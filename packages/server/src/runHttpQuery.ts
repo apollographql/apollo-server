@@ -20,19 +20,7 @@ import { FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import { URLSearchParams } from 'url';
 import Negotiator from 'negotiator';
-
-// TODO(AS4): keep rethinking whether Map is what we want or if we just
-// do want to use (our own? somebody else's?) Headers class.
-// TODO(AS4): probably should do something better if you pass upper-case
-// to get/has/delete as well.
-export class HeaderMap extends Map<string, string> {
-  override set(key: string, value: string): this {
-    if (key.toLowerCase() !== key) {
-      throw Error(`Headers must be lower-case, unlike ${key}`);
-    }
-    return super.set(key, value);
-  }
-}
+import { HeaderMap } from './utils/HeaderMap.js';
 
 function fieldIfString(
   o: Record<string, unknown>,
@@ -137,7 +125,6 @@ export async function runHttpQuery<TContext extends BaseContext>(
 
   switch (httpRequest.method) {
     case 'POST': {
-      // TODO(AS4): If it's an array, some error about enabling batching?
       if (!isNonEmptyStringRecord(httpRequest.body)) {
         throw new BadRequestError(
           'POST body missing, invalid Content-Type, or JSON object has no keys.',
@@ -207,13 +194,15 @@ export async function runHttpQuery<TContext extends BaseContext>(
       );
   }
 
-  const graphQLResponse = await internalExecuteOperation({
-    server,
-    graphQLRequest,
-    contextValue,
-    internals,
-    schemaDerivedData,
-  });
+  const graphQLResponse = await internalExecuteOperation(
+    {
+      server,
+      graphQLRequest,
+      internals,
+      schemaDerivedData,
+    },
+    { contextValue },
+  );
 
   if (graphQLResponse.body.kind === 'single') {
     if (!graphQLResponse.http.headers.get('content-type')) {
@@ -363,10 +352,6 @@ function orderIncrementalResultFields(
 // The result of a curl does not appear well in the terminal, so we add an extra new line
 export function prettyJSONStringify(value: FormattedExecutionResult) {
   return JSON.stringify(value) + '\n';
-}
-
-export function cloneObject<T extends Object>(object: T): T {
-  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }
 
 export function newHTTPGraphQLHead(status?: number): HTTPGraphQLHead {

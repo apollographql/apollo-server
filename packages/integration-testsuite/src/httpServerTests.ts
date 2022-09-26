@@ -35,6 +35,7 @@ import type {
   GraphQLRequestListener,
   PersistedQueryOptions,
 } from '@apollo/server';
+import { HeaderMap } from '@apollo/server';
 import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
 import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/disabled';
 import {
@@ -202,7 +203,7 @@ const queryType = new GraphQLObjectType({
       resolve() {
         throw new GraphQLError('error 2', {
           extensions: {
-            http: { headers: new Map([['erroneous', 'indeed']]) },
+            http: { headers: new HeaderMap([['erroneous', 'indeed']]) },
           },
         });
       },
@@ -212,7 +213,7 @@ const queryType = new GraphQLObjectType({
       resolve() {
         throw new GraphQLError('error 3', {
           extensions: {
-            http: { headers: new Map([['felonious', 'nah']]) },
+            http: { headers: new HeaderMap([['felonious', 'nah']]) },
           },
         });
       },
@@ -1208,6 +1209,26 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
+        });
+      });
+
+      it('returns an error on batch requests with no elements', async () => {
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const req = request(app).post('/').send([]);
+        return req.then((res) => {
+          expect(res.status).toEqual(400);
+          expect(res.body).toMatchInlineSnapshot(`
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "code": "BAD_REQUEST",
+                  },
+                  "message": "No operations found in request.",
+                },
+              ],
+            }
+          `);
         });
       });
 

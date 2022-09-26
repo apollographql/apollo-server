@@ -1,6 +1,7 @@
 import { GraphQLError, GraphQLErrorOptions } from 'graphql';
 import { ApolloServerErrorCode } from './errors/index.js';
-import { HeaderMap, newHTTPGraphQLHead } from './runHttpQuery.js';
+import { newHTTPGraphQLHead } from './runHttpQuery.js';
+import { HeaderMap } from './utils/HeaderMap.js';
 
 // These error classes are not part of Apollo Server's external API; the
 // ApolloServerErrorCode enum is (exported from `@apollo/server/errors`).

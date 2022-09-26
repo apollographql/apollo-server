@@ -1,5 +1,6 @@
 import MIMEType from 'whatwg-mimetype';
 import { BadRequestError } from './internalErrorClasses.js';
+import type { HeaderMap } from './utils/HeaderMap.js';
 
 // Our recommended set of CSRF prevention headers. Operations that do not
 // provide a content-type such as `application/json` (in practice, this
@@ -43,7 +44,7 @@ const NON_PREFLIGHTED_CONTENT_TYPES = [
 // won't execute operations at the request of origins who our CORS policy will
 // block.
 export function preventCsrf(
-  headers: Map<string, string>,
+  headers: HeaderMap,
   csrfPreventionRequestHeaders: string[],
 ) {
   const contentType = headers.get('content-type');

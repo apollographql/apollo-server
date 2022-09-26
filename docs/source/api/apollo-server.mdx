@@ -330,6 +330,8 @@ An object containing configuration options for connecting Apollo Server to [Apol
 
 Controls whether to allow [Batching Queries](../workflow/requests/#batching) in a single HTTP Request. Defaults to `false`. If a request comes in formatted as an array rather than as a single request object, an error will be thrown ( i.e., `Operation batching disabled`) _unless_ batching is enabled.
 
+> Note: In the case of duplicate response headers across separate requests, the later request's header will take precedence on a per-header basis.
+
 </td>
 </tr>
 
@@ -599,7 +601,7 @@ The `executeOperation` method takes two arguments:
 
 - The first argument is an object describing the GraphQL operation to be executed.
   - Supported fields are listed in the table below.
-- The second optional argument is used as the operation's [context value](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
+- The second argument is the optional options object. This object includes the operation's optional [`contextValue`](../data/resolvers/#the-context-argument). Note, this argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
 
 The `response` object returned from `executeOperation` is a `GraphQLResponse`, which has `body` and `http` fields.
 

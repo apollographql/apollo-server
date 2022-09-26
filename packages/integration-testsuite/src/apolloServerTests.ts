@@ -13,10 +13,9 @@ import {
   GraphQLString,
   GraphQLError,
   ValidationContext,
-  FieldDefinitionNode,
-  ResponsePath,
   DocumentNode,
   printSchema,
+  FieldNode,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -29,11 +28,12 @@ import {
   ApolloFetch,
   ParsedResponse,
 } from './apolloFetch.js';
-import type {
+import {
   ApolloServerOptions,
   ApolloServer,
   BaseContext,
   ApolloServerPlugin,
+  HeaderMap,
 } from '@apollo/server';
 import fetch, { type Headers } from 'node-fetch';
 
@@ -209,7 +209,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       describe('validation rules', () => {
         it('accepts additional rules', async () => {
           const NoTestString = (context: ValidationContext) => ({
-            Field(node: FieldDefinitionNode) {
+            Field(node: FieldNode) {
               if (node.name.value === 'testString') {
                 context.reportError(
                   new GraphQLError('Not allowed to use', { nodes: [node] }),
@@ -538,12 +538,11 @@ export function defineIntegrationTestSuiteApolloServerTests(
     describe('Plugins', () => {
       let apolloFetch: ApolloFetch;
       let apolloFetchResponse: ParsedResponse;
-      let serverInstance: ApolloServer<BaseContext>;
 
       const setupApolloServerAndFetchPairForPlugins = async (
         plugins: ApolloServerPlugin<BaseContext>[] = [],
       ) => {
-        const { server, url } = await createServer(
+        const { url } = await createServer(
           {
             typeDefs: gql`
               type Query {
@@ -555,8 +554,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           { context: async () => ({ customContext: true }) },
         );
 
-        serverInstance = server;
-
         apolloFetch = createApolloFetch({ uri: url })
           // Store the response so we can inspect it.
           .useAfter(({ response }, next) => {
@@ -564,64 +561,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
             next();
           });
       };
-
-      // TODO(AS4): Is this test still relevant now that we pass
-      // the context explicitly to executeOperation?
-      // Test for https://github.com/apollographql/apollo-server/issues/4170
-      it('works when using executeOperation', async () => {
-        const encounteredFields: ResponsePath[] = [];
-        const encounteredContext: BaseContext[] = [];
-        await setupApolloServerAndFetchPairForPlugins([
-          {
-            requestDidStart: async () => ({
-              executionDidStart: async () => ({
-                willResolveField({ info, contextValue }) {
-                  encounteredFields.push(info.path);
-                  encounteredContext.push(contextValue);
-                },
-              }),
-            }),
-          },
-        ]);
-
-        // The bug in 4170 (linked above) was occurring because of a failure
-        // to clone context in `executeOperation` in the same way that occurs
-        // in `runHttpQuery` prior to entering the request pipeline.  That
-        // resulted in the inability to attach a symbol to the context because
-        // the symbol already existed on the context.  Of course, a context
-        // is only created after the first invocation, so we'll run this twice
-        // to encounter the error where it was in the way when we tried to set
-        // it the second time.  While we could have tested for the property
-        // before assigning to it, that is not the contract we have with the
-        // context, which should have been copied on `executeOperation` (which
-        // is meant to be used by testing, currently).
-        await serverInstance.executeOperation(
-          {
-            query: '{ justAField }',
-          },
-          { customContext: true },
-        );
-        await serverInstance.executeOperation(
-          {
-            query: '{ justAField }',
-          },
-          { customContext: true },
-        );
-
-        expect(encounteredFields).toStrictEqual([
-          { key: 'justAField', prev: undefined, typename: 'Query' },
-          { key: 'justAField', prev: undefined, typename: 'Query' },
-        ]);
-
-        // This bit is just to ensure that nobody removes `context` from the
-        // `setupApolloServerAndFetchPairForPlugins` thinking it's unimportant.
-        // When a custom context is not provided, a new one is initialized
-        // on each request.
-        expect(encounteredContext).toStrictEqual([
-          expect.objectContaining({ customContext: true }),
-          expect.objectContaining({ customContext: true }),
-        ]);
-      });
 
       it('returns correct status code for a normal operation', async () => {
         await setupApolloServerAndFetchPairForPlugins();
@@ -1664,9 +1603,15 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             expect(spy).not.toBeCalled();
 
-            await server.executeOperation({ query: '{hello}' }, uniqueContext);
+            await server.executeOperation(
+              { query: '{hello}' },
+              { contextValue: uniqueContext },
+            );
             expect(spy).toHaveBeenCalledTimes(1);
-            await server.executeOperation({ query: '{hello}' }, uniqueContext);
+            await server.executeOperation(
+              { query: '{hello}' },
+              { contextValue: uniqueContext },
+            );
             expect(spy).toHaveBeenCalledTimes(2);
           });
         });
@@ -1847,7 +1792,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                     extensions: {
                       http: {
                         status: 404,
-                        headers: new Map([['special', 'hello']]),
+                        headers: new HeaderMap([['special', 'hello']]),
                       },
                     },
                   }),

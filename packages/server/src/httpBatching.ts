@@ -19,7 +19,9 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
-  // TODO(AS4): Handle empty list as an error
+  if (body.length === 0) {
+    throw new BadRequestError('No operations found in request.');
+  }
 
   const combinedResponseHead = newHTTPGraphQLHead();
   const responseBodies = await Promise.all(
@@ -44,7 +46,6 @@ export async function runBatchHttpQuery<TContext extends BaseContext>(
       }
       for (const [key, value] of response.headers) {
         // Override any similar header set in other responses.
-        // TODO(AS4): this is what AS3 did but maybe this is silly
         combinedResponseHead.headers.set(key, value);
       }
       // If two responses both want to set the status code, one of them will win.

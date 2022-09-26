@@ -5,7 +5,6 @@ import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
   assertValidSchema,
   DocumentNode,
-  FieldDefinitionNode,
   GraphQLError,
   GraphQLFieldResolver,
   GraphQLFormattedError,
@@ -13,6 +12,7 @@ import {
   ParseOptions,
   print,
   ValidationContext,
+  ValidationRule,
 } from 'graphql';
 import {
   type KeyValueCache,
@@ -55,12 +55,7 @@ import {
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
-import {
-  cloneObject,
-  HeaderMap,
-  newHTTPGraphQLHead,
-  prettyJSONStringify,
-} from './runHttpQuery.js';
+import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
 import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
@@ -68,9 +63,11 @@ import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import { HeaderMap } from './utils/HeaderMap.js';
+import type { ExecuteOperationOptions } from './externalTypes/graphql.js';
 
-const NoIntrospection = (context: ValidationContext) => ({
-  Field(node: FieldDefinitionNode) {
+const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
+  Field(node) {
     if (node.name.value === '__schema' || node.name.value === '__type') {
       context.reportError(
         new GraphQLError(
@@ -134,19 +131,14 @@ type ServerState =
       stopError: Error | null;
     };
 
-// TODO(AS4): Move this to its own file or something. Also organize the fields.
-
 export interface ApolloServerInternals<TContext extends BaseContext> {
+  state: ServerState;
+  gatewayExecutor: GatewayExecutor | null;
+
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
   ) => GraphQLFormattedError;
-  // TODO(AS4): Is there a way (with generics/codegen?) to make
-  // this "any" more specific? In AS3 there was technically a
-  // generic for it but it was used inconsistently.
-  rootValue?: ((parsedQuery: DocumentNode) => any) | any;
-  validationRules: Array<(context: ValidationContext) => any>;
-  fieldResolver?: GraphQLFieldResolver<any, TContext>;
   includeStacktraceInErrorResponses: boolean;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
@@ -154,20 +146,21 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
-  state: ServerState;
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version
   // of start).
   stopOnTerminationSignals: boolean | undefined;
-  gatewayExecutor: GatewayExecutor | null;
   csrfPreventionRequestHeaders: string[] | null;
+
+  rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
+  validationRules: Array<ValidationRule>;
+  fieldResolver?: GraphQLFieldResolver<any, TContext>;
+
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
 function defaultLogger(): Logger {
   const loglevelLogger = loglevel.getLogger('apollo-server');
-  // TODO(AS4): Ensure that migration guide makes it clear that
-  // debug:true doesn't set the log level any more.
   loglevelLogger.setLevel(loglevel.levels.INFO);
   return loglevelLogger;
 }
@@ -176,7 +169,7 @@ function defaultLogger(): Logger {
 //
 //     const s: ApolloServer<{}> =
 //       new ApolloServer<{importantContextField: boolean}>({ ... });
-//     s.executeOperation({query}, {});
+//     s.executeOperation({query}, {contextValue: {}});
 //
 // ie, if you declare an ApolloServer whose context values must be of a certain
 // type, you can't assign it to a variable whose context values are less
@@ -187,7 +180,7 @@ function defaultLogger(): Logger {
 //     const sBase = new ApolloServer<{}>({ ... });
 //     const s: ApolloServer<{importantContextField: boolean}> = sBase;
 //     s.addPlugin({async requestDidStart({contextValue: {importantContextField}}) { ... }})
-//     sBase.executeOperation({query}, {});
+//     sBase.executeOperation({query}, {contextValue: {}});
 //
 // so you shouldn't be able to assign an ApolloServer to a variable whose
 // context values are more constrained, either. So we want to declare that
@@ -250,13 +243,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const introspectionEnabled = config.introspection ?? isDev;
 
-    // The default internal cache is a vanilla `Keyv` which uses a `Map` by
-    // default for its underlying store. For production, we recommend using a
-    // more appropriate Keyv implementation (see
-    // https://github.com/jaredwray/keyv/tree/main/packages for 1st party
-    // maintained Keyv packages or our own Keyv store `LRUCacheStore`).
-    // TODO(AS4): warn users and provide better documentation around providing
-    // an appropriate Keyv.
     this.cache = config.cache ?? new InMemoryLRUCache();
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
@@ -925,7 +911,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     this.internals.plugins.push(plugin);
   }
 
-  // TODO(AS4): Make sure we like the name of this function.
   public async executeHTTPGraphQLRequest({
     httpGraphQLRequest,
     context,
@@ -1093,9 +1078,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
    * just a convenience, not an optimization (we convert provided ASTs back into
    * string).
    *
-   * The second object will be the `contextValue` object available in resolvers.
+   * The second object is an optional options object which includes the optional
+   * `contextValue` object available in resolvers.
    */
-  // TODO(AS4): document this
   public async executeOperation(
     this: ApolloServer<BaseContext>,
     request: Omit<GraphQLRequest, 'query'> & {
@@ -1106,14 +1091,14 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    contextValue: TContext,
+    options?: ExecuteOperationOptions<TContext>,
   ): Promise<GraphQLResponse>;
 
   async executeOperation(
     request: Omit<GraphQLRequest, 'query'> & {
       query?: string | DocumentNode;
     },
-    contextValue?: TContext,
+    options: ExecuteOperationOptions<TContext> = {},
   ): Promise<GraphQLResponse> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
@@ -1136,36 +1121,34 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           : request.query,
     };
 
-    return await internalExecuteOperation({
-      server: this,
-      graphQLRequest,
-      // The typecast here is safe, because the only way `contextValue` can be
-      // null-ish is if we used the `contextValue?: BaseContext` override, in
-      // which case TContext is BaseContext and {} is ok. (This does depend on
-      // the fact we've hackily forced the class to be contravariant in
-      // TContext.)
-      contextValue: contextValue ?? ({} as TContext),
-      internals: this.internals,
-      schemaDerivedData,
-    });
+    return await internalExecuteOperation(
+      {
+        server: this,
+        graphQLRequest,
+        internals: this.internals,
+        schemaDerivedData,
+      },
+      options,
+    );
   }
 }
 
 // Shared code between runHttpQuery (ie executeHTTPGraphQLRequest) and
 // executeOperation to set up a request context and invoke the request pipeline.
-export async function internalExecuteOperation<TContext extends BaseContext>({
-  server,
-  graphQLRequest,
-  contextValue,
-  internals,
-  schemaDerivedData,
-}: {
-  server: ApolloServer<TContext>;
-  graphQLRequest: GraphQLRequest;
-  contextValue: TContext;
-  internals: ApolloServerInternals<TContext>;
-  schemaDerivedData: SchemaDerivedData;
-}): Promise<GraphQLResponse> {
+export async function internalExecuteOperation<TContext extends BaseContext>(
+  {
+    server,
+    graphQLRequest,
+    internals,
+    schemaDerivedData,
+  }: {
+    server: ApolloServer<TContext>;
+    graphQLRequest: GraphQLRequest;
+    internals: ApolloServerInternals<TContext>;
+    schemaDerivedData: SchemaDerivedData;
+  },
+  options: ExecuteOperationOptions<TContext>,
+): Promise<GraphQLResponse> {
   const requestContext: GraphQLRequestContext<TContext> = {
     logger: server.logger,
     cache: server.cache,
@@ -1183,7 +1166,13 @@ export async function internalExecuteOperation<TContext extends BaseContext>({
     // We don't want to do a deep clone here, because one of the main advantages of
     // using batched HTTP requests is to share context across operations for a
     // single request.
-    contextValue: cloneObject(contextValue),
+    //
+    // The typecast here is safe, because the only way `contextValue` can be
+    // null-ish is if we used the `contextValue?: BaseContext` override, in
+    // which case TContext is BaseContext and {} is ok. (This does depend on
+    // the fact we've hackily forced the class to be contravariant in
+    // TContext.)
+    contextValue: cloneObject(options?.contextValue ?? ({} as TContext)),
     metrics: {},
     overallCachePolicy: newCachePolicy(),
   };
@@ -1265,4 +1254,8 @@ export function chooseContentTypeForSingleResultResponse(
       return null;
     }
   }
+}
+
+function cloneObject<T extends Object>(object: T): T {
+  return Object.assign(Object.create(Object.getPrototypeOf(object)), object);
 }

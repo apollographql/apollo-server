@@ -21,6 +21,7 @@ import {
   GraphQLRequestListenerExecutionDidEnd,
   GraphQLRequestListenerParsingDidEnd,
   GraphQLRequestListenerValidationDidEnd,
+  HeaderMap,
 } from '..';
 import { mockLogger } from './mockLogger';
 import { jest, describe, it, expect } from '@jest/globals';
@@ -44,7 +45,7 @@ async function runQuery<TContext extends BaseContext>(
   const response = await server.executeOperation(
     request,
     // `as` safe because TContext must be BaseContext if no contextValue provided
-    contextValue ?? ({} as TContext),
+    { contextValue: contextValue ?? ({} as TContext) },
   );
   await server.stop();
   if (!('singleResult' in response.body)) {
@@ -836,7 +837,7 @@ describe('request pipeline life-cycle hooks', () => {
               message: 'Syntax Error: Expected Name, found "}".',
               extensions: {
                 code: 'GRAPHQL_PARSE_FAILED',
-                http: { status: 400, headers: new Map() },
+                http: { status: 400, headers: new HeaderMap() },
               },
             }),
           ]),
@@ -861,7 +862,7 @@ describe('request pipeline life-cycle hooks', () => {
                 'Cannot query field "testStringWithParseError" on type "QueryType".',
               extensions: {
                 code: 'GRAPHQL_VALIDATION_FAILED',
-                http: { status: 400, headers: new Map() },
+                http: { status: 400, headers: new HeaderMap() },
               },
             }),
           ]),

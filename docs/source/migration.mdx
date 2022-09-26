@@ -1119,7 +1119,7 @@ So a test for Apollo Server 3 that looks like this:
 
 <MultiCodeBlock>
 
-```ts {13-17}
+```ts
 const server = new ApolloServer({
   typeDefs: "type Query { hello: String!}",
   resolvers: {
@@ -1133,9 +1133,13 @@ const server = new ApolloServer({
 const result = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
-  // A half-hearted attempt at making something vaguely like an express.Request,
-  // and not bothering to make the express.Response at all.
-  req: { headers: { name: 'world' } },
+  // highlight-start
+  contextValue: {
+    // A half-hearted attempt at making something vaguely like an express.Request,
+    // and not bothering to make the express.Response at all.
+    req: { headers: { name: 'world' } },
+  }
+  // highlight-end
 });
 
 expect(result.data?.hello).toBe('Hello world!'); // -> true
@@ -1147,7 +1151,7 @@ looks like this in Apollo Server 4:
 
 <MultiCodeBlock>
 
-```ts {16-18}
+```ts
 interface MyContext {
   name: string;
 }
@@ -1164,7 +1168,11 @@ const server = new ApolloServer<MyContext>({
 const { body } = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
-  name: 'world',
+  // highlight-start
+  contextValue: {
+    name: 'world',
+  }
+  // highlight-end
 });
 
 // Note the use of Node's assert rather than Jest's expect; if using
@@ -1675,6 +1683,10 @@ const { url } = await startStandaloneServer(apolloServerInstance, {
   listen: { port: 4000 }
 });
 ```
+
+### Improved typing for `validationRules`
+
+In Apollo Server 3, the `validationRules` option was declared as a list of functions that returned `any`. However, at runtime the functions actually needed to return a `graphql-js` `ASTVisitor`. In Apollo Server 4, the TypeScript type ensures that `validationRules` is a list of `graphql-js` `ValidationRule`s. If your `validationRules` has a TypeScript error, you will need to fix one or more of your rules to correctly return `ASTVisitor`s.
 
 ### `@apollo/utils.fetcher` replaces `apollo-server-env`
 

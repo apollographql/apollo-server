@@ -67,6 +67,8 @@ If you have enabled HTTP batching, you can send a batch of queries in a single `
 
 If you send a batched request, Apollo Server responds with a corresponding array of GraphQL responses.
 
+> Note: In the case of duplicate response headers across separate requests, the later request's header will take precedence on a per-header basis.
+
 ## GET requests
 
 Apollo Server also accepts `GET` requests for queries (but not mutations). With a `GET` request, query details (`query`, `operationName`, `variables`) are provided as URL query parameters. The `variables` option is a URL-escaped JSON object.

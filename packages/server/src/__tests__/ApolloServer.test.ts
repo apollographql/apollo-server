@@ -1,11 +1,10 @@
-import { ApolloServer } from '..';
+import { ApolloServer, HeaderMap } from '..';
 import type { ApolloServerOptions } from '..';
 import { FormattedExecutionResult, GraphQLError, GraphQLSchema } from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import { HeaderMap } from '../runHttpQuery.js';
 import { mockLogger } from './mockLogger.js';
 import gql from 'graphql-tag';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
@@ -382,7 +381,7 @@ describe('ApolloServer executeOperation', () => {
 
     const { body } = await server.executeOperation(
       { query: '{ contextFoo }' },
-      { foo: 'bla' },
+      { contextValue: { foo: 'bla' } },
     );
     const result = singleResult(body);
     expect(result.errors).toBeUndefined();
@@ -425,7 +424,7 @@ describe('ApolloServer executeOperation', () => {
       await server.start();
       const { body } = await server.executeOperation(
         { query: '{ n }' },
-        { foo: 123 },
+        { contextValue: { foo: 123 } },
       );
       const result = singleResult(body);
       expect(result.errors).toBeUndefined();
@@ -435,7 +434,7 @@ describe('ApolloServer executeOperation', () => {
         { query: '{ n }' },
         // It knows that context.foo is a number so it doesn't work as a string.
         // @ts-expect-error
-        { foo: 'asdf' },
+        { contextValue: { foo: 'asdf' } },
       );
       const result2 = singleResult(body2);
       // GraphQL will be sad that a string was returned from an Int! field.
@@ -445,11 +444,11 @@ describe('ApolloServer executeOperation', () => {
 
     // This works due to using `in` on the TContext generic.
     it('generic TContext argument is invariant (in out)', () => {
-      // You cannot assign a server that wants a specific context to
-      // one that wants a more vague context. That's because
-      // `server1.executeOperation(request, {})` should typecheck, but that's
-      // not good enough for the ApolloServer that expects its context to have
-      // `foo` on it.
+      // You cannot assign a server that wants a specific context to one that
+      // wants a more vague context. That's because
+      // `server1.executeOperation(request, {contextValue: {}})` should
+      // typecheck, but that's not good enough for the ApolloServer that expects
+      // its context to have `foo` on it.
       // @ts-expect-error
       const server1: ApolloServer<{}> = new ApolloServer<{
         foo: number;
