@@ -5,28 +5,65 @@ description: Manage connections to databases and other data sources
 
 > Looking to fetch data from a REST API? Check out [Fetching from REST](./fetching-rest).
 
-Apollo Server can fetch data from any source you choose, from a local JSON file, to a database, to a [REST API](./fetching-rest). We recommend some common conventions for fetching from different sources of data byt creating and using a data source class. Your server can use any number of different data sources.
+Apollo Server can fetch data from any source you need, such as a [REST API](./fetching-rest) or a database. Your server can use any number of different data sources:
 
 ```mermaid
 flowchart LR;
+  restAPI(REST API);
   mongo(MongoDB Database);
   sql(SQL Database);
   subgraph ApolloServer;
-    MongoDBDataSource(MongoDataSource);
-    SQLDataSource(SQLDataSource);
+    restDataSource(RESTDataSource);
+    mongoDBDataSource(MongoDBSource);
+    sqlDataSource(SQLDBSource);
   end
-  MongoDBDataSource --Fetches data--> mongo;
-  SQLDataSource --Fetches data--> sql;
+  restDataSource --Fetches data--> restAPI;
+  mongoDBDataSource --Fetches data--> mongo;
+  sqlDataSource --Fetches data--> sql;
   client(ApolloClient);
   client --Sends query--> ApolloServer;
 ```
 
-You can create data source classes to encapsulate the logic of fetching data from a particular source, then providing methods that resolvers can access to neatly fetch data. You don't _have_ to use data sources to fetch data, but they're recommended because they help keep your resolvers tidy.
+Because your server can use various data sources, keeping your [resolvers](./resolvers) tidy becomes even more important. For this reason, we recommend creating data source classes to encapsulate the logic of fetching data from a particular source, then providing methods that resolvers can use to fetch data neatly.
 
+## Creating data source classes
 
-## Adding data sources to Apollo Server's context
+> [In Apollo Server 3](/apollo-server/v3/data/data-sources), you'd subclass the `DataSource` abstract class for each of your data sources. In Apollo Server 4, we recommend [making a custom class for each data source](#creating-data-source-classes), each class best suited for that particular store or API.
 
-You can add data sources to the `context` initialization function, like so:
+Your data source class can be as straightforward or complex as you need it to be. You know what data your server needs, and you can let that be the guide for the methods your class should include. 
+
+Below is simple class for connecting to a built-in static data set:
+
+<MultiCodeBlock>
+
+```ts title="datasources.ts"
+export class BooksDataSource {
+  // Our example static data set
+  books: { title?: string; author?: string }[] = [
+    {
+      title: 'The Awakening',
+      author: 'Kate Chopin',
+    },
+    {
+      title: 'City of Glass',
+      author: 'Paul Auster',
+    },
+  ];
+
+  getBooks(): Book[] {
+    // simulate fetching a list of books
+    return this.books;
+  }
+}
+```
+
+</MultiCodeBlock>
+
+Check out [`RestDataSource`](https://github.com/apollographql/datasource-rest/blob/main/src/RESTDataSource.ts) class for an example of a data source class that handles caching, deduplication, and errors.
+
+## Adding data sources to your context
+
+You can add data sources to your server's `context` initialization function, like so:
 
 <MultiCodeBlock>
 
@@ -35,8 +72,9 @@ You can add data sources to the `context` initialization function, like so:
 interface ContextValue {
   dataSources: {
     dogsDB: DogsDataSource;
-    catsAPI: CatsAPI;
+    catsApi: CatsAPI;
   };
+  token: string
 }
 //highlight-end
 
@@ -48,13 +86,15 @@ const server = new ApolloServer<ContextValue>({
 const { url } = await startStandaloneServer(server, {
   context: async () => {
     const { cache } = server; // highlight-line
+    const token = req.headers.token;
     return {
-      // We create new instances of our data sources with each request,
-      // passing in our server's cache.
-      //highlight-start
+      // We create new instances of our data sources with each request.
+      // We can pass in our server's cache, context, or any other
+      // info our data sources require. 
+      // highlight-start
       dataSources: {
-        moviesAPI: new DogsDataSource({ cache }),
-        personalizationAPI: new CatsAPI(),
+        dogsDB: new DogsDataSource({ cache, context: token }),
+        catsApi: new CatsAPI({ cache }),
       },
       //highlight-end
     };
@@ -68,43 +108,34 @@ console.log(`🚀  Server ready at ${url}`);
 
 <!-- TODO(AS4) add link to context article once exists  -->
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
-- For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** 
+- For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
+- The **`context` function should create a new instance of each data source class for each operation.** You might accidentally combine results from multiple operations if multiple operations share a single data source instance.
 
 Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
 
 ```ts title="resolvers.ts"
 const resolvers = {
   Query: {
-    movie: async (_, { id }, { dataSources }) => {
-      return dataSources.moviesAPI.getMovie(id);
+    dogs: async (_, { id }, { dataSources }) => {
+      return dataSources.dogsDB.getDogs();
     },
-    mostViewedMovies: async (_, __, { dataSources }) => {
-      return dataSources.moviesAPI.getMostViewedMovies();
+    popularDogs: async (_, __, { dataSources }) => {
+      return dataSources.dogsDB.getMostLikedDogs();
     },
-    favorites: async (_, __, { dataSources }) => {
-      return dataSources.personalizationAPI.getFavorites();
+    bigCats: async (_, __, { dataSources }) => {
+      return dataSources.catsApi.getCats({size: 10});
     },
   },
 };
 ```
 
-
-
-## Create your own data source class
-
-Creating your own Data source class (which, unlike AS3, doesn’t extend RESTDataSource) as a nice layer of abstraction for folks to clean up their resolvers
-Is there anything else I should add here? Anything about caching? Or anything else?
-
 ## Open-source implementations
 
-> **Note**: The following data source libraries were built for use with Apollo Server 3. We do show how to use them with Apollo Sever 4, below.
+> ⚠️ **Note**: The community built each data source package below for use with Apollo Server 3. [As shown below](#using-datasource-subclasses), you can still use these packages in Apollo Server 4 with a bit of extra setup.
 
-All of the below data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
+The below data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), from the deprecated `apollo-datasource` package. Subclasses of `DataSource` define the logic required to communicate with a particular store or API.
 
-Apollo and the larger community maintain the following open-source implementations:
-
-> Do you maintain a `DataSource` implementation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/data/data-sources.md) to be added to the list!
+The larger community maintains the following open-source implementations:
 
 | Class            | Source    | For Use With          |
 |------------------|-----------|-----------------------|
@@ -114,8 +145,67 @@ Apollo and the larger community maintain the following open-source implementatio
 | [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb) | Community | Azure Cosmos DB |
 | [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore |
 
-If none of these implementations applies to your use case, you can create your own custom `DataSource` subclass.
-
 > Apollo does not provide official support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained.
 
-If you are using any of the above data sources in Apollo Sever 4, you'll need to call on the instance of that data source with the `cache` and `context` for each source, like so:
+### Using `DataSource` subclasses
+
+In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invokes the `initialize({ cache, context })` method on each new `DataSource`. 
+
+To replicate this in Apollo Sever 4, you can manually invoke the `initialize` method in the constructor function of each `DataSource` subclass, like so:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { KeyValueCache } from '@apollo/utils.keyvaluecache';
+import { Pool } from 'undici';
+import { HTTPDataSource } from 'apollo-datasource-http';
+
+class BooksAPI extends HTTPDataSource {
+  override baseURL = 'https://movies-api.example.com/';
+
+  constructor(options: { cache: KeyValueCache<string>; context: string }) { //highlight-line
+    // the necessary arguments for HTTPDataSource
+    const pool = new Pool(baseURL);
+    super(baseURL, { pool });
+
+    // We need to call the initialize method in our data source's
+    // constructor, passing in our cache and context.
+    this.initialize(options); //highlight-line
+  }
+
+  async getMovie(id: string): Promise<Movie> {
+    return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
+  }
+}
+
+interface MyContext {
+  dataSources: {
+    moviesApi: MoviesAPI;
+  };
+  token?: string;
+}
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await startStandaloneServer(server, {
+  context: async () => {
+    //highlight-start
+    const { cache } = server;
+    const token = req.headers.token;
+    return {
+      dataSources: {
+        moviesApi: new MoviesAPI({ cache, context: token }),
+      },
+    //highlight-end
+      token 
+    };
+  },
+});
+```
+
+</MultiCodeBlock>
