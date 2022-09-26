@@ -27,15 +27,15 @@ import type {
   CreateServerForIntegrationTests,
   CreateServerForIntegrationTestsOptions,
 } from './index.js';
-import {
+import type {
   ApolloServer,
   ApolloServerOptions,
   BaseContext,
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestListener,
-  HeaderMap,
   PersistedQueryOptions,
 } from '@apollo/server';
+import { HeaderMap } from '@apollo/server';
 import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
 import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/disabled';
 import {
