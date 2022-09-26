@@ -7,6 +7,7 @@ import {
   collectCacheControlHints,
   collectCacheControlHintsAndPolicyIfCacheable,
 } from './collectCacheControlHints';
+import { describe, it, expect } from '@jest/globals';
 
 describe('@cacheControl directives', () => {
   it('should set maxAge: 0 and no scope for a field without cache hints', async () => {

@@ -11,9 +11,10 @@ const s = new ApolloServer({
     },
   },
 });
-const { result } = await s.executeOperation({ query: '{hello}' });
+const { body } = await s.executeOperation({ query: '{hello}' });
 
-assert.strictEqual(result.data.hello, 'world');
+assert.strictEqual(body.kind, 'single');
+assert.strictEqual(body.singleResult.data.hello, 'world');
 
 await s.stop();
 

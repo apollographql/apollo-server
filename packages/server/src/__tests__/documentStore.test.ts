@@ -3,6 +3,7 @@ import type { DocumentNode } from 'graphql';
 import gql from 'graphql-tag';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '..';
+import { jest, describe, it, expect } from '@jest/globals';
 
 const typeDefs = gql`
   type Query {
@@ -109,9 +110,12 @@ describe('ApolloServer documentStore', () => {
     ).schemaManager.getSchemaDerivedData();
     expect(documentStore).toBeNull();
 
-    const { result } = await server.executeOperation(operations.simple.op);
+    const { body } = await server.executeOperation(operations.simple.op);
 
-    expect(result.data).toEqual({ hello: 'world' });
+    expect(body).toEqual({
+      kind: 'single',
+      singleResult: { data: { hello: 'world' } },
+    });
   });
 
   it('documentStore with changing schema', async () => {});

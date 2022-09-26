@@ -2,7 +2,7 @@
 title: Apollo Server plugin event reference
 ---
 
-> **New in Apollo Server 3:** All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield) and [`schemaDidLoadOrUpdate`](#schemadidloadorupdate)_.
+> All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield) and [`schemaDidLoadOrUpdate`](#schemadidloadorupdate)_.
 
 This reference describes the lifecycle events that your [custom Apollo Server plugin](./plugins/) can respond to.
 
@@ -13,7 +13,7 @@ events** and **request lifecycle events**.
 * Request lifecycle events are associated with the lifecycle of a specific request.
   * You define responses to these events _within_ the response to a `requestDidStart` event, as described in [Responding to request lifecycle events](./plugins#responding-to-request-lifecycle-events).
 
-> With two exceptions, all plugin methods in Apollo Server 3 are `async`. The first exception is `willResolveField`, which is called much more frequently than other plugin methods. The second exception is `schemaDidLoadOrUpdate`, where making the method `async` would introduce unclear ordering semantics around method executions.
+> With two exceptions, all plugin methods in Apollo Server are `async`. The first exception is `willResolveField`, which is called much more frequently than other plugin methods. The second exception is `schemaDidLoadOrUpdate`, where making the method `async` would introduce unclear ordering semantics around method executions.
 
 ## Server lifecycle events
 
@@ -21,15 +21,18 @@ events** and **request lifecycle events**.
 
 The `serverWillStart` event fires when Apollo Server is preparing to start serving GraphQL requests. The server doesn't start until this asynchronous method completes. If it throws (i.e., if the `Promise` it returns is _rejected_), startup _fails_ and your server does not serve GraphQL operations. This helps you make sure all of your server's dependencies are available before attempting to begin serving requests.
 
-This event is fired at different times depending on which [Apollo Server middleware](./middleware/) you're using:
+<!-- TODO(AS4) add link to integration page when exists -->
+This event is fired at different times depending on which Apollo Server integration you're using:
 
-* In `apollo-server`, it's fired from the `listen()` method.
-* In non-serverless middleware libraries like `apollo-server-express`, it's fired from the `start()` method.
-* In serverless middleware libraries like `apollo-server-lambda`, it's fired in response to the first incoming request.
+* If you are using `startStandaloneServer`, it's fired when you invoke the `startStandaloneServer` function with your server instance.
+* In non-serverless integrations like `expressMiddleware`, it's fired from the `start()` method.
+* In serverless integrations, it's usually fired in response to the first incoming request.
 
 #### Example
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
@@ -43,6 +46,8 @@ const server = new ApolloServer({
 })
 ```
 
+</MultiCodeBlock>
+
 ### `drainServer`
 
 The `drainServer` event fires when Apollo Server is starting to shut down because [`ApolloServer.stop()`](../api/apollo-server/#stop) has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). While `drainServer` handlers run, GraphQL operations can still execute successfully. This hook is designed to allow you to stop accepting new connections and close existing connections. Apollo Server has a [built-in plugin](../api/plugin/drain-http-server) which uses this event to drain a [Node `http.Server`](https://nodejs.org/api/http.html#http_class_http_server).
@@ -51,7 +56,9 @@ You define your `drainServer` handler in the object returned by your [`serverWil
 
 #### Example
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
@@ -69,6 +76,8 @@ const server = new ApolloServer({
 })
 ```
 
+</MultiCodeBlock>
+
 ### `serverWillStop`
 
 The `serverWillStop` event fires when Apollo Server is starting to shut down because [`ApolloServer.stop()`](../api/apollo-server/#stop) has been invoked (either explicitly by your code, or by one of the [termination signal handlers](../api/apollo-server/#stoponterminationsignals)). If your plugin is running any background tasks, this is a good place to shut them down.
@@ -79,7 +88,9 @@ When your `serverWillStop` handler is called, Apollo Server is in a state where 
 
 #### Example
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
@@ -98,81 +109,94 @@ const server = new ApolloServer({
 })
 ```
 
+</MultiCodeBlock>
+
 ### `renderLandingPage`
 
-This event enables you to serve a [custom landing page](../testing/build-run-queries/#custom-landing-page) from Apollo Server's base URL. The event is fired once by Apollo Server after all `serverWillStart` events run. **At most one installed plugin can define a `renderLandingPage` handler.** Otherwise, Apollo Server throws an error on startup.
+This event enables you to serve a [custom landing page](../workflow/build-run-queries/#custom-landing-page) from Apollo Server's base URL. The event is fired once by Apollo Server after all `serverWillStart` events run. **At most one installed plugin can define a `renderLandingPage` handler.** Otherwise, Apollo Server throws an error on startup.
 
 You define your plugin's `renderLandingPage` handler in the object returned by your [`serverWillStart`](#serverwillstart) handler, which enables it to read values passed to `serverWillStart`:
 
-```js {5-22} title="index.js"
-const server = new ApolloServer({
-  // ... other configuration ...
+<MultiCodeBlock>
 
+```ts title="index.ts"
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
   plugins: [
     {
       async serverWillStart() {
         return {
+          //highlight-start
           async renderLandingPage() {
             const html = `
-<!DOCTYPE html>
-<html>
-  <head>
-  </head>
-  <body>
-    <h1>Hello world!</h1>
-  </body>
-</html>`;
+              <!DOCTYPE html>
+              <html>
+                  <head>
+                  </head>
+                  <body>
+                      <h1>Hello world!</h1>
+                  </body>
+              </html>`;
             return { html };
-          }
-        }
-      }
-    }
-  ]
+          },
+          //highlight-end
+        };
+      },
+    },
+  ],
 });
 ```
 
+</MultiCodeBlock>
+
 The handler should return an object with a string `html` field. The value of that field is served as HTML for any requests with `accept: text/html` headers.
 
-For more landing page options, see [Changing the landing page](../testing/build-run-queries/#changing-the-landing-page).
+For more landing page options, see [Changing the landing page](../workflow/build-run-queries/#changing-the-landing-page).
 
 #### Example
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
-  plugins: [
+   plugins: [
     {
       async serverWillStart() {
         return {
           async renderLandingPage() {
             return { html: `<html><body>Welcome to your server!</body></html>` };
-          }
-        }
-      }
-    }
-  ]
+          },
+        };
+      },
+    },
+  ],
 })
 ```
+
+</MultiCodeBlock>
 
 
 ### `requestDidStart`
 
+> **New in Apollo Server 4**: In Apollo Server 4, `requestDidStart` hooks are called in parallel rather than in series.
+
 The `requestDidStart` event fires whenever Apollo Server begins fulfilling a GraphQL request.
 
-```typescript
+```ts
 requestDidStart?(
-  requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'request' | 'context' | 'logger'
-  >
+  requestContext: GraphQLRequestContext<TContext>,
 ): Promise<GraphQLRequestListener<TContext> | void>;
 ```
 
 This function can optionally return an object that includes functions for responding
 to request lifecycle events that might follow `requestDidStart`.
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
@@ -195,18 +219,24 @@ const server = new ApolloServer({
 })
 ```
 
+</MultiCodeBlock>
+
 If your plugin doesn't need to respond to any request lifecycle events, `requestDidStart`
 should not return a value.
 
 ### `schemaDidLoadOrUpdate`
 
-The `schemaDidLoadOrUpdate` event fires whenever Apollo Server initially loads the schema or updates the schema. A `schemaDidLoadOrUpdate` handler is given the new API schema and optionally the new core schema (if using a gateway). If you provide a gateway and it is older than `@apollo/gateway@0.35.0`, attempting to register a `schemaDidLoadOrUpdate` handler will fail.
+The `schemaDidLoadOrUpdate` event fires whenever Apollo Server initially loads the schema or updates the schema.
+
+A `schemaDidLoadOrUpdate` handler is given the new API schema and optionally the new core schema (if using a gateway).
 
 `schemaDidLoadOrUpdate` is a synchronous plugin API (i.e., it does not return a `Promise`).
 
 #### Example
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
@@ -227,9 +257,11 @@ const server = new ApolloServer({
 });
 ```
 
+</MultiCodeBlock>
+
 ## Request lifecycle events
 
-> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-plugin-base/src/index.ts) from the `apollo-server-plugin-base` module to define functions for request lifecycle events.
+> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/93ebfc742fb201f885227474836ebdeaa4ab0691/packages/server/src/externalTypes/plugins.ts#L104) to define functions for request lifecycle events.
 
 When Apollo Server processes a request, these events fire in the order listed (with the exception of `didEncounterErrors`, which might fire in one of a few places depending on when errors occur). [See the flow diagram](./plugins/#request-lifecycle-event-flow)
 
@@ -244,10 +276,10 @@ may be retrieved from a cache store (e.g., Automated Persisted Queries).
 
 At this stage, there is not a guarantee that the operation is not malformed.
 
-```typescript
+```ts
 didResolveSource?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>, 'source' | 'logger'>,
+    GraphQLRequestContext<TContext>, 'source' | 'queryHash'>,
   >,
 ): Promise<void>;
 ```
@@ -262,11 +294,10 @@ request, the associated `document` might already be available in Apollo Server's
 In this case, `parsingDidStart` is _not_ called for the request, because parsing
 does not occur.
 
-```typescript
+```ts
 parsingDidStart?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'logger'
+    GraphQLRequestContext<TContext>, 'source' | 'queryHash'
   >,
 ): Promise<void | (err?: Error) => Promise<void>>;
 ```
@@ -282,11 +313,11 @@ already available in Apollo Server's cache (only successfully validated `documen
 The `document` AST is guaranteed to be
 available at this stage, because parsing must succeed for validation to occur.
 
-```typescript
+```ts
 validationDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'logger'
+    'source' | 'queryHash' | 'document'
   >,
 ): Promise<void | (err?: ReadonlyArray<Error>) => Promise<void>>;
 ```
@@ -301,11 +332,11 @@ This event is _not_ associated with your GraphQL server's _resolvers_. When this
 
 > If the operation is anonymous (i.e., the operation is `query { ... }` instead of `query NamedQuery { ... }`), then `operationName` is `null`.
 
-```typescript
+```ts
 didResolveOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
+    'source' | 'queryHash' | 'document' | 'operationName'
   >,
 ): Promise<void>;
 ```
@@ -317,12 +348,11 @@ would take place. If its return value resolves to a non-null `GraphQLResponse`,
 that result is used instead of executing the query. Hooks from different plugins
 are invoked in series, and the first non-null response is used.
 
-```typescript
+```ts
 responseForOperation?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
-  >,
+    'source' | 'queryHash' | 'document' | 'operationName' | 'operation'
 ): Promise<GraphQLResponse | null>;
 ```
 
@@ -331,20 +361,20 @@ responseForOperation?(
 The `executionDidStart` event fires whenever Apollo Server begins executing the
 GraphQL operation specified by a request's `document` AST.
 
-```typescript
+```ts
 executionDidStart?(
   requestContext: WithRequired<
     GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'document' | 'operationName' | 'operation' | 'logger'
+    'source' | 'queryHash' | 'document' | 'operationName' | 'operation'
   >,
 ): Promise<GraphQLRequestExecutionListener | void>;
 ```
 
-`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. `willResolveField` is documented in the next section. (In Apollo Server 2, `executionDidStart` could return also return an end hook directly.)
+`executionDidStart` may return an object with one or both of the methods `executionDidEnd` and `willResolveField`.  `executionDidEnd` is treated like an end hook: it is called after execution with any errors that occurred. (If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `executionDidEnd` is called when the fields required to fill the *initial* payload have finished executing; you can use `willSendSubsequentPayload` to hook into the end of execution for each subsequent payload.) `willResolveField` is documented in the next section.
 
 ### `willResolveField`
 
-The `willResolveField` event fires whenever Apollo Server is about to resolve a single field during the execution of an operation. The handler is passed an object with four fields (`source`, `args`, `context`, and `info`) that correspond to the [four positional arguments passed to resolvers](../data/resolvers/#resolver-arguments). (Note that `source` corresponds to the argument often called `parent` in these docs.)
+The `willResolveField` event fires whenever Apollo Server is about to resolve a single field during the execution of an operation. The handler is passed an object with four fields (`source`, `args`, `contextValue`, and `info`) that correspond to the [four positional arguments passed to resolvers](../data/resolvers/#resolver-arguments). Note that `source` corresponds to the argument often called `parent` in our docs.
 
 You provide your `willResolveField` handler in the object returned by your [`executionDidStart`](#executiondidstart) handler.
 
@@ -356,7 +386,9 @@ Your `willResolveField` handler can optionally return an ["end hook"](./plugins/
 
 #### Example
 
-```js
+<MultiCodeBlock>
+
+```ts
 const server = new ApolloServer({
   /* ... other necessary configuration ... */
 
@@ -366,7 +398,7 @@ const server = new ApolloServer({
         return {
           async executionDidStart(executionRequestContext) {
             return {
-              willResolveField({source, args, context, info}) {
+              willResolveField({source, args, contextValue, info}) {
                 const start = process.hrtime.bigint();
                 return (error, result) => {
                   const end = process.hrtime.bigint();
@@ -387,19 +419,35 @@ const server = new ApolloServer({
 })
 ```
 
+</MultiCodeBlock>
+
 ### `didEncounterErrors`
 
 The `didEncounterErrors` event fires when Apollo Server encounters errors while
-parsing, validating, or executing a GraphQL operation.
+parsing, validating, or executing a GraphQL operation. The errors are available on `requestContext.errors`.
 
-```typescript
+(If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `didEncounterErrors` is only called when errors that will be sent in the *initial* payload are encountered; you can use `didEncounterSubsequentErrors` to find out if more errors are found later.)
+
+```ts
 didEncounterErrors?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'source' | 'errors' | 'logger'
+    GraphQLRequestContext<TContext>, 'errors'
   >,
 ): Promise<void>;
 ```
+
+### `didEncounterSubsequentErrors`
+
+The `didEncounterSubsequentErrors` event only fires for operations that use [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`. This hook is called when any execution errors are encountered *after* the initial payload is sent; `didEncounterErrors` is *not* called in this case. The errors in question are provided as the second argument to the hook (*not* as `requestContext.errors`, which will continue to be the list of errors sent in the initial payload).
+
+```ts
+didEncounterSubsequentErrors?(
+  requestContext: GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+  errors: ReadonlyArray<GraphQLError>,
+): Promise<void>;
+```
+
+
 
 ### `willSendResponse`
 
@@ -407,11 +455,23 @@ The `willSendResponse` event fires whenever Apollo Server is about to send a res
 for a GraphQL operation. This event fires (and Apollo Server sends a response) even
 if the GraphQL operation encounters one or more errors.
 
-```typescript
+(If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `willSendResponse` is called before the *initial* payload is sent; you can use `willSendSubsequentPayload` to find out when more payloads will be sent.)
+
+```ts
 willSendResponse?(
   requestContext: WithRequired<
-    GraphQLRequestContext<TContext>,
-    'metrics' | 'response' | 'logger'
+    GraphQLRequestContext<TContext>, 'source' | 'queryHash'
   >,
+): Promise<void>;
+```
+
+### `willSendSubsequentPayload`
+
+The `willSendSubsequentPayload` event only fires for operations that use [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`. This hook is called before each payload after the initial one is sent, similarly to `willSendResponse`. The payload in question is provided as the second argument to the hook (*not* on `requestContext`). If this is the last payload, `payload.hasNext` will be false. Note that the precise format of `payload` is determined by the `graphql-js` project, and incremental delivery support has not yet (as of September 2022) been released in an official release of `graphql-js`. When the official release (expected to be `graphql@17`) is released, the format of this argument may potentially change; in this case, Apollo Server may change the precise details of this hook in a backward-incompatible way in a minor release of Apollo Server. (For now, this hook can only be called if you install a pre-release of `graphql@17`.)
+
+```ts
+willSendSubsequentPayload?(
+  requestContext: GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+  payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
 ): Promise<void>;
 ```

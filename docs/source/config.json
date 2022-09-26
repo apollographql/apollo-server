@@ -27,6 +27,7 @@
     "Development Workflow": {
       "Build and run queries": "/workflow/build-run-queries",
       "Request format": "/workflow/requests",
+      "Generating TS types": "/workflow/generate-types",
       "Mocking": "/testing/mocking",
       "Integration testing": "/testing/testing",
       "Apollo Studio Explorer": "https://www.apollographql.com/docs/studio/explorer/"
@@ -41,6 +42,33 @@
       "CORS": "/security/cors",
       "Terminating SSL": "/security/terminating-ssl",
       "Proxy configuration": "/security/proxy-configuration"
+    },
+    "Deployment": {
+      "Heroku": "/deployment/heroku"
+    },
+    "Monitoring": {
+      "Metrics and logging": "/monitoring/metrics",
+      "Health checks": "/monitoring/health-checks"
+    },
+    "API Reference": {
+      "ApolloServer": "/api/apollo-server",
+      "startStandaloneServer": "/api/standalone",
+      "expressMiddleware": "/api/express-middleware",
+      "@apollo/subgraph": "https://www.apollographql.com/docs/federation/api/apollo-subgraph/",
+      "@apollo/gateway": "https://www.apollographql.com/docs/federation/api/apollo-gateway/"
+    },
+    "Built-in Plugins": {
+      "Overview": "/builtin-plugins",
+      "Usage reporting": "/api/plugin/usage-reporting",
+      "Schema reporting": "/api/plugin/schema-reporting",
+      "Inline trace": "/api/plugin/inline-trace",
+      "Drain HTTP server": "/api/plugin/drain-http-server",
+      "Cache control": "/api/plugin/cache-control",
+      "Landing pages": "/api/plugin/landing-pages"
+    },
+    "Custom Plugins": {
+      "Creating plugins": "/integrations/plugins",
+      "Event reference": "/integrations/plugins-event-reference"
     }
   }
 }

@@ -36,3 +36,4 @@ cd ..
 tsc --build tsconfig.{esm,cjs}.json
 node generated/tsc/smoke-test.cjs
 node generated/tsc/smoke-test.mjs
+

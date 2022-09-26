@@ -1,5 +1,6 @@
 import { printSchema, buildSchema } from 'graphql';
 import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
+import { describe, it, expect } from '@jest/globals';
 
 describe('Executable Schema Id', () => {
   const unsortedGQLSchemaDocument = `

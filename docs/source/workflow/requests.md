@@ -50,7 +50,7 @@ curl --request POST \
 
 ### Batching
 
-By default, Apollo Server 4 [doesn't support batching HTTP requests](../migration#http-batching-is-off-by-default). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
+By default, Apollo Server 4 [doesn't support batching HTTP requests](../api/apollo-server#allowbatchedhttprequests). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
 
 If you have enabled HTTP batching, you can send a batch of queries in a single `POST` request by providing a JSON-encoded array of query objects, like so:
 
@@ -86,3 +86,11 @@ Unlike with `POST` requests, `GET` requests do not require a `Content-Type` head
 - A non-empty `Apollo-Require-Preflight` header
 
 For more details, see [the CSRF prevention documentation](../security/cors#preventing-cross-site-request-forgery-csrf).
+
+## Incremental delivery (experimental)
+
+Incremental delivery is a [Stage 2: Draft Proposal](https://github.com/graphql/graphql-spec/pull/742) to the GraphQL specification which adds `@defer` and `@stream` executable directives. These directives allow clients to specify that parts of an operation can be sent after an initial response, so that slower fields do not delay all other fields. As of September 2022, the `graphql` library (also known as `graphql-js`) upon which Apollo Server is built implements incremental delivery only in the unreleased major version 17. If a pre-release of `graphql@17` is installed in your server, Apollo Server 4 can execute these incremental delivery directives and provide streaming [`multipart/mixed`](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md) responses.
+
+Clients sending operations with incremental delivery directives need to explicitly indicate that they are expecting to receive `multipart/mixed` responses in an `accept` header. Moreover, because incremental delivery has not yet been finalized in the GraphQL spec and may change before the final version, they need to specify that they expect the particular response format that Apollo Server produces today via a `deferSpec` parameter. Specifically, clients prepared to accept incremental delivery responses should send an `accept` header like `multipart/mixed; deferSpec=20220824`. Note that this header implies that *only* multipart responses should be accepted; typically, clients will send an accept header like `multipart/mixed; deferSpec=20220824, application/json` indicating that either multipart or single-part responses are acceptable.
+
+You cannot combine [batching](#batching) with incremental delivery in the same request.

@@ -1,5 +1,29 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-alpha.12
+
+### Patch Changes
+
+- [#6827](https://github.com/apollographql/apollo-server/pull/6827) [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b) Thanks [@glasser](https://github.com/glasser)! - Experimental support for incremental delivery (`@defer`/`@stream`) when combined with a prerelease of `graphql-js`.
+
+- [#6850](https://github.com/apollographql/apollo-server/pull/6850) [`256f2424b`](https://github.com/apollographql/apollo-server/commit/256f2424bf6e8420e2582bb2d7a685c810c40bfe) Thanks [@renovate](https://github.com/apps/renovate)! - Expand jest peer deps to include v29
+
+- [#6910](https://github.com/apollographql/apollo-server/pull/6910) [`6541f92c9`](https://github.com/apollographql/apollo-server/commit/6541f92c9a0a97b818d637fbac9fb6a2fe14c37c) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update snapshot format to future jest v29 default
+
+- [#6827](https://github.com/apollographql/apollo-server/pull/6827) [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b) Thanks [@glasser](https://github.com/glasser)! - Support application/graphql-response+json content-type if requested via Accept header, as per graphql-over-http spec.
+  Include `charset=utf-8` in content-type headers.
+- Updated dependencies [[`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b), [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b)]:
+  - @apollo/server@4.0.0-alpha.12
+
+## 4.0.0-alpha.11
+
+### Patch Changes
+
+- [#6906](https://github.com/apollographql/apollo-server/pull/6906) [`115ab2fa8`](https://github.com/apollographql/apollo-server/commit/115ab2fa8879d532d2de2fe6b0373540bda518e3) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Relax message requirement for malformed JSON POST to allow default 'Bad Request'
+  response.
+- Updated dependencies [[`6b37d169b`](https://github.com/apollographql/apollo-server/commit/6b37d169bc7163d49efdff37f5a3a5c3404806ff)]:
+  - @apollo/server@4.0.0-alpha.11
+
 ## 4.0.0-alpha.10
 
 ### Patch Changes

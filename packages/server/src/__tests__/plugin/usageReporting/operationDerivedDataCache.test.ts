@@ -1,4 +1,5 @@
 import { operationDerivedDataCacheKey } from '../../../plugin/usageReporting/operationDerivedDataCache';
+import { describe, it, expect } from '@jest/globals';
 
 describe('operation-derived data cache key', () => {
   it('generates without the operationName', () => {

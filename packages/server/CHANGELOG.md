@@ -1,5 +1,20 @@
 # @apollo/server
 
+## 4.0.0-alpha.12
+
+### Patch Changes
+
+- [#6827](https://github.com/apollographql/apollo-server/pull/6827) [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b) Thanks [@glasser](https://github.com/glasser)! - Experimental support for incremental delivery (`@defer`/`@stream`) when combined with a prerelease of `graphql-js`.
+
+- [#6827](https://github.com/apollographql/apollo-server/pull/6827) [`0c2909aa1`](https://github.com/apollographql/apollo-server/commit/0c2909aa1593a9b0abf299b071629a4ab23dc71b) Thanks [@glasser](https://github.com/glasser)! - Support application/graphql-response+json content-type if requested via Accept header, as per graphql-over-http spec.
+  Include `charset=utf-8` in content-type headers.
+
+## 4.0.0-alpha.11
+
+### Patch Changes
+
+- [#6879](https://github.com/apollographql/apollo-server/pull/6879) [`6b37d169b`](https://github.com/apollographql/apollo-server/commit/6b37d169bc7163d49efdff37f5a3a5c3404806ff) Thanks [@bonnici](https://github.com/bonnici)! - Fixed usage reporting plugin log message
+
 ## 4.0.0-alpha.10
 
 ### Patch Changes

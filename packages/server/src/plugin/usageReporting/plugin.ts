@@ -537,6 +537,17 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               },
             };
           },
+
+          async didEncounterSubsequentErrors(_requestContext, errors) {
+            treeBuilder.didEncounterErrors(errors);
+          },
+
+          async willSendSubsequentPayload(requestContext, payload) {
+            if (!payload.hasNext) {
+              await operationFinished(requestContext);
+            }
+          },
+
           async willSendResponse(requestContext) {
             // Search above for a comment about "didResolveSource" to see which
             // of the pre-source-resolution errors we are intentionally avoiding.
@@ -545,205 +556,214 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               treeBuilder.didEncounterErrors(requestContext.errors);
             }
 
-            const resolvedOperation = !!requestContext.operation;
-
-            // If we got an error before we called didResolveOperation (eg parse or
-            // validation error), check to see if we should include the request.
-            await maybeCallIncludeRequestHook(requestContext);
-
-            treeBuilder.stopTiming();
-            const executableSchemaId =
-              overriddenExecutableSchemaId ??
-              executableSchemaIdForSchema(schema);
-            const reportData = getReportData(executableSchemaId);
-
-            if (includeOperationInUsageReporting === false) {
-              if (resolvedOperation) reportData.report.operationCount++;
-              return;
-            }
-
-            treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
-            treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
-            treeBuilder.trace.registeredOperation =
-              !!metrics.registeredOperation;
-
-            const policyIfCacheable =
-              requestContext.overallCachePolicy.policyIfCacheable();
-            if (policyIfCacheable) {
-              treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
-                scope:
-                  policyIfCacheable.scope === 'PRIVATE'
-                    ? Trace.CachePolicy.Scope.PRIVATE
-                    : policyIfCacheable.scope === 'PUBLIC'
-                    ? Trace.CachePolicy.Scope.PUBLIC
-                    : Trace.CachePolicy.Scope.UNKNOWN,
-                // Convert from seconds to ns.
-                maxAgeNs: policyIfCacheable.maxAge * 1e9,
-              });
-            }
-
-            // If this was a federated operation and we're the gateway, add the query plan
-            // to the trace.
-            if (metrics.queryPlanTrace) {
-              treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
-            }
-
-            // Intentionally un-awaited so as not to block the response.  Any
-            // errors will be logged, but will not manifest a user-facing error.
-            // The logger in this case is a request specific logger OR the logger
-            // defined by the plugin if that's unavailable.  The request-specific
-            // logger is preferred since this is very much coupled directly to a
-            // client-triggered action which might be more granularly tagged by
-            // logging implementations.
-            addTrace().catch(logger.error);
-
-            async function addTrace(): Promise<void> {
-              // Ignore traces that come in after stop().
-              if (stopped) {
-                return;
-              }
-
-              // Ensure that the caller of addTrace (which does not await it) is
-              // not blocked. We use setImmediate rather than process.nextTick or
-              // just relying on the Promise microtask queue because setImmediate
-              // comes after IO, which is what we want.
-              await new Promise((res) => setImmediate(res));
-
-              const executableSchemaId =
-                overriddenExecutableSchemaId ??
-                executableSchemaIdForSchema(schema);
-
-              const reportData = getReportData(executableSchemaId);
-              const { report } = reportData;
-              const { trace } = treeBuilder;
-
-              let statsReportKey: string | undefined = undefined;
-              let referencedFieldsByType: ReferencedFieldsByType;
-              if (!requestContext.document) {
-                statsReportKey = `## GraphQLParseFailure\n`;
-              } else if (graphqlValidationFailure) {
-                statsReportKey = `## GraphQLValidationFailure\n`;
-              } else if (graphqlUnknownOperationName) {
-                statsReportKey = `## GraphQLUnknownOperationName\n`;
-              }
-
-              const isExecutable = statsReportKey === undefined;
-
-              if (statsReportKey) {
-                if (options.sendUnexecutableOperationDocuments) {
-                  trace.unexecutedOperationBody = requestContext.source;
-                  // Get the operation name from the request (which might not
-                  // correspond to an actual operation).
-                  trace.unexecutedOperationName =
-                    requestContext.request.operationName || '';
-                }
-                referencedFieldsByType = Object.create(null);
-              } else {
-                const operationDerivedData = getOperationDerivedData();
-                statsReportKey = `# ${requestContext.operationName || '-'}\n${
-                  operationDerivedData.signature
-                }`;
-                referencedFieldsByType =
-                  operationDerivedData.referencedFieldsByType;
-              }
-
-              const protobufError = Trace.verify(trace);
-              if (protobufError) {
-                throw new Error(`Error encoding trace: ${protobufError}`);
-              }
-
-              if (resolvedOperation) report.operationCount++;
-
-              report.addTrace({
-                statsReportKey,
-                trace,
-                // We include the operation as a trace (rather than aggregated
-                // into stats) only if the user didn't set `sendTraces: false`
-                // *and* we believe it's possible that our organization's plan
-                // allows for viewing traces *and* we actually captured this as
-                // a full trace *and* sendOperationAsTrace says so.
-                //
-                // (As an edge case, if the reason metrics.captureTraces is
-                // falsey is that this is an unexecutable operation and thus we
-                // never ran the code in didResolveOperation that sets
-                // metrics.captureTrace, we allow it to be sent as a trace. This
-                // means we'll still send some parse and validation failures as
-                // traces, for the sake of the Errors page.)
-                asTrace:
-                  sendTraces &&
-                  (!isExecutable || !!metrics.captureTraces) &&
-                  sendOperationAsTrace(trace, statsReportKey),
-                referencedFieldsByType,
-              });
-
-              // If the buffer gets big (according to our estimate), send.
-              if (
-                sendReportsImmediately ||
-                report.sizeEstimator.bytes >=
-                  (options.maxUncompressedReportSize || 4 * 1024 * 1024)
-              ) {
-                await sendReportAndReportErrors(executableSchemaId);
-              }
-            }
-
-            // Calculates signature and referenced fields for the current document.
-            // Only call this when the document properly parses and validates and
-            // the given operation name (if any) is known!
-            function getOperationDerivedData(): OperationDerivedData {
-              if (!requestContext.document) {
-                // This shouldn't happen: no document means parse failure, which
-                // uses its own special statsReportKey.
-                throw new Error('No document?');
-              }
-
-              const cacheKey = operationDerivedDataCacheKey(
-                requestContext.queryHash,
-                requestContext.operationName || '',
-              );
-
-              // Ensure that the cache we have is for the right schema.
-              if (
-                !operationDerivedDataCache ||
-                operationDerivedDataCache.forSchema !== schema
-              ) {
-                operationDerivedDataCache = {
-                  forSchema: schema,
-                  cache: createOperationDerivedDataCache({ logger }),
-                };
-              }
-
-              // If we didn't have the signature in the cache, we'll resort to
-              // calculating it.
-              const cachedOperationDerivedData =
-                operationDerivedDataCache.cache.get(cacheKey);
-              if (cachedOperationDerivedData) {
-                return cachedOperationDerivedData;
-              }
-
-              const generatedSignature = (
-                options.calculateSignature || usageReportingSignature
-              )(requestContext.document, requestContext.operationName || '');
-
-              const generatedOperationDerivedData: OperationDerivedData = {
-                signature: generatedSignature,
-                referencedFieldsByType: calculateReferencedFieldsByType({
-                  document: requestContext.document,
-                  schema,
-                  resolvedOperationName: requestContext.operationName ?? null,
-                }),
-              };
-
-              // Note that this cache is always an in-memory cache.
-              // If we replace it with a more generic async cache, we should
-              // not await the write operation.
-              operationDerivedDataCache.cache.set(
-                cacheKey,
-                generatedOperationDerivedData,
-              );
-              return generatedOperationDerivedData;
+            // If there isn't any defer/stream coming later, we're done.
+            // Otherwise willSendSubsequentPayload will trigger
+            // operationFinished.
+            if (requestContext.response.body.kind === 'single') {
+              await operationFinished(requestContext);
             }
           },
         };
+
+        async function operationFinished(
+          requestContext: GraphQLRequestContextWillSendResponse<TContext>,
+        ) {
+          const resolvedOperation = !!requestContext.operation;
+
+          // If we got an error before we called didResolveOperation (eg parse or
+          // validation error), check to see if we should include the request.
+          await maybeCallIncludeRequestHook(requestContext);
+
+          treeBuilder.stopTiming();
+          const executableSchemaId =
+            overriddenExecutableSchemaId ?? executableSchemaIdForSchema(schema);
+          const reportData = getReportData(executableSchemaId);
+
+          if (includeOperationInUsageReporting === false) {
+            if (resolvedOperation) reportData.report.operationCount++;
+            return;
+          }
+
+          treeBuilder.trace.fullQueryCacheHit = !!metrics.responseCacheHit;
+          treeBuilder.trace.forbiddenOperation = !!metrics.forbiddenOperation;
+          treeBuilder.trace.registeredOperation = !!metrics.registeredOperation;
+
+          const policyIfCacheable =
+            requestContext.overallCachePolicy.policyIfCacheable();
+          if (policyIfCacheable) {
+            treeBuilder.trace.cachePolicy = new Trace.CachePolicy({
+              scope:
+                policyIfCacheable.scope === 'PRIVATE'
+                  ? Trace.CachePolicy.Scope.PRIVATE
+                  : policyIfCacheable.scope === 'PUBLIC'
+                  ? Trace.CachePolicy.Scope.PUBLIC
+                  : Trace.CachePolicy.Scope.UNKNOWN,
+              // Convert from seconds to ns.
+              maxAgeNs: policyIfCacheable.maxAge * 1e9,
+            });
+          }
+
+          // If this was a federated operation and we're the gateway, add the query plan
+          // to the trace.
+          if (metrics.queryPlanTrace) {
+            treeBuilder.trace.queryPlan = metrics.queryPlanTrace;
+          }
+
+          // Intentionally un-awaited so as not to block the response.  Any
+          // errors will be logged, but will not manifest a user-facing error.
+          // The logger in this case is a request specific logger OR the logger
+          // defined by the plugin if that's unavailable.  The request-specific
+          // logger is preferred since this is very much coupled directly to a
+          // client-triggered action which might be more granularly tagged by
+          // logging implementations.
+          addTrace().catch(logger.error);
+
+          async function addTrace(): Promise<void> {
+            // Ignore traces that come in after stop().
+            if (stopped) {
+              return;
+            }
+
+            // Ensure that the caller of addTrace (which does not await it) is
+            // not blocked. We use setImmediate rather than process.nextTick or
+            // just relying on the Promise microtask queue because setImmediate
+            // comes after IO, which is what we want.
+            await new Promise((res) => setImmediate(res));
+
+            const executableSchemaId =
+              overriddenExecutableSchemaId ??
+              executableSchemaIdForSchema(schema);
+
+            const reportData = getReportData(executableSchemaId);
+            const { report } = reportData;
+            const { trace } = treeBuilder;
+
+            let statsReportKey: string | undefined = undefined;
+            let referencedFieldsByType: ReferencedFieldsByType;
+            if (!requestContext.document) {
+              statsReportKey = `## GraphQLParseFailure\n`;
+            } else if (graphqlValidationFailure) {
+              statsReportKey = `## GraphQLValidationFailure\n`;
+            } else if (graphqlUnknownOperationName) {
+              statsReportKey = `## GraphQLUnknownOperationName\n`;
+            }
+
+            const isExecutable = statsReportKey === undefined;
+
+            if (statsReportKey) {
+              if (options.sendUnexecutableOperationDocuments) {
+                trace.unexecutedOperationBody = requestContext.source;
+                // Get the operation name from the request (which might not
+                // correspond to an actual operation).
+                trace.unexecutedOperationName =
+                  requestContext.request.operationName || '';
+              }
+              referencedFieldsByType = Object.create(null);
+            } else {
+              const operationDerivedData = getOperationDerivedData();
+              statsReportKey = `# ${requestContext.operationName || '-'}\n${
+                operationDerivedData.signature
+              }`;
+              referencedFieldsByType =
+                operationDerivedData.referencedFieldsByType;
+            }
+
+            const protobufError = Trace.verify(trace);
+            if (protobufError) {
+              throw new Error(`Error encoding trace: ${protobufError}`);
+            }
+
+            if (resolvedOperation) report.operationCount++;
+
+            report.addTrace({
+              statsReportKey,
+              trace,
+              // We include the operation as a trace (rather than aggregated
+              // into stats) only if the user didn't set `sendTraces: false`
+              // *and* we believe it's possible that our organization's plan
+              // allows for viewing traces *and* we actually captured this as
+              // a full trace *and* sendOperationAsTrace says so.
+              //
+              // (As an edge case, if the reason metrics.captureTraces is
+              // falsey is that this is an unexecutable operation and thus we
+              // never ran the code in didResolveOperation that sets
+              // metrics.captureTrace, we allow it to be sent as a trace. This
+              // means we'll still send some parse and validation failures as
+              // traces, for the sake of the Errors page.)
+              asTrace:
+                sendTraces &&
+                (!isExecutable || !!metrics.captureTraces) &&
+                sendOperationAsTrace(trace, statsReportKey),
+              referencedFieldsByType,
+            });
+
+            // If the buffer gets big (according to our estimate), send.
+            if (
+              sendReportsImmediately ||
+              report.sizeEstimator.bytes >=
+                (options.maxUncompressedReportSize || 4 * 1024 * 1024)
+            ) {
+              await sendReportAndReportErrors(executableSchemaId);
+            }
+          }
+
+          // Calculates signature and referenced fields for the current document.
+          // Only call this when the document properly parses and validates and
+          // the given operation name (if any) is known!
+          function getOperationDerivedData(): OperationDerivedData {
+            if (!requestContext.document) {
+              // This shouldn't happen: no document means parse failure, which
+              // uses its own special statsReportKey.
+              throw new Error('No document?');
+            }
+
+            const cacheKey = operationDerivedDataCacheKey(
+              requestContext.queryHash,
+              requestContext.operationName || '',
+            );
+
+            // Ensure that the cache we have is for the right schema.
+            if (
+              !operationDerivedDataCache ||
+              operationDerivedDataCache.forSchema !== schema
+            ) {
+              operationDerivedDataCache = {
+                forSchema: schema,
+                cache: createOperationDerivedDataCache({ logger }),
+              };
+            }
+
+            // If we didn't have the signature in the cache, we'll resort to
+            // calculating it.
+            const cachedOperationDerivedData =
+              operationDerivedDataCache.cache.get(cacheKey);
+            if (cachedOperationDerivedData) {
+              return cachedOperationDerivedData;
+            }
+
+            const generatedSignature = (
+              options.calculateSignature || usageReportingSignature
+            )(requestContext.document, requestContext.operationName || '');
+
+            const generatedOperationDerivedData: OperationDerivedData = {
+              signature: generatedSignature,
+              referencedFieldsByType: calculateReferencedFieldsByType({
+                document: requestContext.document,
+                schema,
+                resolvedOperationName: requestContext.operationName ?? null,
+              }),
+            };
+
+            // Note that this cache is always an in-memory cache.
+            // If we replace it with a more generic async cache, we should
+            // not await the write operation.
+            operationDerivedDataCache.cache.set(
+              cacheKey,
+              generatedOperationDerivedData,
+            );
+            return generatedOperationDerivedData;
+          }
+        }
       };
 
       return {

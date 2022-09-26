@@ -78,6 +78,7 @@ goofql
 graphiql
 graphqlcodegenerator
 GraphQLJSON
+gzipped
 hackily
 herokuapp
 Hofmann

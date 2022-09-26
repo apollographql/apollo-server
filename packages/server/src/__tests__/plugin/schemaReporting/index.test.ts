@@ -1,6 +1,7 @@
 import { ApolloServer } from '../../..';
 import { ApolloServerPluginUsageReportingDisabled } from '../../../plugin/disabled';
 import { ApolloServerPluginSchemaReporting } from '../../../plugin/schemaReporting';
+import { describe, it, expect } from '@jest/globals';
 
 describe('end-to-end', () => {
   it('fails for unparsable overrideReportedSchema', async () => {

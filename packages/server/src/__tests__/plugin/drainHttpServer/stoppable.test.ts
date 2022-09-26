@@ -38,6 +38,7 @@ import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import child from 'child_process';
 import path from 'path';
 import type { AddressInfo } from 'net';
+import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
 
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;

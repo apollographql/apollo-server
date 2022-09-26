@@ -25,6 +25,7 @@ import {
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting';
 import { ApolloServerPluginCacheControlDisabled } from '../../../plugin/disabled';
+import { describe, it, expect, afterEach } from '@jest/globals';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
@@ -111,10 +112,13 @@ describe('end-to-end', () => {
           async requestDidStart() {
             return {
               async willSendResponse({ response, metrics }) {
-                if (!response.result.extensions) {
-                  response.result.extensions = {};
+                if (!('singleResult' in response.body)) {
+                  throw Error('expected single result');
                 }
-                response.result.extensions.__metrics__ = metrics;
+                if (!response.body.singleResult.extensions) {
+                  response.body.singleResult.extensions = {};
+                }
+                response.body.singleResult.extensions.__metrics__ = metrics;
               },
             };
           },
@@ -154,9 +158,14 @@ describe('end-to-end', () => {
       schemaShouldBeInstrumented,
     );
 
+    if (!('singleResult' in response.body)) {
+      throw Error('expected single result');
+    }
+
     return {
       report,
-      metrics: response.result.extensions!.__metrics__ as GraphQLRequestMetrics,
+      metrics: response.body.singleResult.extensions!
+        .__metrics__ as GraphQLRequestMetrics,
     };
   }
 

@@ -1,0 +1,212 @@
+---
+title: "API Reference: startStandaloneServer"
+api_reference: true
+---
+
+This API reference documents the `startStandaloneServer` function.
+
+## Overview
+
+This `startStandaloneServer` function helps you get started with Apollo Server quickly. This function is recommended for all projects that don't require serverless support or a particular Node.js framework (such as Fastify). Under the hood, the `startStandaloneServer` function uses Apollo Server 4's Express integration (i.e., [`expressMiddleware`](./express-middleware)). 
+
+Because it sets helpful defaults, this function is less configurable than other Apollo Server integrations. Complex projects might eventually need to [swap to using `expressMiddleware`](#swapping-to-expressmiddleware) (this process is straightforward).
+
+## `startStandaloneServer`
+
+The `startStandaloneServer` function accepts two arguments. The first **required** argument is the instance of `ApolloServer` to begin listening for incoming requests:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+
+const server = new ApolloServer({ typeDefs, resolvers });
+
+// `startStandaloneServer` returns a `Promise` with the
+// the URL that the server is listening on.
+const { url } = await startStandaloneServer(server); //highlight-line
+``` 
+
+</MultiCodeBlock>
+
+The `startStandaloneServer` function's second optional argument is an object for configuring your server's options, which can contain the following properties:
+
+### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+
+<td>
+
+  ##### `context`
+
+  `Function`
+
+</td>
+
+<td>
+
+An optional asynchronous [`context` initialization function](../data/resolvers#the-context-argument). 
+
+The `context` function should return an object that all your server's resolvers share during an operation's execution. This enables resolvers to share helpful context values, such as a database connection.
+
+The `context` function receives `req` and `res` options which are `http.IncomingMessage` and `http.ServerResponse` types.
+
+</td>
+
+</tr>
+
+<tr>
+
+<td>
+
+  ##### `listen`
+
+  `Object`
+
+</td>
+
+<td>
+
+An optional `listen` configuration object. The `listen` option accepts an object with the same properties as the [`net.Server.listen` _options object_](https://nodejs.org/api/net.html#serverlistenoptions-callback).
+
+If no `port` is specified, this defaults to using `{port: 4000}`.
+</td>
+
+</tr>
+
+</tbody>
+</table>
+
+### Example 
+
+Below is a full example of setting up `startStandaloneServer`:
+
+<MultiCodeBlock>
+
+```ts
+// npm install @apollo/server graphql
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { typeDefs, resolvers } from './schema';
+
+interface MyContext {
+  token?: String;
+}
+
+async function startApolloServer() {
+  const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
+  const { url } = await startStandaloneServer(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+    listen: { port: 4000 },
+  });
+  console.log(`🚀  Server ready at ${url}`);
+}
+```
+
+</MultiCodeBlock>
+
+## Swapping to `expressMiddleware`
+
+The `startStandaloneServer` function is not right for every use case, particularly if you need to customize your server's behavior. For example, you might want to customize your CORS behavior, run some middleware before processing GraphQL requests, or serve other endpoints from the same server.
+
+In these cases, we recommend you swap out `startStandaloneServer` for `expressMiddleware` (unless you are confident that you want to use a different Node.js framework). This change requires only a few lines and has a minimal effect on your server's existing behavior (`startStandaloneServer` uses `expressMiddleware` under the hood).
+
+> We recommend Express because it's the most popular Node.js web framework, and it integrates well with many _other_ popular libraries. It does have its limitations (for example, Express async support is not built around `Promise`s and `async` functions), but backward incompatible changes to the framework are rarer than in newer libraries.
+
+### Example
+
+Let's say our current `startStandaloneServer` setup uses the following code:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import { typeDefs, resolvers } from './schema';
+
+interface MyContext {
+  token?: String;
+}
+
+async function startApolloServer() {
+  const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
+  const { url } = await startStandaloneServer(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+    listen: { port: 4000 },
+  });
+  console.log(`🚀  Server ready at ${url}`);
+}
+```
+</MultiCodeBlock>
+
+To swap to using `expressMiddleware`, you'll first need to install the following packages so you'll be able to set up HTTP body parsing and CORS for your server:
+
+```bash
+npm install express cors body-parser
+```
+
+Next, we can modify our code to match the following:
+
+<MultiCodeBlock>
+
+```ts
+// npm install @apollo/server express graphql cors body-parser
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import { typeDefs, resolvers } from './schema';
+
+interface MyContext {
+  token?: String;
+}
+
+async function startApolloServer() {
+  // Required logic for integrating with Express
+  const app = express();
+  // Our httpServer handles incoming requests to our Express app.
+  // Below, we tell Apollo Server to "drain" this httpServer,
+  // enabling our servers to shut down gracefully.
+  const httpServer = http.createServer(app);
+
+  // Same ApolloServer initialization as before, plus the drain plugin
+  // for our httpServer.
+  const server = new ApolloServer<MyContext>({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+  // Ensure we wait for our server to start
+  await server.start();
+
+  // Set up our Express middleware to handle CORS, body parsing,
+  // and our expressMiddleware function.
+  app.use('/',
+    cors<cors.CorsRequest>(),
+    bodyParser.json(),
+    // expressMiddleware accepts the same arguments:
+    // an Apollo Server instance and optional configuration options
+    expressMiddleware(server, {
+      context: async ({ req }) => ({ token: req.headers.token }),
+    }),
+  );
+
+  // Modified server startup
+  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000/`);
+}
+```
+</MultiCodeBlock>

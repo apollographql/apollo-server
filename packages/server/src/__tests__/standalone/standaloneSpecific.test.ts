@@ -1,5 +1,6 @@
 import { ApolloServer } from '../..';
 import { startStandaloneServer } from '../../standalone';
+import { describe, it } from '@jest/globals';
 
 describe('Typings: TContext inference', () => {
   it('correctly infers BaseContext when no `context` function is provided', async () => {

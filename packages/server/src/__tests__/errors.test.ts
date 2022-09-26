@@ -2,6 +2,7 @@ import { GraphQLError, GraphQLFormattedError } from 'graphql';
 import { unwrapResolverError } from '@apollo/server/errors';
 
 import { normalizeAndFormatErrors } from '../errorNormalize.js';
+import { jest, describe, it, expect } from '@jest/globals';
 
 describe('Errors', () => {
   describe('normalizeAndFormatErrors', () => {
@@ -55,7 +56,7 @@ describe('Errors', () => {
       const error = new GraphQLError(message, {
         extensions: { code, key },
       });
-      const formatError = jest.fn();
+      const formatError = jest.fn((fErr, _err) => fErr);
       normalizeAndFormatErrors([error], {
         formatError,
         includeStacktraceInErrorResponses: true,
@@ -114,10 +115,10 @@ describe('Errors', () => {
         expect(error.extensions?.exception).toHaveProperty('stacktrace');
         delete (error as any).extensions.exception.stacktrace;
         expect(error).toMatchInlineSnapshot(`
-          Object {
-            "extensions": Object {
+          {
+            "extensions": {
               "code": "INTERNAL_SERVER_ERROR",
-              "exception": Object {
+              "exception": {
                 "key": "value",
               },
             },
@@ -136,10 +137,10 @@ describe('Errors', () => {
         expect(errors).toHaveLength(1);
         const [error] = errors;
         expect(error).toMatchInlineSnapshot(`
-          Object {
-            "extensions": Object {
+          {
+            "extensions": {
               "code": "INTERNAL_SERVER_ERROR",
-              "exception": Object {
+              "exception": {
                 "key": "value",
               },
             },
