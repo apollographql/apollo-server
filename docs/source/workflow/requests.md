@@ -67,7 +67,7 @@ If you have enabled HTTP batching, you can send a batch of queries in a single `
 
 If you send a batched request, Apollo Server responds with a corresponding array of GraphQL responses.
 
-> Note: In the case of duplicate response headers across separate requests, the later request's header will take precedence on a per-header basis.
+> Note: If multiple operations in a request try to set the same HTTP response header ([via error extensions or plugins](../data/errors#setting-http-status-code-and-headers)), headers from later operations will take precedence on a per-header basis.
 
 ## GET requests
 

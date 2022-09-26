@@ -1134,11 +1134,9 @@ const result = await server.executeOperation({
   query: 'query helloContext { hello }',
 }, {
   // highlight-start
-  contextValue: {
-    // A half-hearted attempt at making something vaguely like an express.Request,
-    // and not bothering to make the express.Response at all.
-    req: { headers: { name: 'world' } },
-  }
+  // A half-hearted attempt at making something vaguely like an express.Request,
+  // and not bothering to make the express.Response at all.
+  req: { headers: { name: 'world' } },
   // highlight-end
 });
 
