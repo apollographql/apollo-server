@@ -1,5 +1,15 @@
 # @apollo/server
 
+## 4.0.0-alpha.13
+
+### Patch Changes
+
+- [#6936](https://github.com/apollographql/apollo-server/pull/6936) [`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update executeOperation second parameter to be an optional options object which includes an optional `contextValue`.
+
+- [#6936](https://github.com/apollographql/apollo-server/pull/6936) [`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - `HTTPGraphQLRequest` now uses a specific `HeaderMap` class which we export instead of allowing a standard `Map`. The `HeaderMap` downcases all incoming keys, as header names are not case-sensitive.
+
+- [#6936](https://github.com/apollographql/apollo-server/pull/6936) [`a404bf17e`](https://github.com/apollographql/apollo-server/commit/a404bf17e86d6f53588b2796c9190ad98779a6f9) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update `validationRules` typing for correctness. This is sort of a breaking change for TS users in that the types were more permissive than they should have been. All `validationRules` list items should conform to the `graphql-js` `ValidationRule` type.
+
 ## 4.0.0-alpha.12
 
 ### Patch Changes

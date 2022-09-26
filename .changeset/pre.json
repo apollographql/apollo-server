@@ -9,6 +9,7 @@
     "@apollo/server-plugin-landing-page-graphql-playground": "3.0.0"
   },
   "changesets": [
+    "big-kiwis-explain",
     "blue-bottles-jump",
     "chatty-baboons-search",
     "chilled-cows-drum",
@@ -18,8 +19,10 @@
     "famous-parents-argue",
     "fifty-peaches-bathe",
     "gorgeous-penguins-jog",
+    "healthy-deers-search",
     "healthy-glasses-reflect",
     "hip-cheetahs-fail",
+    "late-numbers-pull",
     "lazy-emus-hunt",
     "many-plums-smile",
     "neat-buckets-marry",
@@ -47,6 +50,7 @@
     "violet-mayflies-help",
     "wet-kiwis-play",
     "wet-rats-shake",
+    "witty-moles-fail",
     "witty-squids-vanish"
   ]
 }
