@@ -10,4 +10,8 @@ export class HeaderMap extends Map<string, string> {
   override delete(key: string) {
     return super.delete(key.toLowerCase());
   }
+
+  override has(key: string) {
+    return super.has(key.toLowerCase());
+  }
 }
