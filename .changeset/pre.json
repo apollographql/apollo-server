@@ -2,11 +2,11 @@
   "mode": "pre",
   "tag": "rc",
   "initialVersions": {
-    "@apollo/server-integration-testsuite": "3.6.7",
-    "@apollo/server-plugin-response-cache": "3.6.7",
-    "@apollo/server": "3.6.7",
-    "@apollo/usage-reporting-protobuf": "3.3.1",
-    "@apollo/server-plugin-landing-page-graphql-playground": "3.0.0"
+    "@apollo/server-integration-testsuite": "4.0.0-alpha.13",
+    "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0-alpha.0",
+    "@apollo/server-plugin-response-cache": "4.0.0-alpha.5",
+    "@apollo/server": "4.0.0-alpha.13",
+    "@apollo/usage-reporting-protobuf": "4.0.0-alpha.1"
   },
   "changesets": [
     "big-kiwis-explain",
