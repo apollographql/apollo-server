@@ -506,13 +506,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
             const res = await request(url)
               .post('/')
               .send({ query: '{__typename}' });
-            // TODO(AS4): This is currently throwing from
-            // executeHTTPGraphQLRequest but should instead be formatted either
-            // as text/plain or application/json.
             expect(res.status).toEqual(500);
-            expect(res.text).toMatch(
-              /This data graph is missing a valid configuration. More details may be available in the server logs./,
+            expect(res.header['content-type']).toMatchInlineSnapshot(
+              `"application/json; charset=utf-8"`,
             );
+            expect(res.text).toMatchInlineSnapshot(`
+              "{"errors":[{"message":"This data graph is missing a valid configuration. More details may be available in the server logs.","extensions":{"code":"INTERNAL_SERVER_ERROR"}}]}
+              "
+            `);
 
             // The error is logged once immediately when startup fails, and
             // again during the request.
@@ -2776,7 +2777,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
         );
       });
 
-      // TODO(AS4): delete this test eventually?
+      // We can remove this test after the initial AS4 release once we stop supporting
+      // the playground package.
       it('can install playground with specific version', async () => {
         url = (
           await createServer({
