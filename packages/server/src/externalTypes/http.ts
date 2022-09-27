@@ -1,6 +1,10 @@
+/**
+ * This file exports types related to GraphQL execution with respect to HTTP.
+ * These types define the inputs and outputs for `executeHTTPGraphQLRequest` and
+ * are most interesting for integration authors.
+ */
 import type { HeaderMap } from '../utils/HeaderMap.js';
 
-// TODO(AS4): Document this interface.
 export interface HTTPGraphQLRequest {
   // capitalized (GET, POST, etc)
   method: string;
@@ -22,14 +26,15 @@ export interface HTTPGraphQLRequest {
 
 export interface HTTPGraphQLHead {
   status?: number;
-  // TODO(AS4): need to figure out what headers this includes (eg JSON???)
   headers: HeaderMap;
 }
 
-// TODO(AS4): document why we chose strings as output. (tl;dr: consistent
-// rather than flexible JSON output. Can represent landing page. We can
-// always add another entry point that returns un-serialized responses
-// later.) Although maybe should be Buffer instead?
+/**
+ * Here we use `string`s for the response body since the response can be either
+ * HTML (for the landing page - see `executeHTTPGraphQLRequest`) or JSON (for a
+ * GraphQL response). Based on `headers` and `method` on the request, we know
+ * how to correctly interpret the response body.
+ */
 export type HTTPGraphQLResponseBody =
   | { kind: 'complete'; string: string }
   | { kind: 'chunked'; asyncIterator: AsyncIterableIterator<string> };
