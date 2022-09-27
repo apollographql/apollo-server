@@ -631,7 +631,7 @@ Below are the available fields for the first argument of `executeOperation`:
 
 <td>
 
-**Required**. The GraphQL operation to run. Note that you must use the `query` field even if the operation is a mutation.
+**Required**. The GraphQL operation to run. Note that you must use the `query` field even if the operation is a mutation. This may also be a [`TypedQueryDocumentNode`](https://github.com/graphql/graphql-js/blob/main/src/utilities/typedQueryDocumentNode.ts), in which case TypeScript types for the `variables` option and `response.body.singleResult.data` will be automatically inferred.
 
 </td>
 </tr>
