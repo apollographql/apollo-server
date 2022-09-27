@@ -1,6 +1,6 @@
 {
   "mode": "pre",
-  "tag": "alpha",
+  "tag": "rc",
   "initialVersions": {
     "@apollo/server-integration-testsuite": "3.6.7",
     "@apollo/server-plugin-response-cache": "3.6.7",
