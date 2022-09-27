@@ -39,11 +39,11 @@ Below is an example of a data source class that connects to a database:
 ```ts title="bookings.ts"
 export class BookingsDataSource {
   private dbConnection;
-  private context;
+  private token;
 
-  constructor(options: { context: { token: string } }) {
+  constructor(options: { contextValue: { token: string } }) {
     this.dbConnection = this.initializeDBConnection();
-    this.context = options.context;
+    this.token = options.contextValue.token;
   }
 
   async initializeDBConnection() {
@@ -53,7 +53,12 @@ export class BookingsDataSource {
   }
 
   async getBooking(bookingId) {
-    return await this.db.Booking.findByPk(bookingId);
+    const user = await getUser(this.token);
+    if (user) {
+      return await this.dbConnection.Booking.findByPk(bookingId);
+    } else {
+      // handle invalid user
+    }
   }
 
   //... more methods for finding and creating bookings
@@ -92,11 +97,11 @@ const { url } = await startStandaloneServer(server, {
     const token = req.headers.token;
     return {
       // We create new instances of our data sources with each request.
-      // We can pass in our server's cache, context, or any other
+      // We can pass in our server's cache, contextValue, or any other
       // info our data sources require. 
       // highlight-start
       dataSources: {
-        dogsDB: new DogsDataSource({ cache, context: token }),
+        dogsDB: new DogsDataSource({ cache, contextValue: token }),
         catsApi: new CatsAPI({ cache }),
       },
       //highlight-end
@@ -115,7 +120,7 @@ Apollo Server calls [the `context` initialization](./resolvers/#the-context-argu
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
 - The **`context` function should create a new instance of each data source class for each operation.** You might accidentally combine results from multiple operations if multiple operations share a single data source instance.
 
-Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
+Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
 ```ts title="resolvers.ts"
 const resolvers = {
@@ -155,7 +160,7 @@ The larger community maintains the following open-source implementations:
 
 ### Using `DataSource` subclasses
 
-In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, context })` method on each new `DataSource` behind the scenes.
+In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, contextValue })` method on each new `DataSource` behind the scenes.
 
 To replicate this in Apollo Sever 4, you can manually invoke the `initialize` method in the constructor function of each `DataSource` subclass, like so:
 
@@ -171,13 +176,15 @@ import { HTTPDataSource } from 'apollo-datasource-http';
 class BooksAPI extends HTTPDataSource {
   override baseURL = 'https://movies-api.example.com/';
 
-  constructor(options: { cache: KeyValueCache<string>; context: string }) { //highlight-line
+  //highlight-start
+  constructor(options: { cache: KeyValueCache<string>; contextValue: string }) {
+  //highlight-end
     // the necessary arguments for HTTPDataSource
     const pool = new Pool(baseURL);
     super(baseURL, { pool });
 
     // We need to call the initialize method in our data source's
-    // constructor, passing in our cache and context.
+    // constructor, passing in our cache and contextValue.
     this.initialize(options); //highlight-line
   }
 
@@ -205,7 +212,7 @@ const { url } = await startStandaloneServer(server, {
     const token = req.headers.token;
     return {
       dataSources: {
-        moviesApi: new MoviesAPI({ cache, context: token }),
+        moviesApi: new MoviesAPI({ cache, contextValue: token }),
       },
     //highlight-end
       token 
