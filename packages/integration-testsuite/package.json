@@ -44,7 +44,7 @@
   "peerDependencies": {
     "@apollo/server": "^4.0.0-alpha.13",
     "@jest/globals": "28.x || 29.x",
-    "graphql": "^16.5.0",
+    "graphql": "^16.6.0",
     "jest": "28.x || 29.x"
   },
   "volta": {
