@@ -428,14 +428,9 @@ const { url } = await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-> This example assumes you're using either the `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. The fields of the object passed to your `context` function might differ if you're using a different integration.
+> This example assumes you're using either the `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. The fields of the object passed to your `context` function might differ if you're [using a different integration](../integrations/integration-index).
 
 The `context` function should be *asynchronous* and return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
-
-<!-- TODO (AS4): update these links once we have an article with other integration functions
-
-[For more details on Apollo Server integrations, see [Choosing an Apollo Server package](/apollo-server/api/apollo-server/#middleware-specific-context-fields).
--->
 
 Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
 

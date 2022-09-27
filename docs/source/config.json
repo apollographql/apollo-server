@@ -21,7 +21,8 @@
       "Error handling": "/data/errors",
       "Subscriptions": "/data/subscriptions"
     },
-    "Server frameworks": {
+    "Web frameworks": {
+      "Integrations": "/integrations/integration-index",
       "Building integrations": "/integrations/building-integrations"
     },
     "Development Workflow": {
