@@ -8,9 +8,10 @@ import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLError, GraphQLResolveInfo, GraphQLSchema } from 'graphql';
 import type { ApolloConfig } from './constructor.js';
 import type { BaseContext } from './context.js';
-import type { GraphQLRequestContext, GraphQLResponse } from './graphql.js';
+import type { GraphQLResponse } from './graphql.js';
 import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult } from './incrementalDeliveryPolyfill.js';
 import type {
+  GraphQLRequestContext,
   GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestContextDidEncounterSubsequentErrors,
   GraphQLRequestContextDidResolveOperation,
