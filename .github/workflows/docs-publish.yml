@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - version-2
+      - version-4
     paths:
       - docs/**
 
