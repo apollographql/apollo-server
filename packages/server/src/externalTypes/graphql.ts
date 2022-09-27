@@ -17,10 +17,12 @@ import type {
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
 } from './incrementalDeliveryPolyfill.js';
 
-export interface GraphQLRequest {
+export interface GraphQLRequest<
+  TVariables extends VariableValues = VariableValues,
+> {
   query?: string;
   operationName?: string;
-  variables?: VariableValues;
+  variables?: TVariables;
   extensions?: Record<string, any>;
   http?: HTTPGraphQLRequest;
 }
@@ -32,10 +34,10 @@ export type VariableValues = { [name: string]: any };
 // GraphQL operation uses incremental delivery directives such as `@defer` or
 // `@stream`. Note that incremental delivery currently requires using a
 // pre-release of graphql-js v17.
-export type GraphQLResponseBody =
+export type GraphQLResponseBody<TData = Record<string, unknown>> =
   | {
       kind: 'single';
-      singleResult: FormattedExecutionResult;
+      singleResult: FormattedExecutionResult<TData>;
     }
   | {
       kind: 'incremental';
@@ -43,12 +45,15 @@ export type GraphQLResponseBody =
       subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>;
     };
 
-export type GraphQLInProgressResponse = {
+export type GraphQLInProgressResponse<TData = Record<string, unknown>> = {
   http: HTTPGraphQLHead;
-  body?: GraphQLResponseBody;
+  body?: GraphQLResponseBody<TData>;
 };
 
-export type GraphQLResponse = WithRequired<GraphQLInProgressResponse, 'body'>;
+export type GraphQLResponse<TData = Record<string, unknown>> = WithRequired<
+  GraphQLInProgressResponse<TData>,
+  'body'
+>;
 
 export interface GraphQLRequestMetrics {
   // It would be more accurate to call this fieldLevelInstrumentation (it is

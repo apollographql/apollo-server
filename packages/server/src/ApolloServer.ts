@@ -11,6 +11,7 @@ import {
   GraphQLSchema,
   ParseOptions,
   print,
+  TypedQueryDocumentNode,
   ValidationContext,
   ValidationRule,
 } from 'graphql';
@@ -64,7 +65,10 @@ import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constr
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
 import { HeaderMap } from './utils/HeaderMap.js';
-import type { ExecuteOperationOptions } from './externalTypes/graphql.js';
+import type {
+  ExecuteOperationOptions,
+  VariableValues,
+} from './externalTypes/graphql.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {
@@ -1080,26 +1084,44 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
    *
    * The second object is an optional options object which includes the optional
    * `contextValue` object available in resolvers.
+   *
+   * You may specify the TData and TVariables generic types when calling this
+   * method; Apollo Server does not validate that the returned data actually
+   * matches the structure of TData. (Typically these types are created by a
+   * code generation tool.) Note that this does not enforce that `variables` is
+   * provided at all, just that it has the right type if provided.
    */
-  public async executeOperation(
+  public async executeOperation<
+    TData = Record<string, unknown>,
+    TVariables extends VariableValues = VariableValues,
+  >(
     this: ApolloServer<BaseContext>,
-    request: Omit<GraphQLRequest, 'query'> & {
-      query?: string | DocumentNode;
+    request: Omit<GraphQLRequest<TVariables>, 'query'> & {
+      query?: string | DocumentNode | TypedQueryDocumentNode<TData, TVariables>;
     },
-  ): Promise<GraphQLResponse>;
-  public async executeOperation(
-    request: Omit<GraphQLRequest, 'query'> & {
-      query?: string | DocumentNode;
+  ): Promise<GraphQLResponse<TData>>;
+  public async executeOperation<
+    TData = Record<string, unknown>,
+    TVariables extends VariableValues = VariableValues,
+  >(
+    request: Omit<GraphQLRequest<TVariables>, 'query'> & {
+      query?: string | DocumentNode | TypedQueryDocumentNode<TData, TVariables>;
     },
     options?: ExecuteOperationOptions<TContext>,
-  ): Promise<GraphQLResponse>;
+  ): Promise<GraphQLResponse<TData>>;
 
-  async executeOperation(
-    request: Omit<GraphQLRequest, 'query'> & {
-      query?: string | DocumentNode;
+  async executeOperation<
+    TData = Record<string, unknown>,
+    TVariables extends VariableValues = VariableValues,
+  >(
+    request: Omit<GraphQLRequest<TVariables>, 'query'> & {
+      // We should consider supporting TypedDocumentNode from
+      // `@graphql-typed-document-node/core` as well, as it is more popular than
+      // the newer built-in type.
+      query?: string | DocumentNode | TypedQueryDocumentNode<TData, TVariables>;
     },
     options: ExecuteOperationOptions<TContext> = {},
-  ): Promise<GraphQLResponse> {
+  ): Promise<GraphQLResponse<TData>> {
     // Since this function is mostly for testing, you don't need to explicitly
     // start your server before calling it. (That also means you can use it with
     // `apollo-server` which doesn't support `start()`.)
@@ -1121,7 +1143,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           : request.query,
     };
 
-    return await internalExecuteOperation(
+    const response: GraphQLResponse = await internalExecuteOperation(
       {
         server: this,
         graphQLRequest,
@@ -1130,6 +1152,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       },
       options,
     );
+
+    // It's your job to set an appropriate TData (perhaps using codegen); we
+    // don't validate it.
+    return response as GraphQLResponse<TData>;
   }
 }
 

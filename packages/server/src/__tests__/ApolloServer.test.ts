@@ -1,6 +1,12 @@
 import { ApolloServer, HeaderMap } from '..';
 import type { ApolloServerOptions } from '..';
-import { FormattedExecutionResult, GraphQLError, GraphQLSchema } from 'graphql';
+import {
+  FormattedExecutionResult,
+  GraphQLError,
+  GraphQLSchema,
+  parse,
+  TypedQueryDocumentNode,
+} from 'graphql';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
@@ -566,4 +572,52 @@ describe('ApolloServer addPlugin', () => {
     );
     await server.stop();
   });
+});
+
+it('TypedQueryDocumentNode', async () => {
+  const server = new ApolloServer({
+    typeDefs: `type Query {
+    foo(arg: Int!): String
+  }`,
+    resolvers: {
+      Query: {
+        foo(_, { arg }) {
+          return `yay ${arg}`;
+        },
+      },
+    },
+  });
+  await server.start();
+
+  const query = parse(
+    'query Q($a: Int!) {foo(arg: $a)}',
+  ) as TypedQueryDocumentNode<{ foo: string | null }, { a: number }>;
+
+  const response = await server.executeOperation({
+    query,
+    variables: { a: 1 },
+  });
+  assert(response.body.kind === 'single');
+  expect(response.body.singleResult.data?.foo).toBe('yay 1');
+  // bar is not part of the data type.
+  // @ts-expect-error
+  expect(response.body.singleResult.data?.bar).toBe(undefined);
+
+  if (1 + 1 === 3) {
+    // We just want to type-check this part, not run it.
+    await server.executeOperation({
+      query,
+      // @ts-expect-error
+      variables: { a: 'asdf' },
+    });
+    await server.executeOperation({
+      query,
+      // @ts-expect-error
+      variables: {},
+    });
+
+    // Note that we don't detect providing extra variables or not providing
+    // variables at all when some are required, though it would be nice to fix
+    // that.
+  }
 });
