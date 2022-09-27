@@ -17,9 +17,6 @@ export interface ExpressMiddlewareOptions<TContext extends BaseContext> {
   context?: ContextFunction<[ExpressContextFunctionArgument], TContext>;
 }
 
-// TODO(AS4): Figure out exact naming (eg is this Express-specific or just Node
-// HTTP?)
-// TODO(AS4): Write compilation tests about the context optionality stuff.
 export function expressMiddleware(
   server: ApolloServer<BaseContext>,
   options?: ExpressMiddlewareOptions<BaseContext>,

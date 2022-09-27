@@ -1,7 +1,7 @@
 import express from 'express';
 import request from 'supertest';
 import compression, { filter as defaultFilter } from 'compression';
-import { ApolloServer } from '../../index.js';
+import { ApolloServer, BaseContext } from '../../index.js';
 import { expressMiddleware } from '../../express4/index.js';
 import { it, expect } from '@jest/globals';
 import resolvable from '@josephg/resolvable';
@@ -27,6 +27,27 @@ it('not calling start causes a clear error', async () => {
   expect(() => expressMiddleware(server)).toThrow(
     'You must `await server.start()`',
   );
+});
+
+it('context optional only if TContext=BaseContext', async () => {
+  const baseContextServer = new ApolloServer<BaseContext>({
+    typeDefs: 'type Query{x:ID}',
+  });
+  await baseContextServer.start();
+  const differentContextServer = new ApolloServer<{ x: number }>({
+    typeDefs: 'type Query{x:ID}',
+  });
+  await differentContextServer.start();
+
+  // This is a typechecking test, so we don't actually do anything with these
+  // middlewares.
+  expressMiddleware(baseContextServer);
+  expressMiddleware(baseContextServer, { context: async () => ({}) });
+  expressMiddleware(differentContextServer, {
+    context: async () => ({ x: 5 }),
+  });
+  // @ts-expect-error
+  expressMiddleware(differentContextServer);
 });
 
 // This test validates that you can use incremental delivery with the
