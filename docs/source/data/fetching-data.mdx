@@ -24,7 +24,7 @@ flowchart LR;
   client --Sends query--> ApolloServer;
 ```
 
-Because your server can use any number of various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important. 
+Because your server can multiple various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important. 
 
 For this reason, we recommend creating individual data source classes to encapsulate the logic of fetching data from a particular source, providing methods that resolvers can use to access data neatly. You can additionally customize your data source classes to help with caching, deduplication, or errors while resolving operations.
 
