@@ -260,4 +260,6 @@ res.end();
 
 ## Additional resources
 
-The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations.
+For those _building_ a new integration library, we recommend that your repository lives within Apollo's [`apollo-server-integrations`](https://github.com/apollo-server-integrations) Github organization alongside other Apollo Server integrations. If you are _publishing_ a new integration package, we recommend publishing under the `@as-integrations` scope to ensure your integration is discoverable for other Apollo Server users. 
+
+The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations. 
