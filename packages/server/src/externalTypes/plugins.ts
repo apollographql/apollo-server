@@ -1,3 +1,8 @@
+/**
+ * The types defined in this file are useful to plugin authors. In particular,
+ * defining a plugin as an `ApolloServerPlugin` will provide typings for all of
+ * the hooks that are available to a plugin.
+ */
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { Logger } from '@apollo/utils.logger';
 import type { GraphQLError, GraphQLResolveInfo, GraphQLSchema } from 'graphql';
@@ -24,8 +29,6 @@ export interface GraphQLServerContext {
 
   schema: GraphQLSchema;
   apollo: ApolloConfig;
-  // TODO(AS4): Make sure we document that we removed `persistedQueries`.
-  // TODO(AS4): Note change of serverlessFramework to startedInBackground.
   startedInBackground: boolean;
 }
 
@@ -37,15 +40,25 @@ export interface GraphQLSchemaContext {
 export interface ApolloServerPlugin<
   in TContext extends BaseContext = BaseContext,
 > {
+  // Called once on server startup, after the schema has been loaded.
   serverWillStart?(
     service: GraphQLServerContext,
   ): Promise<GraphQLServerListener | void>;
 
+  // Called once per request, before parsing or validation of the request has
+  // occurred. This hook can return an object of more fine-grained hooks (see
+  // `GraphQLRequestListener`) which pertain to the lifecycle of the request.
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
   ): Promise<GraphQLRequestListener<TContext> | void>;
 
-  // TODO(AS4): Document all these.
+  /**
+   * "Unexpected" errors do not include more common errors like validation,
+   * parsing, or graphql execution errors. Rather, an unexpected error might
+   * occur when a plugin hook throws unexpectedly or a bug in Apollo Server is
+   * encountered. Notably, when errors like this occur, the error is masked to
+   * the client.
+   */
   unexpectedErrorProcessingRequest?({
     requestContext,
     error,
@@ -53,12 +66,24 @@ export interface ApolloServerPlugin<
     requestContext: GraphQLRequestContext<TContext>;
     error: Error;
   }): Promise<void>;
+  // Called specifically when the user-provided `context` function throws an
+  // error.
   contextCreationDidFail?({ error }: { error: Error }): Promise<void>;
+  /**
+   * This hook is called any time a "Bad Request" error is thrown during request
+   * execution. This includes CSRF prevention and malformed requests (e.g.
+   * incorrect headers, invalid JSON body, or invalid search params for GET),
+   * but does not include malformed GraphQL.
+   */
   invalidRequestWasReceived?({ error }: { error: Error }): Promise<void>;
+  // Called on startup fail. This can occur if the schema fails to load or if a
+  // `serverWillStart` or `renderLandingPage` hook throws.
   startupDidFail?({ error }: { error: Error }): Promise<void>;
 }
 
 export interface GraphQLServerListener {
+  // Called on server startup after a successful schema load and on successful
+  // schema updates when running in `gateway` mode.
   schemaDidLoadOrUpdate?(schemaContext: GraphQLSchemaContext): void;
 
   // When your server is stopped (by calling `stop()` or via the

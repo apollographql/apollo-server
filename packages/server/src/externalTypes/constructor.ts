@@ -1,3 +1,9 @@
+/**
+ * This file consists of types used to define the arguments to the ApolloServer
+ * constructor. The top-level and likely most interesting type exported from
+ * here is `ApolloServerOptions` which is used to define the input object to the
+ * `ApolloServer` constructor.
+ */
 import type { Logger } from '@apollo/utils.logger';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
@@ -72,7 +78,6 @@ export interface CSRFPreventionOptions {
   requestHeaders?: string[];
 }
 
-// TODO(AS4): Organize this.
 interface ApolloServerOptionsBase<TContext extends BaseContext> {
   formatError?: (
     formattedError: GraphQLFormattedError,

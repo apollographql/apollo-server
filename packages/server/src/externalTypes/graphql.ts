@@ -1,3 +1,9 @@
+/**
+ * This file exports types related specifically to GraphQL execution, most
+ * notably `GraphQLRequest` and `GraphQLResponse`, used most heavily by
+ * `executeHTTPGraphQLRequest` and `executeOperation`. The
+ * `responseForOperation` plugin hook also returns a `GraphQLResponse`.
+ */
 import type { Trace } from '@apollo/usage-reporting-protobuf';
 import type {
   DocumentNode,
