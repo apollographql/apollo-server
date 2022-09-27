@@ -1,6 +1,6 @@
 {
   "title": "Apollo Server",
-  "version": "v4 (Alpha)",
+  "version": "v4 (Release Candidate)",
   "algoliaFilters": ["docset:server", ["docset:react", "docset:federation"]],
   "sidebar": {
     "Introduction": "/",
