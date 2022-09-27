@@ -168,6 +168,11 @@
       matchPackageNames: ["jest", "jest-config", "ts-jest", "@types/jest", ],
       matchBaseBranches: ["main"],
       allowedVersions: "28.x"
-    }
+    },
+    {
+      // We're uncomfortable running TS4.8 until this bug is fixed: https://github.com/microsoft/TypeScript/issues/50959
+      matchPackageNames: ["typescript"],
+      allowedVersions: "4.7.x",
+    },
   ]
 }
