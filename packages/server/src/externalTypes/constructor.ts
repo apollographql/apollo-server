@@ -33,8 +33,6 @@ export interface ApolloConfigInput {
   // backwards compatibility, may alternatively specify the ref as graphId and
   // graphVariant separately.
   graphRef?: string;
-  // TODO(AS4): Consider dropping support for specifying ID and variant separately.
-  //
   // The graph ID of your graph, eg `my-graph`. Environment variable:
   // APOLLO_GRAPH_ID.
   graphId?: string;
