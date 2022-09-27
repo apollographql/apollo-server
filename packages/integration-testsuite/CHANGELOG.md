@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-rc.14
+
+### Patch Changes
+
+- [#6961](https://github.com/apollographql/apollo-server/pull/6961) [`a782c791f`](https://github.com/apollographql/apollo-server/commit/a782c791f4f616e36a0036dcabb4d928a7c3f871) Thanks [@glasser](https://github.com/glasser)! - Require graphql@16.6 as a peer dependency.
+
+- Updated dependencies [[`a782c791f`](https://github.com/apollographql/apollo-server/commit/a782c791f4f616e36a0036dcabb4d928a7c3f871), [`d3ea2d4ef`](https://github.com/apollographql/apollo-server/commit/d3ea2d4ef137519d073185dea778e39e89a301c2)]:
+  - @apollo/server@4.0.0-rc.14
+
 ## 4.0.0-alpha.13
 
 ### Patch Changes
