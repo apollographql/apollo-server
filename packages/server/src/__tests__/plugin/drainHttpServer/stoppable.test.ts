@@ -26,9 +26,6 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
-// TODO(AS4): Figure out a way to usefully test the grace period behavior without
-//   leading to flakiness due to speed variation.
-
 import http from 'http';
 import https from 'https';
 const a: any = require('awaiting');
@@ -216,6 +213,9 @@ Object.keys(schemes).forEach((schemeName) => {
       const closeEventPromise = a.event(server, 'close');
       const gracefully = await stopper.stop(500);
       await closeEventPromise;
+      // These tests are a bit flakey; we should figure out a way to usefully
+      // test the grace period behavior without leading to flakiness due to
+      // speed variation.
       const elapsed = Date.now() - start;
       expect(elapsed).toBeGreaterThanOrEqual(450);
       expect(elapsed).toBeLessThanOrEqual(550);
@@ -251,6 +251,9 @@ Object.keys(schemes).forEach((schemeName) => {
       const bodies = await Promise.all(res.map((r) => r.text()));
       await closeEventPromise;
       expect(bodies[0]).toBe('helloworld');
+      // These tests are a bit flakey; we should figure out a way to usefully
+      // test the grace period behavior without leading to flakiness due to
+      // speed variation.
       const elapsed = Date.now() - start;
       expect(elapsed).toBeGreaterThanOrEqual(400);
       expect(elapsed).toBeLessThanOrEqual(600);
@@ -270,6 +273,9 @@ Object.keys(schemes).forEach((schemeName) => {
         ).agent(scheme.agent({ keepAlive: true }));
         const body = await res.text();
         expect(body).toBe('helloworld');
+        // These tests are a bit flakey; we should figure out a way to usefully
+        // test the grace period behavior without leading to flakiness due to
+        // speed variation.
         const elapsed = Date.now() - start;
         expect(elapsed).toBeGreaterThanOrEqual(150);
         expect(elapsed).toBeLessThanOrEqual(350);

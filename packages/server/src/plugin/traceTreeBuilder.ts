@@ -12,7 +12,7 @@ function internalError(message: string) {
 
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
-  private logger: Logger = console; // TODO(AS4): why have this default?
+  private logger: Logger;
   public trace = new Trace({
     root: this.rootNode,
     // By default, each trace counts as one operation for the sake of field
@@ -35,7 +35,7 @@ export class TraceTreeBuilder {
 
   public constructor(options: {
     maskedBy: string;
-    logger?: Logger;
+    logger: Logger;
     sendErrors?: SendErrorsOptions;
   }) {
     const { logger, sendErrors, maskedBy } = options;
@@ -51,7 +51,7 @@ export class TraceTreeBuilder {
     } else {
       throw new UnreachableCaseError(sendErrors);
     }
-    if (logger) this.logger = logger;
+    this.logger = logger;
   }
 
   public startTiming() {

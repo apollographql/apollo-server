@@ -134,14 +134,12 @@ export async function runHttpQuery<TContext extends BaseContext>(
       ensureQueryIsStringOrMissing(httpRequest.body.query);
 
       if (typeof httpRequest.body.variables === 'string') {
-        // TODO(AS4): make sure we note this change in migration
         throw new BadRequestError(
           '`variables` in a POST body should be provided as an object, not a recursively JSON-encoded string.',
         );
       }
 
       if (typeof httpRequest.body.extensions === 'string') {
-        // TODO(AS4): make sure we note this change in migration
         throw new BadRequestError(
           '`extensions` in a POST body should be provided as an object, not a recursively JSON-encoded string.',
         );
