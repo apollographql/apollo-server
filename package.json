@@ -45,7 +45,7 @@
     "@apollo/utils.createhash": "1.1.0",
     "@changesets/changelog-github": "0.4.6",
     "@changesets/cli": "2.24.4",
-    "@graphql-codegen/cli": "2.12.2",
+    "@graphql-codegen/cli": "2.13.0",
     "@graphql-codegen/typescript-operations": "2.5.3",
     "@graphql-tools/mock": "8.7.6",
     "@graphql-tools/schema": "9.0.4",
