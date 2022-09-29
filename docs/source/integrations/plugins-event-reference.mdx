@@ -270,7 +270,7 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      async startupDidFail(({ error })) {
+      async startupDidFail({ error }) {
         console.log(`Startup failed: ${error}`);
       },
     },
@@ -512,7 +512,7 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      async contextCreationDidFail(({ error })) {
+      async contextCreationDidFail({ error }) {
         console.log(`Context creation failed: ${error}`);
       },
     },
@@ -536,7 +536,7 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      async invalidRequestWasReceived(({ error })) {
+      async invalidRequestWasReceived({ error }) {
         console.log(`Bad request: ${error}`);
       },
     },
@@ -548,7 +548,7 @@ const server = new ApolloServer({
 
 ### `unexpectedErrorProcessingRequest`
 
-The `unexpectedErrorProcessingRequest` event fires whenever an "unexpected" error is thrown during request execution. "Unexpected" errors don't include common client data errors such as validation, parsing, or GraphQL execution errors. Instead, an unexpected error indicates a _programming_ error, such as a plugin hook throwing unexpectedly or Apollo Server encountering a bug. No matter the cause, Apollo Server masks this type of error from a client. 
+The `unexpectedErrorProcessingRequest` event fires whenever an "unexpected" error is thrown during request execution. "Unexpected" errors don't include common client data errors such as validation, parsing, or GraphQL execution errors. Instead, an unexpected error indicates a _programming_ error, such as a plugin hook throwing unexpectedly or Apollo Server encountering a bug. No matter the cause, Apollo Server masks this type of error from a client.
 
 Note this hook is on the top level of the plugin rather than on the object returned from `requestWillStart`, because this hook triggers if `requestWillStart` throws.
 
@@ -562,7 +562,7 @@ const server = new ApolloServer({
 
   plugins: [
     {
-      async unexpectedErrorProcessingRequest(({ requestContext,  error })) {
+      async unexpectedErrorProcessingRequest({ requestContext,  error }) {
         console.log(`Something went wrong: ${error}`);
       },
     },
