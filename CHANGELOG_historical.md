@@ -1,15 +1,45 @@
-# CHANGELOG
+# CHANGELOG for Apollo Server v0, v1, v2, and v3
 
-The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g., those which are not actual HTTP integrations; packages not prefixed with "`apollo-server`", or just supporting packages) may use different versions.
+This file describes the history of Apollo Server up to v3. The version headers in this history reflect the versions of Apollo Server itself.  Versions of other packages (e.g., those which are not actual HTTP integrations; packages not prefixed with "`apollo-server`", or just supporting packages) may use different versions.
 
-🆕 **Please Note!**: 🆕 **The `@apollo/federation` and `@apollo/gateway` packages now live in the [`apollographql/federation`](https://github.com/apollographql/federation) repository.**
+Starting with Apollo Server v4, this single monorepo CHANGELOG file is no longer maintained; see the `CHANGELOG.md` file in each package directory (such as [`packages/server/CHANGELOG.md`](https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md)) instead.
 
-- [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
-- [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
+## v3.10.2
 
-## vNEXT
+- `apollo-server-fastify`: Use `return reply.send` in handlers to match the pattern encouraged by Fastify 4 (although [`apollo-server-fastify@3` only works with Fastify 3](https://github.com/apollographql/apollo-server/issues/6576#issuecomment-1159249244)). [PR #6798](https://github.com/apollographql/apollo-server/pull/6798)
+- `apollo-datasource-rest@3.7.0`: Add option `memoizeGetRequests` to disable GET cache [PR #6650](https://github.com/apollographql/apollo-server/pull/6650) and [PR #6834](https://github.com/apollographql/apollo-server/pull/6834)
 
-- _Nothing yet! Stay tuned._
+## v3.10.1
+
+- ⚠️ **SECURITY**: The default landing page contained HTML to display a sample `curl` command which is made visible if the full landing page bundle could not be fetched from Apollo's CDN. The server's URL is directly interpolated into this command inside the browser from `window.location.href`. On some older browsers such as IE11, this value is not URI-encoded. On such browsers, opening a malicious URL pointing at an Apollo Router could cause execution of attacker-controlled JavaScript. In this release, the fallback page does not display a `curl` command. More details are available at the [security advisory](https://github.com/apollographql/apollo-server/security/advisories/GHSA-2fvv-qxrq-7jq6).
+- Improve error message when both a graph ref and a graph variant are specified. [PR #6709](https://github.com/apollographql/apollo-server/pull/6709)
+- Fix the TypeScript declaration of the `fieldLevelInstrumentation` option to `ApolloServerPluginUsageReporting` to show that the function may return a number in addition to a boolean. This now matches the implementation and docs. [PR #6763](https://github.com/apollographql/apollo-server/pull/6763)
+
+## v3.10.0
+
+- Add `document`, `variables`, `headers` as an option in the `ApolloServerPluginLandingPageLocalDefault` plugins. The embedded version of Apollo Sandbox can now use these options as an initial state. [PR #6628](https://github.com/apollographql/apollo-server/pull/6628)
+- Add `generateCacheKey` to `ApolloServerPluginResponseCache` to allow for custom cache keys. [PR #6655](https://github.com/apollographql/apollo-server/pull/6655)
+
+## v3.9.0
+
+- ⚠️ **SECURITY** `apollo-server-core`: The default configuration of Apollo Server is vulnerable to denial of service attacks via memory exhaustion. If you do not currently specify the `cache` option to `new ApolloServer()`, we strongly recommend you specify `cache: 'bounded'`, which replaces the default in-memory unbounded cache with a 30MB in-memory cache, or disable automatic persisted queries with `persistedQueries: false`. Apollo Server now logs a warning in production if you do not configure the cache or disable APQs. See [the docs](https://www.apollographql.com/docs/apollo-server/performance/cache-backends#ensuring-a-bounded-cache) for more details.
+- The `apollo-server-caching` package is no longer published. The TypeScript types `KeyValueCache` and `KeyValueCacheSetOptions` and the classes `PrefixingKeyValueCache` and `InMemoryLRUCache` can be imported from `@apollo/utils.keyvaluecache` instead. The first three exports are identical; `InMemoryLRUCache` is based on `lru-cache` v7 instead of v6, and no longer supports creating unbounded caches (which was the default behavior for `apollo-server-caching`'s `InMemoryLRUCache`). [PR #6522](https://github.com/apollographql/apollo-server/pull/6522)
+- The `apollo-server-cache-redis` and `apollo-server-cache-memcached` packages are no longer published (though previous versions continue to work). We recommend that users of these packages migrate to `@apollo/utils.keyvadapter`, which lets you connect to Redis, Memcached, or any other backend supported by the [Keyv](https://www.npmjs.com/package/keyv) project. See [the new cache backend docs](https://www.apollographql.com/docs/apollo-server/performance/cache-backends) for more details. [PR #6541](https://github.com/apollographql/apollo-server/pull/6541)
+- Avoid unhandled rejection errors if the end hook from a `parsingDidStart` plugin method rejects. [Issue #6567](https://github.com/apollographql/apollo-server/pull/6567) [PR #6559](https://github.com/apollographql/apollo-server/pull/6559)
+
+## v3.8.2
+
+- `apollo-server-core`: Fix usage reporting plugin "willResolveField called after stopTiming!" error caused by a race condition related to null bubbling. [Issue #4472](https://github.com/apollographql/apollo-server/issues/4472) [PR #6398](https://github.com/apollographql/apollo-server/pull/6398)
+
+## v3.8.1
+
+- This is a patch release strictly for republishing over what appears to be a hiccup in NPMs service. [Issue #6469](https://github.com/apollographql/apollo-server/issues/6469)
+
+## v3.8.0
+
+- Add `embed` as an option in the `ApolloServerPluginLandingPageLocalDefault` and `ApolloServerPluginLandingPageProductionDefault` plugins. If you pass the `embed` option to `ApolloServerPluginLandingPageLocalDefault`, the Apollo Studio Sandbox will be embedded on your Apollo Server endpoint. If you pass the `embed` option to `ApolloServerPluginLandingPageProductionDefault`, the Apollo Studio embedded Explorer will be embedded on your Apollo Server endpoint. In both cases, users can use the embedded app to run GraphQL operations without any special CORS setup.
+- Add a few missing dependencies to packages. [PR #6393](https://github.com/apollographql/apollo-server/pull/6393)
+- Factor out some usage reporting code to a shared package in the [`apollo-utils` repository](https://github.com/apollographql/apollo-utils/). Should not be a visible change.  [PR #6449](https://github.com/apollographql/apollo-server/pull/6449)
 
 ## v3.7.0
 
