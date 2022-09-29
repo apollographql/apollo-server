@@ -190,8 +190,7 @@ requestDidStart?(
 ): Promise<GraphQLRequestListener<TContext> | void>;
 ```
 
-This function can optionally return an object that includes functions for responding
-to request lifecycle events that might follow `requestDidStart`.
+This function can optionally return an object that includes functions for responding to [request lifecycle events](#request-lifecycle-events) that might follow `requestDidStart`.
 
 <MultiCodeBlock>
 
@@ -220,8 +219,7 @@ const server = new ApolloServer({
 
 </MultiCodeBlock>
 
-If your plugin doesn't need to respond to any request lifecycle events, `requestDidStart`
-should not return a value.
+If your plugin doesn't need to respond to any request lifecycle events, `requestDidStart` should not return a value.
 
 ### `schemaDidLoadOrUpdate`
 
@@ -257,6 +255,31 @@ const server = new ApolloServer({
 ```
 
 </MultiCodeBlock>
+
+### `startupDidFail`
+
+The `startupDidFail` hook is triggered if your server fails to start. This can occur if the schema fails to load or a `serverWillStart` or `renderLandingPage` hook throws an error. This hook receives the thrown `error`, which is the same error that `await server.start()` throws.
+
+#### Example
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      async startupDidFail(({ error })) {
+        console.log(`Startup failed: ${error}`);
+      },
+    },
+  ],
+});
+```
+
+</MultiCodeBlock>
+
 
 ## Request lifecycle events
 
@@ -474,3 +497,77 @@ willSendSubsequentPayload?(
   payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
 ): Promise<void>;
 ```
+
+### `contextCreationDidFail`
+
+The `contextCreationDidFail` event fires if the user-provided `context` function throws an error. Because the request context is incomplete, this hook only receives the `error` (not a full `GraphQLRequestContext`). If you want more information about the request that triggered this event, consider wrapping your `context` function in a `try`/`catch` block and adding the appropriate information to the thrown error.
+
+#### Example
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      async contextCreationDidFail(({ error })) {
+        console.log(`Context creation failed: ${error}`);
+      },
+    },
+  ],
+});
+```
+
+</MultiCodeBlock>
+
+### `invalidRequestWasReceived`
+
+The `invalidRequestWasReceived` event fires any time a "Bad Request" error is thrown during request execution. This includes CSRF prevention and malformed requests (e.g., incorrect headers, invalid JSON body, or invalid search params for `GET`), but *doesn't* include malformed GraphQL. Because the request context is incomplete, this hook only receives the `error` (not a full `GraphQLRequestContext`). If you want more information about the request that triggered this event, consider wrapping your `context` function in a `try`/`catch` block and adding the appropriate information to the thrown error.
+
+#### Example
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      async invalidRequestWasReceived(({ error })) {
+        console.log(`Bad request: ${error}`);
+      },
+    },
+  ],
+});
+```
+
+</MultiCodeBlock>
+
+### `unexpectedErrorProcessingRequest`
+
+The `unexpectedErrorProcessingRequest` event fires whenever an "unexpected" error is thrown during request execution. "Unexpected" errors don't include common client data errors such as validation, parsing, or GraphQL execution errors. Instead, an unexpected error indicates a _programming_ error, such as a plugin hook throwing unexpectedly or Apollo Server encountering a bug. No matter the cause, Apollo Server masks this type of error from a client. 
+
+Note this hook is on the top level of the plugin rather than on the object returned from `requestWillStart`, because this hook triggers if `requestWillStart` throws.
+
+#### Example
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  /* ... other necessary configuration ... */
+
+  plugins: [
+    {
+      async unexpectedErrorProcessingRequest(({ requestContext,  error })) {
+        console.log(`Something went wrong: ${error}`);
+      },
+    },
+  ],
+});
+```
+
+</MultiCodeBlock>
