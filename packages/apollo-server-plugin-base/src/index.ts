@@ -108,23 +108,23 @@ export interface GraphQLRequestListener<
 > extends AnyFunctionMap {
   didResolveSource?(
     requestContext: GraphQLRequestContextDidResolveSource<TContext>,
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
-  ): Promise<GraphQLRequestListenerParsingDidEnd | void>;
+  ): Promise<GraphQLRequestListenerParsingDidEnd | void> | void;
 
   validationDidStart?(
     requestContext: GraphQLRequestContextValidationDidStart<TContext>,
-  ): Promise<GraphQLRequestListenerValidationDidEnd | void>;
+  ): Promise<GraphQLRequestListenerValidationDidEnd | void> | void;
 
   didResolveOperation?(
     requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   didEncounterErrors?(
     requestContext: GraphQLRequestContextDidEncounterErrors<TContext>,
-  ): Promise<void>;
+  ): Promise<void> | void;
 
   // If this hook is defined, it is invoked immediately before GraphQL execution
   // would take place. If its return value resolves to a non-null
@@ -137,11 +137,11 @@ export interface GraphQLRequestListener<
 
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): Promise<GraphQLRequestExecutionListener | void>;
+  ): Promise<GraphQLRequestExecutionListener | void> | void;
 
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
-  ): Promise<void>;
+  ): Promise<void> | void;
 }
 
 export interface GraphQLRequestExecutionListener<
