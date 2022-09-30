@@ -555,20 +555,4 @@ describe('Add trace to report', () => {
       Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
     ).toBe(0);
   });
-
-  it('add as trace if asTrace is true and max trace size is invalid', () => {
-    const report = new OurReport(defaultHeader);
-    report.addTrace({
-      statsReportKey: 'key',
-      trace: baseTrace,
-      asTrace: true,
-      referencedFieldsByType,
-      maxTraceBytes: 'one' as unknown as number,
-    });
-
-    expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
-    expect(
-      Object.keys(report.tracesPerQuery['key']?.statsWithContext?.map).length,
-    ).toBe(0);
-  });
 });
