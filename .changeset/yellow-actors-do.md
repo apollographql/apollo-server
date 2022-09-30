@@ -2,4 +2,4 @@
 '@apollo/server': patch
 ---
 
-Send large traces as stats
+Usage reporting: always send traces over 10MB as stats.
