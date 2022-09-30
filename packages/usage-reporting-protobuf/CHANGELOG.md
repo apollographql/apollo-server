@@ -1,5 +1,11 @@
 # @apollo/usage-reporting-protobuf
 
+## 4.0.0-rc.2
+
+### Patch Changes
+
+- [#6967](https://github.com/apollographql/apollo-server/pull/6967) [`d20842824`](https://github.com/apollographql/apollo-server/commit/d208428248532d55249cad5ea3912dd097232831) Thanks [@renovate](https://github.com/apps/renovate)! - Update `@apollo/protobufjs` dependency to avoid false positives in vulnerability scans (https://github.com/apollographql/apollo-server/issues/6835)
+
 ## 4.0.0-alpha.1
 
 ### Patch Changes
