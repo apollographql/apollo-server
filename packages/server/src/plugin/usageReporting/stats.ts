@@ -63,7 +63,7 @@ export class OurReport implements Required<IReport> {
     referencedFieldsByType,
     // The max size a trace can be before it is sent as stats. Note that the
     // Apollo reporting ingress server will never store any traces over 10mb
-    // anyway. They will instead be converted to stats as we would do here.
+    // anyway. They will still be converted to stats as we would do here.
     maxTraceBytes = 10 * 1024 * 1024,
   }: {
     statsReportKey: string;
