@@ -680,7 +680,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               trace,
               // We include the operation as a trace (rather than aggregated
               // into stats) only if the user didn't set `sendTraces: false`
-              // *and8 we believe it's possible that our organization's plan
+              // *and* we believe it's possible that our organization's plan
               // allows for viewing traces *and* we actually captured this as
               // a full trace *and* sendOperationAsTrace says so.
               //

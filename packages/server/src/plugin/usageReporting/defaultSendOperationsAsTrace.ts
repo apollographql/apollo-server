@@ -9,7 +9,10 @@ export function defaultSendOperationsAsTrace() {
   // operation, what minute the operation ended at, etc) to `true` if we've seen
   // it recently. We actually split this into one cache per minute so we can
   // throw away a full minute's worth of cache at once; we keep only the last
-  // three minutes
+  // three minutes.
+  // Note that if a trace is over a certain size, we will always send it as
+  // stats. We check this within the addTrace function of the OurReport class so
+  // that we don't have to encode these large traces twice.
   const cache = new LRUCache<string, true>({
     // 3MiB limit, very much approximately since we can't be sure how V8 might
     // be storing these strings internally. Though this should be enough to

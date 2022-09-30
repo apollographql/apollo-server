@@ -61,11 +61,16 @@ export class OurReport implements Required<IReport> {
     trace,
     asTrace,
     referencedFieldsByType,
+    // The max size a trace can be before it is sent as stats. Note that the
+    // Apollo reporting ingress server will never store any traces over 10mb
+    // anyway. They will still be converted to stats as we would do here.
+    maxTraceBytes = 10 * 1024 * 1024,
   }: {
     statsReportKey: string;
     trace: Trace;
     asTrace: boolean;
     referencedFieldsByType: ReferencedFieldsByType;
+    maxTraceBytes?: number;
   }) {
     const tracesAndStats = this.getTracesAndStats({
       statsReportKey,
@@ -73,8 +78,13 @@ export class OurReport implements Required<IReport> {
     });
     if (asTrace) {
       const encodedTrace = Trace.encode(trace).finish();
-      tracesAndStats.trace.push(encodedTrace);
-      this.sizeEstimator.bytes += 2 + encodedTrace.length;
+
+      if (!isNaN(maxTraceBytes) && encodedTrace.length > maxTraceBytes) {
+        tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
+      } else {
+        tracesAndStats.trace.push(encodedTrace);
+        this.sizeEstimator.bytes += 2 + encodedTrace.length;
+      }
     } else {
       tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
     }
