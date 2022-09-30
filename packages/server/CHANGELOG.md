@@ -1,5 +1,14 @@
 # @apollo/server
 
+## 4.0.0-rc.15
+
+### Patch Changes
+
+- [#6897](https://github.com/apollographql/apollo-server/pull/6897) [`e1455d583`](https://github.com/apollographql/apollo-server/commit/e1455d58366517b633cc4412e3c2f9e80d7a4f22) Thanks [@bonnici](https://github.com/bonnici)! - Usage reporting: always send traces over 10MB as stats.
+
+- Updated dependencies [[`d20842824`](https://github.com/apollographql/apollo-server/commit/d208428248532d55249cad5ea3912dd097232831)]:
+  - @apollo/usage-reporting-protobuf@4.0.0-rc.2
+
 ## 4.0.0-rc.14
 
 ### Patch Changes
