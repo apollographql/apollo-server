@@ -52,7 +52,7 @@ The [`@apollo/server` package](https://www.npmjs.com/package/@apollo/server) exp
 
 If you are using another Apollo Server 3 framework integration package (such as `apollo-server-koa` or `apollo-server-lambda`), check out our [list of integrations](./integrations/integration-index) to see if a community-maintained integration package exists for your framework of choice.
 
-If there is no Apollo Server integration for your favorite framework _yet_, help the broader community by [building a new integration](./integrations/building-integrations)! You can also [join the discussions about maintaining our existing integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators). 
+If there is no Apollo Server integration for your favorite framework _yet_, help the broader community by [building a new integration](./integrations/building-integrations)! You can also [join the discussions about maintaining our existing integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators).
 
 Below are a few high-level changes for using framework integrations:
 
@@ -1333,10 +1333,9 @@ Apollo Server 4 also introduces new plugin hooks `startupDidFail`, `contextCreat
 
 In Apollo Server 3, if your `context` function throws, then the string `"Context creation failed: "` is *always* prepended to its message, and the error is rendered with HTTP status code 500 (if the error is a GraphQLError with `extensions.code` equal to `INTERNAL_SERVER_ERROR`) or 400. You cannot select a different HTTP status code or control HTTP response headers.
 
-In Apollo Server 4, if either the `resolveOperation` or `execute` function throws an error, that error is rendered with the HTTP status code 500 (rather than 400). Note that the `execute` function commonly returns a non-empty list of errors rather than throwing an explicit error.
-
 In Apollo Server 4, if your `context` function throws, the string `"Context creation failed: "` is only prepended to the message if the thrown error was not a `GraphQLError`. There is no special-casing of `extensions.code`; instead, you can use [`extensions.http`](./data/errors/#setting-http-status-code-and-headers) to set the HTTP status code or headers. If this extension is not provided, the status code defaults to 500 (not 400).
 
+In Apollo Server 4, if the `execute` function throws an error, that error is rendered with the HTTP status code 500 (rather than 400). Note that the `execute` function commonly returns a non-empty list of errors rather than throwing an explicit error.
 
 ### Warning for servers without draining
 

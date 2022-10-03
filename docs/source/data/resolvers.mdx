@@ -447,7 +447,7 @@ context: async () => ({
 
 #### Throwing errors in `context`
 
-By default, if your `context` function throws an error, Apollo Server returns that error to the user in a JSON  response with an HTTP status code of 500. If the thrown error is not a `GraphQLError`, the error's message will be prepended with `"Context creation failed: "`.
+By default, if your `context` function throws an error, Apollo Server returns that error to the user in a JSON response with an HTTP status code of 500. If the thrown error is not a `GraphQLError`, the error's message will be prepended with `"Context creation failed: "`.
 
 You can control the HTTP status code of an error by throwing a [`GraphQLError` with an `http` extension](./errors/#setting-http-status-code-and-headers). For example:
 
