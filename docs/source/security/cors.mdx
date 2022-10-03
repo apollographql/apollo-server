@@ -64,7 +64,7 @@ If you don't, while your personal computer is on your private network, a script 
 
 If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your production subgraph servers _disable_ CORS or limit your subgraph's origins to tools like the [Apollo Studio Explorer](/studio/explorer/embed-explorer/). Most subgraphs should _only_ allow communication from your gateways, and that communication doesn't involve a browser.
 
-For more information, see [Securing your subgraphs](/federation/subgraphs/#securing-your-subgraphs).
+For more information, see [Securing your subgraphs](/federation/building-supergraphs/subgraphs-overview#securing-your-subgraphs).
 
 #### APIs that require cookies
 
@@ -145,7 +145,7 @@ Using the `cors` package directly, we can configure the `Access-Control-Allow-Or
 
 If you're using another integration of Apollo Server, you can add and configure CORS for your server using your framework's standard functionality.
 
-You can also choose to omit CORS middleware entirely to disable cross-origin requests. This is [recommended for subgraphs in a federated graph](/federation/subgraphs/#securing-your-subgraphs).
+You can also choose to omit CORS middleware entirely to disable cross-origin requests. This is [recommended for subgraphs in a federated graph](/federation/building-supergraphs/subgraphs-overview#securing-your-subgraphs).
 
 ### Passing credentials with CORS
 

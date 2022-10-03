@@ -103,7 +103,7 @@ Provide this object to modify GraphQL operation errors before Apollo Server repo
 
 The default value is `{ masked: true }`, which means error messages are masked and extensions are omitted in the traces that Apollo Server sends to Apollo Studio. This is a security measure to prevent sensitive data from potentially reaching Apollo servers.
 
-**Note:** If this `ApolloServer` instance is acting as the gateway in an [Apollo Federation](/federation/#architecture) architecture, this option does **not** modify errors that originate in subgraphs. To modify those errors, instead configure the [`includeErrors` option in the inline trace plugin](./inline-trace/#includeerrors), which you install in the subgraph's `ApolloServer` instance.
+**Note:** If this `ApolloServer` instance is acting as the gateway in an [Apollo Federation](/federation/) architecture, this option does **not** modify errors that originate in subgraphs. To modify those errors, instead configure the [`includeErrors` option in the inline trace plugin](./inline-trace/#includeerrors), which you install in the subgraph's `ApolloServer` instance.
 
 </td>
 </tr>
@@ -191,7 +191,7 @@ By default, all requests are included in usage reports.
 </td>
 <td>
 
-Specify this function to provide Apollo Studio with client details for each processed request. Apollo Studio uses this information to [segment metrics by client](/studio/client-awareness/).
+Specify this function to provide Apollo Studio with client details for each processed request. Apollo Studio uses this information to [segment metrics by client](/studio/metrics/client-awareness/).
 
 This function is passed a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/6b4945935a786d06e7ff904be94c0035fe27aeb1/packages/server/src/externalTypes/graphql.ts#L47) object containing all available information about the request. It should return an object with `clientName` and `clientVersion` fields that identify the associated client.
 
