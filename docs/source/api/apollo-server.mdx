@@ -191,7 +191,7 @@ Providing a function is useful if you want to use a different root value dependi
 </td>
 <td>
 
-An array containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating the schema.
+An array containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating operations against the schema. Note that these rules should depend only on the operation and the schema, not on anything else specific to an individual request, as the result of successful validation is cached across requests.
 
 </td>
 </tr>
