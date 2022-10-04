@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-rc.16
+
+### Patch Changes
+
+- [#6986](https://github.com/apollographql/apollo-server/pull/6986) [`db5d715a3`](https://github.com/apollographql/apollo-server/commit/db5d715a38fc4b24e45a045440b593018a5d170e) Thanks [@glasser](https://github.com/glasser)! - The cache control plugin sets `cache-control: no-store` for uncacheable responses. Pass `calculateHttpHeaders: 'if-cacheable'` to the cache control plugin to restore AS3 behavior.
+
+- Updated dependencies [[`db5d715a3`](https://github.com/apollographql/apollo-server/commit/db5d715a38fc4b24e45a045440b593018a5d170e)]:
+  - @apollo/server@4.0.0-rc.16
+
 ## 4.0.0-rc.15
 
 ### Patch Changes
