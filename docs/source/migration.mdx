@@ -1345,6 +1345,33 @@ In Apollo Server 4, if your server _hasn't_ set up draining and it receives an o
 
 If you are using the `startStandaloneServer` function, your server drains automatically. If you are using `expressMiddleware` or another `http.Server`-based web server, you can add draining using the  [`ApolloServerPluginDrainHttpServer` plugin](./api/plugin/drain-http-server/#using-the-plugin).
 
+### Cache control plugin sets `cache-control` header for uncached requests
+
+The cache control plugin is installed by default. It does two things: it calculates `requestContext.overallCachePolicy` based on static and dynamic hints, and it sets the `Cache-Control` response HTTP header.
+
+In Apollo Server 3, the cache control plugin only sets the `Cache-Control` header when the response is cacheable.
+
+In Apollo Server 4, the cache control plugin also sets the `Cache-Control` header (to the value `no-store`) when the response is not cacheable.
+
+To restore the behavior from Apollo Server 3, you can install the cache control plugin and set `calculateHttpHeaders: 'if-cacheable'`:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
+
+new ApolloServer({
+  // ...
+  plugins: [
+    ApolloServerPluginCacheControl({ calculateHttpHeaders: 'if-cacheable' }),
+  ],
+});
+```
+
+</MultiCodeBlock>
+
+
 ### `CacheScope` type
 
 In Apollo Server 4,  `CacheScope` is now a union of strings (`PUBLIC` or `PRIVATE`) rather than an enum:

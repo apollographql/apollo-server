@@ -817,6 +817,24 @@ export function defineIntegrationTestSuiteHttpServerTests(
           expect(res.headers['cache-control']).toEqual('max-age=200, public');
         });
 
+        it('applies cacheControl Headers with if-cacheable', async () => {
+          const app = await createApp({
+            typeDefs,
+            resolvers,
+            plugins: [
+              ApolloServerPluginCacheControl({
+                calculateHttpHeaders: 'if-cacheable',
+              }),
+            ],
+          });
+          const res = await request(app).post('/').send({
+            query: `{ cooks { title author } }`,
+          });
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual({ cooks: books });
+          expect(res.headers['cache-control']).toEqual('max-age=200, public');
+        });
+
         it('contains no cacheControl Headers when uncacheable', async () => {
           const app = await createApp({ typeDefs, resolvers });
           const res = await request(app).post('/').send({
@@ -824,7 +842,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           });
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual({ books });
-          expect(res.headers['cache-control']).toBeUndefined;
+          expect(res.headers['cache-control']).toBe('no-store');
         });
 
         it('contains private cacheControl Headers when scoped', async () => {
@@ -852,7 +870,29 @@ export function defineIntegrationTestSuiteHttpServerTests(
           expect(res.body.data).toEqual({
             pooks: [{ title: 'pook', books }],
           });
-          expect(res.headers['cache-control']).toBeUndefined;
+          expect(res.headers['cache-control']).toBeUndefined();
+        });
+      });
+
+      it('cache-control not set without any hints with if-cacheable', async () => {
+        const app = await createApp({
+          schema,
+          plugins: [
+            ApolloServerPluginCacheControl({
+              calculateHttpHeaders: 'if-cacheable',
+            }),
+          ],
+        });
+        const expected = {
+          testPerson: { firstName: 'Jane' },
+        };
+        const req = request(app).post('/').send({
+          query: 'query test{ testPerson { firstName } }',
+        });
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual(expected);
+          expect(res.headers['cache-control']).toBeUndefined();
         });
       });
 
@@ -869,7 +909,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.headers['cache-control']).toBeUndefined();
+          expect(res.headers['cache-control']).toBe('no-store');
         });
       });
 

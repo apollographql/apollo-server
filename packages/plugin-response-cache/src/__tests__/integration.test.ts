@@ -282,7 +282,7 @@ describe('Response caching', () => {
       expect(result.body.data.uncached).toBe('value:uncached');
       expectCacheMiss('cached');
       expectCacheMiss('uncached');
-      expect(httpHeader(result, 'cache-control')).toBe(null);
+      expect(httpHeader(result, 'cache-control')).toBe('no-store');
       expect(httpHeader(result, 'age')).toBe(null);
     }
 
@@ -295,7 +295,7 @@ describe('Response caching', () => {
       expect(result.body.data.uncached).toBe('value:uncached');
       expectCacheMiss('cached');
       expectCacheMiss('uncached');
-      expect(httpHeader(result, 'cache-control')).toBe(null);
+      expect(httpHeader(result, 'cache-control')).toBe('no-store');
       expect(httpHeader(result, 'age')).toBe(null);
     }
 

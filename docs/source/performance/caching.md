@@ -128,7 +128,7 @@ You can decide how to cache a particular field's result _while_ you're resolving
 
 The `cacheControl` object includes a `setCacheHint` method, which you call like so:
 
-```ts 
+```ts
 const resolvers = {
   Query: {
     post: (_, { id }, _, info) => {
@@ -331,13 +331,20 @@ The effect of setting `honorSubgraphCacheControlHeader` to `false` is to have no
 
 ## Caching with a CDN
 
-Whenever Apollo Server sends an operation response that has a non-zero `maxAge`, it includes a `Cache-Control` HTTP header that describes the response's cache policy.
+Whenever Apollo Server sends an operation response that is cacheable, it includes a `Cache-Control` HTTP header that describes the response's cache policy.
 
-The header has this format:
+To be cacheable, all of the following must be true:
+- The operation has a non-zero `maxAge`.
+- The operation has a single response rather than an [incremental delivery](../workflow/requests#incremental-delivery-experimental) response.
+- There are no errors in the response.
+
+When the response is cacheable, the header has this format:
 
 ```
 Cache-Control: max-age=60, private
 ```
+
+When the response is not cacheable, the header has the value `Cache-Control: no-store`.
 
 If you run Apollo Server behind a CDN or another caching proxy, you can configure it to use this header's value to cache responses appropriately. See your CDN's documentation for details (for example, here's the [documentation for Amazon CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html#expiration-individual-objects)).
 

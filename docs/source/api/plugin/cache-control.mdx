@@ -91,11 +91,11 @@ This option was popular in Apollo Server 2 as a workaround for the problem solve
 
 ###### `calculateHttpHeaders`
 
-`boolean`
+`boolean | 'if-cacheable'`
 </td>
 <td>
 
-By default, the cache control plugin sets the `cache-control` HTTP response header to `max-age=MAXAGE, public` or `max-age=MAXAGE, private` if the request is cacheable. If you specify `calculateHttpHeaders: false`, it will not set this header. The `requestContext.overallCachePolicy` field will still be calculated, and the [response cache plugin](../../performance/caching/#caching-with-responsecacheplugin-advanced) will still work.
+By default, the cache control plugin sets the `cache-control` HTTP response header to `max-age=MAXAGE, public` or `max-age=MAXAGE, private` if the request is cacheable, and to `no-store` if the request is not cacheable. If you specify `calculateHttpHeaders: false`, it will not set this header. If you specify `calculateHttpHeaders: 'if-cacheable'`, it will only set the header if the request is cacheable. (A response is cacheable if its overall cache policy has a non-zero `maxAge`, and the body is a single result rather than an incremental delivery response, and the body contains no errors.) Setting this option does not prevent the `requestContext.overallCachePolicy` field from being calculated, nor does it prevent the [response cache plugin](../../performance/caching/#caching-with-responsecacheplugin-advanced) from working.
 
 </td>
 </tr>
