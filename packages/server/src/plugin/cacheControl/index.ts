@@ -39,10 +39,15 @@ export interface ApolloServerPluginCacheControlOptions {
    */
   defaultMaxAge?: number;
   /**
-   * Determines whether to set the `Cache-Control` HTTP header on cacheable
-   * responses with no errors. The default is true.
+   * Determines whether to set the `Cache-Control` HTTP header. If true (the
+   * default), the header is written on all responses (with a value of
+   * `no-store` for non-cacheable responses). If `'if-cacheable'`, the header is
+   * only written for cacheable responses. If false, the header is never
+   * written. A response is cacheable if its overall cache policy has a non-zero
+   * `maxAge`, and the body is a single result rather than an incremental
+   * delivery response, and the body contains no errors.
    */
-  calculateHttpHeaders?: boolean;
+  calculateHttpHeaders?: boolean | 'if-cacheable';
   // For testing only.
   __testing__cacheHints?: Map<string, CacheHint>;
 }
@@ -260,6 +265,12 @@ export function ApolloServerPluginCacheControl(
         },
 
         async willSendResponse(requestContext) {
+          // This hook is just for setting response headers, so make sure that
+          // hasn't been disabled.
+          if (!calculateHttpHeaders) {
+            return;
+          }
+
           const { response, overallCachePolicy } = requestContext;
 
           const policyIfCacheable = overallCachePolicy.policyIfCacheable();
@@ -268,7 +279,6 @@ export function ApolloServerPluginCacheControl(
           // there are no errors, and we actually can write headers, write the
           // header.
           if (
-            calculateHttpHeaders &&
             policyIfCacheable &&
             // At least for now, we don't set cache-control headers for
             // incremental delivery responses, since we don't know if a later
@@ -285,6 +295,14 @@ export function ApolloServerPluginCacheControl(
                 policyIfCacheable.maxAge
               }, ${policyIfCacheable.scope.toLowerCase()}`,
             );
+          } else if (
+            calculateHttpHeaders !== 'if-cacheable' &&
+            !response.http.headers.has('cache-control')
+          ) {
+            // The response is not cacheable, so make sure it doesn't get
+            // cached. This is especially important for GET requests, because
+            // browsers and other agents cache many GET requests by default.
+            response.http.headers.set('cache-control', 'no-store');
           }
         },
       };
