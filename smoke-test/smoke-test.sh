@@ -28,6 +28,8 @@ grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle.mjs
 # tsconfig using moduleResolution: nodenext. Let's run it before the others
 # since this is the "pickiest" of the tests.
 cd nodenext
+type tsc
+echo "path: $PATH"
 tsc --build .
 node ./dist/smoke-test.js
 cd ..
