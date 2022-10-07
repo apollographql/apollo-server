@@ -1099,8 +1099,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
             const reports = await reportIngress.promiseOfReports;
             expect(reports.length).toBe(1);
 
-            expect(Object.keys(reports[0].tracesPerQuery)[0]).not.toEqual(
-              '# -\n{ aliasedField: justAField }',
+            expect(Object.keys(reports[0].tracesPerQuery)[0]).toEqual(
+              '# -\n{justAField}',
             );
           });
 
