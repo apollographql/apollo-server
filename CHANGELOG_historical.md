@@ -4,6 +4,9 @@ This file describes the history of Apollo Server up to v3. The version headers i
 
 Starting with Apollo Server v4, this single monorepo CHANGELOG file is no longer maintained; see the `CHANGELOG.md` file in each package directory (such as [`packages/server/CHANGELOG.md`](https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md)) instead.
 
+## v3.10.3
+- `apollo-server-core`: Fix memory leak in usage reporting plugin. [Issue #6983](https://github.com/apollographql/apollo-server/issues/6983) [PR #6999](https://github.com/apollographql/apollo-server/[Issue #6983](https://github.com/apollographql/apollo-server/issues/6983)pull/6999)
+
 ## v3.10.2
 
 - `apollo-server-fastify`: Use `return reply.send` in handlers to match the pattern encouraged by Fastify 4 (although [`apollo-server-fastify@3` only works with Fastify 3](https://github.com/apollographql/apollo-server/issues/6576#issuecomment-1159249244)). [PR #6798](https://github.com/apollographql/apollo-server/pull/6798)
