@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.0-rc.18
+
+### Patch Changes
+
+- [#7001](https://github.com/apollographql/apollo-server/pull/7001) [`63d568d13`](https://github.com/apollographql/apollo-server/commit/63d568d13b82e241a4ab9b6033c7aaa983b71700) Thanks [@glasser](https://github.com/glasser)! - Test the behavior of didResolveOperation hooks throwing.
+
+- Updated dependencies []:
+  - @apollo/server@4.0.0-rc.18
+
 ## 4.0.0-rc.17
 
 ### Patch Changes
