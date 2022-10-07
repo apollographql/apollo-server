@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.0.0-rc.17
+
+### Patch Changes
+
+- [#6998](https://github.com/apollographql/apollo-server/pull/6998) [`233b44eea`](https://github.com/apollographql/apollo-server/commit/233b44eea5031364d88df38afede0b8771c27661) Thanks [@glasser](https://github.com/glasser)! - Fix a slow memory leak in the usage reporting plugin (#6983).
+
 ## 4.0.0-rc.16
 
 ### Patch Changes
