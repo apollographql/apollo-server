@@ -1,6 +1,6 @@
 {
   "name": "apollo-server",
-  "version": "3.10.2",
+  "version": "3.10.3",
   "description": "Production ready GraphQL Server",
   "author": "Apollo <packages@apollographql.com>",
   "main": "dist/index.js",
