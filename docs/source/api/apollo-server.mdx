@@ -97,11 +97,11 @@ For details, see [Resolvers](../data/resolvers/).
 
 An executable GraphQL schema. Under the hood, Apollo Server automatically generates this field from [`typeDefs`](#typedefs) and [`resolvers`](#resolvers).
 
-This field is helpful if you are using:
+This field is helpful if:
 
-- [Apollo Federation](https://www.apollographql.com/docs/federation/implementing-services/#generating-a-federated-schema), which uses the `buildFederatedSchema` function to generate its schema
-- A function like `makeExecutableSchema` from [`graphql-tools`](https://www.graphql-tools.com/docs/generate-schema) to create your schema
-- A code-first approach (i.e., instead of a schema-first approach)
+- You are [building a subgraph for Apollo Federation](https://www.apollographql.com/docs/federation/building-supergraphs/subgraphs-apollo-server), which uses the `buildSubgraphSchema` function to generate its schema
+- You are using a function like `makeExecutableSchema` from [`graphql-tools`](https://www.graphql-tools.com/docs/generate-schema) to create your schema
+- You are using a library that takes a code-first approach (i.e., instead of a schema-first approach) to generate a schema
 
 </td>
 </tr>
