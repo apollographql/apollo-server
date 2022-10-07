@@ -112,7 +112,7 @@
     "jest-serializer-html": "7.1.0",
     "js-sha256": "0.9.0",
     "koa": "2.13.4",
-    "lerna": "4.0.0",
+    "lerna": "5.5.2",
     "lodash.sumby": "4.6.0",
     "mock-req": "0.2.0",
     "nock": "13.2.9",
