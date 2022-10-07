@@ -462,6 +462,74 @@ export function defineIntegrationTestSuiteHttpServerTests(
         `);
       });
 
+      it('throwing in didResolveOperation results in error with default HTTP status code', async () => {
+        const app = await createApp({
+          schema,
+          plugins: [
+            {
+              async requestDidStart() {
+                return {
+                  async didResolveOperation() {
+                    throw new GraphQLError('error with default status');
+                  },
+                };
+              },
+            },
+          ],
+        });
+        const res = await request(app)
+          .post('/')
+          .send({ query: `{ testString }` });
+        expect(res.status).toEqual(500);
+        expect(res.body).toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "INTERNAL_SERVER_ERROR",
+                },
+                "message": "error with default status",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('throwing in didResolveOperation results in error with specified HTTP status code', async () => {
+        const app = await createApp({
+          schema,
+          plugins: [
+            {
+              async requestDidStart() {
+                return {
+                  async didResolveOperation() {
+                    throw new GraphQLError('error with another status', {
+                      extensions: { http: { status: 401 }, code: 'OH_NO' },
+                    });
+                  },
+                };
+              },
+            },
+          ],
+        });
+        const res = await request(app)
+          .post('/')
+          .send({ query: `{ testString }` });
+        expect(res.status).toEqual(401);
+        expect(res.body).toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "OH_NO",
+                },
+                "message": "error with another status",
+              },
+            ],
+          }
+        `);
+      });
+
       it('multiple operations with no `operationName` specified returns 400 and OPERATION_RESOLUTION_FAILURE', async () => {
         const app = await createApp();
         const res = await request(app)

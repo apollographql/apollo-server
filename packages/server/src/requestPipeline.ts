@@ -324,6 +324,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       ),
     );
   } catch (err: unknown) {
+    // Note that we explicitly document throwing `GraphQLError`s from
+    // `didResolveOperation` as a good way to do validation that depends on the
+    // validated operation and the request context. (It will have status 500 by
+    // default.)
     return await sendErrorResponse([ensureGraphQLError(err)]);
   }
 

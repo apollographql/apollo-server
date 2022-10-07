@@ -354,6 +354,8 @@ This event is _not_ associated with your GraphQL server's _resolvers_. When this
 
 > If the operation is anonymous (i.e., the operation is `query { ... }` instead of `query NamedQuery { ... }`), then `operationName` is `null`.
 
+If a `didResolveOperation` hook throws an [`GraphQLError`](../data/errors#custom-errors), the error will be serialized and returned to the client, with an HTTP status code of 500 unless [the error specifies a different status code](../data/errors#setting-http-status-code-and-headers). Because this hook has access to the parsed and validated operation as well as request-specific context (such as the `contextValue`) that makes this plugin hook a good place to perform extra validation. (`didResolveOperation` hooks from multiple plugins are run in parallel and if more than one throws, only one error will be sent to the client.)
+
 ```ts
 didResolveOperation?(
   requestContext: WithRequired<
