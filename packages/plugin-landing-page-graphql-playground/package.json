@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-plugin-landing-page-graphql-playground",
-  "version": "4.0.0-alpha.0",
+  "version": "4.0.0",
   "description": "Apollo Server landing page plugin for GraphQL Playground",
   "type": "module",
   "main": "dist/cjs/index.js",
@@ -33,6 +33,6 @@
     "@apollographql/graphql-playground-html": "1.6.29"
   },
   "peerDependencies": {
-    "@apollo/server": "^4.0.0-alpha.7"
+    "@apollo/server": "^4.0.0"
   }
 }
