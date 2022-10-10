@@ -964,7 +964,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
-      it('cache-control not set without any hints', async () => {
+      it('cache-control set to no-store without any hints', async () => {
         const app = await createApp({
           schema,
         });
