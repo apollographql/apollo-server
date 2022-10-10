@@ -62,7 +62,7 @@
     "@josephg/resolvable": "1.0.1",
     "@koa/router": "12.0.0",
     "@rollup/plugin-commonjs": "22.0.2",
-    "@rollup/plugin-json": "4.1.0",
+    "@rollup/plugin-json": "5.0.0",
     "@sinonjs/fake-timers": "9.1.2",
     "@types/async-retry": "1.4.5",
     "@types/aws-lambda": "8.10.106",
