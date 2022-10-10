@@ -1,13 +1,13 @@
 {
   "title": "Apollo Server",
-  "version": "v4 (Release Candidate)",
+  "version": "v4",
   "algoliaFilters": ["docset:server", ["docset:react", "docset:federation"]],
   "sidebar": {
     "Introduction": "/",
     "Get started": "/getting-started",
     "New in v4": {
       "Migrating to Apollo Server 4": "/migration",
-      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md"
+      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md"
     },
     "Defining a Schema": {
       "Schema basics": "/schema/schema",

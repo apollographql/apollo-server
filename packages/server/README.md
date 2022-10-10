@@ -2,15 +2,14 @@
 
 ## A TypeScript/JavaScript GraphQL server
 
-> Apollo Server 4 is currently in the Release Candidate phase. Further changes (including backwards-incompatible changes) may be made before v4.0.0 is released. Docs for this version are available at https://www.apollographql.com/docs/apollo-server/v4/
+> **Apollo Server 4 is now generally available!**.
 
 **Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
-
 You can use Apollo Server as:
 
-* A stand-alone GraphQL server
 * The GraphQL server for a [subgraph](https://www.apollographql.com/docs/federation/subgraphs/) in a federated supergraph
+* A stand-alone GraphQL server
 * The gateway for a [federated supergraph](https://www.apollographql.com/docs/federation/)
 
 Apollo Server provides a simple API for integrating with any Node.js web framework or serverless environment. The `@apollo/server` package itself ships with a standalone zero-dependency web server, and a middleware implementation for [the Express web framework](https://expressjs.com/). Integrations with other environments are community-maintained.
@@ -27,7 +26,6 @@ This `@apollo/server` package is new with Apollo Server 4. Previous major versio
 ## Documentation
 
 Full documentation for Apollo Server is available on [our documentation site](https://www.apollographql.com/docs/apollo-server/). This README shows the basics of getting a server running (both standalone and with Express), but most features are only documented on our docs site.
-
 
 ## Getting started: standalone server
 
