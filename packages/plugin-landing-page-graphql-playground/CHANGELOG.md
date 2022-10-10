@@ -1,12 +1,7 @@
 # @apollo/server-plugin-landing-page-graphql-playground
 
-## 4.0.0-alpha.0
+## 4.0.0
 
-### Major Changes
+One-time release of `@apollo/server-plugin-landing-page-graphql-playground` with support for Apollo Server 4. The version of this plugin designed for Apollo Server 2 and 3 was part of `apollo-server-core`.
 
-- [#6817](https://github.com/apollographql/apollo-server/pull/6817) [`eca003fdc`](https://github.com/apollographql/apollo-server/commit/eca003fdc75bdb63153e68119b9891d2bffc6545) Thanks [@glasser](https://github.com/glasser)! - Move ApolloServerPluginGraphQLPlayground into its own package.
-
-### Patch Changes
-
-- Updated dependencies [[`eca003fdc`](https://github.com/apollographql/apollo-server/commit/eca003fdc75bdb63153e68119b9891d2bffc6545)]:
-  - @apollo/server@4.0.0-alpha.7
+Note: this package is not officially supported by Apollo. This package exists for migration purposes only. We do not intend to resolve security issues or other bugs with this package if they arise, so please migrate away from this to Apollo Server's default Explorer as soon as possible.
