@@ -2,8 +2,6 @@
 
 ## A TypeScript/JavaScript GraphQL server
 
-> Apollo Server 4 is currently in the Release Candidate phase. Further changes (including backwards-incompatible changes) may be made before v4.0.0 is released. Docs for this version are available at https://www.apollographql.com/docs/apollo-server/v4/
-
 **Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
 
