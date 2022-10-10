@@ -30,7 +30,7 @@
 
 # Redirects associated with revamp of Apollo Server information architecture
 
-/whats-new https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md
+/whats-new https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md
 /essentials/data/ /docs/apollo-server/data/data/
 /essentials/schema/ /docs/apollo-server/schema/schema/
 /essentials/server /docs/apollo-server/getting-started/

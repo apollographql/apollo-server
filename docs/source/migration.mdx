@@ -1,18 +1,16 @@
 ---
-title: Migrating to Apollo Server 4 (Release Candidate)
+title: Migrating to Apollo Server 4
 ---
 
-> ⚠️ **Apollo Server 4 is currently available as a Release Candidate.** We believe the current version is suitable for use, but it is possible that breaking changes might occur before v4.0.0 is published for general availability. [Learn about release stages.](/resources/product-launch-stages/#open-source-pre-releases)
+Apollo Server 4 focuses on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/24a841bc68d/ROADMAP.md).
 
-This major release focuses on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/main/ROADMAP.md).
-
-The Apollo Server 4 Release Candidate provides the following features:
+Apollo Server 4 provides the following features:
 * A well-defined API with a stable HTTP abstraction, enabling contributors to easily [build and maintain integrations](./integrations/building-integrations) in their preferred frameworks.
 * A new `@apollo/server` package, combining numerous [smaller packages](#packages-merged-into-apolloserver) and including the [`startStandaloneServer`](#migrate-from-apollo-server) and [`expressMiddleware`](#migrate-from-apollo-server-express) functions.
 * Packages that can be used as either ECMAScript or CJS modules.
 * Experimental support for [incremental delivery](./workflow/requests#incremental-delivery-experimental) when combined with a pre-release of `graphql-js`.
 
-> For a list of all breaking changes, see the [changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md) (not yet finished).
+> For a list of all breaking changes, see the [changelog](https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md) ([temporary location](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/CHANGELOG.md)).
 
 ## The new `@apollo/server` package
 
