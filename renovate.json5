@@ -81,5 +81,11 @@
       matchPackageNames: ["typescript"],
       allowedVersions: "4.7.x",
     },
+    {
+      // Major upgrade rollup plugins along with rollup itself.
+      matchSourceUrlPrefixes: ["https://github.com/rollup/"],
+      matchUpdateTypes: ["major"],
+      groupName: "rollup",
+    }
   ]
 }
