@@ -11,3 +11,4 @@ dist/
 **/generated/**
 
 .volta
+_redirects
