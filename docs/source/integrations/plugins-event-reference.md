@@ -229,7 +229,7 @@ const server = new ApolloServer({
 
 ## Request lifecycle events
 
-> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-plugin-base/src/index.ts) from the `apollo-server-plugin-base` module to define functions for request lifecycle events.
+> If you're using TypeScript to create your plugin, implement the [ `GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-server-plugin-base/src/index.ts) from the `apollo-server-plugin-base` module to define functions for request lifecycle events.
 
 When Apollo Server processes a request, these events fire in the order listed (with the exception of `didEncounterErrors`, which might fire in one of a few places depending on when errors occur). [See the flow diagram](./plugins/#request-lifecycle-event-flow)
 

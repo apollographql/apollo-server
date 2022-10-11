@@ -26,15 +26,15 @@ flowchart LR;
 
 ## Open-source implementations
 
-All data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
+All data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-datasource/src/index.ts), which is included in the `apollo-datasource` package. Subclasses of a `DataSource` should define whatever logic is required to communicate with a particular store or API.
 
 Apollo and the larger community maintain the following open-source implementations:
 
-> Do you maintain a `DataSource` implementation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/data/data-sources.md) to be added to the list!
+> Do you maintain a `DataSource` implementation that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/version-3/docs/source/data/data-sources.md) to be added to the list!
 
 | Class            | Source    | For Use With          |
 |------------------|-----------|-----------------------|
-| [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) | Apollo    | REST APIs ([see below](#restdatasource-reference)) |
+| [`RESTDataSource`](https://github.com/apollographql/apollo-server/tree/version-3/packages/apollo-datasource-rest) | Apollo    | REST APIs ([see below](#restdatasource-reference)) |
 | [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http)  | Community | HTTP/REST APIs (newer community alternative to `RESTDataSource`) |
 | [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)  | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
 | [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/) | Community | MongoDB |
@@ -125,7 +125,7 @@ npm install apollo-datasource-rest
 You then extend the `RESTDataSource` class and implement whatever data-fetching methods your resolvers need. These methods can use built-in convenience methods (like `get` and `post`) to perform HTTP requests, helping you add query parameters, parse JSON results, and handle errors.
 
 ### API Reference
-To see the all the properties and functions that can be overridden, the [source code](https://github.com/apollographql/apollo-server/tree/main/packages/apollo-datasource-rest) is always the best option.
+To see the all the properties and functions that can be overridden, the [source code](https://github.com/apollographql/apollo-server/tree/version-3/packages/apollo-datasource-rest) is always the best option.
 
 #### Constructor Parameters
 ##### `httpFetch`
@@ -229,7 +229,7 @@ class MoviesAPI extends RESTDataSource {
 
 ### HTTP Methods
 
-`RESTDataSource` includes convenience methods for common REST API request methods: `get`, `post`, `put`, `patch`, and `delete` ([see the source](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource-rest/src/RESTDataSource.ts#L154-L202)).
+`RESTDataSource` includes convenience methods for common REST API request methods: `get`, `post`, `put`, `patch`, and `delete` ([see the source](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-datasource-rest/src/RESTDataSource.ts#L154-L202)).
 
 An example of each is shown below:
 

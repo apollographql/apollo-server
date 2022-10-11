@@ -172,7 +172,7 @@ Specify this asynchronous function to configure which requests are included in u
 
  Note that returning `false` here means that the operation is completely ignored by all Apollo Studio features. If you want to improve performance by skipping the field-level execution trace, set the [`fieldLevelInstrumentation`](#fieldlevelinstrumentation) option instead of this one.
 
-This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)), or when sending the final error response if the operation was not successfully resolved (via [the `willSendResponse` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#willsendresponse)).
+This function is called for each received request. It takes a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-server-types/src/index.ts#L115-L150) object and must return a `Promise<Boolean>` that indicates whether to include the request. It's called either after the operation is successfully resolved (via [the `didResolveOperation` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#didresolveoperation)), or when sending the final error response if the operation was not successfully resolved (via [the `willSendResponse` event](https://www.apollographql.com/docs/apollo-server/integrations/plugins/#willsendresponse)).
 
 If you don't want any usage reporting at all, don't use this option: instead, either avoid specifying an Apollo API key or explicitly [disable the plugin](#disabling-the-plugin).
 
@@ -192,7 +192,7 @@ By default, all requests are included in usage reports.
 
 Specify this function to provide Apollo Studio with client details for each processed request. Apollo Studio uses this information to [segment metrics by client](https://www.apollographql.com/docs/studio/client-awareness/).
 
-This function is passed a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts#L115-L150) object containing all available information about the request. It should return an object with `clientName` and `clientVersion` fields that identify the associated client.
+This function is passed a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-server-types/src/index.ts#L115-L150) object containing all available information about the request. It should return an object with `clientName` and `clientVersion` fields that identify the associated client.
 
 By default, the plugin attempts to obtain these values from the incoming request's HTTP headers (specifically, `apollographql-client-name` and `apollographql-client-version`).
 

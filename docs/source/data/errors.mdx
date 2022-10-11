@@ -42,7 +42,7 @@ Here's an example error response caused by misspelling the `__typename` field in
 
 To help with debugging, Apollo Server defines error subclasses that represent different types of errors that can occur while handling a GraphQL operation (such as `SyntaxError` and `ValidationError`). These subclasses each return a different [error code](#error-codes), which enables requesting clients to respond differently to different error types.
 
-These built-in error subclasses inherit from the generic `ApolloError` class, and they're all defined in [the `apollo-server-errors` package](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-errors/src/index.ts). You can also [create your own custom errors and codes](#custom-errors).
+These built-in error subclasses inherit from the generic `ApolloError` class, and they're all defined in [the `apollo-server-errors` package](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-server-errors/src/index.ts). You can also [create your own custom errors and codes](#custom-errors).
 
 ## Error codes
 

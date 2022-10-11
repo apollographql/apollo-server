@@ -10,7 +10,7 @@ The focus of this major-version release is to provide a lighter, nimbler core li
 
 This document explains which features _do_ require code changes and how to make them. If you encounter issues while migrating, please [create an issue](https://github.com/apollographql/apollo-server/issues/new/choose).
 
-> For a list of all breaking changes, [see the changelog](https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md).
+> For a list of all breaking changes, [see the changelog](https://github.com/apollographql/apollo-server/blob/version-3/CHANGELOG.md).
 
 
 ## Bumped dependencies
@@ -184,7 +184,7 @@ import typeDefs from "./typeDefs";
       }
     }],
   });
-  
+
   subscriptionServer = SubscriptionServer.create({
     schema,
     execute,
@@ -197,7 +197,7 @@ import typeDefs from "./typeDefs";
     server: httpServer,
     path: server.graphqlPath,
   });
-  
+
   await server.start();
   server.applyMiddleware({ app });
 

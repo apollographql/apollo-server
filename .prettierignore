@@ -12,3 +12,4 @@ docs/.cache/
 **/generated/**
 
 .volta
+_redirects

@@ -15,7 +15,7 @@
     "Apollo Federation": "https://www.apollographql.com/docs/federation/",
     "New in v3": {
       "Migrating to Apollo Server 3": "/migration",
-      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md"
+      "Changelog": "https://github.com/apollographql/apollo-server/blob/version-3/CHANGELOG.md"
     },
     "Defining a Schema": {
       "Schema basics": "/schema/schema",

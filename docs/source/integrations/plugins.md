@@ -19,7 +19,7 @@ const myPlugin = {
 };
 ```
 
-> If you're using TypeScript to create a plugin, the `apollo-server-plugin-base` module exports the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-plugin-base/src/index.ts) for plugins to implement.
+> If you're using TypeScript to create a plugin, the `apollo-server-plugin-base` module exports the [`ApolloServerPlugin` interface](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-server-plugin-base/src/index.ts) for plugins to implement.
 
 You can define a plugin in the same file where you initialize Apollo Server, or
 you can export it as a separate module:
@@ -189,7 +189,7 @@ Note that the `validationDidStart` end hook receives an _array_ of errors that c
 
 As the example above shows, `requestDidStart` and request lifecycle functions accept a `requestContext` parameter. This parameter is of type `GraphQLRequestContext`, which includes a `request` (of type `GraphQLRequest`), along with a `response` field (of type `GraphQLResponse`) if it's available.
 
-These types and their related subtypes are all defined in [`apollo-server-types/src/index.ts`](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-server-types/src/index.ts).
+These types and their related subtypes are all defined in [`apollo-server-types/src/index.ts`](https://github.com/apollographql/apollo-server/blob/version-3/packages/apollo-server-types/src/index.ts).
 
 ## Installing custom plugins
 
