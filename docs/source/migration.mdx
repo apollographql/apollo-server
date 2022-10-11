@@ -10,7 +10,7 @@ Apollo Server 4 provides the following features:
 * Packages that can be used as either ECMAScript or CJS modules.
 * Experimental support for [incremental delivery](./workflow/requests#incremental-delivery-experimental) when combined with a pre-release of `graphql-js`.
 
-> For a list of all breaking changes, see the [changelog](https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md) ([temporary location](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/CHANGELOG.md)).
+> For a list of all breaking changes, see the [changelog](https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md).
 
 ## The new `@apollo/server` package
 
@@ -862,7 +862,7 @@ you should now pass your error code to `GraphQLError`'s `extensions` option; see
 
 Apollo Server 3 exports several error classes. Apollo Server uses some of these error classes in specific situations (e.g., `SyntaxError`, `ValidationError`, and `UserInputError`), while other classes (`ForbiddenError` and `AuthenticationError`) are for users to use in their apps. All of these error classes are subclasses of the main `ApolloError` class.
 
-In Apollo Server 4, [`ApolloError` no longer exists](#apolloerror), so Apollo Server doesn't export specific error classes. Instead, you can create your own error codes using `graphql`'s `GraphQLError` class.  Additionally, Apollo Server now provides an enum of error codes ([`ApolloServerErrorCode`](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/errors/index.ts)) that you can check against to see if a given error is one of the types recognized by Apollo Server.
+In Apollo Server 4, [`ApolloError` no longer exists](#apolloerror), so Apollo Server doesn't export specific error classes. Instead, you can create your own error codes using `graphql`'s `GraphQLError` class.  Additionally, Apollo Server now provides an enum of error codes ([`ApolloServerErrorCode`](https://github.com/apollographql/apollo-server/blob/main/packages/server/src/errors/index.ts)) that you can check against to see if a given error is one of the types recognized by Apollo Server.
 
 In Apollo Server 3, you can throw a new `ForbiddenError`, like so:
 
@@ -1460,7 +1460,7 @@ Specifically, the `http` field is now an `HTTPGraphQLRequest` type instead of a 
 
 ### `GraphQLResponse`
 
-Apollo Server 4 refactors the [`GraphQLResponse` object](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/externalTypes/graphql.ts#L25), which is available to plugins as `requestContext.response` and is the type `server.executeOperation` returns.
+Apollo Server 4 refactors the [`GraphQLResponse` object](https://github.com/apollographql/apollo-server/blob/main/packages/server/src/externalTypes/graphql.ts#L25), which is available to plugins as `requestContext.response` and is the type `server.executeOperation` returns.
 
 In Apollo Server 3, the  `data`, `errors`, and `extensions` fields existed at the top level, right beside `http`.
 

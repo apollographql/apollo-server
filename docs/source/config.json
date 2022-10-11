@@ -7,7 +7,7 @@
     "Get started": "/getting-started",
     "New in v4": {
       "Migrating to Apollo Server 4": "/migration",
-      "Changelog": "https://github.com/apollographql/apollo-server/blob/version-4/packages/server/CHANGELOG.md"
+      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md"
     },
     "Defining a Schema": {
       "Schema basics": "/schema/schema",

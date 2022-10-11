@@ -15,7 +15,7 @@ Server in their web framework of choice.
 ## Overview
 
 The primary responsibility of an Apollo Server integration is to translate
-requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/version-4/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
+requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/main/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
 
 > For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
 
@@ -262,4 +262,4 @@ res.end();
 
 For those _building_ a new integration library,  we'd like to welcome you (and your repository!) to the [`apollo-server-integrations`](https://github.com/apollo-server-integrations) Github organization alongside other community-maintained Apollo Server integrations. If you participate in our organization, you'll have the option to publish under our community's NPM scope `@as-integrations`, ensuring your integration is discoverable.
 
-The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations. 
+The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) provides a set of Jest tests for authors looking to test their Apollo Server integrations.
