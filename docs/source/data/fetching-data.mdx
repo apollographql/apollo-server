@@ -41,7 +41,7 @@ export class BookingsDataSource {
   private dbConnection;
   private token;
 
-  constructor(options: { contextValue: { token: string } }) {
+  constructor(options: { token: string }) {
     this.dbConnection = this.initializeDBConnection();
     this.token = options.contextValue.token;
   }
@@ -118,7 +118,7 @@ console.log(`🚀  Server ready at ${url}`);
 <!-- TODO(AS4) add link to context article once exists  -->
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
-- The **`context` function should create a new instance of each data source class for each operation.** You might accidentally combine results from multiple operations if multiple operations share a single data source instance.
+> If your data source class uses **caching** or its constructor requires an argument, the `context` function should create a _new instance_ of each data source class for each operation. Otherwise, you might accidentally combine results from multiple operations if those operations share a single data source instance.
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
@@ -138,9 +138,11 @@ const resolvers = {
 };
 ```
 
-## Open-source implementations
+## Apollo Server 3 `DataSource`s
 
-[In Apollo Server 3](/apollo-server/v3/data/data-sources), you'd subclass the `DataSource` abstract class for each of your data sources. In Apollo Server 4, we recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
+Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which would attach your data sources to your `context` behind the scenes. 
+
+In Apollo Server 4, you can now create your data sources in the same `context` function as the rest of your per-request setup, avoiding the `DataSource` superclass entirely. We recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
 
 > ⚠️ **Note**: The community built each data source package below for use with Apollo Server 3. [As shown below](#using-datasource-subclasses), you can still use these packages in Apollo Server 4 with a bit of extra setup.
 
