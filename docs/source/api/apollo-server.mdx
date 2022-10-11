@@ -522,28 +522,9 @@ The `start` method triggers the following actions:
 
 ## `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests`
 
-**Serverless** integrations handle starting an Apollo Server instance in the background by calling the `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details.
+**Serverless** integrations handle starting an Apollo Server instance in the background by calling the `startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests` method. This method is _synchronous_ and doesn't need to be `awaited`. This means any errors that occur happen in the background, so you can't immediately handle them. See [Building integrations](../integrations/building-integrations#ensure-successful-startup) for more details.
 
 This method [triggers the same actions](#triggered-actions) as the `start()` method.
-
-## `executeHTTPGraphQLRequest`
-
-You can pass a [`HTTPGraphQLRequest`](../integrations/building-integrations/#construct-the-httpgraphqlrequest-object) object to the `executeHTTPGraphQLRequest` method to execute a GraphQL request:
-
-<MultiCodeBlock>
-
-```ts
-const result = await server.executeHTTPGraphQLRequest({
-  httpGraphQLRequest: OurHttpGraphQLRequest,
-  context: async () => ({
-    // token: ...,
-  }),
-});
-```
-
-</MultiCodeBlock>
-
-For details and examples, see [Building Integrations](../integrations/building-integrations/#execute-the-graphql-request).
 
 ## `addPlugin`
 
@@ -674,7 +655,7 @@ If `query` contains more than one operation definition, you must provide this op
 </td>
 <td>
 
-The `extensions` object is usually used to pass request metadata within your server from one touch point to another (e.g., from a request to a plugin) during the lifecycle of a request.
+The `extensions` object is usually used to pass request metadata within your server from one touch point to another (e.g., from a request to a plugin) during the lifecycle of a request. In this scenario, this object represents the request extensions sent in an actual request.
 
 </td>
 </tr>
@@ -696,6 +677,26 @@ An object implementing the [`HTTPGraphQLRequest`](https://github.com/apollograph
 
 </tbody>
 </table>
+
+
+## `executeHTTPGraphQLRequest`
+
+The `executeHTTPGraphQLRequest` method is the main entry point for web framework integrations. You can pass a [`HTTPGraphQLRequest`](../integrations/building-integrations/#construct-the-httpgraphqlrequest-object) object to the `executeHTTPGraphQLRequest` method to execute a GraphQL request:
+
+<MultiCodeBlock>
+
+```ts
+const result = await server.executeHTTPGraphQLRequest({
+  httpGraphQLRequest: OurHttpGraphQLRequest,
+  context: async () => ({
+    // token: ...,
+  }),
+});
+```
+
+</MultiCodeBlock>
+
+For details and examples, see [Building Integrations](../integrations/building-integrations/#execute-the-graphql-request).
 
 ## `cache`
 

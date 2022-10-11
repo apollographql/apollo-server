@@ -11,7 +11,7 @@ Apollo Server accepts queries and mutations sent as `POST` requests. It also acc
 
 ## POST requests
 
-Apollo Server accepts `POST` requests with a JSON body. A valid request contains a `query` field, along with optional `variables` and an `operationName` (if `query` contains multiple possible operations). You must specify a `Content-Type` HTTP header with type `application/json`.
+Apollo Server accepts `POST` requests with a JSON body. A valid request contains a `query` field, along with optional `variables`, `extensions`, and an `operationName` (if `query` contains multiple possible operations). You must specify a `Content-Type` HTTP header with type `application/json`.
 
 Let's say we want to execute the following query:
 
