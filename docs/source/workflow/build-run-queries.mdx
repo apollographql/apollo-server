@@ -1,0 +1,116 @@
+---
+title: Build and run queries against Apollo Server
+---
+
+In non-production environments, Apollo Server 4's landing page is an embedded version of [Apollo Sandbox](/studio/explorer/sandbox) (served at `http://localhost:4000` by default):
+
+<img class="screenshot" src="../images/sandbox.jpeg" alt="Apollo Sandbox" />
+
+> Apollo Server serves a different landing page [in production](#production-vs-non-production).
+
+[Apollo Sandbox](https://studio.apollographql.com/sandbox) is a special mode of Apollo Studio used for local development, which doesn't require an Apollo account. Sandbox includes the [Apollo Studio Explorer](/studio/explorer/explorer), a powerful web IDE that enables you to build and run operations against your server (or any other reachable server).
+
+## Production vs. non-production
+
+In production environments (when `NODE_ENV` is `production`), Apollo Server serves a different landing page:
+
+<img
+  class="screenshot"
+  src="../images/as-landing-page-production.jpg"
+  alt="Apollo Server production landing page"
+  width="400"
+/>
+
+This is partly because Apollo Server disables introspection in production by default, which means that tools like Apollo Sandbox don't work.
+
+For this reason, if you choose to [change your Apollo Server landing page](#changing-the-landing-page), we recommend using different settings for production and non-production environments (potentially even [disabling your landing page](#disabling-the-landing-page) in production).
+
+## Changing the landing page
+
+You can change the landing page that's served from Apollo Server's base URL. You can choose to [configure the default landing page](#configuring-the-default-landing-page), serve [GraphQL Playground](../api/plugin/landing-pages/#graphql-playground-landing-page) (a legacy open-source GraphQL IDE), create a completely [custom landing page](#custom-landing-page), or you can [disable the landing page entirely](#disabling-the-landing-page).
+
+You do this by installing one of a few different Apollo Server **plugins**.
+
+### Configuring the default landing page
+
+Apollo Server uses one of these plugins to display its default landing page, depending on the environment:
+
+- `ApolloServerPluginLandingPageLocalDefault` (non-production environments)
+- `ApolloServerPluginLandingPageProductionDefault` (production)
+
+You can install either of these plugins manually to configure its behavior.
+
+For example, below, we set up our local landing page to serve up a splash page which contains a link to the Apollo Sandbox:
+
+```ts title="index.ts"
+import { ApolloServer } from '@apollo/server';
+// highlight-start
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
+} from '@apollo/server/plugin/landingPage/default';
+// highlight-end
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    // highlight-start
+    process.env.NODE_ENV === 'production'
+      ? ApolloServerPluginLandingPageProductionDefault()
+      : ApolloServerPluginLandingPageLocalDefault({ embed: false }),
+    // highlight-end
+  ],
+});
+```
+
+For all available configuration options for these plugins, [see the API reference](../api/plugin/landing-pages/).
+
+### Custom landing page
+
+You can serve a custom HTML landing page from Apollo Server's base URL. To do so, define your own [custom plugin](../integrations/plugins/) that calls the [`renderLandingPage` method](../integrations/plugins-event-reference/#renderlandingpage), like so:
+
+```ts title="index.ts"
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    {
+      async serverWillStart() {
+        return {
+          // highlight-start
+          async renderLandingPage() {
+            const html = `
+              <!DOCTYPE html>
+              <html>
+                <head>
+                </head>
+                <body>
+                  <h1>Hello world!</h1>
+                </body>
+              </html>`;
+            return { html };
+          },
+        };
+        // highlight-end
+      },
+    },
+  ],
+});
+```
+
+### Disabling the landing page
+
+You can disable Apollo Server's landing page by providing the following plugin to the `ApolloServer` constructor:
+
+```ts title="index.ts"
+import { ApolloServerPluginLandingPageDisabled } from '@apollo/server/plugin/disabled'; // highlight-line
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  // highlight-start
+  plugins: [ApolloServerPluginLandingPageDisabled()],
+  // highlight-end
+});
+```

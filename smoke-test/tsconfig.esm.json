@@ -1,0 +1,12 @@
+{
+  "files": [
+    "smoke-test.mts",
+  ],
+  "compilerOptions": {
+    "outDir": "generated/tsc",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+  },
+}

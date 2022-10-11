@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/errors",
+  "type": "module",
+  "main": "../dist/cjs/errors/index.js",
+  "module": "../dist/esm/errors/index.js",
+  "types": "../dist/esm/errors/index.d.ts",
+  "sideEffects": false
+}

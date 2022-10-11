@@ -1,0 +1,45 @@
+{
+  "name": "@apollo/usage-reporting-protobuf",
+  "version": "4.0.0",
+  "description": "Protobuf format for Apollo usage reporting",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./generated/protobuf.mjs",
+      "require": "./generated/protobuf.cjs",
+      "types": "./generated/protobuf.d.ts"
+    }
+  },
+  "types": "generated/protobuf.d.ts",
+  "scripts": {
+    "generate": "rm -rf generated && mkdir generated && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
+    "pbjs-cjs": "apollo-pbjs --target static-module --out generated/protobuf.cjs --wrap commonjs --force-number --no-from-object src/reports.proto",
+    "pbjs-esm": "apollo-pbjs --target static-module --out generated/protobuf.mjs --es6 --force-number --no-from-object src/reports.proto",
+    "pbts": "mv generated/protobuf.{c,}js && apollo-pbts -o generated/protobuf.d.ts generated/protobuf.js && mv generated/protobuf.{,c}js",
+    "update-proto": "curl -sSfo src/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/usage-reporting-protobuf"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Apollo <packages@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "//": "Don't caret this, we want to be explicit about the version of our fork of protobufjs and update it intentionally if we need to.",
+  "dependencies": {
+    "@apollo/protobufjs": "1.2.6"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

@@ -1,0 +1,119 @@
+{
+  "name": "@apollo/server",
+  "version": "4.0.0",
+  "description": "Core engine for Apollo GraphQL server",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./errors": {
+      "types": "./dist/esm/errors/index.d.ts",
+      "import": "./dist/esm/errors/index.js",
+      "require": "./dist/cjs/errors/index.js"
+    },
+    "./express4": {
+      "types": "./dist/esm/express4/index.d.ts",
+      "import": "./dist/esm/express4/index.js",
+      "require": "./dist/cjs/express4/index.js"
+    },
+    "./standalone": {
+      "types": "./dist/esm/standalone/index.d.ts",
+      "import": "./dist/esm/standalone/index.js",
+      "require": "./dist/cjs/standalone/index.js"
+    },
+    "./plugin/cacheControl": {
+      "types": "./dist/esm/plugin/cacheControl/index.d.ts",
+      "import": "./dist/esm/plugin/cacheControl/index.js",
+      "require": "./dist/cjs/plugin/cacheControl/index.js"
+    },
+    "./plugin/disabled": {
+      "types": "./dist/esm/plugin/disabled/index.d.ts",
+      "import": "./dist/esm/plugin/disabled/index.js",
+      "require": "./dist/cjs/plugin/disabled/index.js"
+    },
+    "./plugin/drainHttpServer": {
+      "types": "./dist/esm/plugin/drainHttpServer/index.d.ts",
+      "import": "./dist/esm/plugin/drainHttpServer/index.js",
+      "require": "./dist/cjs/plugin/drainHttpServer/index.js"
+    },
+    "./plugin/inlineTrace": {
+      "types": "./dist/esm/plugin/inlineTrace/index.d.ts",
+      "import": "./dist/esm/plugin/inlineTrace/index.js",
+      "require": "./dist/cjs/plugin/inlineTrace/index.js"
+    },
+    "./plugin/landingPage/default": {
+      "types": "./dist/esm/plugin/landingPage/default/index.d.ts",
+      "import": "./dist/esm/plugin/landingPage/default/index.js",
+      "require": "./dist/cjs/plugin/landingPage/default/index.js"
+    },
+    "./plugin/schemaReporting": {
+      "types": "./dist/esm/plugin/schemaReporting/index.d.ts",
+      "import": "./dist/esm/plugin/schemaReporting/index.js",
+      "require": "./dist/cjs/plugin/schemaReporting/index.js"
+    },
+    "./plugin/usageReporting": {
+      "types": "./dist/esm/plugin/usageReporting/index.d.ts",
+      "import": "./dist/esm/plugin/usageReporting/index.js",
+      "require": "./dist/cjs/plugin/usageReporting/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/server"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript"
+  ],
+  "author": "Apollo <packages@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "engines": {
+    "node": ">=12.0"
+  },
+  "dependencies": {
+    "@apollo/cache-control-types": "^1.0.2",
+    "@apollo/server-gateway-interface": "^1.0.3",
+    "@apollo/usage-reporting-protobuf": "^4.0.0",
+    "@apollo/utils.createhash": "^1.1.0",
+    "@apollo/utils.fetcher": "^1.0.0",
+    "@apollo/utils.isnodelike": "^1.1.0",
+    "@apollo/utils.keyvaluecache": "^1.0.1",
+    "@apollo/utils.logger": "^1.0.0",
+    "@apollo/utils.usagereporting": "^1.0.0",
+    "@apollo/utils.withrequired": "^1.0.0",
+    "@graphql-tools/schema": "^9.0.0",
+    "@josephg/resolvable": "^1.0.0",
+    "@types/express-serve-static-core": "^4.17.30",
+    "@types/express": "^4.17.13",
+    "@types/node-fetch": "^2.6.1",
+    "async-retry": "^1.2.1",
+    "body-parser": "^1.20.0",
+    "cors": "^2.8.5",
+    "express": "^4.17.1",
+    "loglevel": "^1.6.8",
+    "lru-cache": "^7.10.1",
+    "negotiator": "^0.6.3",
+    "node-fetch": "^2.6.7",
+    "uuid": "^9.0.0",
+    "whatwg-mimetype": "^3.0.0"
+  },
+  "peerDependencies": {
+    "graphql": "^16.6.0"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

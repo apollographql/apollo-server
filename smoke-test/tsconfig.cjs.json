@@ -1,0 +1,12 @@
+{
+  "files": [
+    "smoke-test.cts",
+  ],
+  "compilerOptions": {
+    "outDir": "generated/tsc",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+  },
+}

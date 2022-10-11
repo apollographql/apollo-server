@@ -6,7 +6,6 @@
 *.snap
 
 dist/
-docs/.cache/
 
 # Don't format generated files!
 **/generated/**

@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/disabled",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/disabled/index.js",
+  "module": "../../dist/esm/plugin/disabled/index.js",
+  "types": "../../dist/esm/plugin/disabled/index.d.ts",
+  "sideEffects": false
+}

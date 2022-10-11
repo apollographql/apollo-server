@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/cacheControl",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/cacheControl/index.js",
+  "module": "../../dist/esm/plugin/cacheControl/index.js",
+  "types": "../../dist/esm/plugin/cacheControl/index.d.ts",
+  "sideEffects": false
+}
