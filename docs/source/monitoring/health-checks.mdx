@@ -56,4 +56,4 @@ app.get('/health', (req, res) => {
 
 </MultiCodeBlock>
 
-Note, if you are using `startStandaloneServer`, you must [swap to using the `expressMiddleware` function](../api/standalone/#swapping-to-expressmiddleware) to create an HTTP server health check.
+> If you are using `startStandaloneServer`, you must first [swap to using the `expressMiddleware` function](../api/standalone/#swapping-to-expressmiddleware) before creating an HTTP server health check.

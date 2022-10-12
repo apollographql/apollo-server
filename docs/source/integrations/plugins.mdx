@@ -59,6 +59,22 @@ export default (options: { logMessage: string }) => {
 
 </MultiCodeBlock>
 
+If your plugin needs to read the [`contextValue`] of a request (i.e., `requestContext.contextValue`), then you need to declare your plugin as `ApolloServerPlugin<YourContextType>`
+
+<MultiCodeBlock>
+
+```ts title="myPlugin.ts"
+export default (options: { logMessage: string }) => {
+  return {
+    async serverWillStart() {
+      console.log(options.logMessage);
+    },
+  };
+};
+```
+
+</MultiCodeBlock>
+
 ## Responding to events
 
 A plugin specifies exactly which events it responds to by implementing functions that correspond to those events. The plugin in the examples above responds to the `serverWillStart` event, which fires when Apollo Server is preparing to start up. Almost all plugin events are `async` functions (i.e., functions that return `Promise`s). The only exceptions
