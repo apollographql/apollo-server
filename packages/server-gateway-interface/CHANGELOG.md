@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 1.0.4
+
+### Patch Changes
+
+- [#203](https://github.com/apollographql/apollo-utils/pull/203) [`68ba755`](https://github.com/apollographql/apollo-utils/commit/68ba755fd54df123408a11a217400711e82f30cf) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update to latest release of Apollo Server dependencies
+
 ## 1.0.3
 
 ### Patch Changes
