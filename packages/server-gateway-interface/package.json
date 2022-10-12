@@ -23,7 +23,7 @@
     "@apollo/utils.fetcher": "^1.0.0",
     "@apollo/utils.logger": "^1.0.0",
     "@apollo/utils.keyvaluecache": "^1.0.1",
-    "@apollo/usage-reporting-protobuf": "^4.0.0-alpha.1"
+    "@apollo/usage-reporting-protobuf": "^4.0.0"
   },
   "peerDependencies": {
     "graphql": "14.x || 15.x || 16.x"
