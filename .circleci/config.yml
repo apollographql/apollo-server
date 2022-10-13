@@ -56,7 +56,7 @@ jobs:
     - image: cimg/base:stable
     steps:
       - setup-node:
-          node-version: <<parameters.node-version>
+          node-version: <<parameters.node-version>>
       - run: npm run compile
       - run: npm run test:ci
       - run: npm run coverage:upload
