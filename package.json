@@ -11,7 +11,6 @@
     "postcompile": "node scripts/postcompile.mjs",
     "watch": "tsc --build tsconfig.esm.json --watch",
     "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",
-    "postinstall": "npm run compile",
     "pretest": "tsc --build tsconfig.json",
     "test": "jest --verbose",
     "test:clean": "jest --clearCache",
@@ -28,7 +27,7 @@
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
     "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)",
-    "changeset-publish": "changeset publish",
+    "changeset-publish": "npm run compile && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "changeset-version": "changeset version && npm i"
   },
