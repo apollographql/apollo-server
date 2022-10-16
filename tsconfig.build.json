@@ -5,21 +5,7 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "./packages/apollo-datasource" },
-    { "path": "./packages/apollo-datasource-rest" },
-    { "path": "./packages/apollo-server" },
-    { "path": "./packages/apollo-server-azure-functions" },
-    { "path": "./packages/apollo-server-cloud-functions" },
-    { "path": "./packages/apollo-server-cloudflare" },
-    { "path": "./packages/apollo-server-core" },
-    { "path": "./packages/apollo-server-errors" },
-    { "path": "./packages/apollo-server-express" },
-    { "path": "./packages/apollo-server-fastify" },
-    { "path": "./packages/apollo-server-hapi" },
-    { "path": "./packages/apollo-server-koa" },
-    { "path": "./packages/apollo-server-lambda" },
-    { "path": "./packages/apollo-server-micro" },
-    { "path": "./packages/apollo-server-plugin-base" },
-    { "path": "./packages/apollo-server-plugin-response-cache" },
+    { "path": "./tsconfig.build.esm.json" },
+    { "path": "./tsconfig.build.cjs.json" },
   ]
 }

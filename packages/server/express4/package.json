@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/express4",
+  "type": "module",
+  "main": "../dist/cjs/express4/index.js",
+  "module": "../dist/esm/express4/index.js",
+  "types": "../dist/esm/express4/index.d.ts",
+  "sideEffects": false
+}

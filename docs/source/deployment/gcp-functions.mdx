@@ -2,12 +2,17 @@
 title: Deploying with Google Cloud Functions
 ---
 
+<!-- TODO(AS4) update when we have a Google Cloud Function integration to deploy -->
+
 This tutorial helps you deploy Apollo Server to Google Cloud Functions. It uses the following example function handler:
 
 <ExpansionPanel title="Click to expand">
 
 ```javascript title="index.js"
 const { ApolloServer, gql } = require('apollo-server-cloud-functions');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -28,6 +33,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.handler = server.createHandler();
@@ -146,6 +154,9 @@ To obtain information about a currently executing Google Cloud Function (HTTP he
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server-cloud-functions');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -171,6 +182,9 @@ const server = new ApolloServer({
     req,
     res,
   }),
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.handler = server.createHandler();

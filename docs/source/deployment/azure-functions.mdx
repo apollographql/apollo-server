@@ -3,6 +3,8 @@ title: Deploying with Azure Functions
 description: Deploying your GraphQL server to Azure Functions
 ---
 
+<!-- TODO(AS4) update when we have an Azure Functions integration to deploy -->
+
 This tutorial walks through setting up an example project using the [Azure Functions integration](https://www.npmjs.com/package/apollo-server-azure-functions) for Apollo Server.
 
 We created this tutorial using a Linux environment. Some commands might differ if you use a Windows environment; [please refer to the Azure documentation for more details](https://docs.microsoft.com/en-us/cli/azure/install-azure-cli-windows?tabs=azure-cli).
@@ -79,6 +81,9 @@ To set up the `apollo-server-azure-functions` library, replace the content of yo
 
 ```javascript
 const { ApolloServer, gql } = require('apollo-server-azure-functions');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Schema definition.
 const typeDefs = gql`
@@ -100,6 +105,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 exports.graphqlHandler = server.createHandler();
 ```

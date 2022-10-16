@@ -4,21 +4,24 @@ title: Terminating SSL
 
 Most production environments use a load balancer or HTTP proxy (such as nginx) to perform SSL termination on behalf of web applications in that environment.
 
-If you're using Apollo Server in an application that must perform its _own_ SSL termination, you can use the `https` module with the `apollo-server-express` [middleware
-library](../integrations/middleware/).
+If you're using Apollo Server in an application that must perform its _own_ SSL termination, you can use the `https` module with the [`expressMiddleware` function](../api/express-middleware).
 
 Here's an example that uses HTTPS in production and HTTP in development:
 
 <MultiCodeBlock>
 
 ```ts title="index.ts"
-import express from 'express';
-import { ApolloServer } from 'apollo-server-express';
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import typeDefs from './graphql/schema';
 import resolvers from './graphql/resolvers';
-import fs from 'fs';
-import https from 'https';
+import cors from 'cors';
+import bodyParser from 'body-parser';
+import express from 'express';
 import http from 'http';
+import https from 'https';
+import fs from 'fs';
 
 async function startApolloServer() {
   const configurations = {
@@ -33,13 +36,17 @@ async function startApolloServer() {
   const server = new ApolloServer({
     typeDefs,
     resolvers,
-    csrfPrevention: true,
-    cache: 'bounded',
   });
   await server.start();
 
   const app = express();
-  server.applyMiddleware({ app });
+  // our express server is mounted at /graphql
+  app.use(
+    '/graphql',
+    cors<cors.CorsRequest>(),
+    bodyParser.json(),
+    expressMiddleware(server),
+  );
 
   // Create the HTTPS or HTTP server, per configuration
   let httpServer;
@@ -49,7 +56,7 @@ async function startApolloServer() {
     httpServer = https.createServer(
       {
         key: fs.readFileSync(`./ssl/${environment}/server.key`),
-        cert: fs.readFileSync(`./ssl/${environment}/server.crt`)
+        cert: fs.readFileSync(`./ssl/${environment}/server.crt`),
       },
 
       app,
@@ -58,16 +65,9 @@ async function startApolloServer() {
     httpServer = http.createServer(app);
   }
 
-  await new Promise<void>(resolve =>
-    httpServer.listen({ port: config.port }, resolve)
-  );
+  await new Promise<void>((resolve) => httpServer.listen({ port: config.port }, resolve));
 
-  console.log(
-    '🚀 Server ready at',
-    `http${config.ssl ? 's' : ''}://${config.hostname}:${config.port}${
-      server.graphqlPath
-    }`
-  );
+  console.log('🚀 Server ready at', `http${config.ssl ? 's' : ''}://${config.hostname}:${config.port}/graphql`);
 
   return { server, app };
 }

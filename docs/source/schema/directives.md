@@ -3,7 +3,9 @@ title: Directives
 description: Configure GraphQL types, fields, and arguments
 ---
 
-A **directive** decorates part of a GraphQL schema or operation with additional configuration. Tools like Apollo Server (and [Apollo Client](https://www.apollographql.com/docs/react/local-state/managing-state-with-field-policies/#querying)) can read a GraphQL document's directives and perform custom logic as appropriate.
+> Looking for Apollo Federation directives? See [Federation-specific GraphQL directives](/federation/federated-types/federated-directives/).
+
+A **directive** decorates part of a GraphQL schema or operation with additional configuration. Tools like Apollo Server (and [Apollo Client](/react/local-state/managing-state-with-field-policies/#querying)) can read a GraphQL document's directives and perform custom logic as appropriate.
 
 Directives are preceded by the `@` character, like so:
 
@@ -16,8 +18,8 @@ type ExampleType {
 
 This example shows the `@deprecated` directive, which is a [default directive](#default-directives) (i.e., it's part of the [GraphQL specification](http://spec.graphql.org/June2018/#sec--deprecated)). It demonstrates the following about directives:
 
-* Directives can take arguments of their own (`reason` in this case).
-* Directives appear _after_ the declaration of what they decorate (the `oldField` field in this case)
+- Directives can take arguments of their own (`reason` in this case).
+- Directives appear _after_ the declaration of what they decorate (the `oldField` field in this case)
 
 ## Valid locations
 
@@ -37,7 +39,7 @@ This indicates that `@deprecated` can decorate any of the four listed locations.
 # ARGUMENT_DEFINITION
 # Note: @deprecated arguments _must_ be optional.
 directive @withDeprecatedArgs(
-  deprecatedArg: String @deprecated(reason: "Use `newArg`"),
+  deprecatedArg: String @deprecated(reason: "Use `newArg`")
   newArg: String
 ) on FIELD
 

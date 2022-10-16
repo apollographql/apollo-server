@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../tsconfig.test.base",
+  "include": ["**/*"],
+  "exclude": ["gatewayCompatibility0.test.ts", "gatewayCompatibility2.test.ts"],
+  "references": [
+    { "path": "../../" },
+    { "path": "../../../integration-testsuite" }
+  ]
+}

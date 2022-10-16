@@ -3,6 +3,8 @@ title: Deploying with AWS Lambda
 description: How to deploy Apollo Server with AWS Lambda
 ---
 
+<!-- TODO(AS4) update when we have a serverless integration to deploy -->
+
 AWS Lambda is a service that allows users to run code without provisioning or managing servers. Cost is based on the compute time that is consumed, and there is no charge when code is not running.
 
 This guide explains how to setup Apollo Server 2 to run on AWS Lambda using Serverless Framework. To use CDK and SST instead, [follow this tutorial](https://serverless-stack.com/examples/how-to-create-an-apollo-graphql-api-with-serverless.html).
@@ -35,6 +37,9 @@ Next, set up the schema's type definitions and resolvers, and pass them to the `
 // graphql.js
 
 const { ApolloServer, gql } = require('apollo-server-lambda');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -55,6 +60,9 @@ const server = new ApolloServer({
   resolvers,
   csrfPrevention: true,
   cache: 'bounded',
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.graphqlHandler = server.createHandler();
@@ -197,6 +205,9 @@ The `event` object contains the API Gateway event (HTTP headers, HTTP method, bo
 
 ```js
 const { ApolloServer, gql } = require('apollo-server-lambda');
+const {
+  ApolloServerPluginLandingPageLocalDefault
+} = require('apollo-server-core');
 
 // Construct a schema, using GraphQL schema language
 const typeDefs = gql`
@@ -224,6 +235,9 @@ const server = new ApolloServer({
     context,
     expressRequest: express.req,
   }),
+  plugins: [
+    ApolloServerPluginLandingPageLocalDefault({ embed: true }),
+  ],
 });
 
 exports.graphqlHandler = server.createHandler();

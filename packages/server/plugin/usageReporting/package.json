@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/usageReporting",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/usageReporting/index.js",
+  "module": "../../dist/esm/plugin/usageReporting/index.js",
+  "types": "../../dist/esm/plugin/usageReporting/index.d.ts",
+  "sideEffects": false
+}

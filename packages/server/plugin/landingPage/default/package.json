@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/landingPage/default",
+  "type": "module",
+  "main": "../../../dist/cjs/plugin/landingPage/default/index.js",
+  "module": "../../../dist/esm/plugin/landingPage/default/index.js",
+  "types": "../../../dist/esm/plugin/landingPage/default/index.d.ts",
+  "sideEffects": false
+}

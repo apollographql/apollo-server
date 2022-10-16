@@ -8,7 +8,6 @@
     "group:jestPlusTypes",
   ],
   "schedule": null,
-  baseBranches: ["main", "version-4"],
   // Override this value set in apollo-open-source back to the default.
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
@@ -34,90 +33,59 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
-    // We are currently working on v16 support; let's pin to v15 until we do so.
-    // See #5605 and #5844.
-    {
-      matchPackageNames: ["graphql"],
-      allowedVersions: "15.x"
-    },
-    // We need to support Node v12, so we don't allow ourselves to use type definitions
-    // that would let us write v14-specific code. (In AS4, we stay on v14 instead.)
+    // We need to support Node v14, so we don't allow ourselves to use type definitions
+    // that would let us write v16-specific code.
     {
       matchPackageNames: ["@types/node"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "12.x"
-    },
-    {
-      matchPackageNames: ["@types/node"],
-      matchBaseBranches: ["version-4"],
       allowedVersions: "14.x"
     },
-    // The changes required to upgrade to v7 aren't 100% trivial, so they're not worth
-    // doing on main, just on version-4. (Oddly, @types/lru-cache skipped directly from
-    // v5 to v6.)
-    {
-      matchPackageNames: ["lru-cache"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "6.x"
-    },
-    {
-      matchPackageNames: ["@types/lru-cache"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "5.x"
-    },
-    // We've transitioned from lerna to changesets on version-4. We don't need
-    // to take the major upgrade on main. (Plus we can't because it drops Node
-    // 12 support.)
-    {
-      matchPackageNames: ["lerna"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "4.x"
-    },
-    // cspell v6 drops Node 12 support. We let it upgrade on version-4.
-    {
-      matchPackageNames: ["cspell"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "5.x"
-    },
-    // The next versions of these Hapi packages drop Node 12 support, so we can't
-    // take them. (AS4 drops Node 12 support too, but we will also no longer
-    // maintain a Hapi integration as part of core in AS4.)
-    {
-      matchPackageNames: ["@hapi/accept"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "5.x",
-    },
-    {
-      matchPackageNames: ["@hapi/boom"],
-      matchBaseBranches: ["main"],
-      allowedVersions: "9.x",
-    },
-    // node-fetch v3 only ships as ESM. We currently build to CommonJS and even
-    // if we start publishing as ESM (#5627) we're not going to go ESM-only
-    // for a while. (Plus it requires Node v12.20 and we technically support
-    // v12.0.) So let's stay on v2. (Perhaps we could swap to undici instead
-    // if this pin gets to be a problem.)
+    // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
+    // ESM and we're not going to go ESM-only for a while. So let's stay on v2.
+    // (Perhaps we could swap to undici instead if this pin gets to be a
+    // problem.)
     {
       "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
-    // apollo-server-fastify supports Fastify v3. In the past it has been a challenge
-    // to support multiple major versions of web frameworks due to the tight coupling
-    // between Apollo Server core and the framework integration code. (In fact we only
-    // went from Fastify v2 support to Fastify v3 support with AS3.0.) Our solution for
-    // AS4 is to release and version framework integrations separately, and to allow
-    // direct users of the integrations to maintain them. So we are not going to update
-    // AS3 to work with Fastify v4; the Fastify/Apollo Server community can decide whether
-    // the best approach for AS4 is to maintain separate apollo-server-fastify-v3 and
-    // apollo-server-fastify-v4 packages, or to publish a package that manages to work
-    // with both, or something else. (This integration is gone on the version-4 branch.)
+    // We install a bunch of different copies of `@apollo/gateway` (with various
+    // aliases). We want them to be stuck at specific versions, or to track only
+    // a particular major version.
     {
-      matchPackageNames: ["fastify", "@fastify/accepts"],
-      allowedVersions: "3.x",
+      matchPackageNames: ["apollo-gateway-0-oldest-supported"],
+      allowedVersions: "0.50.1",
     },
     {
-      matchPackageNames: ["@fastify/cors"],
-      allowedVersions: "7.x",
+      matchPackageNames: ["apollo-gateway-0-before-asgi"],
+      allowedVersions: "0.51.0",
     },
+    {
+      matchPackageNames: ["apollo-gateway-0-latest"],
+      allowedVersions: "0.x",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-2-oldest-supported"],
+      allowedVersions: "2.0.0",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-2-before-asgi"],
+      allowedVersions: "2.0.5",
+    },
+    {
+      matchPackageNames: ["apollo-gateway-2-latest"],
+      // Once 2.1.0 is released, we should switch to "2.x" here and change out of alphas.
+      allowedVersions: "2.x",
+    },
+    {
+      // We're uncomfortable running TS4.8 until this PR is released:
+      // https://github.com/microsoft/TypeScript/pull/50974 (it's not in 4.8.4).
+      matchPackageNames: ["typescript"],
+      allowedVersions: "4.7.x",
+    },
+    {
+      // Major upgrade rollup plugins along with rollup itself.
+      matchSourceUrlPrefixes: ["https://github.com/rollup/"],
+      matchUpdateTypes: ["major"],
+      groupName: "rollup",
+    }
   ]
 }

@@ -6,17 +6,19 @@ description: Utilities for testing Apollo Server
 Apollo Server uses a [multi-step request pipeline](../integrations/plugins/#request-lifecycle-event-flow) to validate and execute incoming GraphQL operations. This pipeline supports integration with custom plugins at each step, which can affect an operation's execution. Because of this, it's important to perform **integration tests** with a variety of operations to ensure your request pipeline works as expected.
 
 There are two main options for integration testing with Apollo Server:
-* Using `ApolloServer`'s `executeOperation` method.
-* Setting up an HTTP client to query your server.
+
+- Using `ApolloServer`'s `executeOperation` method.
+- Setting up an HTTP client to query your server.
 
 ## Testing using `executeOperation`
 
 Apollo Server's `executeOperation` method enables you to run operations through the request pipeline _without_ sending an HTTP request.
 
-The [`executeOperation` method](../api/apollo-server/#executeoperation) accepts the following arguments:
-* An object that describes the GraphQL operation to execute.
-  * This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
-* An optional argument that is passed in to the `ApolloServer` instance's [`context` function](../data/resolvers/#the-context-argument).
+The [`executeOperation` method](../api/apollo-server#executeoperation) accepts the following arguments:
+
+- An object that describes the GraphQL operation to execute.
+  - This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
+- An optional second object that is used as the operation's [context value](../data/resolvers/#the-context-argument)).
 
 Below is a simplified example of setting up a test using the JavaScript testing library [Jest](https://jestjs.io/):
 
@@ -25,7 +27,7 @@ Below is a simplified example of setting up a test using the JavaScript testing 
 ```ts title="index.test.ts"
 // For clarity in this example we included our typeDefs and resolvers above our test,
 // but in a real world situation you'd be importing these in from different files
-const typeDefs = gql`
+const typeDefs = `#graphql
   type Query {
     hello(name: String): String!
   }
@@ -40,39 +42,52 @@ const resolvers = {
 it('returns hello with the provided name', async () => {
   const testServer = new ApolloServer({
     typeDefs,
-    resolvers
+    resolvers,
   });
 
-  const result = await testServer.executeOperation({
+  const response = await testServer.executeOperation({
     query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
     variables: { name: 'world' },
   });
 
-  expect(result.errors).toBeUndefined();
-  expect(result.data?.hello).toBe('Hello world!');
+  // Note the use of Node's assert rather than Jest's expect; if using
+  // TypeScript, `assert`` will appropriately narrow the type of `body`
+  // and `expect` will not.
+  assert(body.kind === 'single');
+  expect(response.body.singleResult.errors).toBeUndefined();
+  expect(response.body.singleResult.data?.hello).toBe('Hello world!');
 });
 ```
 
 </MultiCodeBlock>
 
-Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the `errors` field of the operation result. As with any GraphQL response, these errors are not _thrown_.
+Note that when testing, any errors in parsing, validating, and executing your GraphQL operation are returned in the nested `errors` field of the result. As with any GraphQL response, these errors are not _thrown_.
 
-Unlike with a normal instance of `ApolloServer`,  you don't need to call [`start`](../api/apollo-server/#start) before calling `executeOperation`. The server instance calls `start` automatically for you if it hasn't been called already, and any startup errors are thrown.
+You don't need to start your server before calling `executeOperation`. The server instance will start automatically and throw any startup errors.
 
 To expand on the example above, here's a full integration test being run against a test instance of `ApolloServer`. This test imports all of the important pieces to test (`typeDefs`, `resolvers`, `dataSources`) and creates a new instance of `ApolloServer`.
 
-```js title="integration.test.js"
+```ts title="integration.test.ts"
 it('fetches single launch', async () => {
   const userAPI = new UserAPI({ store });
   const launchAPI = new LaunchAPI();
 
+  // highlight-start
+  // ensure our server's context is typed correctly
+  interface ContextValue {
+    user: User;
+    dataSources: {
+      userAPI: UserAPI;
+      launchAPI: LaunchAPI;
+    };
+  }
+  // highlight-end
+
   // create a test server to test against, using our production typeDefs,
   // resolvers, and dataSources.
-  const server = new ApolloServer({
+  const server = new ApolloServer<ContextValue>({
     typeDefs,
     resolvers,
-    dataSources: () => ({ userAPI, launchAPI }),
-    context: () => ({ user: { id: 1, email: 'a@a.a' } }),
   });
 
   // mock the dataSource's underlying fetch methods
@@ -83,35 +98,52 @@ it('fetches single launch', async () => {
   ]);
 
   // run the query against the server and snapshot the output
-  const res = await server.executeOperation({ query: GET_LAUNCH, variables: { id: 1 } });
+  const res = await server.executeOperation(
+    {
+      query: GET_LAUNCH,
+      variables: { id: 1 },
+    },
+    {
+      // highlight-start
+      contextValue: {
+        user: { id: 1, email: 'a@a.a' },
+        dataSources: {
+          userAPI,
+          launchAPI,
+        },
+      },
+      // highlight-end
+    },
+  );
+
   expect(res).toMatchSnapshot();
 });
 ```
 
-The example above includes a test-specific [`context` function](../data/resolvers/#the-context-argument), which provides data directly to the `ApolloServer` instance instead of calculating it from the request's context.
+The example above includes a test-specific [context value](../data/resolvers/#the-context-argument), which provides data directly to the `ApolloServer` instance, bypassing any `context` initialization function you have.
 
-To use your server's defined `context` function, you can pass a second argument to `executeOperation`, which is then passed to your server's `context` function. Note that to use your server's `context` function you need to put together an object with the correct [middleware-specific context fields](../api/apollo-server/#middleware-specific-context-fields) for your implementation.
+If you want to test the behavior of your `context` function directly, we recommend running actual HTTP requests against your server.
 
->For examples of both integration and end-to-end testing we recommend checking out the [tests included in the Apollo fullstack tutorial](https://github.com/apollographql/fullstack-tutorial/tree/master/final/server/src/__tests__).
+> For examples of both integration and end-to-end testing we recommend checking out the [tests included in the Apollo fullstack tutorial](https://github.com/apollographql/fullstack-tutorial/tree/master/final/server/src/__tests__).
 
 ## End-to-end testing
 
 Instead of bypassing the HTTP layer, you might want to fully run your server and test it with a real HTTP client. Apollo Server doesn't provide built-in support for this at this time.
 
-You can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/) . There are also community packages available such as [`apollo-server-integration-testing`](https://www.npmjs.com/package/apollo-server-integration-testing), which uses mocked Express request and response objects.
+Instead, you can run operations against your server using a combination of any HTTP or GraphQL client such as [`supertest`](https://www.npmjs.com/package/supertest) or [Apollo Client's HTTP Link](/react/api/link/apollo-link-http/).
 
-Below is an example of writing an end-to-end test using the `apollo-server` package and `supertest`:
+Below is an example of writing an end-to-end test using the `@apollo/server` and `supertest` packages:
 
 <MultiCodeBlock>
 
 ```ts title="server.test.ts"
-/// we import a function that we wrote to create a new instance of Apollo Server
+// we import a function that we wrote to create a new instance of Apollo Server
 import { createApolloServer } from '../server';
 
-// we will use supertest to test our server
+// we'll use supertest to test our server
 import request from 'supertest';
 
-// this is the query we use for our test
+// this is the query for our test
 const queryData = {
   query: `query sayHello($name: String) {
     hello(name: $name)
@@ -122,16 +154,16 @@ const queryData = {
 describe('e2e demo', () => {
   let server, url;
 
-  // before the tests we will spin up a new Apollo Server
+  // before the tests we spin up a new Apollo Server
   beforeAll(async () => {
     // Note we must wrap our object destructuring in parentheses because we already declared these variables
     // We pass in the port as 0 to let the server pick its own ephemeral port for testing
     ({ server, url } = await createApolloServer({ port: 0 }));
   });
 
-  // after the tests we will stop our server
+  // after the tests we'll stop the server
   afterAll(async () => {
-    await server?.close();
+    await server?.stop();
   });
 
   it('says hello', async () => {
@@ -147,6 +179,10 @@ describe('e2e demo', () => {
 
 You can also view and fork this complete example on CodeSandbox:
 
-<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v3/integration-testing?fontsize=14&hidenavigation=1&theme=dark">
-  <img alt="Edit integration-testing" src="https://codesandbox.io/static/img/play-codesandbox.svg" />
+<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/integration-testing?fontsize=14&hidenavigation=1&theme=dark">
+  <img
+    alt="Edit integration-testing"
+    src="https://codesandbox.io/static/img/play-codesandbox.svg"
+  />
 </a>
+<br />

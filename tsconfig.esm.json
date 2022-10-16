@@ -1,0 +1,11 @@
+{
+  "compilerOptions": {
+    "composite": true
+  },
+  "files": [],
+  "include": [],
+  "references": [
+    { "path": "./tsconfig.build.esm.json" },
+    { "path": "./tsconfig.test.json" },
+  ]
+}

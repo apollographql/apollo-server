@@ -1,1 +1,1 @@
-packages/apollo-server/README.md
+packages/server/README.md

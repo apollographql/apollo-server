@@ -2,28 +2,34 @@
 title: Introduction to Apollo Server
 ---
 
-**Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
+> 📣 **Apollo Server 4 is generally available!**
+>
+> [See what's new](./migration/)! 
+>
+> Docs for Apollo Server 3 are [available here](/apollo-server/v3/).
+
+**Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
 <img src="./images/frontend_backend_diagram.svg" width="500" alt="Diagram showing Apollo Server bridging frontend and backend" />
 
 #### You can use Apollo Server as:
 
-* A gateway for a [federated supergraph](/federation/)
-* The GraphQL server for a [subgraph](/federation/subgraphs) in a federated supergraph
-* A stand-alone GraphQL server, including in a serverless environment
-* An add-on to your application's existing [Node.js middleware](./integrations/middleware/) (such as Express or Fastify)
+* The GraphQL server for a [subgraph](/federation/building-supergraphs/subgraphs-apollo-server) in a federated supergraph
+* A [stand-alone GraphQL server](./api/standalone)
+* An add-on to your application's existing Node.js [middleware](./integrations/integration-index) (such as [Express](./api/express-middleware), AWS Lambda, or Fastify)
 
 #### Apollo Server provides:
 
 *  **Straightforward setup**, so your client developers can start fetching data quickly
-*  **Incremental adoption**, allowing you to add features as they're needed
+*  **Incremental adoption**, enabling you to add features as they're needed
 *  **Universal compatibility** with any data source, any build tool, and any GraphQL client
-*  **Production readiness**, enabling you to ship features faster
+*  **Production readiness**, enabling you to confidently run your graph in production
+
 
 #### Ready to try it out?
 
 <div align="center">
-  <ButtonLink href="./getting-started/" size="lg">
+  <ButtonLink href="./getting-started" size="lg">
     Get started!
   </ButtonLink>
 </div>

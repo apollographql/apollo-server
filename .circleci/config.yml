@@ -1,93 +1,128 @@
 version: 2.1
 
-# These "CircleCI Orbs" are reusable bits of configuration that can be shared
-# across projects.  See https://circleci.com/orbs/ for more information.
 orbs:
-  # `oss` is a local reference to the package.  The source for Apollo Orbs can
-  # be found at http://github.com/apollographql/CircleCI-Orbs/.
-  # We could use Renovate to bump this version via PR, but that's not setup now.
-  oss: apollo/oss-ci-cd-tooling@0.0.20
+  node: circleci/node@5.0.0
 
 commands:
-  # These are the steps used for each version of Node which we're testing
-  # against.  Thanks to YAMLs inability to merge arrays (though it is able
-  # to merge objects), every version of Node must use the exact same steps,
-  # or these steps would need to be repeated in a version of Node that needs
-  # something different.  Probably best to avoid that, out of principle, though.
-  common_node_steps:
-    description: "Set up Node.js environment and install dependencies"
+  install-volta:
+    description: Install volta to manage Node/npm versions
     steps:
-      - oss/install_specific_npm_version:
-          version: '8'
-      - checkout
-      - oss/npm_clean_install_with_caching
-
-  common_test_steps:
-    description: "Set up Node.js environment and run tests"
-    steps:
-      - common_node_steps
       - run:
-          command: npm run test:ci
-          environment:
-            JEST_JUNIT_OUTPUT_DIR: "reports/junit/"
+          name: Install volta
+          # Teach the volta installer to update Circle's special env
+          # file instead of the default.
+          command: |
+            curl https://get.volta.sh | PROFILE="$BASH_ENV" bash
+
+  setup-node:
+    parameters:
+      node-version:
+        type: string
+        default: ''
+    steps:
+      - install-volta
+      - checkout
+      - when:
+          condition: << parameters.node-version >>
+          steps:
+          - run: volta pin node@<< parameters.node-version >>
+      - run: node --version
+      - run: npm --version
+      # For now, we ignore `engine` constraints in package.json when running on
+      # Node 18. That's because we install a bunch of versions of
+      # @apollo/gateway for compatibility testing, including some from the era
+      # where we liked putting `<` engine constraints on all our packages. If
+      # this gets awkward, we can stop testing those old versions, or test them
+      # somewhere more self-contained like the smoke-test.
+      - when:
+          condition:
+            equal: [ '18', << parameters.node-version >> ]
+          steps:
+            - node/install-packages:
+                override-ci-command: npm ci --no-engine-strict
+      - unless:
+          condition:
+            equal: [ '18', << parameters.node-version >> ]
+          steps:
+            - node/install-packages
+
+
+jobs:
+  NodeJS:
+    parameters:
+      node-version:
+        type: string
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - setup-node:
+          node-version: <<parameters.node-version>>
+      - run: npm run test:ci
       - run: npm run coverage:upload
       - store_test_results:
-          path: reports/junit
-      - store_artifacts:
-          path: reports/junit
+          path: junit.xml
 
-# Important! When adding a new job to `jobs`, make sure to define when it
-# executes by also adding it to the `workflows` section below!
-jobs:
-  # Platform tests, each with the same tests but different platform or version.
-  # The docker tag represents the Node.js version and the full list is available
-  # at https://hub.docker.com/r/cimg/node/.
-
-  NodeJS 12:
+  Smoke test built package:
     docker:
-    - image: cimg/node:12.22.6
+    - image: cimg/base:stable
     steps:
-      - common_test_steps
-      # We will save the results of this one particular invocation to use in
-      # the publish step. Not only does this make the publishing step take less
-      # time, this also ensures that a passing version gets deployed even if,
-      # theoretically, rebuilding the same commit on the same version of
-      # Node.js should yield the same results!
-      - persist_to_workspace:
-          root: .
-          paths:
-            - ./**
+      - setup-node
+      - run: npm run test:smoke
 
-  NodeJS 14:
+  Full incremental delivery tests with graphql-js 17 canary:
     docker:
-    - image: cimg/node:14.18.0
+    - image: cimg/base:stable
+    environment:
+      INCREMENTAL_DELIVERY_TESTS_ENABLED: t
     steps:
-      - common_test_steps
-
-  NodeJS 16:
-    docker:
-    - image: cimg/node:16.10.0
-    steps:
-      - common_test_steps
-
-  NodeJS 17:
-    docker:
-    - image: cimg/node:17.2.0
-    steps:
-      - common_test_steps
+      - setup-node:
+          node-version: "18"
+      # Install a prerelease of graphql-js 17 with incremental delivery support.
+      # --legacy-peer-deps because nothing expects v17 yet.
+      # --no-engine-strict because Node v18 doesn't match the engines fields
+      # on some old stuff.
+      - run: npm i --legacy-peer-deps --no-engine-strict graphql@17.0.0-alpha.1.canary.pr.3361.04ab27334641e170ce0e05bc927b972991953882
+      - run: npm run test:ci
+      - run: npm run test:smoke
 
   Prettier:
     docker:
-    - image: cimg/node:16.10.0
+    - image: cimg/base:stable
     steps:
-      - common_node_steps
+      - setup-node
       - run: npm run prettier-check
+
+  ESLint:
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - setup-node
+      - run: npm run lint
+
+  # Ensure that any PR that changes packages has a changeset on it (perhaps
+  # an empty one created with `changeset --empty`).
+  # We run the Changesets job itself on all branches so that we can require
+  # it to pass, but we don't run any steps on the "Version Packages" PRs
+  # themselves.
+  Changesets:
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - run: echo Ensure there is at least one step
+      - unless:
+          condition:
+            matches:
+              pattern: "^changeset-release/.+$"
+              value: << pipeline.git.branch >>
+          steps:
+            - setup-node
+            - run: npm run changeset-check
 
   Spell check:
     docker:
-    - image: cimg/node:16.10.0
+    - image: cimg/base:stable
     steps:
-      - common_node_steps
+      - setup-node
       - run: npm run spell-check
 
   # We make CI fail if any file contains FIX and ME right next to each other.
@@ -101,76 +136,28 @@ jobs:
     docker:
     - image: cimg/base:stable
     steps:
-    - add_ssh_keys
     - checkout
     - run:
         name: "Check for FIXM\x45"
         # ! means this fails if git grep succeeds, ie if there are any matches
         command: "! git grep FIXM\x45"
 
-# XXX We used to use this filter to only run a "Docs" job on docs branches.
-#     Now we use it to disable all jobs. It's unclear if there's a simpler way
-#     to do this!
-common_non_publish_filters: &common_non_publish_filters
-  filters:
-    branches:
-      # If 'docs' is found, with word boundaries on either side, skip.
-      ignore: /.*?\bdocs\b.*/
-    # Ensure every job has `tags` filters since the publish steps have tags.
-    # This is some wild configuration thing that's pretty hard to figure out.
-    tags:
-      only: /.*/
-
-common_publish_filters: &common_publish_filters
-  filters:
-    # Only run pre-publish and publish steps on specific tags.
-    tags:
-      only: /^publish\/[0-9]+$/
-    # We want the publish to trigger on the above tag, not any branch.
-    branches:
-      ignore: /.*/
-
 workflows:
   version: 2
   Build:
     jobs:
-      - NodeJS 12:
-          <<: *common_non_publish_filters
-      - NodeJS 14:
-          <<: *common_non_publish_filters
-      - NodeJS 16:
-          <<: *common_non_publish_filters
-      - NodeJS 17:
-          <<: *common_non_publish_filters
+      - NodeJS:
+          name: NodeJS << matrix.node-version >>
+          matrix:
+            parameters:
+              node-version:
+                - "14"
+                - "16"
+                - "18"
       - "Check for FIXM\x45"
       - Prettier
+      - ESLint
       - Spell check
-      - oss/lerna_tarballs:
-          name: Package tarballs
-          <<: *common_non_publish_filters
-          requires:
-            - NodeJS 12
-            - NodeJS 14
-            - NodeJS 16
-            - NodeJS 17
-            - Prettier
-      - oss/dry_run:
-          name: Dry-run
-          <<: *common_publish_filters
-          requires:
-            - NodeJS 12
-            - NodeJS 14
-            - NodeJS 16
-            - NodeJS 17
-            - Prettier
-      - oss/confirmation:
-          name: Confirmation
-          type: approval
-          <<: *common_publish_filters
-          requires:
-            - Dry-run
-      - oss/publish:
-          name: Publish
-          <<: *common_publish_filters
-          requires:
-            - Confirmation
+      - Smoke test built package
+      - Full incremental delivery tests with graphql-js 17 canary
+      - Changesets

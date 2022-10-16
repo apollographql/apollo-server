@@ -33,21 +33,22 @@ Apollo Server supports APQ without any additional configuration. However, some _
 
 To set up APQ in Apollo Client, first import the `createPersistedQueryLink` function in the same file where you initialize `ApolloClient`:
 
-```js title="index.js"
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+```ts title="index.ts"
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 ```
 
-This function creates a link that you can add to your client's [Apollo Link chain](https://www.apollographql.com/docs/react/api/link/introduction/). The link takes care of generating APQ identifiers, using `GET` requests for hashed queries, and retrying requests with query strings when necessary.
+This function creates a link that you can add to your client's [Apollo Link chain](/react/api/link/introduction/). The link takes care of generating APQ identifiers, using `GET` requests for hashed queries, and retrying requests with query strings when necessary.
 
 Add the persisted query link anywhere in the chain before the terminating link. This example shows a basic two-link chain:
 
-```js
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+```ts
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 import { sha256 } from 'crypto-hash';
 
 const linkChain = createPersistedQueryLink({ sha256 }).concat(
-  new HttpLink({ uri: "http://localhost:4000/graphql" }));
+  new HttpLink({ uri: 'http://localhost:4000/graphql' }),
+);
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -64,7 +65,9 @@ You can test out APQ directly from the command line. This section also helps ill
 Every GraphQL server supports the following query (which requests the `__typename` field from the `Query` type):
 
 ```graphql
-{__typename}
+{
+  __typename
+}
 ```
 
 The SHA-256 hash of this query string is the following:
@@ -75,40 +78,44 @@ ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38
 
 1. Attempt to execute this query on your running server by providing its hash in a `curl` command, like so:
 
-    ```shell
-    curl --get http://localhost:4000/graphql \
-      --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-    ```
+   ```shell
+   curl --get http://localhost:4000/graphql \
+     --header 'content-type: application/json' \
+     --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+   ```
 
-    The first time you try this, Apollo Server responds with an error with the code `PERSISTED_QUERY_NOT_FOUND`. This tells us that Apollo Server hasn't yet received the associated query string.
+   The first time you try this, Apollo Server responds with an error with the code `PERSISTED_QUERY_NOT_FOUND`. This tells us that Apollo Server hasn't yet received the associated query string.
 
 2. Send a followup request that includes both the query string _and_ its hash, like so:
 
-    ```shell
-    curl --get http://localhost:4000/graphql \
-      --data-urlencode 'query={__typename}' \
-      --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
-    ```
+   ```shell
+     curl --get http://localhost:4000/graphql \
+     --header 'content-type: application/json' \
+     --data-urlencode 'query={__typename}' \
+     --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+   ```
 
-    This time, the server persists the query string and then responds with the query result as we'd expect.
+   This time, the server persists the query string and then responds with the query result as we'd expect.
 
-    > The hash you provide _must_ be the exact SHA-256 hash of the query string. If it isn't, Apollo Server returns an error.
+   > The hash you provide _must_ be the exact SHA-256 hash of the query string. If it isn't, Apollo Server returns an error.
 
 3. Finally, attempt the request from step 1 again:
 
-    ```shell
-    curl --get http://localhost:4000/graphql \
-      --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'    ```
+   ```shell
+     curl --get http://localhost:4000/graphql \
+     --header 'content-type: application/json' \
+     --data-urlencode 'extensions={"persistedQuery":{"version":1,"sha256Hash":"ecf4edb46db40b5132295c0291d62fb65d6759a9eedfa4d5d612dd5ec54a6b38"}}'
+   ```
 
    This time, the server responds with the query result because it successfully located the associated query string in its cache.
 
 ## Using `GET` requests with APQ on a CDN
 
-A great application for APQ is running Apollo Server behind a CDN. Many CDNs only cache GET requests, but many GraphQL queries are too long to fit comfortably in a cacheable GET request.  When the APQ link is created with `createPersistedQueryLink({useGETForHashedQueries: true})`, Apollo Client automatically sends the short hashed queries as GET requests allowing a CDN to serve those request. For full-length queries and for all mutations, Apollo Client will continue to use POST requests.
+A great application for APQ is running Apollo Server behind a CDN. Many CDNs only cache GET requests, but many GraphQL queries are too long to fit comfortably in a cacheable GET request. When the APQ link is created with `createPersistedQueryLink({useGETForHashedQueries: true})`, Apollo Client automatically sends the short hashed queries as GET requests enabling a CDN to serve those requests. For full-length queries and for all mutations, Apollo Client will continue to use POST requests.
 
 ## CDN Integration
 
-Content Delivery Networks (CDNs) such as [fly.io](https://fly.io), [Cloudflare](https://www.cloudflare.com/), [Akamai](https://www.akamai.com/), or [Fastly](https://www.fastly.com/) allow content caching close to clients, delivering data with low latency from a nearby server. Apollo Server makes it straightforward to use CDNs with GraphQL queries to cache full responses while still executing more dynamic queries.
+Content Delivery Networks (CDNs) such as [fly.io](https://fly.io), [Cloudflare](https://www.cloudflare.com/), [Akamai](https://www.akamai.com/), or [Fastly](https://www.fastly.com/) enable content caching close to clients, delivering data with low latency from a nearby server. Apollo Server makes it straightforward to use CDNs with GraphQL queries to cache full responses while still executing more dynamic queries.
 
 Apollo Server works well with a Content Distribution Network (CDN) to cache full GraphQL query results. By adding the appropriate cache hints, Apollo Server can calculate `Cache-Control` headers that a CDN can use to determine how long a request should be cached. For subsequent requests, the result will be served directly from the CDN's cache. A CDN paired with Apollo Server's persisted queries is especially powerful since GraphQL operations can be shortened and sent with an HTTP GET request.
 
@@ -125,16 +132,16 @@ type Author @cacheControl(maxAge: 60) {
 }
 ```
 
-See [the cache control documentation](./caching) for more details, including how to define the `@cacheControl` directive, how to specify hints dynamically inside resolvers, how to set a default `maxAge` for all fields, and how to specify that a field should be cached for specific users only (in which case CDNs should ignore it). For example, to set a default max age other than `0` modify the Apollo Server constructor to include `cacheControl`:
+To learn how to define the `@cacheControl` directive, specify hints dynamically inside resolvers, set a default `maxAge` for all fields, and cache fields only for specific users (enabling CDNs to ignore those fields), see [Caching](./caching).
 
-```js
-import { ApolloServerPluginCacheControl } from 'apollo-server-core';
+For example, to set a default max age other than `0` you can modify the Apollo Server constructor to include `cacheControl`:
+
+```ts
+import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
   // The max age is calculated in seconds
   plugins: [ApolloServerPluginCacheControl({ defaultMaxAge: 5 })],
 });
@@ -148,17 +155,15 @@ Often, GraphQL requests are big POST requests and most CDNs will only cache GET 
 
 To do this, update the **client** code. Add the persisted queries link to the Apollo Client constructor before the HTTP link:
 
-```js
-import { ApolloClient, InMemoryCache, HttpLink } from "@apollo/client";
-import { createPersistedQueryLink } from "@apollo/client/link/persisted-queries";
+```ts
+import { ApolloClient, InMemoryCache, HttpLink } from '@apollo/client';
+import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 import { sha256 } from 'crypto-hash';
 
 const link = createPersistedQueryLink({
   sha256,
-  useGETForHashedQueries: true
-}).concat(
-  new HttpLink({ uri: "/graphql" })
-);
+  useGETForHashedQueries: true,
+}).concat(new HttpLink({ uri: '/graphql' }));
 
 const client = new ApolloClient({
   cache: new InMemoryCache(),
@@ -166,7 +171,7 @@ const client = new ApolloClient({
 });
 ```
 
-> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example:  ` uri: "http://localhost:4000/graphql"`.
+> If you are testing locally, make sure to include the full [URI](https://developer.mozilla.org/en-US/docs/Glossary/URI) including the port number. For example: `uri: "http://localhost:4000/graphql"`.
 
 Make sure to include `useGETForHashedQueries: true`. Note that the client will still use POSTs for mutations because it's generally best to avoid GETs for non-idempotent requests.
 
@@ -190,14 +195,12 @@ To learn how to configure the in-memory cache, set up an external cache, or writ
 
 The cache time-to-live (TTL) value determines how long a registered APQ remains in the cache. If a cached query's TTL elapses and the query is purged, it's re-registered the next time it's sent by a client.
 
-Apollo Server's default in-memory store does not specify a TTL for APQ (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
+Apollo Server's default in-memory store does not specify a TTL for APQs (an APQ remains cached until it is overwritten by the cache's standard eviction policy). For all other [supported stores](#cache-configuration), the default TTL is 300 seconds. You can override or disable this value by setting the `ttl` attribute of the `persistedQueries` option, in seconds:
 
 ```ts
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
   persistedQueries: {
     // highlight-start
     ttl: 900, // 15 minutes
@@ -212,8 +215,6 @@ To disable TTL entirely, specify `null` for the value of `ttl`:
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
   persistedQueries: {
     ttl: null, // highlight-line
   },
@@ -230,8 +231,6 @@ You can disable APQ entirely by setting the `persistedQueries` attribute to `fal
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
   persistedQueries: false, // highlight-line
 });
 ```

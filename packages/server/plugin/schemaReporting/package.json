@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/schemaReporting",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/schemaReporting/index.js",
+  "module": "../../dist/esm/plugin/schemaReporting/index.js",
+  "types": "../../dist/esm/plugin/schemaReporting/index.d.ts",
+  "sideEffects": false
+}

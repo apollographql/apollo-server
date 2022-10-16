@@ -1,0 +1,53 @@
+{
+  "name": "@apollo/server-integration-testsuite",
+  "version": "4.0.0",
+  "description": "Test suite for Apollo Server integrations",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/apollographql/apollo-server",
+    "directory": "packages/integration-testsuite"
+  },
+  "keywords": [
+    "GraphQL",
+    "Apollo",
+    "Server",
+    "Javascript",
+    "Jest"
+  ],
+  "author": "Apollo <packages@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "engines": {
+    "node": ">=14.0"
+  },
+  "dependencies": {
+    "@apollo/cache-control-types": "^1.0.2",
+    "@apollo/client": "^3.6.9",
+    "@apollo/server-plugin-landing-page-graphql-playground": "^4.0.0",
+    "@apollo/utils.keyvaluecache": "^1.0.1",
+    "@apollo/utils.createhash": "^1.1.0",
+    "@apollo/usage-reporting-protobuf": "^4.0.0",
+    "@josephg/resolvable": "^1.0.1",
+    "body-parser": "^1.20.0",
+    "express": "^4.18.1",
+    "graphql-tag": "^2.12.6",
+    "loglevel": "^1.8.0",
+    "node-fetch": "^2.6.7",
+    "supertest": "^6.2.3"
+  },
+  "peerDependencies": {
+    "@apollo/server": "^4.0.0",
+    "@jest/globals": "28.x || 29.x",
+    "graphql": "^16.6.0",
+    "jest": "28.x || 29.x"
+  },
+  "volta": {
+    "extends": "../../package.json"
+  }
+}

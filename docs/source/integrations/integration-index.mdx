@@ -1,0 +1,24 @@
+---
+title: Apollo Server Integrations
+---
+
+> Are you looking to build a new integration? Or help maintain an existing integration? See [Building Web Framework Integrations for Apollo Server](./building-integrations) for step-by-step guidance!
+
+Apollo Server 4 includes two built-in integrations: [`startStandaloneServer`](../api/standalone) and [`expressMiddleware`](../api/express-middleware).
+
+The `startStandaloneServer` function sets useful defaults to get you started quickly. Under the hood, the `startStandaloneServer` function uses Apollo Server 4's Express integration (i.e., `expressMiddleware`). The `expressMiddleware` function is Apollo Server 4's [Express](https://expressjs.com/) integration.
+
+The larger community maintains the following open-source integrations for Apollo Server:
+
+> Have you built, or are you maintaining, an Apollo Server integration that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/integrations/integration-index.mdx) to be added to this list!
+
+<!-- prettier-ignore -->
+| Web Framework | Integration Package |
+|--------|-------------|
+| [AWS Lambda](https://aws.amazon.com/lambda/) | [`@as-integrations/aws-lambda`](https://www.npmjs.com/package/@as-integrations/aws-lambda) |
+| [Fastify](https://fastify.io/) | [`@as-integrations/fastify`](https://www.npmjs.com/package/@as-integrations/fastify) |
+| [Koa](https://koajs.com/) | [`@as-integrations/koa`](https://www.npmjs.com/package/@as-integrations/koa) |
+
+> Apollo does not provide official support for the above community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices or that they will continue to be maintained.
+
+For those _building_ a new integration library,  we'd like to welcome you (and your repository!) to the [`apollo-server-integrations`](https://github.com/apollo-server-integrations) Github organization alongside other community-maintained Apollo Server integrations. If you participate in our organization, you'll have the option to publish under our community's NPM scope `@as-integrations`, ensuring your integration is discoverable.

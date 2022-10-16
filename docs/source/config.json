@@ -1,39 +1,34 @@
 {
   "title": "Apollo Server",
-  "version": "v3",
-  "algoliaFilters": [
-    "docset:server",
-    [
-      "docset:react",
-      "docset:federation"
-    ]
-  ],
+  "version": "v4",
+  "algoliaFilters": ["docset:server", ["docset:react", "docset:federation"]],
   "sidebar": {
     "Introduction": "/",
     "Get started": "/getting-started",
-    "Choosing which package to use": "/integrations/middleware",
-    "Apollo Federation": "https://www.apollographql.com/docs/federation/",
-    "New in v3": {
-      "Migrating to Apollo Server 3": "/migration",
-      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/CHANGELOG.md"
+    "New in v4": {
+      "Migrating to Apollo Server 4": "/migration",
+      "Changelog": "https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md"
     },
     "Defining a Schema": {
       "Schema basics": "/schema/schema",
       "Unions and interfaces": "/schema/unions-interfaces",
       "Custom scalars": "/schema/custom-scalars",
-      "Directives": "/schema/directives",
-      "Creating directives": "/schema/creating-directives"
+      "Directives": "/schema/directives"
     },
     "Fetching Data": {
       "Resolvers": "/data/resolvers",
-      "Data sources": "/data/data-sources",
+      "Fetching from REST": "/data/fetching-rest",
       "Error handling": "/data/errors",
-      "File uploads": "/data/file-uploads",
       "Subscriptions": "/data/subscriptions"
     },
+    "Web frameworks": {
+      "Integrations": "/integrations/integration-index",
+      "Building integrations": "/integrations/building-integrations"
+    },
     "Development Workflow": {
-      "Build and run queries": "/testing/build-run-queries",
-      "Request format": "/requests",
+      "Build and run queries": "/workflow/build-run-queries",
+      "Request format": "/workflow/requests",
+      "Generating TS types": "/workflow/generate-types",
       "Mocking": "/testing/mocking",
       "Integration testing": "/testing/testing",
       "Apollo Studio Explorer": "https://www.apollographql.com/docs/studio/explorer/"
@@ -45,15 +40,12 @@
     },
     "Security": {
       "Auth": "/security/authentication",
-      "CORS":"/security/cors",
+      "CORS": "/security/cors",
       "Terminating SSL": "/security/terminating-ssl",
-      "Proxy configuration": "/proxy-configuration"
+      "Proxy configuration": "/security/proxy-configuration"
     },
     "Deployment": {
-      "Heroku": "/deployment/heroku",
-      "Lambda": "/deployment/lambda",
-      "Azure Functions": "/deployment/azure-functions",
-      "Google Cloud Functions": "/deployment/gcp-functions"
+      "Heroku": "/deployment/heroku"
     },
     "Monitoring": {
       "Metrics and logging": "/monitoring/metrics",
@@ -61,6 +53,8 @@
     },
     "API Reference": {
       "ApolloServer": "/api/apollo-server",
+      "startStandaloneServer": "/api/standalone",
+      "expressMiddleware": "/api/express-middleware",
       "@apollo/subgraph": "https://www.apollographql.com/docs/federation/api/apollo-subgraph/",
       "@apollo/gateway": "https://www.apollographql.com/docs/federation/api/apollo-gateway/"
     },

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@1.6.3/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "apollographql/apollo-server" }
+  ],
+  "commit": false,
+  "fixed": [["@apollo/server", "@apollo/server-integration-testsuite"]],
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": []
+}

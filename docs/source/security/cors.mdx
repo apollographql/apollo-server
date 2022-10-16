@@ -3,15 +3,13 @@ title: Configuring CORS
 description: Control access to your server's resources
 ---
 
-> ⚠️ New in Apollo Server 3.7: we **highly recommend** that all users pass `csrfPrevention: true` to `new ApolloServer()` to protect your server from CSRF and XS-Search attacks. **This is especially important if you integrate `graphql-upload` into your server.** If you enable this feature, any clients that send operations via `GET` requests or multipart upload requests must include a non-empty `Apollo-Require-Preflight` (or any other non-special-cased) header in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
-
-> ⚠️ `graphql-upload` has a known CSRF vulnerability and is turned on by default in Apollo Server 2, specifically versions `< 2.25.4`. If you are using Apollo Server 2 and do _not_ use uploads, you can prevent this by disabling uploads by passing `uploads: false` to `new ApolloServer()` or by upgrading to version `^2.25.4`. If you _do_ use uploads, you **must** update to Apollo Server 3.7 or later and enable CSRF prevention in order to use this feature safely.
+> 📣 By default, Apollo Server 4 ships with a feature that protects users from CSRF and XS-Search attacks. This feature requires that any client sending operations via `GET` or multipart upload requests _must_ include a special header (such as `Apollo-Require-Preflight`) in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
 
 [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header-based protocol that enables a server to dictate which origins can access its resources. Put another way, your server can specify which websites can tell a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
 
-Apollo Server's default CORS behavior enables any website on the internet to tell a user's browser to connect to your server.
+The [`startStandaloneServer`](../api/standalone) function's CORS configuration is _unalterable_ and enables any website on the internet to tell a user's browser to connect to your server. [Depending on your use case,](#choosing-cors-options-for-your-project) you might need to further [customize your CORS behavior](#passing-credentials-with-cors) to ensure your server's security. To do so, you'll first need to swap to using [`expressMiddleware`](../api/express-middleware) (or any other Apollo Server integration).
 
-> ⚠️ If your app is only visible on a private network and uses network separation for security, the default CORS behavior is **not secure**. See [Specifying origins](#specifying-origins) for more information.
+> ⚠️ If your app is only visible on a private network and uses network separation for security, `startStandaloneServer`'s CORS behavior is **not secure**. See [Specifying origins](#specifying-origins) for more information.
 
 By default, websites running on domains that differ from your server's domain can't pass cookies with their requests. For details on enabling cross-origin cookie passing for authentication, see [Passing credentials with CORS](#passing-credentials-with-cors).
 
@@ -35,7 +33,7 @@ http://example.com:8080/ <==> http://example.com:8080/
 http://example.com:8080/ =X= https://example1.com:8081/
 ```
 
-However, as we all know, the internet is an exciting place full of resources that can make websites better (importing images, extra fonts, making API calls, and so on).  Developers needed a new protocol to relax SOP and safely _share_ resources across different origins.
+However, as we all know, the internet is an exciting place full of resources that can make websites better (importing images, extra fonts, making API calls, and so on). Developers needed a new protocol to relax SOP and safely _share_ resources across different origins.
 
 Cross-Origin Resource Sharing is the mechanism that allows a web page to share resources across different origins. CORS provides an extra layer of protection by enabling servers and clients to define HTTP headers that specify _which_ external clients' scripts can access their resources.
 
@@ -45,8 +43,8 @@ Note that both SOP and CORS are related to [_browser_ security](https://develope
 
 When thinking about configuring CORS for your application, there are two main settings to consider:
 
-* Which origins can access your server's resources
-* Whether your server accepts user credentials (i.e., cookies) with requests
+- Which origins can access your server's resources
+- Whether your server accepts user credentials (i.e., cookies) with requests
 
 ### Specifying origins
 
@@ -56,15 +54,17 @@ Depending on what you're building, the origins you specify in your CORS configur
 
 #### ⚠️ Applications on private networks
 
-If your browser is running your API on a private network (i.e., not on the public internet) and it relies on the privacy of that network for security, **the default CORS behavior of Apollo Server is insecure**. We strongly recommend [specifying which origins](#configuring-cors-options-for-apollo-server) can access your server's resources.
+If your browser is running your API on a private network (i.e., not on the public internet) and it relies on the privacy of that network for security, **we strongly recommend [specifying which origins](#configuring-cors-options-for-apollo-server)** can access your server's resources.
 
-If you don't, while your personal computer is on your private network, a script on any website could potentially make your browser talk to your private API. [Some browsers, such as Chrome, have features under development](https://wicg.github.io/private-network-access/) to solve this problem. But in the meantime, all servers on private networks should *always* specify origins in their CORS configuration.
+Specifically, the [`startStandaloneServer`](../api/standalone) function's CORS behavior is **not secure** in this context. Instead, we recommend swapping to another Apollo Server integration to [customize your server's CORS behavior](#configuring-cors-options-for-apollo-server) by specifying origins.
+
+If you don't, while your personal computer is on your private network, a script on any website could potentially make your browser talk to your private API. [Some browsers, such as Chrome, have features under development](https://wicg.github.io/private-network-access/) to solve this problem. But in the meantime, all servers on private networks should _always_ specify origins in their CORS configuration.
 
 #### Federated subgraphs
 
-If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your production subgraph servers [_disable_ CORS](../api/apollo-server#cors) (or at least specify origins and limit them to tools like the Apollo Explorer). Most subgraphs should allow communication _only_ from your gateways, and that communication doesn't involve a browser at all.
+If you're building a [federated graph](/federation/), we strongly recommend that _all_ of your production subgraph servers _disable_ CORS or limit your subgraph's origins to tools like the [Apollo Studio Explorer](/studio/explorer/embed-explorer/). Most subgraphs should _only_ allow communication from your gateways, and that communication doesn't involve a browser.
 
-For more information, see [Securing your subgraphs](/federation/subgraphs/#securing-your-subgraphs).
+For more information, see [Securing your subgraphs](/federation/building-supergraphs/subgraphs-overview#securing-your-subgraphs).
 
 #### APIs that require cookies
 
@@ -77,109 +77,117 @@ For examples, see [Passing credentials with CORS](#passing-credentials-with-cors
 If you create an API on the public internet to serve resources to your _own_ websites or apps, you might want to [specify which origins](#configuring-cors-options-for-apollo-server) can access your server's resources. Explicitly specifying origins can provide an extra level of security.
 
 #### Public or embedded APIs
-
-If you create a public API or an API to embed in websites you don't control yourself, you probably want to allow _all_ origins to access your server's resources. You can use Apollo Server's default ACAO value (the wildcard `*`) in these situations, allowing requests from any origin.
+If you create a public API or an API to embed in websites you don't control yourself, you probably want to allow _all_ origins to access your server's resources. You can use the [`startStandaloneServer`](../api/standalone)'s ACAO value (the wildcard `*`) in these situations, allowing requests from any origin.
 
 > Using the [wildcard (`*`)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin#directives) value for the ACAO header enables _any_ website to tell a user's browser to send an arbitrary request (without cookies or other credentials) to your server and read that server's response.
 
 #### None of the above
 
-If your application doesn't fit into any of the above categories, the default Apollo Server CORS behavior should suit your use case. You can always specify origins in your CORS configuration later or disable cross-origin requests by [disabling CORS for your server](../api/apollo-server#cors).
+If your application doesn't fit into any of the above categories, [`startStandaloneServer`](../api/standalone)'s CORS behavior should suit your use case. You can always choose to swap to another Apollo Server integration later to [customize your CORS configuration](#configuring-cors-options-for-apollo-server).
 
-##  Configuring CORS options for Apollo Server
+## Configuring CORS options for Apollo Server
+> 📣 **New in Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#body-parser-and-cors).
 
-By default, the batteries-included `apollo-server` package serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
+Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standalone)) serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
 
-> If you need to pass credentials to your server (e.g., via cookies), you can't use the wildcard value (`*`) for your origin. You _must_ provide specific origins. For examples, see [Passing credentials with CORS](#passing-credentials-with-cors).
+> If you need to pass credentials to your server (e.g., via cookies), you can't use the wildcard value (`*`) for your origin. You _must_ provide specific origins. For more details, see [Passing credentials with CORS](#passing-credentials-with-cors).
 
-The batteries-included `apollo-server` [has a `cors` option](../api/apollo-server/#cors), which you can use to change your server's default CORS behavior:
+The [`startStandaloneServer` function](../api/standalone) **doesn't support** configuring your server's CORS behavior.  If you want to customize your server's CORS behavior (e.g., by specifying origins or passing cookies), swap to using [`expressMiddleware`](../api/standalone#swapping-to-expressmiddleware) (or any other Apollo Server integration).
 
-```js
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,  // see below for more about this
-  cache: "bounded",
-  cors: {
-    origin: ["https://www.your-app.example", "https://studio.apollographql.com"]
-  },
-});
+Below, we set up and customize the CORS behavior for our `expressMiddleware` function using the [`cors` package](https://github.com/expressjs/cors#configuration-options):
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import express from 'express';
+import http from 'http';
+import { json } from 'body-parser';
+import { typeDefs, resolvers } from './schema';
+// highlight-start
+import cors from 'cors';
+// highlight-end
+
+async function startApolloServer() {
+  const app = express();
+  const httpServer = http.createServer(app);
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+  });
+
+  await server.start();
+
+  app.use(
+    '/graphql',
+    // highlight-start
+    cors<cors.CorsRequest>({ origin: ['https://www.your-app.example', 'https://studio.apollographql.com'] }),
+    // highlight-end
+    json(),
+    expressMiddleware(server),
+  );
+
+  await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve));
+  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+}
 ```
 
-Under the hood, the batteries-included `apollo-server` wraps around middleware provided by the [`cors`](https://github.com/expressjs/cors#configuration-options) npm package, enabling you to configure the `Access-Control-Allow-Origin` header via the `origin` option. The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`.
+</MultiCodeBlock>
 
-> Note if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE you should include `https://studio.apollographql.com` in your list of valid origins.
+> Invoking the `cors` function with no arguments sets your server's `Access-Control-Allow-Origin` HTTP header to the wildcard value (`*`), allowing scripts on any origin to make requests. So, your server would have the same CORS behavior as `startStandaloneServer`.
 
-If you're using another integration of Apollo Server, you can add the `cors` configuration option to your framework-specific middleware function to change your server's CORS behavior. To learn more about the CORS defaults and options for your integration of Apollo Server, see [CORS configuration options](../api/apollo-server/#cors-1).
+Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`.
 
-Below is an example of setting up CORS with the [`apollo-server-express`](../integrations/middleware#swapping-out-apollo-server) package:
+> Note: if you plan to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE, you should include `https://studio.apollographql.com` in your list of valid origins. However, if you plan to embed the [Explorer](https://www.apollographql.com/docs/studio/explorer/embed-explorer/) or use [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox), you *don't* need to specify Studio's URL in your CORS origins because requests will go through the page embedding Studio.
 
-```js
-// ... set up the server
-await server.start();
+If you're using another integration of Apollo Server, you can add and configure CORS for your server using your framework's standard functionality.
 
-const corsOptions = {
-  origin: ["https://www.your-app.example", "https://studio.apollographql.com"]
-};
-
-server.applyMiddleware({
-  app,
-  cors: corsOptions,
-  path: "/graphql",
-});
-```
-
-You can also [remove CORS middleware entirely](../api/apollo-server#cors) to disable cross-origin requests. In the batteries-included `apollo-server` and `apollo-server-express`, you do this by passing `cors: false`. This is [recommended for subgraphs in a federated graph](/federation/subgraphs/#securing-your-subgraphs).
+You can also choose to omit CORS middleware entirely to disable cross-origin requests. This is [recommended for subgraphs in a federated graph](/federation/building-supergraphs/subgraphs-overview#securing-your-subgraphs).
 
 ### Passing credentials with CORS
+
+> ⚠️ The [`startStandaloneServer`](../api/standalone) function's CORS behavior is _unalterable_. To pass credentials via cookies, you must first swap to another Apollo Server integration.
 
 If your server requires requests to [include a user's credentials](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#requests_with_credentials) (e.g., cookies), you need to modify your CORS configuration to tell the browser those credentials are allowed.
 
 You can enable credentials with CORS by setting the [`Access-Control-Allow-Credentials`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Credentials) HTTP header to `true`.
 
-> You *must* [specify an origin](#configuring-cors-options-for-apollo-server) to enable credentialed requests. If your server sends the `*` wildcard value for the `Access-Control-Allow-Origin` HTTP header, your browser will refuse to send credentials.
+> You _must_ [specify an origin](#configuring-cors-options-for-apollo-server) to enable credentialed requests. If your server sends the `*` wildcard value for the `Access-Control-Allow-Origin` HTTP header, your browser will refuse to send credentials.
 
-To  enable your browser to pass credentials with the batteries-included `apollo-server` you can use the [`cors` option](../api/apollo-server/#cors) to specify `origins` and set `credentials` to `true`:
+To enable your browser to pass credentials using `expressMiddleware` and the `cors` npm package, you can specify `origins` and [set `credentials`](https://github.com/expressjs/cors#configuration-options) to `true`:
 
-```js
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  csrfPrevention: true,  // see below for more about this
-  cache: "bounded",
-  cors: {
+<MultiCodeBlock>
+
+```ts
+app.use(
+  '/graphql',
+  // highlight-start
+  cors<cors.CorsRequest>({
     origin: yourOrigin,
-    credentials: true
-  },
-});
+    credentials: true,
+  }),
+  // highlight-end
+  json(),
+  expressMiddleware(server),
+);
 ```
 
-Using `cors` middleware with an integration of Apollo Server, you can set the [`credentials`](https://github.com/expressjs/cors#configuration-options) option to `true` before passing it to your [framework-specific middleware function](https://www.apollographql.com/docs/apollo-server/api/apollo-server#framework-specific-middleware-function):
+</MultiCodeBlock>
 
-```js
-//  The example below is using the apollo-server-express package.
-
-// ... set up the server
-await server.start();
-
-const corsOptions = { origin: yourOrigin, credentials: true };
-
-server.applyMiddleware({
-  app,
-  cors: corsOptions,
-  path: "/graphql",
-});
-```
-
->The `cors` middleware `origin` option also accepts a boolean value, which means you can technically configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). This is almost certainly insecure, because any website could read information previously protected by a user's cookies. Instead, you should [specify origins in your CORS configuration](#configuring-cors-options-for-apollo-server) whenever you enable credentials.
+> The `origin` option also accepts a boolean value, which means you can technically configure CORS to allow all cross-origin requests _with_ credentials (i.e., `{origin: true, credentials: true}`). This is almost certainly insecure, because any website could read information previously protected by a user's cookies. Instead, you should [specify origins in your CORS configuration](#configuring-cors-options-for-apollo-server) whenever you enable credentials.
 
 For examples of sending cookies and authorization headers from Apollo Client, see [Authentication](/react/networking/authentication/). For more guidance on adding authentication logic to Apollo Server, see [Authentication and authorization](./authentication).
 
 ## Preventing Cross-Site Request Forgery (CSRF)
 
-Your server's CORS policy enables you to control which websites can talk to your server. In most cases, the browser checks your server's CORS policy by sending a [preflight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request) before sending the actual operation. This is a separate HTTP request. Unlike most HTTP requests (which use the `GET` or `POST` method), this request uses a method called `OPTIONS`. The browser sends an `Origin` header, along with some other headers that start with `Access-Control-`. These headers describe the kind of request that the potentially untrusted JavaScript wants to make. Your server returns a response with `Access-Control-*` headers describing its policies (as described above), and the browser uses that response to decide whether it's OK to send the real request.  Processing the `OPTIONS` preflight request never actually executes GraphQL operations.
+> By default, Apollo Server 4 ships with a feature protecting from CSRF and XS-Search attacks. If you want to disable this recommended security feature, pass `csrfPrevention: false` to the `ApolloServer` constructor.
 
-However, in some circumstances, the browser will *not* send this preflight request. If the request is considered ["simple"](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests), then the browser just sends the request without sending a preflight first. Your server's response can still contain `Access-Control-*` headers, and if they indicate that the origin that sent the request shouldn't be able to access the site, the browser will hide your server's response from the problematic JavaScript code.
+Your server's CORS policy enables you to control which websites can talk to your server. In most cases, the browser checks your server's CORS policy by sending a [preflight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request) before sending the actual operation. This is a separate HTTP request. Unlike most HTTP requests (which use the `GET` or `POST` method), this request uses a method called `OPTIONS`. The browser sends an `Origin` header, along with some other headers that start with `Access-Control-`. These headers describe the kind of request that the potentially untrusted JavaScript wants to make. Your server returns a response with `Access-Control-*` headers describing its policies (as described above), and the browser uses that response to decide whether it's OK to send the real request. Processing the `OPTIONS` preflight request never actually executes GraphQL operations.
+
+However, in some circumstances, the browser will _not_ send this preflight request. If the request is considered ["simple"](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests), then the browser just sends the request without sending a preflight first. Your server's response can still contain `Access-Control-*` headers, and if they indicate that the origin that sent the request shouldn't be able to access the site, the browser will hide your server's response from the problematic JavaScript code.
 
 Unfortunately, this means that your server might execute GraphQL operations from "simple" requests sent by sites that shouldn't be allowed to communicate with your server. And these requests can even contain cookies! Although the browser will hide your server's response data from the malicious code, that might not be sufficient. If running the operation has side effects, then the attacker might not care if it can read the response or not, as long as it can use an unsuspecting user's browser (and cookies!) to trigger those side effects. Even with a read-only query, the malicious code might be able to figure out something about the response based entirely on how long the query takes to execute.
 
@@ -189,9 +197,9 @@ To avoid CSRF and XS-Search attacks, GraphQL servers should refuse to execute an
 
 The most important rule for whether or not a request is ["simple"](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests) is whether it tries to set arbitrary HTTP request headers. Any request that sets the `Content-Type` header to `application/json` (or anything other than a list of three particular values) cannot be a simple request, and thus it must be preflighted. Because all `POST` requests recognized by Apollo Server must contain a `Content-Type` header specifying `application/json`, we can be confident that they are not simple requests and that if they come from a browser, they have been preflighted.
 
-However, Apollo Server also handles [`GET` requests](../requests#get-requests). `GET` requests do not require a `Content-Type` header, so they can potentially be simple requests. So how can we ensure that we only execute `GET` requests that are _not_ simple requests? If we require the request to include an HTTP header that is never set automatically by the browser, then that is sufficient: requests that set HTTP headers other than the handful defined in the spec must be preflighted.
+However, Apollo Server also handles [`GET` requests](../workflow/requests#get-requests). `GET` requests do not require a `Content-Type` header, so they can potentially be simple requests. So how can we ensure that we only execute `GET` requests that are _not_ simple requests? If we require the request to include an HTTP header that is never set automatically by the browser, then that is sufficient: requests that set HTTP headers other than the handful defined in the spec must be preflighted.
 
-Apollo Server 3.7 introduced a CSRF prevention feature, which you can enable by passing `csrfPrevention: true` to `new ApolloServer()`. When this feature is enabled, Apollo Server only executes GraphQL operations if at least one of the following conditions is true:
+By default, Apollo Server 4 has a CSRF prevention feature enabled. This means your server only executes GraphQL operations if at least one of the following conditions is true:
 
 - The incoming request includes a `Content-Type` header that specifies a type other than `text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data`. Notably, a `Content-Type` of `application/json` (including any suffix like `application/json; charset=utf-8`) is sufficient. This means that all `POST` requests (which must use `Content-Type: application/json`) will be executed. Additionally, all versions of [Apollo Client Web](/react/api/link/apollo-link-http) that support `GET` requests do include `Content-Type: application/json` headers, so any request from Apollo Client Web (`POST` or `GET`) will be executed.
 - There is a non-empty `X-Apollo-Operation-Name` header. This header is sent with all operations (`POST` or `GET`) by [Apollo iOS](/ios) (v0.13.0+) and [Apollo Kotlin](/kotlin) (all versions, including its former name "Apollo Android"), so any request from Apollo iOS or Apollo Kotlin will be executed.
@@ -199,18 +207,31 @@ Apollo Server 3.7 introduced a CSRF prevention feature, which you can enable by 
 
 Note that all HTTP header names are case-insensitive.
 
-> CSRF prevention is only applied to requests that will execute GraphQL operations, not to requests that would load [landing pages](../api/plugin/landing-pages) or run [health checks](../monitoring/health-checks).)
+> CSRF prevention only applies to requests that will execute GraphQL operations, not to requests that would load [landing pages](../api/plugin/landing-pages).
 
 HTTP requests that satisfy none of the conditions above will be rejected with a 400 status code and a message clearly explaining which headers need to be added in order to make the request succeed.
 
-**We highly recommend that you enable CSRF prevention by passing `csrfPrevention: true` to `new ApolloServer()`**. This feature will be enabled by default in Apollo Server 4.
+This feature should have no impact on legitimate use of your graph _except_ in these two cases:
 
-It should have no impact on legitimate use of your graph *except* in these two cases:
-* you have clients that send `GET` requests and are not Apollo Client Web, Apollo iOS, or Apollo Kotlin
-* you have enabled [file uploads](../data/file-uploads) with `graphql-upload`
+- you have clients that send `GET` requests and are not Apollo Client Web, Apollo iOS, or Apollo Kotlin
+- you have enabled [file uploads](#graphql-uploads) with `graphql-upload`
 
 If either of these apply to you, you should configure the relevant clients to send a non-empty `Apollo-Require-Preflight` header along with all requests.
 
-You can also configure the set of headers that allow execution. For example, if you use a GraphQL client that performs `GET` requests without sending `Content-Type`, `X-Apollo-Operation-Name`, or `Apollo-Require-Preflight` headers, but it does send a `Some-Special-Header` header, you can pass `csrfPrevention: { requestHeaders: ['Some-Special-Header'] }` to `new ApolloServer()`.  This option replaces checking for the two headers `X-Apollo-Operation-Name` and `Apollo-Require-Preflight` in the CSRF prevention logic. The check for `Content-Type` remains the same.
+You can also configure the set of headers that allow execution. For example, if you use a GraphQL client that performs `GET` requests without sending `Content-Type`, `X-Apollo-Operation-Name`, or `Apollo-Require-Preflight` headers, but it does send a `Some-Special-Header` header, you can pass `csrfPrevention: { requestHeaders: ['Some-Special-Header'] }` to `new ApolloServer()`. This option replaces checking for the two headers `X-Apollo-Operation-Name` and `Apollo-Require-Preflight` in the CSRF prevention logic. The check for `Content-Type` remains the same.
 
-Note that Apollo Server does not permit executing mutations in `GET` requests (just queries). As long as you ensure that only mutations can have side effects, you are somewhat protected from the "side effects" aspect of CSRFs even without enabling CSRF protection. However, you would still be vulnerable to XS-Search timing attacks. In addition, file uploads as implemented by the [third-party `graphql-upload` package](../data/file-uploads) adds a special middleware that parses `POST` requests with a `Content-Type` of `multipart/form-data`. This is one of the three special `Content-Type`s that can be set on simple requests, so this lets your server process mutations sent in simple requests! **All users of `graphql-upload` should enable `csrfPrevention`** and configure their upload clients to send a non-empty `Apollo-Require-Preflight` header.
+Note that Apollo Server does not permit executing mutations in `GET` requests (just queries). As long as you ensure that only mutations can have side effects, you are somewhat protected from the "side effects" aspect of CSRFs even without enabling CSRF protection. However, you would still be vulnerable to XS-Search timing attacks.
+
+### `graphql-upload`
+
+> ⚠️ The [`graphql-upload`](https://www.npmjs.com/package/graphql-upload) package has a known CSRF vulnerability and is turned on by default in version of Apollo Server 2.25.4 and below. If you are using Apollo Server 2 and do not use uploads, you can disable them by passing `uploads: false` to the `ApolloServer` constructor. If you do use uploads, you must update to Apollo Server 3.7 or later and ensure CSRF prevention is enabled to use this feature safely.
+
+The [third-party `graphql-upload` package](/apollo-server/v3/data/file-uploads) has a known CSRF vulnerability.
+
+The `graphql-upload` package adds a special middleware that parses `POST` requests with a `Content-Type` of `multipart/form-data`. This is one of the three special `Content-Type`s that can be set on [simple requests](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS#simple_requests), enabling your server to process mutations sent in simple requests.
+
+Apollo Server 4's default [CSRF prevention feature](#preventing-cross-site-request-forgery-csrf) blocks those attempting to use the `graphql-upload` package.  **If you use `graphql-upload` you should keep the CSRF prevention feature enabled**, and configure your upload clients to send a non-empty `Apollo-Require-Preflight` header.
+
+For example, if you use the [`apollo-upload-client`](https://github.com/jaydenseric/apollo-upload-client) package with Apollo Client Web, pass  `{headers: {'Apollo-Require-Preflight': 'true'}}` to `createUploadLink`.
+
+For more information about file upload best practices, see [our blog post](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/).

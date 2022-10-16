@@ -91,9 +91,7 @@ Here's a valid result for the above query:
 }
 ```
 
-
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
-
 
 ### Resolving a union
 
@@ -103,12 +101,12 @@ To fully resolve a union, Apollo Server needs to specify _which_ of the union's 
 
 The `__resolveType` function is responsible for determining an object's corresponding GraphQL type and returning the name of that type as a string. It can use any logic to do so, such as:
 
-* Checking for the presence or absence of fields that are unique to a particular type in the union
-* Using `instanceof`, if the _JavaScript_ object's type is related to its _GraphQL_ object type
+- Checking for the presence or absence of fields that are unique to a particular type in the union
+- Using `instanceof`, if the _JavaScript_ object's type is related to its _GraphQL_ object type
 
 Here's a basic `__resolveType` function for the `SearchResult` union defined above:
 
-```js {3-13}
+```ts {3-13}
 const resolvers = {
   SearchResult: {
     __resolveType(obj, context, info){
@@ -131,13 +129,11 @@ const resolvers = {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  csrfPrevention: true,
-  cache: 'bounded',
 });
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`)
-});
+const { url } = await startStandaloneServer(server);
+
+console.log(`🚀  Server ready at: ${url}`);
 ```
 
 > If a `__resolveType` function returns any value that _isn't_ the name of a valid type, the associated operation produces a GraphQL error.
@@ -224,7 +220,8 @@ query GetBooks {
     __typename
     title
     ... on Textbook {
-      courses { # Only present in Textbook
+      courses {
+        # Only present in Textbook
         name
       }
     }
@@ -257,9 +254,7 @@ Here's a valid result for the above query:
       {
         "__typename": "ColoringBook",
         "title": "Oops All Water",
-        "colors": [
-          "Blue"
-        ]
+        "colors": ["Blue"]
       }
     ]
   }
@@ -267,7 +262,6 @@ Here's a valid result for the above query:
 ```
 
 For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
-
 
 ### Resolving an interface
 
@@ -277,7 +271,7 @@ For more information, see [Using fragments with unions and interfaces](https://w
 
 Here's an example `__resolveType` function for the `Book` interface defined above:
 
-```js {3-13}
+```ts {3-13}
 const resolvers = {
   Book: {
     __resolveType(book, context, info){

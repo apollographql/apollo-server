@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/drainHttpServer",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/drainHttpServer/index.js",
+  "module": "../../dist/esm/plugin/drainHttpServer/index.js",
+  "types": "../../dist/esm/plugin/drainHttpServer/index.d.ts",
+  "sideEffects": false
+}

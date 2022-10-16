@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/inlineTrace",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/inlineTrace/index.js",
+  "module": "../../dist/esm/plugin/inlineTrace/index.js",
+  "types": "../../dist/esm/plugin/inlineTrace/index.d.ts",
+  "sideEffects": false
+}
