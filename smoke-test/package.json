@@ -1,7 +1,7 @@
 {
   "dependencies": {
     "graphql": "16.6.0",
-    "make-fetch-happen": "10.2.1"
+    "make-fetch-happen": "11.0.1"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "22.0.2",
