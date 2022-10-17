@@ -339,9 +339,11 @@ Once you've updated your imports, you can remove your project's dependency on `a
 
 ### Node.js
 
-Apollo Server 4 supports Node.js 14 and later. (Apollo Server 3 supports Node.js 12.) This includes all [LTS and Current versions at the time of release](https://nodejs.org/en/about/releases/).
+Apollo Server 4 supports Node.js 14.16.0 and later. (Apollo Server 3 supports Node.js 12.) This includes all [LTS and Current major versions at the time of release](https://nodejs.org/en/about/releases/).
 
 If you're using Node.js 12, upgrade your runtime before upgrading to Apollo Server 4.
+
+(Apollo Server 4 specifically requires v14.16.0 instead of merely v14.0.0, because that is the minimum version of Node.js 14 supported by our minimum supported version of `graphql`, as described in the next section.)
 
 ### `graphql`
 
