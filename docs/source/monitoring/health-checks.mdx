@@ -21,4 +21,39 @@ Note that this health check will run an actual GraphQL operation. If your server
 
 > Sending an `apollo-require-preflight: true` header alongside your health check ensures that Apollo Server's [CSRF prevention](../security/cors/#preventing-cross-site-request-forgery-csrf) feature won't block it.
 
-If you want to create a health check for your HTTP server that is _unrelated_ to the health of the GraphQL execution engine (i.e., such as [Apollo Server 3's health check feature](/apollo-server/v3/monitoring/health-checks)), you can add a `GET` handler that always succeeds to your web framework.
+If you want to create a health check for your HTTP server that is _unrelated_ to the health of the GraphQL execution engine (i.e., such as [Apollo Server 3's health check feature](/apollo-server/v3/monitoring/health-checks)), you can add a `GET` handler that always succeeds to your web framework. 
+
+Below is an example of an HTTP server health check with [`expressMiddleware`](../api/express-middleware/):
+
+<MultiCodeBlock>
+
+```ts
+// imports, etc.
+
+const app = express();
+const server = new ApolloServer({
+  typeDefs,
+  resolvers
+});
+
+await server.start();
+app.use('/graphql',
+  cors<cors.CorsRequest>(),
+  json(),
+  expressMiddleware(server)
+);
+await new Promise<void>(resolve => app.listen({ port: 4000 }, resolve));
+
+// Our GraphQL server is listening for GraphQL operations
+// on `http://localhost:4000/graphql`
+console.log(`🚀 Server ready at http://localhost:4000/graphql`);
+
+// Requests to `http://localhost:4000/health` now return "Okay!"
+app.get('/health', (req, res) => {
+  res.status(200).send('Okay!');
+});
+```
+
+</MultiCodeBlock>
+
+> If you are using `startStandaloneServer`, you must first [swap to using the `expressMiddleware` function](../api/standalone/#swapping-to-expressmiddleware) before creating an HTTP server health check.
