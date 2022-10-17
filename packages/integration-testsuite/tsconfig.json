@@ -9,6 +9,7 @@
   },
   "include": ["src/**/*"],
   "references": [
+    { "path": "../cache-control-types"},
     { "path": "../server" },
   ],
 }

@@ -1,0 +1,36 @@
+{
+  "name": "@apollo/cache-control-types",
+  "version": "1.0.2",
+  "description": "TypeScript types for Apollo Server info.cacheControl",
+  "type": "module",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/apollographql/apollo-server.git",
+    "directory": "packages/cache-control-types/"
+  },
+  "keywords": [
+    "apollo",
+    "graphql",
+    "typescript",
+    "node"
+  ],
+  "author": "Apollo <packages@apollographql.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/apollographql/apollo-server/issues"
+  },
+  "homepage": "https://github.com/apollographql/apollo-server#readme",
+  "peerDependencies": {
+    "graphql": "14.x || 15.x || 16.x"
+  }
+}
