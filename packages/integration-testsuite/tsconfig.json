@@ -9,7 +9,6 @@
   },
   "include": ["src/**/*"],
   "references": [
-    { "path": "../plugin-landing-page-graphql-playground" },
     { "path": "../server" },
   ],
 }

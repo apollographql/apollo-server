@@ -2777,8 +2777,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
         );
       });
 
-      // We can remove this test after the initial AS4 release once we stop supporting
-      // the playground package.
+      // We don’t maintain this plugin any more (and we deleted its source from
+      // this repository) but it would still be nice to find out if we broke the
+      // plugin somehow.
       it('can install playground with specific version', async () => {
         url = (
           await createServer({

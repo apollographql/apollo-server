@@ -12,11 +12,7 @@ import { writeFileSync } from 'fs';
 import rimraf from 'rimraf';
 
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
-for (const dir of [
-  'plugin-response-cache',
-  'plugin-landing-page-graphql-playground',
-  'server',
-]) {
+for (const dir of ['plugin-response-cache', 'server']) {
   writeFileSync(
     path.join('packages', dir, 'dist', 'esm', 'package.json'),
     JSON.stringify({ type: 'module' }),

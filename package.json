@@ -42,6 +42,7 @@
   "devDependencies": {
     "@apollo/cache-control-types": "1.0.2",
     "@apollo/client": "3.7.0",
+    "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
     "@apollo/utils.createhash": "1.1.0",
     "@changesets/changelog-github": "0.4.7",
     "@changesets/cli": "2.25.0",
