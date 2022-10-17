@@ -36,7 +36,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=14",
+    "node": ">=14.16.0",
     "npm": "^8.5.0"
   },
   "devDependencies": {
