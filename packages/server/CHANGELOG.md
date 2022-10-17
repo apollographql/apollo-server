@@ -1,11 +1,18 @@
 # @apollo/server
 
+## 4.0.1
+
+### Patch Changes
+
+- [#7049](https://github.com/apollographql/apollo-server/pull/7049) [`3daee02c6`](https://github.com/apollographql/apollo-server/commit/3daee02c6a0fa34ea0e6f4f18b9a7308539021e3) Thanks [@glasser](https://github.com/glasser)! - Raise minimum `engines` requirement from Node.js v14.0.0 to v14.16.0. This is the minimum version of Node 14 supported by the `engines` requirement of `graphql@16.6.0`.
+
+- [#7049](https://github.com/apollographql/apollo-server/pull/7049) [`3daee02c6`](https://github.com/apollographql/apollo-server/commit/3daee02c6a0fa34ea0e6f4f18b9a7308539021e3) Thanks [@glasser](https://github.com/glasser)! - Require Node.js v14 rather than v12. This change was intended for v4.0.0 and the documentation already stated this requirement, but was left off of the package.json `engines` field in `@apollo/server` inadvertently.
+
 ## 4.0.0
 
 ### BREAKING CHANGES
 
 Apollo Server contains quite a few breaking changes: most notably, a brand new package name! Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for more details on how to update your app.
-
 
 #### Bumped dependencies
 
@@ -15,7 +22,6 @@ The minimum versions of these dependencies have been bumped to provide an improv
 - Dropped support for versions of the `graphql` library prior to `v16.6.0`.
   - Upgrading `graphql` may require you to upgrade other libraries that are installed in your project. For example, if you use Apollo Server with Apollo Gateway, you should upgrade Apollo Gateway to at least v0.50.1 or any v2.x version for full `graphql` 16 support before upgrading to Apollo Server 4.
 - If you use Apollo Server with TypeScript, you must use TypeScript v4.7.0 or newer.
-
 
 #### New package structure
 
@@ -28,18 +34,17 @@ Other functionality is exported from "deep imports" on `@apollo/server`. `startS
 The `@apollo/server` package is built natively as both an ECMAScript Module (ESM) and as a CommonJS module (CJS); Apollo Server 3 was only built as CJS. This allows ESM-native bundlers to create more efficient bundles.
 
 Other packages have been renamed:
+
 - `apollo-datasource-rest` is now [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest).
 - `apollo-server-plugin-response-cache` is now [`@apollo/server-plugin-response-cache`](https://www.npmjs.com/package/@apollo/server-plugin-response-cache).
 - `apollo-server-plugin-operation-registry` is now [`@apollo/server-plugin-operation-registry`](https://www.npmjs.com/package/@apollo/server-plugin-operation-registry).
 - `apollo-reporting-protobuf` (an internal implementation detail for the usage reporting plugin) is now [`@apollo/usage-reporting-protobuf`](https://www.npmjs.com/package/@apollo/usage-reporting-protobuf).
 
-
 #### Removed web framework integrations
 
-Prior to Apollo Server 4, the only way to integrate a web framework with Apollo Server was for the Apollo Server project to add an official `apollo-server-x` subclass maintained as part of the core project. Apollo Server 4 makes it easy for users to integrate with their favorite web framework, and so we have removed most of the framework integrations from the core project so that framework integrations can be maintained by users who are passionate about that framework. Because of this, the core project no longer directly maintains integrations for Fastify, Hapi, Koa, Micro, AWS Lambda,Google Cloud Functions, Azure Functions, or Cloudflare.  We expect that [community integrations](https://www.apollographql.com/docs/apollo-server/v4/integrations/integration-index/) will eventually be created for most of these frameworks and serverless environments.
+Prior to Apollo Server 4, the only way to integrate a web framework with Apollo Server was for the Apollo Server project to add an official `apollo-server-x` subclass maintained as part of the core project. Apollo Server 4 makes it easy for users to integrate with their favorite web framework, and so we have removed most of the framework integrations from the core project so that framework integrations can be maintained by users who are passionate about that framework. Because of this, the core project no longer directly maintains integrations for Fastify, Hapi, Koa, Micro, AWS Lambda,Google Cloud Functions, Azure Functions, or Cloudflare. We expect that [community integrations](https://www.apollographql.com/docs/apollo-server/v4/integrations/integration-index/) will eventually be created for most of these frameworks and serverless environments.
 
 Apollo Server's support for the Express web framework no longer also supports its older predecessor [Connect](https://github.com/senchalabs/connect).
-
 
 #### Removed constructor options
 
@@ -74,7 +79,6 @@ Apollo Server's support for the Express web framework no longer also supports it
 - Other [changes to error handling outside of resolvers](https://www.apollographql.com/docs/apollo-server/migration/#improvements-to-error-handling-outside-of-resolvers) are described in the migration guide.
 - The `parseOptions` constructor option only affects the parsing of incoming operations, not the parsing of `typeDefs`.
 
-
 #### Plugin API changes
 
 - The field `GraphQLRequestContext.context` has been renamed to `contextValue`.
@@ -87,13 +91,12 @@ Apollo Server's support for the Express web framework no longer also supports it
 - `requestDidStart` hooks are called in parallel rather than in series.
 - A few changes have been made which may affect [custom `gateway` and `GraphQLDataSource` implementations](https://www.apollographql.com/docs/apollo-server/migration/#custom-gateway-and-graphqldatasource-implementations).
 
-
 #### Changes to defaults
 
 - CSRF prevention is on by default.
 - HTTP batching is disabled by default.
 - The default in-memory cache is bounded.
-- The local landing page defaults to the *embedded* Apollo Sandbox; this provides a user interface for executing GraphQL operations which doesn't require any additional CORS configuration.
+- The local landing page defaults to the _embedded_ Apollo Sandbox; this provides a user interface for executing GraphQL operations which doesn't require any additional CORS configuration.
 - The usage reporting and inline trace plugins mask errors in their reports by default: error messages are replaced with `<masked>` and error extensions are replaced with a single extension `maskedBy`. This can be configured with the `sendErrors` option to `ApolloServerPluginUsageReporting` and the `includeErrors` option to `ApolloServerPluginInlineTrace`. The `rewriteError` option to these plugins has been removed; its functionality is subsumed by the new options.
 
 #### TypeScript-specific changes
