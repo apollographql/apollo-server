@@ -40,7 +40,6 @@
     "npm": "^8.5.0"
   },
   "devDependencies": {
-    "@apollo/cache-control-types": "1.0.2",
     "@apollo/client": "3.7.0",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
     "@apollo/utils.createhash": "1.1.0",

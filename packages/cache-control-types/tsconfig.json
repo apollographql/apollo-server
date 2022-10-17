@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base",
   "compilerOptions": {
     "rootDir": "src",
-    "outDir": "dist"
+    "outDir": "dist/esm"
   },
   "include": ["src/**/*"],
   "exclude": ["**/__tests__"]

@@ -5,6 +5,8 @@
   "files": [],
   "include": [],
   "references": [
+    { "path": "./packages/cache-control-types" },
+    { "path": "./packages/gateway-interface" },
     { "path": "./packages/integration-testsuite/" },
     { "path": "./packages/plugin-response-cache" },
     { "path": "./packages/server" },

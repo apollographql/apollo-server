@@ -3,7 +3,7 @@
 // enable us to make non-alpha releases that can be used on the apollo-server
 // version-4 branch.
 
-import type { KeyValueCache } from "@apollo/utils.keyvaluecache";
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type {
   DocumentNode,
   ExecutionResult,
@@ -11,10 +11,10 @@ import type {
   GraphQLFormattedError,
   GraphQLSchema,
   OperationDefinitionNode,
-} from "graphql";
-import type { Logger } from "@apollo/utils.logger";
-import type { Trace } from "@apollo/usage-reporting-protobuf";
-import type { FetcherHeaders } from "@apollo/utils.fetcher";
+} from 'graphql';
+import type { Logger } from '@apollo/utils.logger';
+import type { Trace } from '@apollo/usage-reporting-protobuf';
+import type { FetcherHeaders } from '@apollo/utils.fetcher';
 
 export interface GatewayInterface {
   onSchemaLoadOrUpdate(
@@ -104,7 +104,7 @@ export interface GatewayHTTPResponse {
   status?: number;
 }
 
-export type GatewaySchemaHash = string & { __fauxpaque: "SchemaHash" };
+export type GatewaySchemaHash = string & { __fauxpaque: 'SchemaHash' };
 
 export interface GatewayGraphQLRequestMetrics {
   captureTraces?: boolean;

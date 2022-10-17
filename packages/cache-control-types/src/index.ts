@@ -3,13 +3,13 @@
 // enable us to make non-alpha releases that can be used on the apollo-server
 // version-4 branch.
 
-import type { GraphQLCompositeType, GraphQLResolveInfo } from "graphql";
+import type { GraphQLCompositeType, GraphQLResolveInfo } from 'graphql';
 
 /**
  * CacheScope represents whether cacheable data should be shared across sessions
  * (PUBLIC) or considered session-specific (PRIVATE).
  */
-export type CacheScope = "PUBLIC" | "PRIVATE";
+export type CacheScope = 'PUBLIC' | 'PRIVATE';
 
 /**
  * CacheHint represents a contribution to an overall cache policy. It can
@@ -63,7 +63,7 @@ export interface ResolveInfoCacheControl {
  * use this type with the customResolveInfo option to the graphql-code-generator
  * typescript-resolvers plugin, for example.) */
 export interface GraphQLResolveInfoWithCacheControl
-  extends Omit<GraphQLResolveInfo, "cacheControl"> {
+  extends Omit<GraphQLResolveInfo, 'cacheControl'> {
   // Why the Omit above? If you happen to have AS2 `apollo-cache-control` or AS3
   // `apollo-server-core` in your TypeScript build, then there's an ambient
   // `declare module` floating around that monkey-patches GraphQLResolveInfo to
@@ -96,18 +96,18 @@ export function maybeCacheControlFromInfo(
 export function cacheControlFromInfo(
   info: GraphQLResolveInfo,
 ): ResolveInfoCacheControl {
-  if (!("cacheControl" in info)) {
+  if (!('cacheControl' in info)) {
     throw new Error(
-      "The `info` argument does not appear to have a cacheControl field. " +
+      'The `info` argument does not appear to have a cacheControl field. ' +
         "Check that you are using Apollo Server 3 or newer and that you aren't using " +
-        "ApolloServerPluginCacheControlDisabled.",
+        'ApolloServerPluginCacheControlDisabled.',
     );
   }
   if (!(info as any).cacheControl?.cacheHint?.restrict) {
     throw new Error(
-      "The `info` argument has a cacheControl field but it does not appear to be from Apollo" +
+      'The `info` argument has a cacheControl field but it does not appear to be from Apollo' +
         "Server 3 or newer. Check that you are using Apollo Server 3 or newer and that you aren't using " +
-        "ApolloServerPluginCacheControlDisabled.",
+        'ApolloServerPluginCacheControlDisabled.',
     );
   }
   return (info as any).cacheControl;
