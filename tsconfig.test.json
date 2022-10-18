@@ -5,7 +5,6 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "./packages/integration-testsuite/tsconfig.cjs.json" },
     { "path": "./packages/plugin-response-cache/src/__tests__/" },
     { "path": "./packages/server/src/__tests__/" },
     { "path": "./packages/server/src/__tests__/tsconfig.gatewayCompatibility0.json" },
