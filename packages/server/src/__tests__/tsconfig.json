@@ -4,6 +4,6 @@
   "exclude": ["gatewayCompatibility0.test.ts", "gatewayCompatibility2.test.ts"],
   "references": [
     { "path": "../../" },
-    { "path": "../../../integration-testsuite" }
+    { "path": "../../../integration-testsuite/tsconfig.cjs.json" }
   ]
 }
