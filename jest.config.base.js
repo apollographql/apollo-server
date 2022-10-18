@@ -9,12 +9,10 @@ export default {
   testPathIgnorePatterns: ['/node_modules/', '/dist/'],
   moduleFileExtensions: [...defaults.moduleFileExtensions, 'ts', 'tsx'],
   clearMocks: true,
-  extensionsToTreatAsEsm: ['.ts'],
   transform: {
     '^.+\\.test.ts$': [
       'ts-jest',
       {
-        useESM: true,
         tsconfig: '<rootDir>/src/__tests__/tsconfig.json',
         diagnostics: true,
       },

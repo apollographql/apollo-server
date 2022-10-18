@@ -319,7 +319,7 @@ describe('request pipeline life-cycle hooks', () => {
    * sooner in the request life-cycle: when "source" is populated via an APQ
    * cache HIT.
    *
-   * That functionality is tested in `apollo-server-integration-testsuite`,
+   * That functionality is tested in `@apollo/server-integration-testsuite`,
    * within the "Persisted Queries" tests. (Search for "didResolveSource").
    */
   it('didResolveSource called with the source', async () => {
