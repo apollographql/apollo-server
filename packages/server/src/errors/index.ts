@@ -11,6 +11,10 @@ export enum ApolloServerErrorCode {
   BAD_REQUEST = 'BAD_REQUEST',
 }
 
+export enum ApolloServerValidationErrorCode {
+  INTROSPECTION_DISABLED = 'INTROSPECTION_DISABLED',
+}
+
 /**
  * unwrapResolverError is a useful helper function for `formatError` hooks.
  * Errors thrown in resolvers are wrapped by graphql-js in a GraphQLError that

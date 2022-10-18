@@ -73,6 +73,10 @@ import type {
   GatewayInterface,
   GatewaySchemaLoadOrUpdateCallback,
 } from '@apollo/server-gateway-interface';
+import {
+  ApolloServerErrorCode,
+  ApolloServerValidationErrorCode,
+} from '@apollo/server/errors';
 
 const quietLogger = loglevel.getLogger('quiet');
 function mockLogger() {
@@ -240,6 +244,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           expect(introspectionResult.errors[0].message).toMatch(
             /introspection/,
           );
+          expect(introspectionResult.errors[0].extensions?.code).toEqual(
+            ApolloServerErrorCode.GRAPHQL_VALIDATION_FAILED,
+          );
+          expect(
+            introspectionResult.errors[0].extensions.validationErrorCode,
+          ).toEqual(ApolloServerValidationErrorCode.INTROSPECTION_DISABLED);
           expect(formatError.mock.calls.length).toEqual(
             introspectionResult.errors.length,
           );
@@ -248,6 +258,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
           expect(result.errors[0].message).toMatch(/Not allowed/);
+          expect(result.errors[0].extensions?.code).toEqual(
+            ApolloServerErrorCode.GRAPHQL_VALIDATION_FAILED,
+          );
           expect(formatError.mock.calls.length).toEqual(
             introspectionResult.errors.length + result.errors.length,
           );
@@ -281,7 +294,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
           expect(result.errors).toBeDefined();
           expect(result.errors.length).toEqual(1);
           expect(result.errors[0].extensions.code).toEqual(
-            'GRAPHQL_VALIDATION_FAILED',
+            ApolloServerErrorCode.GRAPHQL_VALIDATION_FAILED,
+          );
+          expect(result.errors[0].extensions.validationErrorCode).toEqual(
+            ApolloServerValidationErrorCode.INTROSPECTION_DISABLED,
           );
         });
 
