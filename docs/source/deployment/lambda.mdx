@@ -317,9 +317,7 @@ The setup enables you to customize your HTTP behavior as needed.
 
 ## Using request information
 
-You can use the [`context` function](../data/resolvers/#the-context-argument) to get information about the current operation from both the original Lambda data structures. These are provided to your `context` function as `event` and `context` arguments.
-
-The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, etc.). The `context` object (not to be confused with the `context` function itself!) contains the current Lambda Context (function name, function version, awsRequestId, time remaining, etc.).
+You can use the [`context` function](../data/resolvers/#the-context-argument) to get information about the current operation from the original Lambda data structures. Your `context` function can access this information from the passed-in `event` and `context` arguments:
 
 <MultiCodeBlock>
 
@@ -344,7 +342,9 @@ export const graphqlHandler = startServerAndCreateLambdaHandler(server, {
 
 </MultiCodeBlock>
 
-If you've [changed your set up to use `@vendia/serverless-express`](#customizing-http-behavior) you'll also have access to an `express` argument, containing the Express request and response.
+The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, etc.). The `context` object (not to be confused with the `context` function) contains the current Lambda Context (function name, function version, `awsRequestId`, time remaining, etc.).
+
+If you've [changed your set up to use `@vendia/serverless-express`](#customizing-http-behavior) you'll also have access to an `express` argument, containing the Express request and response in your `context` function:
 
 <MultiCodeBlock>
 
