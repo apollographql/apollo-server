@@ -13,7 +13,7 @@ You can use Apollo Server as:
 * The GraphQL server for a [subgraph](https://www.apollographql.com/docs/federation/subgraphs/) in a federated supergraph
 * The gateway for a [federated supergraph](https://www.apollographql.com/docs/federation/)
 
-Apollo Server provides a simple API for integrating with any Node.js web framework or serverless environment. The `@apollo/server` package itself ships with a standalone web server (built using [the Express web framework](https://expressjs.com/)) as well as an Express middleware implementation. Integrations with other environments are community-maintained.
+Apollo Server provides a simple API for integrating with any Node.js web framework or serverless environment. The `@apollo/server` package itself ships with a minimally-configurable, standalone web server which handles CORS and body parsing out of the box. Integrations with other environments are community-maintained.
 
 Apollo Server provides:
 
