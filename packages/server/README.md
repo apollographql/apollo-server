@@ -1,5 +1,7 @@
 # `@apollo/server`
 
+> This `@apollo/server` package is new with Apollo Server 4. Previous major versions of Apollo Server used a set of package names starting with `apollo-server`, such as `apollo-server`, `apollo-server-express`, `apollo-server-core`, etc.
+
 ## A TypeScript/JavaScript GraphQL server
 
 **Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](https://www.apollographql.com/docs/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
@@ -11,7 +13,7 @@ You can use Apollo Server as:
 * The GraphQL server for a [subgraph](https://www.apollographql.com/docs/federation/subgraphs/) in a federated supergraph
 * The gateway for a [federated supergraph](https://www.apollographql.com/docs/federation/)
 
-Apollo Server provides a simple API for integrating with any Node.js web framework or serverless environment. The `@apollo/server` package itself ships with a standalone zero-dependency web server, and a middleware implementation for [the Express web framework](https://expressjs.com/). Integrations with other environments are community-maintained.
+Apollo Server provides a simple API for integrating with any Node.js web framework or serverless environment. The `@apollo/server` package itself ships with a minimally-configurable, standalone web server which handles CORS and body parsing out of the box. Integrations with other environments are community-maintained.
 
 Apollo Server provides:
 
@@ -19,8 +21,6 @@ Apollo Server provides:
 *  **Incremental adoption**, enabling you to add features as they're needed
 *  **Universal compatibility** with any data source, any build tool, and any GraphQL client
 *  **Production readiness**, enabling you to confidently run your graph in production
-
-This `@apollo/server` package is new with Apollo Server 4. Previous major versions of Apollo Server used a set of package names starting with `apollo-server`, such as `apollo-server`, `apollo-server-express`, `apollo-server-core`, etc.
 
 ## Documentation
 
