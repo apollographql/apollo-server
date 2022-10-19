@@ -21,5 +21,6 @@
     "lib": ["es2020"],
     "types": ["node"],
     "baseUrl": ".",
-  }
+  },
+  "exclude": ["**/__tests__"],
 }

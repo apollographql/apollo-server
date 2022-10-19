@@ -7,7 +7,7 @@
   "scripts": {
     "clean": "git clean -dfqX -- ./node_modules **/{dist,node_modules}/ **/tsconfig*tsbuildinfo",
     "precompile": "node scripts/precompile.mjs",
-    "compile": "tsc --build tsconfig.build.json",
+    "compile": "tsc --build",
     "postcompile": "node scripts/postcompile.mjs",
     "watch": "tsc --build tsconfig.esm.json --watch",
     "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",

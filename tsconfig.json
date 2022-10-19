@@ -5,7 +5,7 @@
   "files": [],
   "include": [],
   "references": [
-    { "path": "./tsconfig.build.json" },
-    { "path": "./tsconfig.test.json" },
+    { "path": "./tsconfig.build.esm.json" },
+    { "path": "./tsconfig.build.cjs.json" },
   ]
 }

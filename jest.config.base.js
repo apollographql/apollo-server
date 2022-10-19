@@ -13,7 +13,7 @@ export default {
     '^.+\\.test.ts$': [
       'ts-jest',
       {
-        tsconfig: '<rootDir>/src/__tests__/tsconfig.json',
+        tsconfig: '<rootDir>/src/tsconfig.json',
         diagnostics: true,
       },
     ],
