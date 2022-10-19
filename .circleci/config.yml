@@ -57,7 +57,6 @@ jobs:
     steps:
       - setup-node:
           node-version: <<parameters.node-version>>
-      - run: npm run compile
       - run: npm run test:ci
       - run: npm run coverage:upload
       - store_test_results:
@@ -68,7 +67,6 @@ jobs:
     - image: cimg/base:stable
     steps:
       - setup-node
-      - run: npm run compile
       - run: npm run test:smoke
 
   Full incremental delivery tests with graphql-js 17 canary:
@@ -84,7 +82,6 @@ jobs:
       # --no-engine-strict because Node v18 doesn't match the engines fields
       # on some old stuff.
       - run: npm i --legacy-peer-deps --no-engine-strict graphql@17.0.0-alpha.1.canary.pr.3361.04ab27334641e170ce0e05bc927b972991953882
-      - run: npm run compile
       - run: npm run test:ci
       - run: npm run test:smoke
 

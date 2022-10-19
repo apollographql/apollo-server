@@ -3,9 +3,9 @@ title: Generating types from a GraphQL schema
 description: How to ensure your resolvers are type safe
 ---
 
-> 👋 If you haven't set up a TypeScript project using Apollo Server yet, follow our [Getting Started](../../getting-started) guide before continuing. 
+> 👋 If you haven't set up a TypeScript project using Apollo Server yet, follow our [Getting Started](../../getting-started) guide before continuing.
 
-GraphQL uses a type system to clearly define the available data for each type and field in a [GraphQL schema](../schema/schema). Type generation libraries can take advantage of the strongly-typed nature of a GraphQL schema to automatically generate TypeScript types based on that schema. 
+GraphQL uses a type system to clearly define the available data for each type and field in a [GraphQL schema](../schema/schema). Type generation libraries can take advantage of the strongly-typed nature of a GraphQL schema to automatically generate TypeScript types based on that schema.
 
 You can use these generated TS types in your resolvers to type-check that your resolvers' return values match the field types dictated by your schema. Type checking your resolvers enables you to catch errors quickly and gives you the peace of mind that type safety ensures.
 
@@ -104,16 +104,15 @@ Finally, we recommend adding helpful scripts to your `package.json` file to ensu
   "scripts": {
     "generate": "graphql-codegen --config codegen.yml",
     "compile": "npm run generate && tsc",
-    "postinstall": "npm run compile",
     "start": "npm run compile && node ./dist/index.js",
   },
 // ...
 }
 ```
 
-> We also recommend [adding scripts to watch your code](https://github.com/apollographql/docs-examples/blob/e3c133e50cd1d9ce6fb54630ca9ea9395b9bfa4d/apollo-server/v4/generated-types/package.json#L12), enabling your types to regenerate and your TypeScript files to recompile in the background as you work.  
+> We also recommend [adding scripts to watch your code](https://github.com/apollographql/docs-examples/blob/e3c133e50cd1d9ce6fb54630ca9ea9395b9bfa4d/apollo-server/v4/generated-types/package.json#L12), enabling your types to regenerate and your TypeScript files to recompile in the background as you work.
 
-Above, running the `npm start` command generates types based on our GraphQL schema _and_ compiles our TypeScript code. The first time you run the `graphql-codegen` command, you'll see a file full of generated types at the path you specified in your `codegen.yml` file. 
+Above, running the `npm start` command generates types based on our GraphQL schema _and_ compiles our TypeScript code. The first time you run the `graphql-codegen` command, you'll see a file full of generated types at the path you specified in your `codegen.yml` file.
 
 ## Adding types to resolvers
 
@@ -148,7 +147,7 @@ export const resolvers: Resolvers = {
 }
 ```
 
-If your resolvers are in multiple files, you can pull out the corresponding generated types for the resolvers into those files. For example, below, we import the generated types into the separate files we have for our queries and mutations:  
+If your resolvers are in multiple files, you can pull out the corresponding generated types for the resolvers into those files. For example, below, we import the generated types into the separate files we have for our queries and mutations:
 
 <CodeColumns>
 
@@ -210,11 +209,11 @@ Remember the `contextType` from our [`codegen.yml` file above](#installing-and-c
 config:
   useIndexSignature: true
   # Providing our context's interface ensures our
-  # context's type is set for all of our resolvers. 
+  # context's type is set for all of our resolvers.
 
-  # Note, this file path starts from the location of the 
-  # file where you generate types. 
-  # (i.e., `/src/__generated__/resolvers-types.ts` above) 
+  # Note, this file path starts from the location of the
+  # file where you generate types.
+  # (i.e., `/src/__generated__/resolvers-types.ts` above)
   contextType: "../index#MyContext" # highlight-line
 ```
 

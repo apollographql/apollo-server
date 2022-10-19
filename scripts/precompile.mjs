@@ -1,10 +1,10 @@
 // This script updates packageVersion.ts to contain the version from
 // package.json. That file is gitignored and this script gets run by
-// "precompile" (which is itself run by "postinstall").
+// "precompile".
 //
 // This assumes that we always publish packages from a fresh checkout rather
 // than running `changeset version` and then `changeset publish` from the same
-// checkout without `npm run compile` or `npm install` in between.
+// checkout without `npm run compile` in between.
 //
 // This script expects to be run from the project root (as `npm run` does).
 

@@ -25,15 +25,16 @@ specifically for this package) based on the `reports.proto` file. The output is
 generated with the `generate` npm script.
 
 The root of the repository provides some `devDependencies` necessary to build
-these definitions and the `prepare` npm script is invoked programmatically via
-the monorepo tooling (e.g. Lerna) thanks to _this_ module's `postinstall`
-script.  Therefore, when making changes to this module, run scripts via `npx
-lerna run SCRIPTNAME` in the **root** of this monorepo in order to update the
-definitions in _this_ module.
+these definitions; these will be installed by running `npm install` at the root
+of this workspace. When making changes to this module, run scripts via `npm run
+SCRIPTNAME -w @apollo/usage-reporting-protobuf` in the **root** of this monorepo in
+order to update the definitions in _this_ module. The `-w` flag is shorthand for
+`--workspace`; this monorepo leverages NPM workspaces to manage its packages.
 
 To update `reports.proto` to the current version recognized by the Studio usage
-reporting ingress, run `lerna run update-proto`. To then regenerate the JS and
-TS files, run `npx lerna run generate`. We check in the generated code and only
-regenerate it manually, partially to make builds faster (no need to run pbjs on
-every `npm install`) and partially so that we don't have to make sure that
-`pbjs` runs on every Node version that we support.
+reporting ingress, run `npm run update-proto -w
+@apollo/usage-reporting-protobuf`. To then regenerate the JS and TS files, run
+`npm run generate -w @apollo/usage-reporting-protobuf`. We check in the
+generated code and only regenerate it manually, partially to make builds faster
+(no need to run pbjs on every `npm install`) and partially so that we don't have
+to make sure that `pbjs` runs on every Node version that we support.
