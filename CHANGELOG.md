@@ -11,6 +11,10 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 > The changes noted within this `vNEXT` section have not been released yet.  New PRs and commits which introduce changes should include an entry in this `vNEXT` section as part of their development.  With few exceptions, the format of the entry should follow convention (i.e., prefix with package name, use markdown `backtick formatting` for package names and code, suffix with a link to the change-set à la `[PR #YYY](https://link/pull/YYY)`, etc.).  When a release is being prepared, a new header will be (manually) created below and the appropriate changes within that release will be moved into the new section.
 
+## v2.26.1
+
+- Update fork of `graphql-upload` to a version that specifies its dependency on `@types/fs-capacitor` more precisely to fix a build breakage. [Issue #7060](https://github.com/apollographql/apollo-server/issues/7060)
+
 ## v2.26.0
 
 - Backport [PR #5537](https://github.com/apollographql/apollo-server/pull/5537) from Apollo Server 3. This fixes a TypeScript declaration relating to the Fetch API. We believe this will make it possible to use Apollo Server 2 with Apollo Gateway 0.52.0. (This change does not provide any functionality other than hopefully fixing some TypeScript builds, so if it turns out that this breaks your TypeScript build instead, just don't take the upgrade. We encourage you to upgrade to actively supported Apollo major versions instead.) [PR #6829](https://github.com/apollographql/apollo-server/pull/6829)
