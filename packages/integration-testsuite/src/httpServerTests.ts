@@ -462,6 +462,31 @@ export function defineIntegrationTestSuiteHttpServerTests(
         `);
       });
 
+      it('unknown operation name returns 400 and OPERATION_RESOLUTION_FAILURE for GET requests', async () => {
+        const app = await createApp();
+        const res = await request(app)
+          .get('/')
+          .set('apollo-require-preflight', 't')
+          .query({
+            query: `query BadName { testString }`,
+            operationName: 'NotBadName',
+          });
+
+        expect(res.status).toEqual(400);
+        expect(res.body).toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "OPERATION_RESOLUTION_FAILURE",
+                },
+                "message": "Unknown operation named "NotBadName".",
+              },
+            ],
+          }
+        `);
+      });
+
       it('throwing in didResolveOperation results in error with default HTTP status code', async () => {
         const app = await createApp({
           schema,
