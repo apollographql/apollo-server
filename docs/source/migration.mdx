@@ -371,6 +371,8 @@ In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-ser
 
 Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
 
+> 📣 See our new [Fetching Data](./data/fetching-data) article for more information on how the _concept_ of a data source has changed in Apollo Sever 4. 
+
 In Apollo Server 3, immediately after constructing each `DataSource` subclass, Apollo Server invokes the `dataSource.initialize({ cache, context })` function on each new `DataSource`. If you need to replicate this behavior in Apollo Server 4, you can pass the `cache` and `context` arguments to each `DataSource` constructor. In Apollo Server 4, you can find `cache` as a new readonly field on `ApolloServer`.
 
 For example, below, we use the `RESTDataSource` class to create a `DataSource` with Apollo Server 3:
@@ -562,7 +564,6 @@ await startStandaloneServer(server, {
 ```
 
 </MultiCodeBlock>
-
 
 ### `modules`
 
