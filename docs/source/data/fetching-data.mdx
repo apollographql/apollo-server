@@ -24,13 +24,13 @@ flowchart LR;
   client --Sends query--> ApolloServer;
 ```
 
-Because your server can multiple various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important. 
+Because your server can use multiple various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important.
 
 For this reason, we recommend creating individual data source classes to encapsulate the logic of fetching data from a particular source, providing methods that resolvers can use to access data neatly. You can additionally customize your data source classes to help with caching, deduplication, or errors while resolving operations.
 
 ## Creating data source classes
 
-Your data source class can be as straightforward or complex as you need it to be. You know what data your server needs, and you can let that be the guide for the methods your class should include. 
+Your data source class can be as straightforward or complex as you need it to be. You know what data your server needs, and you can let that be the guide for the methods your class should include.
 
 Below is an example of a data source class that connects to a database:
 
@@ -40,10 +40,11 @@ Below is an example of a data source class that connects to a database:
 export class BookingsDataSource {
   private dbConnection;
   private token;
+  private user;
 
   constructor(options: { token: string }) {
     this.dbConnection = this.initializeDBConnection();
-    this.token = options.contextValue.token;
+    this.token = options.token;
   }
 
   async initializeDBConnection() {
@@ -52,8 +53,16 @@ export class BookingsDataSource {
     return dbConnection;
   }
 
+  async getUser() {
+    if (!this.user) {
+      // cache the user, lookup by token
+      this.user = await this.dbConnection.User.findByToken(this.token);
+    }
+    return this.user;
+  }
+
   async getBooking(bookingId) {
-    const user = await getUser(this.token);
+    const user = await this.getUser(this.token);
     if (user) {
       return await this.dbConnection.Booking.findByPk(bookingId);
     } else {
@@ -82,7 +91,7 @@ interface ContextValue {
     dogsDB: DogsDataSource;
     catsApi: CatsAPI;
   };
-  token: string
+  token: string;
 }
 //highlight-end
 
@@ -98,14 +107,14 @@ const { url } = await startStandaloneServer(server, {
     return {
       // We create new instances of our data sources with each request.
       // We can pass in our server's cache, contextValue, or any other
-      // info our data sources require. 
+      // info our data sources require.
       // highlight-start
       dataSources: {
-        dogsDB: new DogsDataSource({ cache, contextValue: token }),
+        dogsDB: new DogsDataSource({ cache, token: contextValue.token }),
         catsApi: new CatsAPI({ cache }),
       },
       //highlight-end
-      token
+      token,
     };
   },
 });
@@ -116,9 +125,11 @@ console.log(`🚀  Server ready at ${url}`);
 </MultiCodeBlock>
 
 <!-- TODO(AS4) add link to context article once exists  -->
+
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
+
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
-> If your data source class uses **caching** or its constructor requires an argument, the `context` function should create a _new instance_ of each data source class for each operation. Otherwise, you might accidentally combine results from multiple operations if those operations share a single data source instance.
+  > If your data source class uses **caching** or its constructor requires an argument, the `context` function should create a _new instance_ of each data source class for each operation. Otherwise, you might accidentally combine results from multiple operations if those operations share a single data source instance.
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
@@ -140,7 +151,7 @@ const resolvers = {
 
 ## Apollo Server 3 `DataSource`s
 
-Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which would attach your data sources to your `context` behind the scenes. 
+Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which would attach your data sources to your `context` behind the scenes.
 
 In Apollo Server 4, you can now create your data sources in the same `context` function as the rest of your per-request setup, avoiding the `DataSource` superclass entirely. We recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
 
@@ -150,19 +161,19 @@ The below data source implementations extend the generic [`DataSource` abstract 
 
 The larger community maintains the following open-source implementations:
 
-| Class            | Source    | For Use With          |
-|------------------|-----------|-----------------------|
-| [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http)  | Community | HTTP/REST APIs |
-| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)  | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
-| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/) | Community | MongoDB |
-| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb) | Community | Azure Cosmos DB |
-| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore |
+| Class                                                                             | Source    | For Use With                                      |
+| --------------------------------------------------------------------------------- | --------- | ------------------------------------------------- |
+| [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http)           | Community | HTTP/REST APIs                                    |
+| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)                     | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
+| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)   | Community | MongoDB                                           |
+| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb)      | Community | Azure Cosmos DB                                   |
+| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore                                   |
 
 > Apollo does not provide official support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained.
 
 ### Using `DataSource` subclasses
 
-In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, contextValue })` method on each new `DataSource` behind the scenes.
+In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, context })` method on each new `DataSource` behind the scenes.
 
 To replicate this in Apollo Sever 4, you can manually invoke the `initialize` method in the constructor function of each `DataSource` subclass, like so:
 
@@ -179,16 +190,17 @@ class BooksAPI extends HTTPDataSource {
   override baseURL = 'https://movies-api.example.com/';
 
   //highlight-start
-  constructor(options: { cache: KeyValueCache<string>; contextValue: string }) {
-  //highlight-end
+  constructor(options: { cache: KeyValueCache<string>; token: string }) {
+    //highlight-end
     // the necessary arguments for HTTPDataSource
     const pool = new Pool(baseURL);
     super(baseURL, { pool });
 
     // We need to call the initialize method in our data source's
     // constructor, passing in our cache and contextValue.
-    this.initialize(options); //highlight-line
-  }
+    //highlight-start
+    this.initialize({ cache: options.cache, context: options.token });
+    //highlight-end
 
   async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
@@ -214,10 +226,10 @@ const { url } = await startStandaloneServer(server, {
     const token = req.headers.token;
     return {
       dataSources: {
-        moviesApi: new MoviesAPI({ cache, contextValue: token }),
+        moviesApi: new MoviesAPI({ cache, token }),
       },
-    //highlight-end
-      token 
+      //highlight-end
+      token,
     };
   },
 });

@@ -17,7 +17,7 @@
     },
     "Fetching Data": {
       "Resolvers": "/data/resolvers",
-      "Fetching Data": "/data/fetching-data",
+      "Fetching data": "/data/fetching-data",
       "Fetching from REST": "/data/fetching-rest",
       "Error handling": "/data/errors",
       "Subscriptions": "/data/subscriptions"
