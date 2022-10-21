@@ -45,8 +45,8 @@
       "Proxy configuration": "/security/proxy-configuration"
     },
     "Deployment": {
-      "Heroku": "/deployment/heroku",
-      "Lambda": "/deployment/lambda"
+      "Lambda": "/deployment/lambda",
+      "Heroku": "/deployment/heroku"
     },
     "Monitoring": {
       "Metrics and logging": "/monitoring/metrics",

@@ -173,6 +173,8 @@ service: apollo-lambda
 provider:
   name: aws
   runtime: nodejs16.x
+  httpApi:
+    cors: true
 functions:
   graphql:
     # Make sure your file path is correct!
@@ -180,20 +182,16 @@ functions:
     # The format is: <FILENAME>.<HANDLER>
     handler: src/server.graphqlHandler # highlight-line
     events:
-      - http:
+      - httpApi:
           path: /
-          method: post
-          cors: true
-      - http:
+          method: POST
+      - httpApi:
           path: /
-          method: get
-          cors: true
-# Omit the below lines if you aren't using TS!
+          method: GET
+# Omit the following lines if you aren't using TS!
 plugins:
   - serverless-plugin-typescript
 ```
-
-> If you are using webpack, you might want to install and configure Serverless using the [`serverless-webpack` plugin](https://github.com/serverless-heaven/serverless-webpack) to ensure the CLI can find your file.
 
 ### Running locally
 
@@ -282,9 +280,9 @@ If you ever want to remove the S3 bucket or Lambda functions that Serverless cre
 
 ## Customizing HTTP behavior
 
-The `@as-integrations/aws-lambda` package is compatible with Lambda's API Gateway V1 (REST) and V2 (HTTP). However, it does not let you customize HTTP behavior directly.
+The `@as-integrations/aws-lambda` package is compatible with Lambda's API Gateway V1 (REST) and V2 (HTTP). However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., such as Application Load Balancers).
 
-If you'd like to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests.
+If you want to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
 
 You can update your Apollo Server setup to the following to have a fully functioning Lambda server that works in a variety of AWS features:
 
@@ -317,7 +315,9 @@ The setup enables you to customize your HTTP behavior as needed.
 
 ## Using request information
 
-You can use the [`context` function](../data/resolvers/#the-context-argument) to get information about the current operation from the original Lambda data structures. Your `context` function can access this information from the passed-in `event` and `context` arguments:
+You can use the [`context` function](../data/resolvers/#the-context-argument) to get information about the current operation from the original Lambda data structures.
+
+Your `context` function can access this information from its argument containing `event` and `context` objects:
 
 <MultiCodeBlock>
 
@@ -330,7 +330,7 @@ const server = new ApolloServer<MyContext>({
 // This final export is important!
 export const graphqlHandler = startServerAndCreateLambdaHandler(server, {
   // highlight-start
-  context: async (event, context) => {
+  context: async ({ event, context }) => {
     return {
       lambdaEvent: event,
       lambdaContext: context,
@@ -344,7 +344,7 @@ export const graphqlHandler = startServerAndCreateLambdaHandler(server, {
 
 The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, etc.). The `context` object (not to be confused with the `context` function) contains the current Lambda Context (function name, function version, `awsRequestId`, time remaining, etc.).
 
-If you've [changed your set up to use `@vendia/serverless-express`](#customizing-http-behavior) you'll also have access to an `express` argument, containing the Express request and response in your `context` function:
+If you've [changed your setup to use `@vendia/serverless-express`](#customizing-http-behavior) your `context` function receives `req` and `res` options which are [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L367) and [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L659) objects:
 
 <MultiCodeBlock>
 
@@ -368,7 +368,11 @@ app.use(
   cors(),
   json(),
   expressMiddleware(server, {
+    // The Express request and response objects are passed into
+    // your context initialization function
     context: async ({ req, res }) => {
+      // Here is where you'll have access to the
+      // API Gateway event and Lambda Context
       const { event, context } = serverlessExpress.getCurrentInvoke();
       return {
         expressRequest: req,
@@ -384,4 +388,3 @@ exports.handler = serverlessExpress({ app });
 ```
 
 </MultiCodeBlock>
-````
