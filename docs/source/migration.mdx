@@ -381,7 +381,9 @@ For example, below, we use the `RESTDataSource` class to create a `DataSource` w
 import { RESTDataSource, RequestOptions } from 'apollo-datasource-rest';
 import { ApolloServer } from 'apollo-server';
 
-class MoviesAPI extends RESTDataSource { //highlight-line
+// highlight-start
+class MoviesAPI extends RESTDataSource { 
+  // highlight-end
   override baseURL = 'https://movies-api.example.com/';
 
   override willSendRequest(request: RequestOptions) {
@@ -390,6 +392,14 @@ class MoviesAPI extends RESTDataSource { //highlight-line
 
   async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
+  }
+
+  async updateMovie(movie: Movie): Promise<Movie>  {
+    return this.patch(
+      `movies`,
+      // Syntax for passing a request body
+      { id: movie.id, movie }, //highlight-line
+    );
   }
 }
 
@@ -403,7 +413,9 @@ interface ContextValue {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => { //highlight-line
+  //highlight-start
+  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => { 
+    //highlight-end
     return {
       token: getTokenFromRequest(req),
     };
@@ -449,16 +461,23 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
+
+  async updateMovie(movie: Movie): Promise<Movie>  {
+    return this.patch(
+      `movies`,
+      // Note the way we pass request bodies has also changed!
+      { body: { id: movie.id, movie } }, //highlight-line
+    );
+  }
 }
 
-// highlight-start
-interface ContextValue {
-  token: string;
-  dataSources: {
-    moviesAPI: MoviesAPI;
-  };
-}
-// highlight-end
+interface ContextValue { // highlight-line
+  token: string; // highlight-line
+  dataSources: { // highlight-line
+    moviesAPI: MoviesAPI; // highlight-line
+  }; // highlight-line
+} // highlight-line
+
 
 const server = new ApolloServer<ContextValue>({
   typeDefs,
@@ -474,8 +493,7 @@ const { url } = await startStandaloneServer(server, {
       //highlight-start
       dataSources: {
         moviesAPI: new MoviesAPI({ cache, token }),
-      },
-      //highlight-end
+      }, //highlight-end
     };
   },
 });
@@ -485,7 +503,7 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-> For Apollo Server 4, `apollo-datasource-rest` package has been updated and renamed [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest).
+> In Apollo Server 4, we've updated and renamed `apollo-datasource-rest` to the new [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest) package. Most of the functionality between the two packages is the same. However, some small syntax differences exist in how we pass a request's `headers`, `params`, `cacheOptions`, and `body`. See [Fetching from REST](./data/fetching-rest#method-parameters) for more details on the new syntax.
 
 If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class` (enabling it to refer to itself via `this` in its constructor):
 
