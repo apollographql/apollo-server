@@ -124,12 +124,12 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-<!-- TODO(AS4) add link to context article once exists  -->
+<!-- TODO(AS4) add link to context article once exists and link to REST article once we cover caching -->
 
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
-- If your data source class uses in memory caching of values that shouldn't be shared across requests, or its constructor requires an argument, the `context` function should create a _new instance_ of each data source class for each operation.
+- If your data source constructor accepts an argument _or_ uses an in-memory cache, the `context` function should create a **new instance of your data source class for each operation**. This ensures that your data source doesn't accidentally share values across requests.
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
@@ -149,7 +149,18 @@ const resolvers = {
 };
 ```
 
-## Apollo Server 3 `DataSource`s
+## Open-source implementations
+
+## Modern data sources
+
+Apollo maintains the following open-source data source implementations for Apollo Server 4:
+
+<!-- prettier-ignore -->
+| Class | Examples | For Use With |
+| --- | --- | --- | 
+| [`RESTDataSource`](https://github.com/apollographql/datasource-rest) | [See Fetching Rest](./fetching-rest)|  HTTP/REST APIs |
+
+### Legacy data source classes
 
 Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which would attach your data sources to your `context` behind the scenes.
 
@@ -161,17 +172,18 @@ The below data source implementations extend the generic [`DataSource` abstract 
 
 The larger community maintains the following open-source implementations:
 
-| Class                                                                             | Source    | For Use With                                      |
-| --------------------------------------------------------------------------------- | --------- | ------------------------------------------------- |
-| [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http)           | Community | HTTP/REST APIs                                    |
-| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource)                     | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
-| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/)   | Community | MongoDB                                           |
-| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb)      | Community | Azure Cosmos DB                                   |
-| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore                                   |
+<!-- prettier-ignore -->
+| Class | Source | For Use With |
+| --- | --- | --- | 
+| [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http) | Community | HTTP/REST APIs |
+| [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource) | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
+| [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/) | Community | MongoDB |
+| [`CosmosDataSource`](https://github.com/andrejpk/apollo-datasource-cosmosdb) | Community | Azure Cosmos DB |
+| [`FirestoreDataSource`](https://github.com/swantzter/apollo-datasource-firestore) | Community | Cloud Firestore |
 
 > Apollo does not provide official support for community-maintained libraries. We cannot guarantee that community-maintained libraries adhere to best practices, or that they will continue to be maintained.
 
-### Using `DataSource` subclasses
+#### Using `DataSource` subclasses
 
 In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, context })` method on each new `DataSource` behind the scenes.
 
