@@ -129,7 +129,7 @@ console.log(`🚀  Server ready at ${url}`);
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
-  > If your data source class uses **caching** or its constructor requires an argument, the `context` function should create a _new instance_ of each data source class for each operation. Otherwise, you might accidentally combine results from multiple operations if those operations share a single data source instance.
+- If your data source class uses in memory caching of values that shouldn't be shared across requests, or its constructor requires an argument, the `context` function should create a _new instance_ of each data source class for each operation.
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
