@@ -2655,5 +2655,66 @@ content-type: application/json; charset=utf-8\r
         );
       });
     });
+
+    describe('gateway execution', () => {
+      it('executor can read and write response HTTP headers and status', async () => {
+        const app = await createApp({
+          plugins: [
+            {
+              async requestDidStart({ response }) {
+                response.http.headers.set('header-in', 'send this in');
+                return {
+                  async willSendResponse({ response }) {
+                    response.http.headers.set(
+                      'got-status-from-plugin',
+                      `${response.http.status}`,
+                    );
+                  },
+                };
+              },
+            },
+          ],
+          gateway: {
+            async load() {
+              return {
+                schema,
+                async executor(requestContext) {
+                  const http = requestContext.response?.http!;
+                  http.headers.set(
+                    'header-out',
+                    http.headers.get('header-in') === 'send this in'
+                      ? 'got it'
+                      : 'did not',
+                  );
+                  http.status = 202;
+                  return { data: { testString: 'hi' } };
+                },
+              };
+            },
+            async stop() {},
+            onSchemaLoadOrUpdate(f) {
+              f({ apiSchema: schema, coreSupergraphSdl: '' });
+              return () => {};
+            },
+          },
+        });
+
+        const res = await request(app)
+          .post('/')
+          .send({ query: `{testString}` });
+
+        expect(res.status).toEqual(202);
+        expect(res.headers['header-in']).toEqual('send this in');
+        expect(res.headers['header-out']).toEqual('got it');
+        expect(res.headers['got-status-from-plugin']).toEqual('202');
+        expect(res.body).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "testString": "hi",
+            },
+          }
+        `);
+      });
+    });
   });
 }
