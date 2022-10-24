@@ -4,12 +4,13 @@ import type {
   GatewayGraphQLResponse,
   GatewaySchemaHash,
 } from '@apollo/server-gateway-interface';
-import { Headers } from 'node-fetch';
+import type { FetcherHeaders } from '@apollo/utils.fetcher';
 import type { ApolloServer, ApolloServerInternals } from '../ApolloServer';
 import type {
   BaseContext,
   GraphQLRequestContextExecutionDidStart,
 } from '../externalTypes';
+import type { HeaderMap } from './HeaderMap';
 
 // Apollo Gateway's API included `GraphQLRequestContext` from AS2/AS3.
 // Specifically, a request context is passed to the main executor method, which
@@ -76,7 +77,9 @@ import type {
 // But the main thing the executor is doing is *returning* a response, which
 // then semi-overwrites `requestContext.response` anyway. So it doesn't seem
 // like we need to support `executor` *also* overwriting response. Yet again, we
-// can fix this if it turns out it's necessary.
+// can fix this if it turns out it's necessary. (That said, the executor could
+// in theory write HTTP response headers or status, so we make sure to hook them
+// up directly to the appropriate data in the real GraphQLRequestContext.)
 //
 // So all in all, it looks like it's OK for this to be a "one-way" conversion.
 export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
@@ -108,21 +111,24 @@ export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
       url: `https://unknown-url.invalid/${needQuestion ? '?' : ''}${
         as4http.search
       }`,
-      headers: new Headers(Object.fromEntries(as4http.headers)),
+      headers: new FetcherHeadersForHeaderMap(as4http.headers),
     };
   }
 
   const response: GatewayGraphQLResponse = {
     http: {
-      headers: new Headers(
-        Object.fromEntries(as4RequestContext.response.http.headers),
+      headers: new FetcherHeadersForHeaderMap(
+        as4RequestContext.response.http.headers,
       ),
+      get status() {
+        return as4RequestContext.response.http.status;
+      },
+      set status(newStatus) {
+        as4RequestContext.response.http.status = newStatus;
+      },
     },
     // We leave off `body` because it hasn't been set yet.
   };
-  if ('status' in as4RequestContext.response.http) {
-    response.http!.status = as4RequestContext.response.http.status;
-  }
 
   return {
     request,
@@ -148,4 +154,43 @@ export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
     debug: internals.includeStacktraceInErrorResponses,
     overallCachePolicy: as4RequestContext.overallCachePolicy,
   };
+}
+
+// An implementation of the W3C-style headers class used by Gateway (and AS3),
+// backed by AS4's HeaderMap. Changes are written directly to the HeaderMap, so
+// any concurrent writes to the underlying HeaderMap (eg from a plugin) can be
+// seen immediately by the gateway and vice versa.
+class FetcherHeadersForHeaderMap implements FetcherHeaders {
+  constructor(private map: HeaderMap) {}
+  append(name: string, value: string) {
+    if (this.map.has(name)) {
+      this.map.set(name, this.map.get(name) + ', ' + value);
+    } else {
+      this.map.set(name, value);
+    }
+  }
+  delete(name: string) {
+    this.map.delete(name);
+  }
+  get(name: string): string | null {
+    return this.map.get(name) ?? null;
+  }
+  has(name: string): boolean {
+    return this.map.has(name);
+  }
+  set(name: string, value: string) {
+    this.map.set(name, value);
+  }
+  entries(): Iterator<[string, string]> {
+    return this.map.entries();
+  }
+  keys(): Iterator<string> {
+    return this.map.keys();
+  }
+  values(): Iterator<string> {
+    return this.map.values();
+  }
+  [Symbol.iterator](): Iterator<[string, string]> {
+    return this.map.entries();
+  }
 }
