@@ -1,0 +1,390 @@
+---
+title: Deploying with AWS Lambda
+description: How to deploy Apollo Server with AWS Lambda
+---
+
+[AWS Lambda](https://aws.amazon.com/lambda/) is a serverless computing platform with a pay-for-use billing model that enables you to run code without worrying about provisioning or managing servers.
+
+In this guide, we'll walk through how to deploy Apollo Server's [AWS Lambda integration](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda) to AWS Lambda using the [Serverless framework](https://www.serverless.com/).
+
+## Prerequisites
+
+Make sure you've completed the following before proceeding with this guide:
+
+- [Create an AWS account](https://aws.amazon.com/free/)
+- [Install the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html)
+- [Create an IAM user](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-creds-create)
+- [Configure the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config) with your new IAM user's credentials
+
+> ⚠️ AWS best practices warn against using your AWS account root user keys for any task where it's not required (e.g., don't use these keys to configure the AWS CLI). Instead, [create an IAM user account](https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started_create-admin-group.html#getting-started_create-admin-group-console) with the [least privilege](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#grant-least-privilege) required to deploy your application, and [configure the AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-quickstart.html#cli-configure-quickstart-config) to use that account.
+
+## Setting up your project
+
+For this example, we'll start from scratch to show how all the pieces fit together.
+
+Begin by installing the necessary packages for using Apollo Server and its integration for AWS Lambda:
+
+```shell
+npm install @apollo/server graphql @as-integrations/aws-lambda
+```
+
+Next, we'll create a file with a basic Apollo Server setup. Note the file's name and location; we'll need those in a later step:
+
+<MultiCodeBlock>
+
+```ts title="src/server.ts"
+import { ApolloServer } from '@apollo/server';
+
+// The GraphQL schema
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
+
+// A map of functions which return data for the schema.
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+  },
+};
+
+// Set up Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+```
+
+```js title="server.js"
+import { ApolloServer } from '@apollo/server';
+
+// The GraphQL schema
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
+
+// A map of functions which return data for the schema.
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+  },
+};
+
+// Set up Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+```
+
+</MultiCodeBlock>
+
+Now we can import the `startServerAndCreateLambdaHandler` function from [`@as-integrations/aws-lambda`](https://www.npmjs.com/package/@as-integrations/aws-lambda), passing in our `ApolloServer` instance:
+
+<MultiCodeBlock>
+
+```ts title="src/server.ts"
+import { ApolloServer } from '@apollo/server';
+import { startServerAndCreateLambdaHandler } from '@as-integrations/aws-lambda'; //highlight-line
+
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+  },
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+// This final export is important!
+export const graphqlHandler = startServerAndCreateLambdaHandler(server); //highlight-line
+```
+
+```js title="server.js"
+import { ApolloServer } from '@apollo/server';
+import { startServerAndCreateLambdaHandler } from '@as-integrations/aws-lambda'; //highlight-line
+
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+  },
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+// This final export is important!
+export const graphqlHandler = startServerAndCreateLambdaHandler(server); //highlight-line
+```
+
+</MultiCodeBlock>
+
+The final line in the code snippet above creates an export named `graphqlHandler` with a Lambda function handler. We'll get back to this function in a moment!
+
+## Deploying using the Serverless framework
+
+[Serverless](https://serverless.com) is a framework that helps make deploying serverless applications to platforms like AWS Lambda easier.
+
+### Installing the CLI
+
+We'll use the [Serverless CLI](https://www.serverless.com/framework/docs/getting-started/) to deploy our application. You can either install the Serverless package into your project directly or install the Serverless CLI globally:
+
+```bash
+npm install -g serverless
+```
+
+The Serverless CLI can access the credentials of the AWS CLI, which [you configured earlier](#prerequisites). So now we just need to tell Serverless which service we want to deploy.
+
+> AWS best practices recommend [rotating your access keys](https://docs.aws.amazon.com/IAM/latest/UserGuide/best-practices.html#rotate-credentials) for use cases that require long-term credentials (e.g., hosting an application).
+
+### Configuring services
+
+You can configure Serverless using a `serverless.yml` file, letting it know which services to deploy and where the handlers are.
+
+If you are using TypeScript, download the `serverless-plugin-typescript` package to enable Serverless to use your TS file:
+
+```bash
+npm install -D serverless-plugin-typescript
+```
+
+You use the example `serverless.yml` configuration below; take care to ensure the file path you use is pointing to the file where you export your handler:
+
+```yaml title="serverless.yml"
+service: apollo-lambda
+provider:
+  name: aws
+  runtime: nodejs16.x
+  httpApi:
+    cors: true
+functions:
+  graphql:
+    # Make sure your file path is correct!
+    # (e.g., if your file is in the root folder use server.graphqlHandler )
+    # The format is: <FILENAME>.<HANDLER>
+    handler: src/server.graphqlHandler # highlight-line
+    events:
+      - httpApi:
+          path: /
+          method: POST
+      - httpApi:
+          path: /
+          method: GET
+# Omit the following lines if you aren't using TS!
+plugins:
+  - serverless-plugin-typescript
+```
+
+### Running locally
+
+Before deploying, we can use the Serverless CLI to invoke our handler locally to ensure everything is working. We'll do this by mocking an HTTP request with a GraphQL operation.
+
+You can store a mock HTTP requests locally by creating a `query.json` file, like so:
+
+```json title="query.json"
+{
+  "httpMethod": "POST",
+  "path": "/",
+  "headers": {
+    "content-type": "application/json"
+  },
+  "requestContext": {},
+  "body": "{\"operationName\": null, \"variables\": null, \"query\": \"{ hello }\"}"
+}
+```
+
+Now we can use `serverless` to invoke our handler using the query above:
+
+```bash
+serverless invoke local -f graphql -p query.json
+```
+
+Your response should look something like this:
+
+```json
+{
+  "statusCode": 200,
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "content-length": "27"
+  },
+  "body": "{\"data\":{\"hello\":\"world\"}}\n"
+}
+```
+
+With everything working locally, we can move on to deployment!
+
+### Deploying
+
+[As we mentioned earlier](#installing-the-serverless-cli), Serverless already has access to your AWS CLI credentials, so to deploy, all you need to do is run the following command:
+
+```bash
+serverless deploy
+```
+
+If successful, `serverless` should output something like this:
+
+```bash
+> serverless deploy
+> Deploying apollo-lambda to stage dev (us-east-1)
+> ✔ Service deployed to stack apollo-lambda-dev (187s)
+> ..............
+> endpoints:
+> POST - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/
+> GET - https://ujt89xxyn3.execute-api.us-east-1.amazonaws.com/dev/
+> functions:
+> graphql: apollo-lambda-dev-graphql
+> Monitor all your API routes with Serverless Console: run "serverless --console"
+```
+
+You can now navigate to your endpoints and query your newly hosted server using [Apollo Sandbox](/studio/explorer/sandbox).
+
+#### What does `serverless` do?
+
+First, it builds the functions, zips up the artifacts, and uploads them to a new S3 bucket. Then, it creates a Lambda function with those artifacts and outputs the HTTP endpoint URLs to the console if everything is successful.
+
+### Managing the resulting services
+
+The resulting S3 buckets and Lambda functions are accessible from the [AWS Console](https://console.aws.amazon.com). The AWS Console also lets you view the [IAM user](https://docs.aws.amazon.com/IAM/latest/UserGuide/getting-started.html) you created earlier.
+
+<!-- cSpell:disable-next-line -->
+
+To find the S3 bucket that Serverless created, search in Amazon's listed services for S3, then look for the name of your bucket (e.g., `apollo-lambda-dev-serverlessdeploymentbucket-1s10e00wvoe5f` is the name of our bucket).
+
+To find the Lambda function that Serverless created, search in Amazon's listed services for `Lambda`. Double-check the region at the top right of the screen if your list of Lambda functions is empty or missing your new function. The default region for Serverless deployments is `us-east-1` (N. Virginia).
+
+If you ever want to remove the S3 bucket or Lambda functions that Serverless created, you can run the following command:
+
+```bash
+ serverless remove
+```
+
+## Customizing HTTP behavior
+
+The `@as-integrations/aws-lambda` package is compatible with Lambda's API Gateway V1 (REST) and V2 (HTTP). However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., Application Load Balancers).
+
+If you want to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
+
+You can update your Apollo Server setup to the following to have a fully functioning Lambda server that works in a variety of AWS features:
+
+<MultiCodeBlock>
+
+```ts
+const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@apollo/server/express4');
+const serverlessExpress = require('@vendia/serverless-express');
+const express = require('express');
+const { json } = require('body-parser');
+const cors = require('cors');
+
+const server = new ApolloServer({
+  typeDefs: 'type Query { x: ID }',
+  resolvers: { Query: { x: () => 'hi!' } },
+});
+
+server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
+
+const app = express();
+app.use(cors(), json(), expressMiddleware(server));
+
+exports.graphqlHandler = serverlessExpress({ app });
+```
+
+</MultiCodeBlock>
+
+The setup enables you to customize your HTTP behavior as needed.
+
+## Using request information
+
+You can use the [`context` function](../data/resolvers/#the-context-argument) to get information about the current operation from the original Lambda data structures.
+
+Your `context` function can access this information from its argument containing `event` and `context` objects:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+// This final export is important!
+export const graphqlHandler = startServerAndCreateLambdaHandler(server, {
+  // highlight-start
+  context: async ({ event, context }) => {
+    return {
+      lambdaEvent: event,
+      lambdaContext: context,
+    };
+  },
+  // highlight-end
+});
+```
+
+</MultiCodeBlock>
+
+The `event` object contains the API Gateway event (HTTP headers, HTTP method, body, path, etc.). The `context` object (not to be confused with the `context` function) contains the current Lambda Context (function name, function version, `awsRequestId`, time remaining, etc.).
+
+If you've [changed your setup to use `@vendia/serverless-express`](#customizing-http-behavior) your `context` function receives `req` and `res` options which are [`express.Request`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L367) and [`express.Response`](https://github.com/DefinitelyTyped/DefinitelyTyped/blob/2c4c1d0b106a1305c384cde84bb14bbf1a938d2c/types/express-serve-static-core/index.d.ts#L659) objects:
+
+<MultiCodeBlock>
+
+```ts
+const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@apollo/server/express4');
+const serverlessExpress = require('@vendia/serverless-express');
+const express = require('express');
+const { json } = require('body-parser');
+const cors = require('cors');
+
+const server = new ApolloServer({
+  typeDefs: 'type Query { x: ID }',
+  resolvers: { Query: { x: () => 'hi!' } },
+});
+
+server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
+
+const app = express();
+app.use(
+  cors(),
+  json(),
+  expressMiddleware(server, {
+    // The Express request and response objects are passed into
+    // your context initialization function
+    context: async ({ req, res }) => {
+      // Here is where you'll have access to the
+      // API Gateway event and Lambda Context
+      const { event, context } = serverlessExpress.getCurrentInvoke();
+      return {
+        expressRequest: req,
+        expressResponse: res,
+        lambdaEvent: event,
+        lambdaContext: context,
+      };
+    },
+  }),
+);
+
+exports.handler = serverlessExpress({ app });
+```
+
+</MultiCodeBlock>
