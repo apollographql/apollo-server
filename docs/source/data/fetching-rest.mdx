@@ -5,7 +5,7 @@ description: Using RESTDataSource to fetch data from REST APIs
 
 > See the [`@apollo/datasource-rest` page](https://github.com/apollographql/datasource-rest) for the full details of the `RESTDataSource` API.
 
-The `RESTDataSource` class helps you fetch data from REST APIs. The `RESTDataSource` class helps handle caching, deduplication, and errors while resolving operations.
+The `RESTDataSource` class, from the Apollo-maintained `@apollo/datasource-rest` library, helps you fetch data from REST APIs. The `RESTDataSource` class helps handle caching, deduplication, and errors while resolving operations.
 
 ```mermaid
 flowchart LR;
@@ -31,6 +31,7 @@ npm install @apollo/datasource-rest
 ```
 
 Your server should define a separate subclass of `RESTDataSource` for each REST API it communicates with. Here's an example of a `RESTDataSource` subclass that defines two data-fetching methods, `getMovie` and `getMostViewedMovies`:
+
 <MultiCodeBlock>
 
 ```ts title="movies-api.ts"
@@ -102,9 +103,11 @@ console.log(`🚀  Server ready at ${url}`);
 </MultiCodeBlock>
 
 <!-- TODO(AS4) add link to context article once exists  -->
+
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
+
 - For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** 
+- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.**
 
 Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
 
@@ -126,9 +129,16 @@ const resolvers = {
 
 ## Caching
 
-> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](#datasources).
+> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](./migration/#datasources).
 
-The `RESTDataSource` class can cache results if the REST API it fetches from specifies caching headers in its HTTP responses (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)). 
+The `RESTDataSource` class provides _two_ layers of caching:
+
+- One layer caches responses that specify HTTP caching headers.
+- The other layer caches all outgoing `GET` requests by their URL in a separate memoized cache.
+
+### HTTP caching
+
+The `RESTDataSource` class can cache results if the REST API it fetches from specifies caching headers in its HTTP responses (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)).
 
 As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a `cache` argument (e.g., Apollo Server's default cache) to store the results of past fetches:
 
@@ -201,10 +211,15 @@ const { url } = await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-
 When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
 > If you want to configure or replace Apollo Server's default cache, see [Configuring external caching](../performance/cache-backends) for more details.
+
+### Caching `GET` requests
+
+By default, the `RESTDataSource` class automatically caches all outgoing `GET` requests by their URL in a separate memoized cache. This means your cache is essentially caching per-GraphQL-request, ensuring that data that gets fetched by multiple resolvers in a single operation _only happens once_.
+
+This layer of caching behaves like the Data loader package to ensure that data that gets fetched by multiple resolvers in a single operation only happens once.
 
 ## HTTP Methods
 
@@ -229,7 +244,7 @@ class MoviesAPI extends RESTDataSource {
   async postMovie(movie) {
     return this.post(
       `movies`, // path
-       { body: { movie } }, // request body
+      { body: { movie } }, // request body
     );
   }
 
@@ -256,7 +271,6 @@ class MoviesAPI extends RESTDataSource {
     );
   }
 }
-
 ```
 
 </ExpansionPanel>
@@ -303,7 +317,10 @@ Data sources also have access to the GraphQL operation context, which is useful 
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import {
+  RESTDataSource,
+  WillSendRequestOptions,
+} from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -330,7 +347,10 @@ class PersonalizationAPI extends RESTDataSource {
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import {
+  RESTDataSource,
+  WillSendRequestOptions,
+} from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -372,17 +392,17 @@ class PersonalizationAPI extends RESTDataSource {
 
   override async resolveURL(path: string, request: RequestOptions) {
     if (!this.baseURL) {
-      const addresses = await resolveSrv(path.split('/')[1] + '.service.consul');
+      const addresses = await resolveSrv(
+        path.split('/')[1] + '.service.consul',
+      );
       this.baseURL = addresses[0];
     }
     return super.resolveURL(path, request);
   }
 }
-
 ```
 
 </MultiCodeBlock>
-
 
 ## Using with DataLoader
 
@@ -404,7 +424,10 @@ We recommend that you restrict batching to requests that _can't_ be cached. In t
 
 ```ts
 import DataLoader from 'dataloader';
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import {
+  RESTDataSource,
+  WillSendRequestOptions,
+} from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -421,7 +444,9 @@ class PersonalizationAPI extends RESTDataSource {
   }
 
   private progressLoader = new DataLoader(async (ids) => {
-    const progressList = await this.get('progress', { params: { ids: ids.join(',') } });
+    const progressList = await this.get('progress', {
+      params: { ids: ids.join(',') },
+    });
     return ids.map((id) => progressList.find((progress) => progress.id === id));
   });
 
