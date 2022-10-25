@@ -620,6 +620,24 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
+      it('GET request with array body is not interpreted as batch', async () => {
+        const app = await createApp({ schema, allowBatchedHttpRequests: true });
+        const res = await request(app)
+          .get('/')
+          .set('apollo-require-preflight', 't')
+          .set('content-type', 'application/json')
+          .query({ query: '{ testString }' })
+          .send('[1, 2]');
+        expect(res.status).toEqual(200);
+        expect(res.body).toMatchInlineSnapshot(`
+          {
+            "data": {
+              "testString": "it works",
+            },
+          }
+        `);
+      });
+
       it('can handle a basic implicit GET request', async () => {
         const app = await createApp();
         const expected = {
