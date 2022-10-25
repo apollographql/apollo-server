@@ -18,6 +18,7 @@
     "test:smoke:prepare": "smoke-test/prepare.sh",
     "test:smoke:run": "smoke-test/smoke-test.sh",
     "test:ci": "npm run coverage -- --ci --maxWorkers=2 --reporters=default --reporters=jest-junit",
+    "test:one-integration": "npm run test -- packages/server/src/__tests__/express4/integration.test.ts",
     "coverage": "npm test -- --coverage",
     "coverage:upload": "codecov",
     "codegen": "graphql-codegen",
