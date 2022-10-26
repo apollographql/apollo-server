@@ -112,7 +112,7 @@ console.log(`🚀  Server ready at ${url}`);
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation**.[See more details on why below.](#http-caching)
+- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation**.[More details on why below.](#caching-get-requests)
 
 Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
 
@@ -141,7 +141,7 @@ The `RESTDataSource` class provides its subclasses with _two_ layers of caching:
 
 These caching layers effectively make the `RESTDataSource` class a Node HTTP client that offers browser-style caching. Below, we'll dive into each layer of caching and the advantage that layer provides.
 
-### HTTP caching
+### HTTP responses
 
 > 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](./migration/#datasources).
 
@@ -193,21 +193,17 @@ When running _multiple instances_ of your server, you should use an external sha
 
 > If you want to configure or replace Apollo Server's default cache, see [Configuring external caching](../performance/cache-backends) for more details.
 
-### Caching `GET` requests
+### `GET` requests and responses
 
-By default, `RESTDataSource` automatically caches _all_ outgoing `GET` requests by their URLs in a separate memoized cache.
+By default, `RESTDataSource` automatically stores _all_ outgoing `GET` requests (by their URLs) alongside their results in a [separate memoized cache](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L263). This cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. Under the hood, this works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
 
-This cache enables `RESTDataSource` to optimize the current GraphQL operation by eliminating redundant requests made by multiple resolvers attempting to get the same information.
+> The `RESTDataSource` class caches `GET` requests and responses _regardless_ of HTTP caching headers.
 
-By default, `RESTDataSource` automatically caches _all_ outgoing `GET` requests by their URLs in a separate memoized cache. This memoized cache ensures that data that gets fetched by multiple resolvers in a single operation _only happens once_. Note, this caching happens regardless of HTTP caching headers.
-
-This `GET` request caching happens _regardless_ of HTTP caching headers.
-
-Let's say we run a small forum and we have two `RESTDataSource` classes for fetching data from a Blog API and an Author API. Now, say we write a query fetching a blog's content and the author's name, something like this:
+For example, let's say we have two `RESTDataSource` subclasses for fetching data from a Blogs API and an Authors API. We can write a query fetching a blog's content and that blog's author's name:
 
 ```graphql
-query GetBlogInfo {
-  blog {
+query GetBlogs {
+  blogs {
     body
     author {
       name
@@ -216,16 +212,13 @@ query GetBlogInfo {
 }
 ```
 
-In the above example we need two things to complete this query:
+The above query provides an example of the classic N+1 problem. For every `N` number of blogs, we'd supposedly make one more request to find the blog's author's name (from an endpoint such as `/authors/id_1`).
 
-- The content of each blog (from our Blog API)
-- The name of each blog's author (from our Author API)
+This is a situation where `RESTDataSource` can optimize an operation using its cache of memoized `GET` requests and their responses.
 
-For this contrived example, let's focus on one prolific author (`id_1`) who wrote a hundred blogs. For each blog we fetch the content, and then we'd need to fetch the author's name (e.g., from `/authors/id_1`). This is a classic example of the N+1 problem, for every `N` number of blogs, we have to make one more request to find the blog's author's name.
+The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`), it stores the request's URL and corresponding result in its memoized cache. If any resolver attempts to make that same `GET` request, `RESTDataSource` first checks its memoized cache for a result _before_ performing that request. If a result is already stored, `RESTDataSource` returns that result _without_ making another request.
 
-This is where `RESTDataSource`'s memoized cache of _all_ outgoing `GET` requests comes in handy. Instead of making a hundred extra requests for the `author.name` field, our `AuthorsApi` subclass checks the memoized cache for a result _before_ preforming a request, and if a result exists it returns that result _without_ making the request.
-
-Under the hood, this layer of catching works much like [`DataLoader`'s batching functionality](https://github.com/graphql/dataloader#caching).
+> You can change how `GET` requests are stored in `RESTDataSource`'s memoized cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor).
 
 If you'd like to disable `GET` request caching you can set `memoizeGetRequests` to `false`:
 
@@ -242,7 +235,7 @@ class MoviesAPI extends RESTDataSource {
     this.memoizeGetRequests = false; // highlight-line
   }
 
-  // Outgoing requests aren't cached, but the response cache still works!
+  // Outgoing requests aren't cached, but the HTTP response cache still works!
   async getMovie(id) {
     return this.get(`movies/${encodeURIComponent(id)}`);
   }
