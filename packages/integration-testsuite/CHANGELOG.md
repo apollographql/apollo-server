@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.0.4
+
+### Patch Changes
+
+- [#7080](https://github.com/apollographql/apollo-server/pull/7080) [`540f3d97c`](https://github.com/apollographql/apollo-server/commit/540f3d97c30a4892cd4b9a87ba2b26464df74a82) Thanks [@martinnabhan](https://github.com/martinnabhan)! - Recognize malformed JSON error messages from Next.js.
+
+- Updated dependencies []:
+  - @apollo/server@4.0.4
+
 ## 4.0.3
 
 ### Patch Changes
