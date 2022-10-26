@@ -218,7 +218,7 @@ The above query provides an example of the classic N+1 problem. For every `N` nu
 
 This is a situation where `RESTDataSource` can optimize an operation using its cache of memoized `GET` requests and their responses.
 
-The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`), it stores the request's URL and corresponding result in its memoized cache forever. If any resolver attempts to make that same `GET` request, `RESTDataSource` first checks its memoized cache for a result _before_ performing that request. If a result is already stored, `RESTDataSource` returns that result _without_ making another request.
+The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`), it stores the request's URL and corresponding result in its memoized cache forever. If any resolver in the current operation attempts to make that same `GET` request, `RESTDataSource` first checks its memoized cache for a result _before_ performing that request. If a result is already stored, `RESTDataSource` returns that result _without_ making another request.
 
 > You can change how `GET` requests are stored in `RESTDataSource`'s memoized cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor).
 
