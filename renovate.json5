@@ -47,34 +47,6 @@
       "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
-    // We install a bunch of different copies of `@apollo/gateway` (with various
-    // aliases). We want them to be stuck at specific versions, or to track only
-    // a particular major version.
-    {
-      matchPackageNames: ["apollo-gateway-0-oldest-supported"],
-      allowedVersions: "0.50.1",
-    },
-    {
-      matchPackageNames: ["apollo-gateway-0-before-asgi"],
-      allowedVersions: "0.51.0",
-    },
-    {
-      matchPackageNames: ["apollo-gateway-0-latest"],
-      allowedVersions: "0.x",
-    },
-    {
-      matchPackageNames: ["apollo-gateway-2-oldest-supported"],
-      allowedVersions: "2.0.0",
-    },
-    {
-      matchPackageNames: ["apollo-gateway-2-before-asgi"],
-      allowedVersions: "2.0.5",
-    },
-    {
-      matchPackageNames: ["apollo-gateway-2-latest"],
-      // Once 2.1.0 is released, we should switch to "2.x" here and change out of alphas.
-      allowedVersions: "2.x",
-    },
     {
       // We're uncomfortable running TS4.8 until this PR is released:
       // https://github.com/microsoft/TypeScript/pull/50974 (it's not in 4.8.4).

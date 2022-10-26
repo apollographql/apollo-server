@@ -28,23 +28,7 @@ commands:
           - run: volta pin node@<< parameters.node-version >>
       - run: node --version
       - run: npm --version
-      # For now, we ignore `engine` constraints in package.json when running on
-      # Node 18. That's because we install a bunch of versions of
-      # @apollo/gateway for compatibility testing, including some from the era
-      # where we liked putting `<` engine constraints on all our packages. If
-      # this gets awkward, we can stop testing those old versions, or test them
-      # somewhere more self-contained like the smoke-test.
-      - when:
-          condition:
-            equal: [ '18', << parameters.node-version >> ]
-          steps:
-            - node/install-packages:
-                override-ci-command: npm ci --no-engine-strict
-      - unless:
-          condition:
-            equal: [ '18', << parameters.node-version >> ]
-          steps:
-            - node/install-packages
+      - node/install-packages
 
 
 jobs:
@@ -79,9 +63,7 @@ jobs:
           node-version: "18"
       # Install a prerelease of graphql-js 17 with incremental delivery support.
       # --legacy-peer-deps because nothing expects v17 yet.
-      # --no-engine-strict because Node v18 doesn't match the engines fields
-      # on some old stuff.
-      - run: npm i --legacy-peer-deps --no-engine-strict graphql@17.0.0-alpha.1.canary.pr.3361.04ab27334641e170ce0e05bc927b972991953882
+      - run: npm i --legacy-peer-deps graphql@17.0.0-alpha.1.canary.pr.3361.04ab27334641e170ce0e05bc927b972991953882
       - run: npm run test:ci
       - run: npm run test:smoke
 
