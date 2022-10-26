@@ -195,11 +195,13 @@ When running _multiple instances_ of your server, you should use an external sha
 
 ### `GET` requests and responses
 
-By default, `RESTDataSource` automatically stores _all_ outgoing `GET` requests (by their URLs) alongside their results in a [separate memoized cache](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L263). This cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. Under the hood, this works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
+Every time you create a new instance of a `RESTDataSource` subclass, under the hood, it makes an internal memoized cache. By default, `RESTDataSource` [automatically stores](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L263) _all_ outgoing `GET` requests (by their URLs) alongside their results in its internal cache.
 
 > The `RESTDataSource` class caches `GET` requests and responses _regardless_ of HTTP caching headers.
 
-For example, let's say we have two `RESTDataSource` subclasses for fetching data from a Blogs API and an Authors API. We can write a query fetching a blog's content and that blog's author's name:
+This internal cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. Under the hood, this works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
+
+As an example, let's say we have two `RESTDataSource` subclasses for fetching data from a Blogs API and an Authors API. We can write a query fetching a blog's content and that blog's author's name:
 
 ```graphql
 query GetBlogs {
@@ -216,7 +218,7 @@ The above query provides an example of the classic N+1 problem. For every `N` nu
 
 This is a situation where `RESTDataSource` can optimize an operation using its cache of memoized `GET` requests and their responses.
 
-The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`), it stores the request's URL and corresponding result in its memoized cache. If any resolver attempts to make that same `GET` request, `RESTDataSource` first checks its memoized cache for a result _before_ performing that request. If a result is already stored, `RESTDataSource` returns that result _without_ making another request.
+The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`), it stores the request's URL and corresponding result in its memoized cache forever. If any resolver attempts to make that same `GET` request, `RESTDataSource` first checks its memoized cache for a result _before_ performing that request. If a result is already stored, `RESTDataSource` returns that result _without_ making another request.
 
 > You can change how `GET` requests are stored in `RESTDataSource`'s memoized cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor).
 
