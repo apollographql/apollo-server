@@ -199,7 +199,7 @@ Every time you create a new instance of a `RESTDataSource` subclass, under the h
 
 > The `RESTDataSource` class caches `GET` requests and responses _regardless_ of HTTP caching headers.
 
-This internal cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. Under the hood, this works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
+This internal cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. This works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
 
 As an example, let's say we have two `RESTDataSource` subclasses for fetching data from a Blogs API and an Authors API. We can write a query fetching a blog's content and that blog's author's name:
 
