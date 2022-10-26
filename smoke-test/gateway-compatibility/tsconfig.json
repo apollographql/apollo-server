@@ -1,0 +1,13 @@
+{
+  "files": [
+    "smoke-test-gateway.mts",
+  ],
+  "compilerOptions": {
+    "noEmit": true,
+    "outDir": "generated/tsc",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "strict": true,
+  },
+}
