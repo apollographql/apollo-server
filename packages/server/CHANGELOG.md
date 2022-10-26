@@ -2,6 +2,8 @@
 
 ## 4.0.4
 
+This version has no changes; `@apollo/server` and `@apollo/server-integration-test` are published with matching version numbers and we published a new version of `@apollo/server-integration-test`.
+
 ## 4.0.3
 
 ### Patch Changes
