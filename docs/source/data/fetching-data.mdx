@@ -80,18 +80,16 @@ export class ReservationsDataSource {
 
 ### Batching and caching
 
-If you want to add batching, deduplication, or caching to your data source class we recommend using the [DataLoader package](https://github.com/graphql/dataloader).
+If you want to add batching, deduplication, or caching to your data source class, we recommend using the [DataLoader package](https://github.com/graphql/dataloader). Using a package like DataLoader is particularly helpful for solving the [infamous N+1 query problem](https://restfulapi.net/rest-api-n-1-problem/).
 
-DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request. It also combines loads that occur during a single tick of the event loop into a batched request that fetches multiple objects at once.
+DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request. It also combines loads during a single event loop tick into a batched request that fetches multiple objects at once.
 
 DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request**:
 
 ```ts
 import DataLoader from 'dataloader';
-import { RESTDataSource } from '@apollo/datasource-rest';
-import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
-class PersonalizationDataSource extends RESTDataSource {
+class ProductsDataSource {
   private dbConnection;
 
   constructor() {
@@ -104,26 +102,24 @@ class PersonalizationDataSource extends RESTDataSource {
     return dbConnection;
   }
 
-  private progressLoader = new DataLoader(async (ids) => {
-    const progressList = await db.fetchAllKeys(keys) await this.get('progress', {
-      params: { ids: ids.join(',') },
-    });
+  private batchProducts = new DataLoader(async (ids) => {
+    const progressList = await db.fetchAllKeys(ids);
     return ids.map((id) => progressList.find((progress) => progress.id === id));
   });
 
   async getProgressFor(id) {
-    return this.progressLoader.load(id);
+    return this.batchProducts.load(id);
   }
 }
 
 // in your server file
-
 const { url } = await startStandaloneServer(server, {
   context: async () => {
     return {
       dataSources: {
-        dogsDB: new DogsDataSource({ cache, token: contextValue.token }),
-        catsApi: new CatsAPI({ cache }),
+        // create a new instance of your data source for
+        // every request
+        productsDb: new ProductsDataSource(),
       },
     };
   },
