@@ -30,14 +30,14 @@ For this reason, we recommend creating individual data source classes to encapsu
 
 ## Creating data source classes
 
-Your data source class can be as straightforward or complex as you need it to be. You know what data your server needs, and you can let that be the guide for the methods your class should include.
+Your data source class can be as straightforward or complex as you need it to be. You know what data your server needs, and you can let that be the guide for the methods your class includes.
 
-Below is an example of a data source class that connects to a database:
+Below is an example of a data source class that connects to a database storing reservations:
 
 <MultiCodeBlock>
 
-```ts title="bookings.ts"
-export class BookingsDataSource {
+```ts title="reservations.ts"
+export class ReservationsDataSource {
   private dbConnection;
   private token;
   private user;
@@ -55,28 +55,80 @@ export class BookingsDataSource {
 
   async getUser() {
     if (!this.user) {
-      // cache the user, lookup by token
+      // store the user, lookup by token
       this.user = await this.dbConnection.User.findByToken(this.token);
     }
     return this.user;
   }
 
-  async getBooking(bookingId) {
+  async getReservation(reservationId) {
     const user = await this.getUser(this.token);
     if (user) {
-      return await this.dbConnection.Booking.findByPk(bookingId);
+      return await this.dbConnection.Reservation.findByPk(reservationId);
     } else {
       // handle invalid user
     }
   }
 
-  //... more methods for finding and creating bookings
+  //... more methods for finding and creating reservations
 }
 ```
 
 </MultiCodeBlock>
 
 > Apollo's [`RestDataSource`](https://github.com/apollographql/datasource-rest/blob/main/src/RESTDataSource.ts) class is a built-out example of how a data source class can handle caching, deduplication, and errors.
+
+### Batching and caching
+
+If you want to add batching and caching to your data source we recommend using the [DataLoader package](https://github.com/graphql/dataloader).
+
+DataLoader enables you to cache, deduplicate, and batch object loads in your data source. It provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request. It also combines loads that occur during a single tick of the event loop into a batched request that fetches multiple objects at once.
+
+DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you create a _new instance_ of that class with every request:
+
+```ts
+import DataLoader from 'dataloader';
+import { RESTDataSource } from '@apollo/datasource-rest';
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
+
+class PersonalizationDataSource extends RESTDataSource {
+  private dbConnection;
+
+  constructor() {
+    this.dbConnection = this.initializeDBConnection();
+  }
+
+  async initializeDBConnection() {
+    // set up our database details, instantiate our connection,
+    // and return that database connection
+    return dbConnection;
+  }
+
+  private progressLoader = new DataLoader(async (ids) => {
+    const progressList = await db.fetchAllKeys(keys) await this.get('progress', {
+      params: { ids: ids.join(',') },
+    });
+    return ids.map((id) => progressList.find((progress) => progress.id === id));
+  });
+
+  async getProgressFor(id) {
+    return this.progressLoader.load(id);
+  }
+}
+
+// in your server file
+
+const { url } = await startStandaloneServer(server, {
+  context: async () => {
+    return {
+      dataSources: {
+        dogsDB: new DogsDataSource({ cache, token: contextValue.token }),
+        catsApi: new CatsAPI({ cache }),
+      },
+    };
+  },
+});
+```
 
 ## Adding data sources to your context
 
