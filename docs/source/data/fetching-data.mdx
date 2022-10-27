@@ -80,11 +80,11 @@ export class ReservationsDataSource {
 
 ### Batching and caching
 
-If you want to add batching and caching to your data source we recommend using the [DataLoader package](https://github.com/graphql/dataloader).
+If you want to add batching, deduplication, or caching to your data source class we recommend using the [DataLoader package](https://github.com/graphql/dataloader).
 
-DataLoader enables you to cache, deduplicate, and batch object loads in your data source. It provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request. It also combines loads that occur during a single tick of the event loop into a batched request that fetches multiple objects at once.
+DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request. It also combines loads that occur during a single tick of the event loop into a batched request that fetches multiple objects at once.
 
-DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you create a _new instance_ of that class with every request:
+DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request**:
 
 ```ts
 import DataLoader from 'dataloader';
@@ -181,7 +181,7 @@ console.log(`🚀  Server ready at ${url}`);
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
-- If your data source is stateful (e.g., uses an in-memory cache), the `context` function should create a **new instance of your data source class for each operation**. This ensures that your data source doesn't accidentally cache results across requests.
+- If your data source is stateful (e.g., uses an [in-memory cache](#batching-and-caching)), the `context` function should create a **new instance of your data source class for each operation**. This ensures that your data source doesn't accidentally cache results across requests.
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
