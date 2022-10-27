@@ -170,7 +170,7 @@ The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`)
 
 If any resolver in the current operation attempts a parallel `GET` request to the same URL, `RESTDataSource` checks its memoized cache _before_ performing that request. If a request _or_ a result exists in the cache, `RESTDataSource` returns (or waits to return) that stored result **without** making another request.
 
-> This internal caching mechanism is why we create a new `RESTDataSource` instance for _every_ request. Otherwise responses would be cached across requests even if they specify they shouldn't be!
+> This internal caching mechanism is why we create a new `RESTDataSource` instance for _every_ request. Otherwise, responses would be cached across requests even if they specify they shouldn't be!
 
 You can change how `GET` requests are stored in `RESTDataSource`'s memoized cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor).
 
