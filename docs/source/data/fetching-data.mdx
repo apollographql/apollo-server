@@ -181,7 +181,7 @@ console.log(`🚀  Server ready at ${url}`);
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
-- If your data source constructor accepts an argument _or_ uses an in-memory cache, the `context` function should create a **new instance of your data source class for each operation**. This ensures that your data source doesn't accidentally share values across requests.
+- If your data source is stateful (e.g., uses an in-memory cache), the `context` function should create a **new instance of your data source class for each operation**. This ensures that your data source doesn't accidentally cache results across requests.
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
@@ -203,9 +203,13 @@ const resolvers = {
 
 ## Open-source implementations
 
-## Modern data sources
+Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which attaches your data sources to your `context` behind the scenes.
 
-Apollo maintains the following open-source data source implementations for Apollo Server 4:
+In Apollo Server 4, you can now create your data sources in the same `context` function as the rest of your per-request setup, **avoiding** the `DataSource` superclass entirely. We recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
+
+### Modern data sources
+
+Apollo maintains the following open-source data source for Apollo Server 4:
 
 <!-- prettier-ignore -->
 | Class | Examples | For Use With |
@@ -213,10 +217,6 @@ Apollo maintains the following open-source data source implementations for Apoll
 | [`RESTDataSource`](https://github.com/apollographql/datasource-rest) | [See Fetching Rest](./fetching-rest)|  HTTP/REST APIs |
 
 ### Legacy data source classes
-
-Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which would attach your data sources to your `context` behind the scenes.
-
-In Apollo Server 4, you can now create your data sources in the same `context` function as the rest of your per-request setup, avoiding the `DataSource` superclass entirely. We recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
 
 > ⚠️ **Note**: The community built each data source package below for use with Apollo Server 3. [As shown below](#using-datasource-subclasses), you can still use these packages in Apollo Server 4 with a bit of extra setup.
 
