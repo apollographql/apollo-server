@@ -80,11 +80,11 @@ export class ReservationsDataSource {
 
 ### Batching and caching
 
-If you want to add batching, deduplication, or caching to your data source class, we recommend using the [DataLoader package](https://github.com/graphql/dataloader). Using a package like DataLoader is particularly helpful for solving the [infamous N+1 query problem](https://restfulapi.net/rest-api-n-1-problem/).
+If you want to add batching, deduplication, or caching to your data source class, we recommend using the [DataLoader package](https://github.com/graphql/dataloader). Using a package like DataLoader is particularly helpful for solving the [infamous N+1 query problem](https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching).
 
-DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request. It also combines loads during a single event loop tick into a batched request that fetches multiple objects at once.
+DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request ([much like one of `RESTDataSource`'s caching layers](./fetching-rest#get-requests-and-responses)). It also combines loads during a single event loop tick into a batched request that fetches multiple objects at once.
 
-DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request**:
+DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request**/ :
 
 ```ts
 import DataLoader from 'dataloader';
@@ -158,7 +158,7 @@ const { url } = await startStandaloneServer(server, {
       // info our data sources require.
       // highlight-start
       dataSources: {
-        dogsDB: new DogsDataSource({ cache, token: contextValue.token }),
+        dogsDB: new DogsDataSource({ cache, token }),
         catsApi: new CatsAPI({ cache }),
       },
       //highlight-end
@@ -172,7 +172,7 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-<!-- TODO(AS4) add link to context article once exists and link to REST article once we cover caching -->
+<!-- TODO(AS4) add link to context article once exists -->
 
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
 
