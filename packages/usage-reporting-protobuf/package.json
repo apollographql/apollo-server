@@ -10,6 +10,8 @@
       "types": "./generated/protobuf.d.ts"
     }
   },
+  "main": "generated/protobuf.cjs",
+  "module": "generated/protobuf.mjs",
   "types": "generated/protobuf.d.ts",
   "scripts": {
     "generate": "rm -rf generated && mkdir generated && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
