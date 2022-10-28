@@ -5,15 +5,20 @@ description: Using RESTDataSource to fetch data from REST APIs
 
 > See the [`@apollo/datasource-rest` page](https://github.com/apollographql/datasource-rest) for the full details of the `RESTDataSource` API.
 
-The `RESTDataSource` class helps you fetch data from REST APIs. The `RESTDataSource` class helps handle caching, deduplication, and errors while resolving operations.
+The `RESTDataSource` class simplifies fetching data from REST APIs and helps handle caching, deduplication, and errors while resolving operations.
 
 ```mermaid
 flowchart LR;
-  restAPI(REST API);
+  booksAPI(Books REST API);
+  moviesAPI(Movies REST API);
+  MoviesAPIExtend(MoviesAPI extends RESTDataSource);
+  BooksAPIExtend(BooksAPI extends RESTDataSource);
   subgraph ApolloServer;
-    restDataSource(RESTDataSource);
+      MoviesAPIExtend
+      BooksAPIExtend
   end
-  restDataSource --Fetches data--> restAPI;
+  MoviesAPIExtend --Fetches data--> moviesAPI;
+  BooksAPIExtend --Fetches data--> booksAPI;
   client(ApolloClient);
   client --Sends query--> ApolloServer;
 ```
@@ -31,6 +36,7 @@ npm install @apollo/datasource-rest
 ```
 
 Your server should define a separate subclass of `RESTDataSource` for each REST API it communicates with. Here's an example of a `RESTDataSource` subclass that defines two data-fetching methods, `getMovie` and `getMostViewedMovies`:
+
 <MultiCodeBlock>
 
 ```ts title="movies-api.ts"
@@ -59,7 +65,7 @@ class MoviesAPI extends RESTDataSource {
 
 You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods should use the built-in convenience methods (e.g., `get` and `post`) to perform HTTP requests, helping you add query parameters, parse and cache JSON results, dedupe requests, and handle errors.
 
-## Adding data sources to Apollo Server's context
+## Adding data sources to your server's context
 
 You can add data sources to the `context` initialization function, like so:
 
@@ -102,9 +108,11 @@ console.log(`🚀  Server ready at ${url}`);
 </MultiCodeBlock>
 
 <!-- TODO(AS4) add link to context article once exists  -->
+
 Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
+
 - For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation.** 
+- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation**. [More details on why below.](#get-requests-and-responses)
 
 Your resolvers can then access your data sources from the shared `context` object and use them to fetch data:
 
@@ -126,29 +134,112 @@ const resolvers = {
 
 ## Caching
 
-> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](#datasources).
+The `RESTDataSource` class provides its subclasses with _two_ layers of caching:
 
-The `RESTDataSource` class can cache results if the REST API it fetches from specifies caching headers in its HTTP responses (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)). 
+- The first layer **stores all outgoing `GET` requests** by their URLs in a separate memoized cache.
+- The second layer caches the results from **HTTP responses that specify HTTP caching headers**.
 
-As shown in the above code snippet, by default, each `RESTDataSource` subclass accepts a `cache` argument (e.g., Apollo Server's default cache) to store the results of past fetches:
+These caching layers effectively make the `RESTDataSource` class a Node HTTP client that offers browser-style caching. Below, we'll dive into each layer of caching and the advantage that layer provides.
 
-```ts disableCopy
+### `GET` requests and responses
+
+Every time you create a new instance of a `RESTDataSource` subclass, under the hood, it makes an internal memoized cache. By default, `RESTDataSource` [automatically stores](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L263) _all_ outgoing `GET` requests (by their URLs) alongside their results in this internal cache.
+
+> The `RESTDataSource` class caches `GET` requests and responses _regardless_ of HTTP caching headers.
+
+This internal cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. This works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
+
+As an example, let's say we have two `RESTDataSource` subclasses for fetching data from a Posts API and an Authors API. We can write a query fetching a post's content and that post's author's name:
+
+```graphql
+query GetPosts {
+  posts {
+    body
+    author {
+      name
+    }
+  }
+}
+```
+
+The above query provides an example of the classic N+1 problem. For every `N` number of posts, we'd supposedly make one more request to find the post's author's name (from an endpoint such as `/authors/id_1`).
+
+This is a situation where `RESTDataSource` can optimize an operation using its cache of memoized `GET` requests and their responses.
+
+The first time `RESTDataSource` makes a `GET` request (e.g., to `/authors/id_1`), it stores the request's URL _before_ making that request. `RESTDataSource` then performs the request and stores the result alongside the request's URL in its memoized cache forever.
+
+If any resolver in the current operation attempts a parallel `GET` request to the same URL, `RESTDataSource` checks its memoized cache _before_ performing that request. If a request _or_ a result exists in the cache, `RESTDataSource` returns (or waits to return) that stored result **without** making another request.
+
+> This internal caching mechanism is why we create a new `RESTDataSource` instance for _every_ request. Otherwise, responses would be cached across requests even if they specify they shouldn't be!
+
+You can change how `GET` requests are stored in `RESTDataSource`'s memoized cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor).
+
+If you'd like to disable `GET` request caching you can set `memoizeGetRequests` to `false`:
+
+<MultiCodeBlock>
+
+```ts
 class MoviesAPI extends RESTDataSource {
   override baseURL = 'https://movies-api.example.com/';
+  private token: string;
 
-  // We omit the constructor function here because
-  // RESTDataSource accepts a cache argument by default
+  constructor(options: { token: string; cache: KeyValueCache }) {
+    super(options); // this sends our server's `cache` through
+    this.token = options.token;
+    this.memoizeGetRequests = false; // highlight-line
+  }
+
+  // Outgoing requests aren't cached, but the HTTP response cache still works!
+  async getMovie(id) {
+    return this.get(`movies/${encodeURIComponent(id)}`);
+  }
+}
+```
+
+</MultiCodeBlock>
+
+### Requests specifying TTL
+
+> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](./migration/#datasources).
+
+The `RESTDataSource` class can cache results from the REST API it fetches from **if either of the following is true**:
+
+- The request is a `GET`, and the response specifies caching headers (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)).
+- The `RESTDataSource` instance's [`cacheOptions`](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L46) specify a TTL.
+  - You can do this by overriding the [`cacheOptionsFor`](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L98) method or in the HTTP method making the request.
+
+`RESTDataSource` ensures that the cached information honors the [TTL (Time To Live)](https://developer.mozilla.org/en-US/docs/Glossary/TTL) rules established by those caching headers.
+
+Each `RESTDataSource` subclass accepts a `cache` argument where you can specify which cache to use (e.g., Apollo Server's default cache) to store the results of past fetches:
+
+<MultiCodeBlock>
+
+```ts disableCopy
+// KeyValueCache is the type of Apollo server's default cache
+import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
+
+class PersonalizationAPI extends RESTDataSource {
+  override baseURL = 'https://person.example.com/';
+  private token: string;
+
+  constructor(options: { cache: KeyValueCache; token: string }) {
+    super(options); // this sends our server's `cache` through
+    this.token = options.token;
+  }
 }
 
 // server set up, etc.
 
 const { url } = await startStandaloneServer(server, {
   context: async ({ req }) => {
+    const token = getTokenFromRequest(req);
+    // We'll take Apollo Server's cache
+    // and pass it to each of our data sources
     const { cache } = server; // highlight-line
     return {
       dataSources: {
         // highlight-start
-        moviesAPI: new MoviesAPI({ cache }),
+        moviesAPI: new MoviesAPI({ cache, token }),
         personalizationAPI: new PersonalizationAPI({ cache }),
         // highlight-end
       },
@@ -157,52 +248,11 @@ const { url } = await startStandaloneServer(server, {
 });
 ```
 
-If your `RESTDataSource` subclass accepts multiple arguments, make sure you add a constructor function, like so:
-
-<MultiCodeBlock>
-
-```ts
-import { ApolloServer } from '@apollo/server';
-import { startStandaloneServer } from '@apollo/server/standalone';
-import { RESTDataSource } from '@apollo/datasource-rest';
-// KeyValueCache is the type of Apollo server's default cache
-import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
-
-class PersonalizationAPI extends RESTDataSource {
-  override baseURL = 'https://movies-api.example.com/';
-  private token: string;
-
-  //highlight-start
-  constructor(options: { token: string; cache: KeyValueCache }) {
-    super(options); // this sends our server's `cache` through
-    this.token = options.token;
-  }
-  //highlight-end
-
-  // data fetching methods, etc.
-}
-
-// set up server, context typing, etc.
-
-const { url } = await startStandaloneServer(server, {
-  context: async ({ req }) => {
-    const token = getTokenFromRequest(req);
-    const { cache } = server;
-    return {
-      //highlight-start
-      dataSources: {
-        personalizationApi: new PersonalizationAPI({ cache, token }),
-      },
-      //highlight-end
-    };
-  },
-});
-```
-
 </MultiCodeBlock>
 
+Passing the same `cache` to multiple `RESTDataSource` subclass instances enables those instances to _share_ the cached results.
 
-When running multiple instances of your server, you should use a shared cache backend. This enables one server instance to use the cached result from _another_ instance.
+When running _multiple instances_ of your server, you should use an external shared cache backend. This enables one server instance to use the cached result from _another_ instance.
 
 > If you want to configure or replace Apollo Server's default cache, see [Configuring external caching](../performance/cache-backends) for more details.
 
@@ -229,7 +279,7 @@ class MoviesAPI extends RESTDataSource {
   async postMovie(movie) {
     return this.post(
       `movies`, // path
-       { body: { movie } }, // request body
+      { body: { movie } }, // request body
     );
   }
 
@@ -256,7 +306,6 @@ class MoviesAPI extends RESTDataSource {
     );
   }
 }
-
 ```
 
 </ExpansionPanel>
@@ -303,7 +352,10 @@ Data sources also have access to the GraphQL operation context, which is useful 
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import {
+  RESTDataSource,
+  WillSendRequestOptions,
+} from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -330,7 +382,10 @@ class PersonalizationAPI extends RESTDataSource {
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import {
+  RESTDataSource,
+  WillSendRequestOptions,
+} from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -372,17 +427,17 @@ class PersonalizationAPI extends RESTDataSource {
 
   override async resolveURL(path: string, request: RequestOptions) {
     if (!this.baseURL) {
-      const addresses = await resolveSrv(path.split('/')[1] + '.service.consul');
+      const addresses = await resolveSrv(
+        path.split('/')[1] + '.service.consul',
+      );
       this.baseURL = addresses[0];
     }
     return super.resolveURL(path, request);
   }
 }
-
 ```
 
 </MultiCodeBlock>
-
 
 ## Using with DataLoader
 
@@ -404,7 +459,10 @@ We recommend that you restrict batching to requests that _can't_ be cached. In t
 
 ```ts
 import DataLoader from 'dataloader';
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import {
+  RESTDataSource,
+  WillSendRequestOptions,
+} from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -421,7 +479,9 @@ class PersonalizationAPI extends RESTDataSource {
   }
 
   private progressLoader = new DataLoader(async (ids) => {
-    const progressList = await this.get('progress', { params: { ids: ids.join(',') } });
+    const progressList = await this.get('progress', {
+      params: { ids: ids.join(',') },
+    });
     return ids.map((id) => progressList.find((progress) => progress.id === id));
   });
 
