@@ -120,6 +120,7 @@ nanos
 nodenext
 npmrc
 nsolid
+Nuxt
 oneof
 onwarn
 opde
