@@ -1983,21 +1983,20 @@ export function testApolloServer<AS extends ApolloServerBase>(
 
       describe('graphql server functions even when Apollo servers are down', () => {
         async function testWithStatus(
-          status: number,
+          status: number | 'cannot-connect' | 'timeout',
           expectedRequestCount: number,
         ) {
-          const networkError = status === 0;
-
           const { closeServer, fakeUsageReportingUrl, writeResponseResolve } =
             await makeFakeUsageReportingServer({
-              status,
+              // the 444 case shouldn't ever get to actually sending 444
+              status: typeof status === 'number' ? status : 444,
               waitWriteResponse: true,
             });
 
           try {
             // To simulate a network error, we create and close the server.
             // This lets us still generate a port that is hopefully unused.
-            if (networkError) {
+            if (status == 'cannot-connect') {
               await closeServer();
             }
 
@@ -2034,6 +2033,8 @@ export function testApolloServer<AS extends ApolloServerBase>(
                   reportErrorFunction(error: Error) {
                     reportErrorPromiseResolve(error);
                   },
+                  // Make sure the timeout test actually finishes in time
+                  requestTimeoutMs: status === 'timeout' ? 10 : undefined,
                 }),
               ],
             });
@@ -2049,19 +2050,24 @@ export function testApolloServer<AS extends ApolloServerBase>(
             });
             expect(result.data.something).toBe('hello');
 
-            if (!networkError) {
+            if (typeof status === 'number') {
               // Allow reporting to return its response (for every retry).
+              // (But not if we're intentionally timing out!)
               writeResponseResolve();
             }
 
             // Make sure we can get the error from reporting.
             const sendingError = await reportErrorPromise;
             expect(sendingError).toBeTruthy();
-            if (networkError) {
+            if (status === 'cannot-connect') {
               expect(sendingError.message).toContain(
                 'Error sending report to Apollo servers',
               );
               expect(sendingError.message).toContain('ECONNREFUSED');
+            } else if (status === 'timeout') {
+              expect(sendingError.message).toBe(
+                'Error sending report to Apollo servers: The user aborted a request.',
+              );
             } else {
               expect(sendingError.message).toBe(
                 `Error sending report to Apollo servers: HTTP status ${status}, Important text in the body`,
@@ -2069,7 +2075,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             }
             expect(requestCount).toBe(expectedRequestCount);
           } finally {
-            if (!networkError) {
+            if (status !== 'cannot-connect') {
               await closeServer();
             }
           }
@@ -2079,7 +2085,10 @@ export function testApolloServer<AS extends ApolloServerBase>(
           await testWithStatus(500, 3);
         });
         it('with network error', async () => {
-          await testWithStatus(0, 3);
+          await testWithStatus('cannot-connect', 3);
+        });
+        it('with timeout', async () => {
+          await testWithStatus('timeout', 3);
         });
         it('with non-retryable error', async () => {
           await testWithStatus(400, 1);
