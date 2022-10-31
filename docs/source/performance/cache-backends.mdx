@@ -201,7 +201,7 @@ const server = new ApolloServer({
 });
 ```
 
-## Handling errors when fetching from cache
+## Handling cache fetching errors
 When cache backend is unavailable, all requests depend on it will fail. It is crucial to still return successful response in this kind of scenario.
 
 In order to provide error tolerance for caches which connect via a client like Redis, `ErrorsAreMissesCache` from [@apollo/utils.keyvaluecache](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#errorsaremissescache) solves the problem. In the event that there's an error, this wrapper will treat it as a cache miss. At the same time, the cache client should try to re-connect to the cache backend. Once it's successful, the caching feature should work again.
