@@ -63,9 +63,8 @@ export function ApolloServerPluginCacheControl(
   >;
 
   return internalPlugin({
-    __internal_plugin_id__() {
-      return 'CacheControl';
-    },
+    __internal_plugin_id__: 'CacheControl',
+    __is_disabled_plugin__: false,
 
     async serverWillStart({ schema }) {
       // Set the size of the caches to be equal to the number of composite types

@@ -804,8 +804,47 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
       plugins.some(
-        (p) => pluginIsInternal(p) && p.__internal_plugin_id__() === id,
+        (p) => pluginIsInternal(p) && p.__internal_plugin_id__ === id,
       );
+
+    // Make sure we're not trying to explicitly enable and disable the same
+    // feature. (Be careful: we are not trying to stop people from installing
+    // the same plugin twice if they have a use case for it, like two usage
+    // reporting plugins for different variants.)
+    //
+    // Note that this check doesn't work for the landing page plugin, because
+    // users can write their own landing page plugins and we don't know if a
+    // given plugin is a landing page plugin until the server has started.
+    const pluginsByInternalID = new Map<
+      InternalPluginId,
+      { sawDisabled: boolean; sawNonDisabled: boolean }
+    >();
+    for (const p of plugins) {
+      if (pluginIsInternal(p)) {
+        const id = p.__internal_plugin_id__;
+        if (!pluginsByInternalID.has(id)) {
+          pluginsByInternalID.set(id, {
+            sawDisabled: false,
+            sawNonDisabled: false,
+          });
+        }
+        const seen = pluginsByInternalID.get(id)!;
+        if (p.__is_disabled_plugin__) {
+          seen.sawDisabled = true;
+        } else {
+          seen.sawNonDisabled = true;
+        }
+
+        if (seen.sawDisabled && seen.sawNonDisabled) {
+          throw new Error(
+            `You have tried to install both ApolloServerPlugin${id} and ` +
+              `ApolloServerPlugin${id}Disabled in your server. Please choose ` +
+              `whether or not you want to disable the feature and install the ` +
+              `appropriate plugin for your use case.`,
+          );
+        }
+      }
+    }
 
     // Special case: cache control is on unless you explicitly disable it.
     {

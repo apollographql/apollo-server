@@ -74,9 +74,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     requestContext: GraphQLRequestContext<TContext>,
   ) => GraphQLRequestListener<TContext>;
   return internalPlugin({
-    __internal_plugin_id__() {
-      return 'UsageReporting';
-    },
+    __internal_plugin_id__: 'UsageReporting',
+    __is_disabled_plugin__: false,
 
     // We want to be able to access locals from `serverWillStart` in our `requestDidStart`, thus
     // this little hack. (Perhaps we should also allow GraphQLServerListener to contain

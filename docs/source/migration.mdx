@@ -1429,6 +1429,29 @@ new ApolloServer({
 });
 ```
 
+## "Disabled" plugins cannot be combined with their enabled counterpart
+
+Apollo Server has several plugins that are installed by default in certain conditions. To override this behavior, each of these plugins has a "disabled" counterpart that prevents this default installation.
+
+But what happens if you combine the manual installation of a plugin with its disabled counterpart? Consider the following code:
+
+```ts
+const server = new ApolloServer({
+  schema,
+  plugins: [
+    ApolloServerPluginUsageReporting(),
+    ApolloServerPluginUsageReportingDisabled(),
+  ]
+});
+await server.start();
+```
+
+In Apollo Server 3, the "disabled" plugin is simply ignored if combined with its enabled counterpart. This could lead to confusion, as it can appear that an attempt to disable a feature is completely ignored.
+
+In Apollo Server 4, `await server.start()` will throw if you combine a "disabled" plugin with its enabled counterpart, with an error like `You have tried to install both ApolloServerPluginUsageReporting and ApolloServerPluginUsageReportingDisabled`. If your server throws this error, choose whether you want the feature enabled or disabled, and install only the appropriate plugin.
+
+(This change affects the usage reporting, inline trace, and cache control features. It also affects the schema reporting feature, although `ApolloServerPluginSchemaReportingDisabled` did not exist in Apollo Server 3. For technical reasons, it does not affect the landing page feature: combining `ApolloServerPluginLandingPageDisabled` with a landing page plugin should be considered as unspecified behavior which may change in a future release of Apollo Server 4.)
+
 ## Plugin API changes
 
 ### Fields on `GraphQLRequestContext`

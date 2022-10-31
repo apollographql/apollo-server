@@ -69,9 +69,8 @@ export function ApolloServerPluginSchemaReporting(
   const bootId = uuidv4();
 
   return internalPlugin({
-    __internal_plugin_id__() {
-      return 'SchemaReporting';
-    },
+    __internal_plugin_id__: 'SchemaReporting',
+    __is_disabled_plugin__: false,
     async serverWillStart({ apollo, schema, logger }) {
       const { key, graphRef } = apollo;
       if (!key) {

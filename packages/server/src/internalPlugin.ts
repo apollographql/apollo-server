@@ -11,7 +11,8 @@ export interface InternalApolloServerPlugin<TContext extends BaseContext>
   extends ApolloServerPlugin<TContext> {
   // Used to identify a few specific plugins that are instantiated
   // by default if not explicitly used or disabled.
-  __internal_plugin_id__(): InternalPluginId;
+  __internal_plugin_id__: InternalPluginId;
+  __is_disabled_plugin__: boolean;
 }
 
 // Helper function for writing internal plugins which lets you write an object

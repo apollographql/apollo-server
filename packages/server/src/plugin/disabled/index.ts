@@ -14,9 +14,8 @@ import type {
 
 function disabledPlugin(id: InternalPluginId): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin<BaseContext> = {
-    __internal_plugin_id__() {
-      return id;
-    },
+    __internal_plugin_id__: id,
+    __is_disabled_plugin__: true,
   };
   return plugin;
 }
@@ -31,6 +30,10 @@ export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<Base
 
 export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin<BaseContext> {
   return disabledPlugin('LandingPageDisabled');
+}
+
+export function ApolloServerPluginSchemaReportingDisabled(): ApolloServerPlugin<BaseContext> {
+  return disabledPlugin('SchemaReporting');
 }
 
 export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<BaseContext> {

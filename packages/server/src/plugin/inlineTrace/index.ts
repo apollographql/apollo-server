@@ -49,9 +49,8 @@ export function ApolloServerPluginInlineTrace(
 ): ApolloServerPlugin {
   let enabled: boolean | null = options.__onlyIfSchemaIsFederated ? null : true;
   return internalPlugin({
-    __internal_plugin_id__() {
-      return 'InlineTrace';
-    },
+    __internal_plugin_id__: 'InlineTrace',
+    __is_disabled_plugin__: false,
     async serverWillStart({ schema, logger }) {
       // Handle the case that the plugin was implicitly installed. We only want it
       // to actually be active if the schema appears to be federated. If you don't
