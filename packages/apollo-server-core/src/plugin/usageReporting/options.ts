@@ -259,9 +259,9 @@ export interface ApolloServerPluginUsageReportingOptions<TContext> {
    */
   minimumRetryDelayMs?: number;
   /**
-   * Default timeout for each individual attempt to send a report to Apollo.
-   * (This is for each HTTP POST, not for all potential retries.) Defaults to 30
-   * seconds (30000ms).
+   * Timeout for each individual attempt to send a report to Apollo. (This is
+   * for each HTTP POST, not for all potential retries.) Defaults to 30 seconds
+   * (30000ms).
    */
   requestTimeoutMs?: number;
   /**

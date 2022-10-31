@@ -346,6 +346,22 @@ The default value is `100`.
 <tr>
 <td>
 
+###### `requestTimeoutMs`
+
+`number`
+</td>
+<td>
+
+Timeout for each individual attempt to send a report to Apollo. (This is for
+each HTTP POST, not for all potential retries.)
+
+The default value is `30000` (30 seconds).
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `logger`
 
 [`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
