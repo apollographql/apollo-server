@@ -10,7 +10,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
-## v3.11.0
+## v3.10.4
 
 - `apollo-server-core`: Manage memory more efficiently in the usage reporting plugin by allowing large objects to be garbage collected more quickly. [PR #FIXME](https://github.com/apollographql/apollo-server/pull/FIXME)
 - `apollo-server-core`: The usage reporting plugin now defaults to a 30 second timeout for each attempt to send reports to Apollo Server instead of no timeout; the timeout can be adjusted with the new `requestTimeoutMs` option to `ApolloServerPluginUsageReporting`. (Apollo's servers already enforced a 30 second timeout, so this is unlikely to break any existing use cases.) [PR #FIXME](https://github.com/apollographql/apollo-server/pull/FIXME)
