@@ -62,7 +62,7 @@ export class ReservationsDataSource {
   }
 
   async getReservation(reservationId) {
-    const user = await this.getUser(this.token);
+    const user = await this.getUser();
     if (user) {
       return await this.dbConnection.Reservation.findByPk(reservationId);
     } else {
@@ -84,7 +84,9 @@ If you want to add batching, deduplication, or caching to your data source class
 
 DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request ([much like one of `RESTDataSource`'s caching layers](./fetching-rest#get-requests-and-responses)). It also combines loads during a single event loop tick into a batched request that fetches multiple objects at once.
 
-DataLoader instances are pre-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request**/ :
+DataLoader instances are per-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request** :
+
+<MultiCodeBlock>
 
 ```ts
 import DataLoader from 'dataloader';
@@ -92,39 +94,37 @@ import DataLoader from 'dataloader';
 class ProductsDataSource {
   private dbConnection;
 
-  constructor() {
-    this.dbConnection = this.initializeDBConnection();
-  }
-
-  async initializeDBConnection() {
-    // set up our database details, instantiate our connection,
-    // and return that database connection
-    return dbConnection;
-  }
-
   private batchProducts = new DataLoader(async (ids) => {
-    const progressList = await db.fetchAllKeys(ids);
-    return ids.map((id) => progressList.find((progress) => progress.id === id));
+    const productList = await db.fetchAllKeys(ids);
+    return ids.map((id) => productList.find((product) => product.id === id));
   });
 
-  async getProgressFor(id) {
+  async getProductFor(id) {
     return this.batchProducts.load(id);
   }
 }
 
-// in your server file
+// In your server file
+
+// Set up our database, instantiate our connection,
+// and return that database connection
+const dbConnection = initializeDBConnection();
+
 const { url } = await startStandaloneServer(server, {
   context: async () => {
     return {
       dataSources: {
-        // create a new instance of your data source for
-        // every request
-        productsDb: new ProductsDataSource(),
+        // Create a new instance of our data source for every request!
+        // (We pass in the database connection because we don't need
+        // a new connection for every request.)
+        productsDb: new ProductsDataSource(dbConnection), //highlight-line
       },
     };
   },
 });
 ```
+
+</MultiCodeBlock>
 
 ## Adding data sources to your context
 
@@ -261,6 +261,7 @@ class BooksAPI extends HTTPDataSource {
     //highlight-start
     this.initialize({ cache: options.cache, context: options.token });
     //highlight-end
+  }
 
   async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
