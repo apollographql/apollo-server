@@ -96,7 +96,7 @@ For more information on the compiler options above, see the [TypeScript Compiler
   "type": "module",
   "scripts": {
     "compile": "tsc",
-    "start": "npm run compile && node ./dist/index.js"
+    "start": "npm run compile && node --experimental-modules --es-module-specifier-resolution=node ./dist/index.js"
   }
   // other dependencies
 }
@@ -108,7 +108,7 @@ The above `start` script tells TypeScript to compile your code into JavaScript b
 
 ```
 > graphql-server-example@1.0.0 start
-> npm run compile && node ./dist/index.js
+> npm run compile && node --experimental-modules --es-module-specifier-resolution=node ./dist/index.js
 ```
 
 </ExpansionPanel>
