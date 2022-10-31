@@ -14,12 +14,8 @@ import type {
 
 function disabledPlugin(id: InternalPluginId): ApolloServerPlugin {
   const plugin: InternalApolloServerPlugin<BaseContext> = {
-    __internal_plugin_id__() {
-      return id;
-    },
-    __is_disabled_plugin__() {
-      return true;
-    },
+    __internal_plugin_id__: id,
+    __is_disabled_plugin__: true,
   };
   return plugin;
 }

@@ -804,7 +804,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
       plugins.some(
-        (p) => pluginIsInternal(p) && p.__internal_plugin_id__() === id,
+        (p) => pluginIsInternal(p) && p.__internal_plugin_id__ === id,
       );
 
     // Make sure we're not trying to explicitly enable and disable the same
@@ -821,32 +821,28 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     >();
     for (const p of plugins) {
       if (pluginIsInternal(p)) {
-        if (!pluginsByInternalID.has(p.__internal_plugin_id__())) {
-          pluginsByInternalID.set(p.__internal_plugin_id__(), {
+        const id = p.__internal_plugin_id__;
+        if (!pluginsByInternalID.has(id)) {
+          pluginsByInternalID.set(id, {
             sawDisabled: false,
             sawNonDisabled: false,
           });
         }
-        if (p.__is_disabled_plugin__()) {
-          pluginsByInternalID.get(p.__internal_plugin_id__())!.sawDisabled =
-            true;
+        const seen = pluginsByInternalID.get(id)!;
+        if (p.__is_disabled_plugin__) {
+          seen.sawDisabled = true;
         } else {
-          pluginsByInternalID.get(p.__internal_plugin_id__())!.sawNonDisabled =
-            true;
+          seen.sawNonDisabled = true;
         }
-      }
-    }
-    for (const [
-      id,
-      { sawDisabled, sawNonDisabled },
-    ] of pluginsByInternalID.entries()) {
-      if (sawDisabled && sawNonDisabled) {
-        throw new Error(
-          `You have tried to install both ApolloServerPlugin${id} and ` +
-            `ApolloServerPlugin${id}Disabled in your server. Please choose ` +
-            `whether or not you want to disable the feature and install the ` +
-            `appropriate plugin for your use case.`,
-        );
+
+        if (seen.sawDisabled && seen.sawNonDisabled) {
+          throw new Error(
+            `You have tried to install both ApolloServerPlugin${id} and ` +
+              `ApolloServerPlugin${id}Disabled in your server. Please choose ` +
+              `whether or not you want to disable the feature and install the ` +
+              `appropriate plugin for your use case.`,
+          );
+        }
       }
     }
 
