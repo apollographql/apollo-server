@@ -1,8 +1,10 @@
 import os from 'os';
+import { promisify } from 'util';
 import { gzip } from 'zlib';
 import retry from 'async-retry';
 import { Report, ReportHeader, Trace } from 'apollo-reporting-protobuf';
-import { Response, fetch, Headers } from 'apollo-server-env';
+import { Response, fetch, Headers, RequestInit } from 'apollo-server-env';
+import { AbortController } from 'node-abort-controller';
 import type {
   GraphQLRequestListener,
   GraphQLServerListener,
@@ -37,6 +39,8 @@ import {
   ReferencedFieldsByType,
 } from '@apollo/utils.usagereporting';
 import type LRUCache from 'lru-cache';
+
+const gzipPromise = promisify(gzip);
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -238,7 +242,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 
       // Needs to be an arrow function to be confident that key is defined.
       const sendReport = async (executableSchemaId: string): Promise<void> => {
-        const report = getAndDeleteReport(executableSchemaId);
+        let report = getAndDeleteReport(executableSchemaId);
         if (
           !report ||
           (Object.keys(report.tracesPerQuery).length === 0 &&
@@ -255,9 +259,12 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 
         const protobufError = Report.verify(report);
         if (protobufError) {
-          throw new Error(`Error encoding report: ${protobufError}`);
+          throw new Error(`Error verifying report: ${protobufError}`);
         }
-        const message = Report.encode(report).finish();
+        let message: Uint8Array | null = Report.encode(report).finish();
+        // Let the original protobuf object be garbage collected (helpful if the
+        // HTTP request hangs).
+        report = null;
 
         // Potential follow-up: we can compare message.length to
         // report.sizeEstimator.bytes and use it to "learn" if our estimation is
@@ -282,23 +289,10 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           );
         }
 
-        const compressed = await new Promise<Buffer>((resolve, reject) => {
-          // The protobuf library gives us a Uint8Array. Node 8's zlib lets us
-          // pass it directly; convert for the sake of Node 6. (No support right
-          // now for Node 4, which lacks Buffer.from.)
-          const messageBuffer = Buffer.from(
-            message.buffer as ArrayBuffer,
-            message.byteOffset,
-            message.byteLength,
-          );
-          gzip(messageBuffer, (err, gzipResult) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(gzipResult);
-            }
-          });
-        });
+        const compressed = await gzipPromise(message);
+        // Let the uncompressed message be garbage collected (helpful if the
+        // HTTP request is slow).
+        message = null;
 
         // Wrap fetcher with async-retry for automatic retrying
         const fetcher = options.fetcher ?? fetch;
@@ -306,11 +300,15 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
-            const curResponse = await fetcher(
-              (options.endpointUrl ||
-                'https://usage-reporting.api.apollographql.com') +
-                '/api/ingress/traces',
-              {
+            // Note that once we require Node v16 we can use its global
+            // AbortController instead of the one from `node-abort-controller`.
+            const controller = new AbortController();
+            const abortTimeout = setTimeout(() => {
+              controller.abort();
+            }, options.requestTimeoutMs ?? 30_000);
+            let curResponse;
+            try {
+              const requestInit: RequestInit = {
                 method: 'POST',
                 headers: {
                   'user-agent': 'ApolloServerPluginUsageReporting',
@@ -320,8 +318,26 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 },
                 body: compressed,
                 agent: options.requestAgent,
-              },
-            );
+              };
+              // The apollo-server-env Fetch API doesn't have `signal` in
+              // RequestInit, but it does work in node-fetch. We've added it
+              // already to our `Fetcher` interface (`@apollo/utils.fetcher`)
+              // that we're using in AS4 but making changes to
+              // `apollo-server-env` that could cause custom AS3 fetchers to not
+              // compile feels like a bad idea. The worst case scenario of
+              // passing in an ignored `signal` is the timeout doesn't work, in
+              // which case you're not getting the new feature but can change
+              // your fetcher to make it work.
+              (requestInit as any).signal = controller.signal;
+              curResponse = await fetcher(
+                (options.endpointUrl ||
+                  'https://usage-reporting.api.apollographql.com') +
+                  '/api/ingress/traces',
+                requestInit,
+              );
+            } finally {
+              clearTimeout(abortTimeout);
+            }
 
             if (curResponse.status >= 500 && curResponse.status < 600) {
               throw new Error(
