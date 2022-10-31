@@ -24,7 +24,10 @@ import {
   ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting';
-import { ApolloServerPluginCacheControlDisabled } from '../../../plugin/disabled';
+import {
+  ApolloServerPluginCacheControlDisabled,
+  ApolloServerPluginUsageReportingDisabled,
+} from '../../../plugin/disabled';
 import { describe, it, expect, afterEach } from '@jest/globals';
 
 const quietLogger = loglevel.getLogger('quiet');
@@ -524,4 +527,20 @@ describe('sendHeaders makeHTTPRequestHeaders helper', () => {
     expect(http.requestHeaders['cookie']).toBe(undefined);
     expect(http.requestHeaders['set-cookie']).toBe(undefined);
   });
+});
+
+it('cannot combine enabling with disabling', async () => {
+  const server = new ApolloServer({
+    typeDefs: 'type Query { x: ID }',
+    plugins: [
+      ApolloServerPluginUsageReporting(),
+      ApolloServerPluginUsageReportingDisabled(),
+    ],
+  });
+  await expect(server.start()).rejects.toThrow(
+    'You have tried to install both ApolloServerPluginUsageReporting ' +
+      'and ApolloServerPluginUsageReportingDisabled in your server. Please ' +
+      'choose whether or not you want to disable the feature and install the ' +
+      'appropriate plugin for your use case.',
+  );
 });

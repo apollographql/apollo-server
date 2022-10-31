@@ -122,3 +122,24 @@ Specifies which [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fet
 
 </tbody>
 </table>
+
+## Disabling the plugin
+
+The schema reporting plugin is only automatically installed if the `APOLLO_SCHEMA_REPORTING` is set to `true`, so the easiest way to disable the plugin is to avoid setting that environment variable (and to not explicitly install `ApolloServerPluginSchemaReporting`). However, if you'd like to ensure that the schema reporting plugin is not installed in your server (perhaps for a test that might run with arbitrary environment variables set), you can disable schema reporting by installing the `ApolloServerPluginSchemaReportingDisabled` plugin, like so:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginSchemaReportingDisabled } from '@apollo/server/plugin/disabled';
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    ApolloServerPluginSchemaReportingDisabled(),
+  ],
+});
+```
+
+</MultiCodeBlock>

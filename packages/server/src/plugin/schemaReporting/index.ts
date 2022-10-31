@@ -72,6 +72,9 @@ export function ApolloServerPluginSchemaReporting(
     __internal_plugin_id__() {
       return 'SchemaReporting';
     },
+    __is_disabled_plugin__() {
+      return false;
+    },
     async serverWillStart({ apollo, schema, logger }) {
       const { key, graphRef } = apollo;
       if (!key) {

@@ -52,6 +52,9 @@ export function ApolloServerPluginInlineTrace(
     __internal_plugin_id__() {
       return 'InlineTrace';
     },
+    __is_disabled_plugin__() {
+      return false;
+    },
     async serverWillStart({ schema, logger }) {
       // Handle the case that the plugin was implicitly installed. We only want it
       // to actually be active if the schema appears to be federated. If you don't

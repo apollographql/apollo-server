@@ -17,6 +17,9 @@ function disabledPlugin(id: InternalPluginId): ApolloServerPlugin {
     __internal_plugin_id__() {
       return id;
     },
+    __is_disabled_plugin__() {
+      return true;
+    },
   };
   return plugin;
 }
@@ -31,6 +34,10 @@ export function ApolloServerPluginInlineTraceDisabled(): ApolloServerPlugin<Base
 
 export function ApolloServerPluginLandingPageDisabled(): ApolloServerPlugin<BaseContext> {
   return disabledPlugin('LandingPageDisabled');
+}
+
+export function ApolloServerPluginSchemaReportingDisabled(): ApolloServerPlugin<BaseContext> {
+  return disabledPlugin('SchemaReporting');
 }
 
 export function ApolloServerPluginUsageReportingDisabled(): ApolloServerPlugin<BaseContext> {
