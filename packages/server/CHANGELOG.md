@@ -1,5 +1,17 @@
 # @apollo/server
 
+## 4.0.5
+
+### Patch Changes
+
+- [#7104](https://github.com/apollographql/apollo-server/pull/7104) [`15d8d65e0`](https://github.com/apollographql/apollo-server/commit/15d8d65e018520d3eedc5e42981f19a5f98524e7) Thanks [@glasser](https://github.com/glasser)! - New `ApolloServerPluginSchemaReportingDisabled` plugin which can override the `APOLLO_SCHEMA_REPORTING` environment variable.
+
+- [#7101](https://github.com/apollographql/apollo-server/pull/7101) [`e4e7738be`](https://github.com/apollographql/apollo-server/commit/e4e7738be7c8d35a42342987e180eba5b6f66ca1) Thanks [@glasser](https://github.com/glasser)! - Manage memory more efficiently in the usage reporting plugin by allowing large objects to be garbage collected more quickly.
+
+- [#7101](https://github.com/apollographql/apollo-server/pull/7101) [`e4e7738be`](https://github.com/apollographql/apollo-server/commit/e4e7738be7c8d35a42342987e180eba5b6f66ca1) Thanks [@glasser](https://github.com/glasser)! - The usage reporting plugin now defaults to a 30 second timeout for each attempt to send reports to Apollo Server instead of no timeout; the timeout can be adjusted with the new `requestTimeoutMs` option to `ApolloServerPluginUsageReporting`. (Apollo's servers already enforced a 30 second timeout, so this is unlikely to break any existing use cases.)
+
+- [#7104](https://github.com/apollographql/apollo-server/pull/7104) [`15d8d65e0`](https://github.com/apollographql/apollo-server/commit/15d8d65e018520d3eedc5e42981f19a5f98524e7) Thanks [@glasser](https://github.com/glasser)! - It is now an error to combine a "disabled" plugin such as `ApolloServerPluginUsageReportingDisabled` with its enabled counterpart such as `ApolloServerPluginUsageReporting`.
+
 ## 4.0.4
 
 This version has no changes; `@apollo/server` and `@apollo/server-integration-test` are published with matching version numbers and we published a new version of `@apollo/server-integration-test`.
