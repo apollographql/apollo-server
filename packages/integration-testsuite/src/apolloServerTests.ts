@@ -209,6 +209,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
     }
     afterEach(stopServer);
 
+    // If this test fails, it means your `@apollo/server` and
+    // `@apollo/server-integration-testsuite` versions are out of sync. Please
+    // update both packages to the same version.
+    it('lockstep versioning of @apollo/server and @apollo/server-integration-testsuite', async () => {
+      const server = (await createServer({ schema })).server;
+      if (!(server instanceof ApolloServer)) {
+        throw Error(
+          'Have you installed @apollo/server and @apollo/server-integration-testsuite with non-matching versions?',
+        );
+      }
+    });
+
     describe('constructor', () => {
       describe('validation rules', () => {
         it('accepts additional rules', async () => {
