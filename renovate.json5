@@ -33,6 +33,13 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
+    // We want the testsuite to explicitly pin the version of @apollo/server
+    // since they are supposed to be in lockstep.
+    {
+      matchPackageNames: ["@apollo/server"],
+      matchPaths: ["packages/integration-testsuite/package.json"],
+      rangeStrategy: "pin",
+    },
     // We need to support Node v14, so we don't allow ourselves to use type definitions
     // that would let us write v16-specific code.
     {
