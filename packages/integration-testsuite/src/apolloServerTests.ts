@@ -219,7 +219,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           'Have you installed @apollo/server and @apollo/server-integration-testsuite with non-matching versions?',
         );
       }
-      expect(server).toBeInstanceOf(ApolloServer);
     });
 
     describe('constructor', () => {
