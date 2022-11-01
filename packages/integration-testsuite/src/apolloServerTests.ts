@@ -209,12 +209,17 @@ export function defineIntegrationTestSuiteApolloServerTests(
     }
     afterEach(stopServer);
 
-    // This test ensures that consumers of this testsuite are using the lockstep
-    // versioned packages of @apollo/server and
-    // @apollo/server-integration-testsuite. If these versions are out of sync,
-    // this test should fail.
+    // If this test fails, it means your `@apollo/server` and
+    // `@apollo/server-integration-testsuite` versions are out of sync. Please
+    // update both packages to the same version.
     it('lockstep versioning of @apollo/server and @apollo/server-integration-testsuite', async () => {
-      expect((await createServer({ schema })).server).toBeInstanceOf(
+      const server = (await createServer({ schema })).server;
+      if (!(server instanceof ApolloServer)) {
+        throw Error(
+          'Have you installed @apollo/server and @apollo/server-integration-testsuite with non-matching versions?',
+        );
+      }
+      expect(server).toBeInstanceOf(
         ApolloServer,
       );
     });
