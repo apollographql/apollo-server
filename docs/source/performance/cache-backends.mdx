@@ -201,6 +201,22 @@ const server = new ApolloServer({
 });
 ```
 
+## Handling cache fetching errors
+
+To provide error tolerance for cache backends that connect via a client (e.g., Redis), we recommend using the `ErrorsAreMissesCache` wrapper from [@apollo/utils.keyvaluecache](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#errorsaremissescache). If the cache is unavailable and your request throws an error, `ErrorsAreMissesCache` treats that error as a cache miss. At the same time, your cache client can keep trying to reconnect to your cache backend until things are working again, like so:
+
+
+```typescript
+import Keyv from "keyv";
+import { KeyvAdapter } from "@apollo/utils.keyvadapter";
+import { ErrorsAreMissesCache } from "@apollo/utils.keyvaluecache";
+
+const redisCache = new Keyv("redis://user:pass@localhost:6379");
+const faultTolerantCache = new ErrorsAreMissesCache(
+  new KeyvAdapter(redisCache),
+);
+```
+
 ## Legacy caching implementation
 
 Versions of Apollo Server prior to 3.9 use the `apollo-server-caching` package to implement caching. The `apollo-server-caching` package is no longer maintained, and we do not recommend using it. The `KeyValueCache` interface has been moved and is now in the `@apollo/utils.keyvaluecache` package.
