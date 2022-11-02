@@ -272,21 +272,47 @@ export function ApolloServerPluginCacheControl(
 
           const { response, overallCachePolicy } = requestContext;
 
-          const policyIfCacheable = overallCachePolicy.policyIfCacheable();
+          // Look to see if something has already set the cache-control header.
+          // This could be a different plugin... or it could be this very plugin
+          // operating on a different operation in the same batched HTTP
+          // request.
+          const existingCacheControlHeader = parseExistingCacheControlHeader(
+            response.http.headers.get('cache-control'),
+          );
 
-          // If the feature is enabled, there is a non-trivial cache policy,
-          // there are no errors, and we actually can write headers, write the
-          // header.
+          // If the header contains something other than a value that this
+          // plugin sets, then we leave it alone. We don't want to mangle
+          // something important that you set! That said, it's probably best to
+          // have only one piece of code that writes to a given header, so you
+          // should probably set `calculateHttpHeaders: false` on this plugin.
+          if (existingCacheControlHeader.kind === 'unparsable') {
+            return;
+          }
+
+          const cachePolicy = newCachePolicy();
+          cachePolicy.replace(overallCachePolicy);
+          if (existingCacheControlHeader.kind === 'parsable-and-cacheable') {
+            cachePolicy.restrict(existingCacheControlHeader.hint);
+          }
+          const policyIfCacheable = cachePolicy.policyIfCacheable();
+
           if (
+            // This code path is only for if we believe it is cacheable.
             policyIfCacheable &&
+            // Either there wasn't a cache-control header already, or we've
+            // already incorporated it into policyIfCacheable. (If we couldn't
+            // parse it, that means some other plugin or mechanism set the
+            // header. This is confusing, so we just don't make any more
+            // changes. You should probably set `calculateHttpHeaders` to false
+            // in that case and only set the header from one place.)
+            existingCacheControlHeader.kind !== 'uncacheable' &&
             // At least for now, we don't set cache-control headers for
             // incremental delivery responses, since we don't know if a later
             // part of the execution will affect the cache policy (perhaps
             // dynamically). (Note that willSendResponse is called when the
             // initial payload is sent, not the final payload.)
             response.body.kind === 'single' &&
-            !response.body.singleResult.errors &&
-            response.http
+            !response.body.singleResult.errors
           ) {
             response.http.headers.set(
               'cache-control',
@@ -294,19 +320,53 @@ export function ApolloServerPluginCacheControl(
                 policyIfCacheable.maxAge
               }, ${policyIfCacheable.scope.toLowerCase()}`,
             );
-          } else if (
-            calculateHttpHeaders !== 'if-cacheable' &&
-            !response.http.headers.has('cache-control')
-          ) {
+          } else if (calculateHttpHeaders !== 'if-cacheable') {
             // The response is not cacheable, so make sure it doesn't get
             // cached. This is especially important for GET requests, because
             // browsers and other agents cache many GET requests by default.
-            response.http.headers.set('cache-control', 'no-store');
+            // (But if some other plugin set the header to a value that this
+            // plugin does not produce, we don't do anything.)
+            response.http.headers.set(
+              'cache-control',
+              CACHE_CONTROL_HEADER_UNCACHEABLE,
+            );
           }
         },
       };
     },
   });
+}
+
+const CACHE_CONTROL_HEADER_CACHEABLE_REGEXP =
+  /^max-age=(\d+), (public|private)$/;
+const CACHE_CONTROL_HEADER_UNCACHEABLE = 'no-store';
+
+type ExistingCacheControlHeader =
+  | { kind: 'no-header' }
+  | { kind: 'uncacheable' }
+  | { kind: 'parsable-and-cacheable'; hint: CacheHint }
+  | { kind: 'unparsable' };
+
+function parseExistingCacheControlHeader(
+  header: string | undefined,
+): ExistingCacheControlHeader {
+  if (!header) {
+    return { kind: 'no-header' };
+  }
+  if (header === CACHE_CONTROL_HEADER_UNCACHEABLE) {
+    return { kind: 'uncacheable' };
+  }
+  const match = CACHE_CONTROL_HEADER_CACHEABLE_REGEXP.exec(header);
+  if (!match) {
+    return { kind: 'unparsable' };
+  }
+  return {
+    kind: 'parsable-and-cacheable',
+    hint: {
+      maxAge: +match[1],
+      scope: match[2] === 'public' ? 'PUBLIC' : 'PRIVATE',
+    },
+  };
 }
 
 function cacheAnnotationFromDirectives(

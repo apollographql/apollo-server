@@ -794,7 +794,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle a basic request', async () => {
-        const app = await createApp();
+        let requestIsBatched: boolean | undefined;
+        const app = await createApp({
+          schema,
+          allowBatchedHttpRequests: true,
+          plugins: [
+            {
+              async requestDidStart(requestContext) {
+                requestIsBatched = requestContext.requestIsBatched;
+              },
+            },
+          ],
+        });
         const expected = {
           testString: 'it works',
         };
@@ -807,6 +818,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           'application/json; charset=utf-8',
         );
         expect(res.body.data).toEqual(expected);
+        expect(requestIsBatched).toEqual(false);
       });
 
       it.each([
@@ -897,6 +909,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
             books: [Book]
             cooks: [Cook]
             pooks: [Pook]
+            uncached: ID
+            ten: ID @cacheControl(maxAge: 10)
+            twenty: ID @cacheControl(maxAge: 20, scope: PRIVATE)
           }
 
           enum CacheControlScope {
@@ -926,6 +941,98 @@ export function defineIntegrationTestSuiteHttpServerTests(
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual({ cooks: books });
           expect(res.headers['cache-control']).toEqual('max-age=200, public');
+        });
+
+        it('applies cacheControl Headers for batched operation', async () => {
+          const app = await createApp({
+            typeDefs,
+            resolvers,
+            allowBatchedHttpRequests: true,
+          });
+          {
+            const res = await request(app)
+              .post('/')
+              .send([{ query: '{ten}' }, { query: '{twenty}' }]);
+            expect(res.status).toEqual(200);
+            expect(res.body).toMatchInlineSnapshot(`
+            [
+              {
+                "data": {
+                  "ten": null,
+                },
+              },
+              {
+                "data": {
+                  "twenty": null,
+                },
+              },
+            ]
+          `);
+            expect(res.headers['cache-control']).toEqual('max-age=10, private');
+          }
+          {
+            const res = await request(app)
+              .post('/')
+              .send([{ query: '{twenty}' }, { query: '{ten}' }]);
+            expect(res.status).toEqual(200);
+            expect(res.body).toMatchInlineSnapshot(`
+            [
+              {
+                "data": {
+                  "twenty": null,
+                },
+              },
+              {
+                "data": {
+                  "ten": null,
+                },
+              },
+            ]
+          `);
+            expect(res.headers['cache-control']).toEqual('max-age=10, private');
+          }
+          {
+            const res = await request(app)
+              .post('/')
+              .send([{ query: '{uncached}' }, { query: '{ten}' }]);
+            expect(res.status).toEqual(200);
+            expect(res.body).toMatchInlineSnapshot(`
+            [
+              {
+                "data": {
+                  "uncached": null,
+                },
+              },
+              {
+                "data": {
+                  "ten": null,
+                },
+              },
+            ]
+          `);
+            expect(res.headers['cache-control']).toEqual('no-store');
+          }
+          {
+            const res = await request(app)
+              .post('/')
+              .send([{ query: '{ten}' }, { query: '{uncached}' }]);
+            expect(res.status).toEqual(200);
+            expect(res.body).toMatchInlineSnapshot(`
+            [
+              {
+                "data": {
+                  "ten": null,
+                },
+              },
+              {
+                "data": {
+                  "uncached": null,
+                },
+              },
+            ]
+          `);
+            expect(res.headers['cache-control']).toEqual('no-store');
+          }
         });
 
         it('applies cacheControl Headers with if-cacheable', async () => {
@@ -1276,7 +1383,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('can handle batch requests', async () => {
-        const app = await createApp({ schema, allowBatchedHttpRequests: true });
+        let requestIsBatched: boolean | undefined;
+        const app = await createApp({
+          schema,
+          allowBatchedHttpRequests: true,
+          plugins: [
+            {
+              async requestDidStart(requestContext) {
+                requestIsBatched = requestContext.requestIsBatched;
+              },
+            },
+          ],
+        });
         const expected = [
           {
             data: {
@@ -1289,7 +1407,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             },
           },
         ];
-        const req = request(app)
+        const res = await request(app)
           .post('/')
           .send([
             {
@@ -1306,13 +1424,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
               operationName: 'testX',
             },
           ]);
-        return req.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body).toEqual(expected);
-          expect(res.header['content-length']).toEqual(
-            Buffer.byteLength(res.text, 'utf8').toString(),
-          );
-        });
+        expect(res.status).toEqual(200);
+        expect(res.body).toEqual(expected);
+        expect(res.header['content-length']).toEqual(
+          Buffer.byteLength(res.text, 'utf8').toString(),
+        );
+        expect(requestIsBatched).toBe(true);
       });
 
       it('can handle non-batch requests when allowBatchedHttpRequests is true', async () => {

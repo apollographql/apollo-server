@@ -70,6 +70,13 @@ export interface GraphQLRequestContext<TContext extends BaseContext> {
   readonly metrics: GraphQLRequestMetrics;
 
   readonly overallCachePolicy: CachePolicy;
+
+  /**
+   * True if this request is part of a potentially multi-operation batch. Note
+   * that if this is true, `response.http` will be shared with the other
+   * operations in the batch.
+   */
+  readonly requestIsBatched: boolean;
 }
 
 export type GraphQLRequestContextDidResolveSource<

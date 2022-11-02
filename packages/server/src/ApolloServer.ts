@@ -1197,6 +1197,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         graphQLRequest,
         internals: this.internals,
         schemaDerivedData,
+        sharedResponseHTTPGraphQLHead: null,
       },
       options,
     );
@@ -1215,11 +1216,13 @@ export async function internalExecuteOperation<TContext extends BaseContext>(
     graphQLRequest,
     internals,
     schemaDerivedData,
+    sharedResponseHTTPGraphQLHead,
   }: {
     server: ApolloServer<TContext>;
     graphQLRequest: GraphQLRequest;
     internals: ApolloServerInternals<TContext>;
     schemaDerivedData: SchemaDerivedData;
+    sharedResponseHTTPGraphQLHead: HTTPGraphQLHead | null;
   },
   options: ExecuteOperationOptions<TContext>,
 ): Promise<GraphQLResponse> {
@@ -1229,7 +1232,7 @@ export async function internalExecuteOperation<TContext extends BaseContext>(
     schema: schemaDerivedData.schema,
     request: graphQLRequest,
     response: {
-      http: newHTTPGraphQLHead(),
+      http: sharedResponseHTTPGraphQLHead ?? newHTTPGraphQLHead(),
     },
     // We clone the context because there are some assumptions that every operation
     // execution has a brand new context object; specifically, in order to implement
@@ -1249,6 +1252,7 @@ export async function internalExecuteOperation<TContext extends BaseContext>(
     contextValue: cloneObject(options?.contextValue ?? ({} as TContext)),
     metrics: {},
     overallCachePolicy: newCachePolicy(),
+    requestIsBatched: sharedResponseHTTPGraphQLHead !== null,
   };
 
   try {

@@ -114,13 +114,21 @@ function ensureQueryIsStringOrMissing(query: unknown) {
   }
 }
 
-export async function runHttpQuery<TContext extends BaseContext>(
-  server: ApolloServer<TContext>,
-  httpRequest: HTTPGraphQLRequest,
-  contextValue: TContext,
-  schemaDerivedData: SchemaDerivedData,
-  internals: ApolloServerInternals<TContext>,
-): Promise<HTTPGraphQLResponse> {
+export async function runHttpQuery<TContext extends BaseContext>({
+  server,
+  httpRequest,
+  contextValue,
+  schemaDerivedData,
+  internals,
+  sharedResponseHTTPGraphQLHead,
+}: {
+  server: ApolloServer<TContext>;
+  httpRequest: HTTPGraphQLRequest;
+  contextValue: TContext;
+  schemaDerivedData: SchemaDerivedData;
+  internals: ApolloServerInternals<TContext>;
+  sharedResponseHTTPGraphQLHead: HTTPGraphQLHead | null;
+}): Promise<HTTPGraphQLResponse> {
   let graphQLRequest: GraphQLRequest;
 
   switch (httpRequest.method) {
@@ -198,6 +206,7 @@ export async function runHttpQuery<TContext extends BaseContext>(
       graphQLRequest,
       internals,
       schemaDerivedData,
+      sharedResponseHTTPGraphQLHead,
     },
     { contextValue },
   );
