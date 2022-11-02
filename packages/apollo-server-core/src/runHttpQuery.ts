@@ -343,6 +343,7 @@ export async function processHTTPRequest<TContext extends BaseContext>(
 
   function buildRequestContext(
     request: GraphQLRequest,
+    requestIsBatched: boolean,
   ): GraphQLRequestContext<TContext> {
     // TODO: We currently shallow clone the context for every request,
     // but that's unlikely to be what people want.
@@ -370,6 +371,7 @@ export async function processHTTPRequest<TContext extends BaseContext>(
       debug: options.debug,
       metrics: {},
       overallCachePolicy: newCachePolicy(),
+      requestIsBatched,
     };
   }
 
@@ -399,7 +401,7 @@ export async function processHTTPRequest<TContext extends BaseContext>(
       const responses = await Promise.all(
         requests.map(async (request) => {
           try {
-            const requestContext = buildRequestContext(request);
+            const requestContext = buildRequestContext(request, true);
             const response = await processGraphQLRequest(
               options,
               requestContext,
@@ -429,7 +431,7 @@ export async function processHTTPRequest<TContext extends BaseContext>(
       // We're processing a normal request
       const request = parseGraphQLRequest(httpRequest.request, requestPayload);
 
-      const requestContext = buildRequestContext(request);
+      const requestContext = buildRequestContext(request, false);
 
       const response = await processGraphQLRequest(options, requestContext);
 

@@ -59,6 +59,7 @@ function runQuery(
     debug: options.debug,
     cache: {} as any,
     overallCachePolicy: newCachePolicy(),
+    requestIsBatched: false,
     ...requestContextExtra,
   });
 }

@@ -424,20 +424,37 @@ describe('apollo-server-express', () => {
 
     describe('Cache Control Headers', () => {
       it('applies cacheControl Headers', async () => {
-        const { url: uri } = await createServer({ typeDefs, resolvers });
-
-        const apolloFetch = createApolloFetch({ uri }).useAfter(
-          (response, next) => {
-            expect(response.response.headers.get('cache-control')).toEqual(
-              'max-age=200, public',
-            );
-            next();
-          },
-        );
-        const result = await apolloFetch({
-          query: `{ cooks { title author } }`,
+        const { server, httpServer } = await createServer({
+          typeDefs,
+          resolvers,
         });
-        expect(result.data).toEqual({ cooks: books });
+
+        const res = await request(httpServer)
+          .post(server.graphqlPath)
+          .send({ query: `{ cooks { title author } }` });
+        expect(res.status).toEqual(200);
+        expect(res.body.data).toEqual({ cooks: books });
+        expect(res.header['cache-control']).toEqual('max-age=200, public');
+      });
+
+      it('does not apply cacheControl Headers for batch', async () => {
+        const { server, httpServer } = await createServer({
+          typeDefs,
+          resolvers,
+        });
+
+        const res = await request(httpServer)
+          .post(server.graphqlPath)
+          .send([
+            { query: `{ cooks { title author } }` },
+            { query: `{ cooks { title author } }` },
+          ]);
+        expect(res.status).toEqual(200);
+        expect(res.body).toEqual([
+          { data: { cooks: books } },
+          { data: { cooks: books } },
+        ]);
+        expect(res.header['cache-control']).toBeUndefined();
       });
 
       it('contains no cacheControl Headers when uncacheable', async () => {

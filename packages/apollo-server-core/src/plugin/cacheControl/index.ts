@@ -232,18 +232,21 @@ export function ApolloServerPluginCacheControl(
         },
 
         async willSendResponse(requestContext) {
-          const { response, overallCachePolicy } = requestContext;
+          const { response, overallCachePolicy, requestIsBatched } =
+            requestContext;
 
           const policyIfCacheable = overallCachePolicy.policyIfCacheable();
 
           // If the feature is enabled, there is a non-trivial cache policy,
-          // there are no errors, and we actually can write headers, write the
-          // header.
+          // there are no errors, we actually can write headers, and the request
+          // is not batched (because we have no way of merging the header across
+          // operations in AS3), write the header.
           if (
             calculateHttpHeaders &&
             policyIfCacheable &&
             !response.errors &&
-            response.http
+            response.http &&
+            !requestIsBatched
           ) {
             response.http.headers.set(
               'Cache-Control',

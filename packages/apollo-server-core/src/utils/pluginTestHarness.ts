@@ -133,6 +133,7 @@ export default async function pluginTestHarness<TContext extends BaseContext>({
     cache: new InMemoryLRUCache(),
     context,
     overallCachePolicy: newCachePolicy(),
+    requestIsBatched: false,
   };
 
   if (requestContext.source === undefined) {

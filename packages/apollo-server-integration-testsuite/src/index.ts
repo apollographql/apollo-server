@@ -475,7 +475,19 @@ export default ({
       });
 
       it('can handle a basic request', async () => {
-        app = await createApp();
+        let requestIsBatched: boolean | undefined;
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                async requestDidStart(requestContext) {
+                  requestIsBatched = requestContext.requestIsBatched;
+                },
+              },
+            ],
+          },
+        });
         const expected = {
           testString: 'it works',
         };
@@ -485,6 +497,7 @@ export default ({
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
+          expect(requestIsBatched).toEqual(false);
         });
       });
 
@@ -793,7 +806,19 @@ export default ({
       });
 
       it('can handle batch requests', async () => {
-        app = await createApp();
+        let requestIsBatched: boolean | undefined;
+        app = await createApp({
+          graphqlOptions: {
+            schema,
+            plugins: [
+              {
+                async requestDidStart(requestContext) {
+                  requestIsBatched = requestContext.requestIsBatched;
+                },
+              },
+            ],
+          },
+        });
         const expected = [
           {
             data: {
@@ -826,6 +851,7 @@ export default ({
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body).toEqual(expected);
+          expect(requestIsBatched).toEqual(true);
         });
       });
 

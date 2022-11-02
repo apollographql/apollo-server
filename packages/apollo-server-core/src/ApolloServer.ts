@@ -1032,6 +1032,7 @@ export class ApolloServerBase<
       },
       debug: options.debug,
       overallCachePolicy: newCachePolicy(),
+      requestIsBatched: false,
     };
 
     return processGraphQLRequest(options, requestCtx);

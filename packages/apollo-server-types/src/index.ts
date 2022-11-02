@@ -172,6 +172,15 @@ export interface GraphQLRequestContext<TContext = Record<string, any>> {
   debug?: boolean;
 
   readonly overallCachePolicy: CachePolicy;
+
+  /**
+   * True if this request is part of a potentially multi-operation batch. Note
+   * that if this is true, the headers and status code `response.http` will be
+   * be merged together; if two operations set the same header one will arbitrarily
+   * win. (In Apollo Server v4, `response.http` will be shared with the other
+   * operations in the batch.)
+   */
+  readonly requestIsBatched: boolean;
 }
 
 export type ValidationRule = (context: ValidationContext) => ASTVisitor;
