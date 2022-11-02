@@ -96,7 +96,7 @@ class ProductsDataSource {
 
   private batchProducts = new DataLoader(async (ids) => {
     const productList = await db.fetchAllKeys(ids);
-    return ids.map((id) => productList.find((product) => product.id === id));
+    return ids.map((id) => productsById.get(id));
   });
 
   async getProductFor(id) {
