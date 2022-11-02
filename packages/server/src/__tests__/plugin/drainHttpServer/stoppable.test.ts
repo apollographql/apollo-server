@@ -35,7 +35,16 @@ import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import child from 'child_process';
 import path from 'path';
 import type { AddressInfo } from 'net';
-import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
+import {
+  describe,
+  it,
+  expect,
+  afterEach,
+  beforeEach,
+  beforeAll,
+  afterAll,
+  jest,
+} from '@jest/globals';
 
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;
@@ -89,6 +98,32 @@ Object.keys(schemes).forEach((schemeName) => {
   const scheme = schemes[schemeName];
 
   describe(`${schemeName}.Server`, function () {
+    beforeAll(() => {
+      // This explicitly mocks only `Date`.
+      jest.useFakeTimers({
+        doNotFake: [
+          'hrtime',
+          'nextTick',
+          'performance',
+          'queueMicrotask',
+          'requestAnimationFrame',
+          'cancelAnimationFrame',
+          'requestIdleCallback',
+          'cancelIdleCallback',
+          'setImmediate',
+          'clearImmediate',
+          'setInterval',
+          'clearInterval',
+          'setTimeout',
+          'clearTimeout',
+        ],
+      });
+    });
+
+    afterAll(() => {
+      jest.useRealTimers();
+    });
+
     describe('.close()', () => {
       let server: http.Server;
 
@@ -211,17 +246,17 @@ Object.keys(schemes).forEach((schemeName) => {
       ]);
       const start = Date.now();
       const closeEventPromise = a.event(server, 'close');
-      const gracefully = await stopper.stop(500);
+      const [gracefully] = await Promise.all([
+        stopper.stop(500),
+        jest.advanceTimersByTime(500),
+      ]);
       await closeEventPromise;
-      // These tests are a bit flakey; we should figure out a way to usefully
-      // test the grace period behavior without leading to flakiness due to
-      // speed variation.
+
       const elapsed = Date.now() - start;
-      expect(elapsed).toBeGreaterThanOrEqual(450);
-      expect(elapsed).toBeLessThanOrEqual(550);
+      expect(elapsed).toBe(500);
       expect(gracefully).toBe(false);
       // It takes a moment for the `finish` events to happen.
-      await a.delay(20);
+      await Promise.all([a.delay(20), jest.advanceTimersByTime(20)]);
       expect(stopper['requestCountPerSocket'].size).toBe(0);
     });
 
@@ -238,25 +273,24 @@ Object.keys(schemes).forEach((schemeName) => {
       const p = port(server);
       await a.event(server, 'listening');
       const start = Date.now();
-      const res = await Promise.all([
+      const [res1, res2] = await Promise.all([
         request(`${schemeName}://localhost:${p}/250`).agent(
           scheme.agent({ keepAlive: true }),
         ),
         request(`${schemeName}://localhost:${p}/500`).agent(
           scheme.agent({ keepAlive: true }),
         ),
+        jest.advanceTimersByTime(500),
       ]);
+
       const closeEventPromise = a.event(server, 'close');
       const gracefully = await stopper.stop();
-      const bodies = await Promise.all(res.map((r) => r.text()));
+      const bodies = await Promise.all([res1, res2].map((r) => r.text()));
       await closeEventPromise;
       expect(bodies[0]).toBe('helloworld');
-      // These tests are a bit flakey; we should figure out a way to usefully
-      // test the grace period behavior without leading to flakiness due to
-      // speed variation.
+
       const elapsed = Date.now() - start;
-      expect(elapsed).toBeGreaterThanOrEqual(400);
-      expect(elapsed).toBeLessThanOrEqual(600);
+      expect(elapsed).toBe(500);
       expect(gracefully).toBe(true);
     });
 
@@ -268,17 +302,17 @@ Object.keys(schemes).forEach((schemeName) => {
         const port = +data.toString();
         expect(typeof port).toBe('number');
         const start = Date.now();
-        const res = await request(
-          `${schemeName}://localhost:${port}/250`,
-        ).agent(scheme.agent({ keepAlive: true }));
+        const [res] = await Promise.all([
+          request(`${schemeName}://localhost:${port}/250`).agent(
+            scheme.agent({ keepAlive: true }),
+          ),
+          jest.advanceTimersByTime(250),
+        ]);
         const body = await res.text();
         expect(body).toBe('helloworld');
-        // These tests are a bit flakey; we should figure out a way to usefully
-        // test the grace period behavior without leading to flakiness due to
-        // speed variation.
+
         const elapsed = Date.now() - start;
-        expect(elapsed).toBeGreaterThanOrEqual(150);
-        expect(elapsed).toBeLessThanOrEqual(350);
+        expect(elapsed).toBe(250);
         // Wait for subprocess to go away.
         await a.event(server, 'close');
       });
