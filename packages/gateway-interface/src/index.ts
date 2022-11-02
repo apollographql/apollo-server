@@ -76,6 +76,9 @@ export interface GatewayGraphQLRequestContext<TContext = Record<string, any>> {
   // runtime before using it anyway, so let's just make everything build by
   // declaring this as `any`.
   readonly overallCachePolicy: any;
+  // This was only added in v3.11/v4.1, so we don't want to declare that it's
+  // required. (In fact, we made it optional in v3.11.1 for this very reason.)
+  readonly requestIsBatched?: boolean;
 }
 
 export interface GatewayGraphQLRequest {

@@ -153,6 +153,7 @@ export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
     metrics: as4RequestContext.metrics,
     debug: internals.includeStacktraceInErrorResponses,
     overallCachePolicy: as4RequestContext.overallCachePolicy,
+    requestIsBatched: as4RequestContext.requestIsBatched,
   };
 }
 
