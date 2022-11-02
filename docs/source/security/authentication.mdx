@@ -164,9 +164,7 @@ Because our resolvers have access to everything in the context, an important que
 
 As our server gets more complex, there will probably be multiple places in the schema that need to fetch the same kind of data. In our last example, you may have noticed the return array was replaced with a call to `context.models.User.getAll()`.
 
-<!-- TODO(AS4) add link back in for data sources -->
-
-As always, we recommend moving the actual data fetching and transformation logic from your resolvers to [data sources](../data/fetching-rest/) or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
+As always, we recommend moving the actual data fetching and transformation logic from your resolvers to [data sources](../data/fetching-data/) or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
 
 For example, a model file for `User` would include all the logic for operating on users, and might look something like this:
 
