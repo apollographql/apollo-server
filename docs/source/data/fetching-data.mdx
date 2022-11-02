@@ -94,9 +94,13 @@ import DataLoader from 'dataloader';
 class ProductsDataSource {
   private dbConnection;
 
+  constructor(dbConnection) {
+    this.dbConnection = dbConnection;
+  }
+
   private batchProducts = new DataLoader(async (ids) => {
-    const productsById = await db.fetchAllKeys(ids);
-    return ids.map((id) => productsById.get(id));
+    const productList = await this.dbConnection.fetchAllKeys(ids);
+    return ids.map((id) => productList.find((product) => product.id === id));
   });
 
   async getProductFor(id) {
