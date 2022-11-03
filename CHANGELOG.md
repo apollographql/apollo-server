@@ -10,6 +10,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 ## vNEXT
 
+## v3.11.1
+- `apollo-server-core`: Follow-up to v3.11.0: make `GraphQLRequestContext.requestIsBatched` optional for better compatibility with older versions of `@apollo/gateway`.
+
 ## v3.11.0
 - ⚠️ **SECURITY**: The cache control plugin no longer sets the `cache-control` HTTP response header if the operation is part of a batched HTTP request. Previously, it would set the header to a value describing the cache policy of only one of the operations in the request, which could lead to data being unintentionally cached by proxies or clients. This bug was introduced in v3.0.0 and this fix restores the behavior of Apollo Server 2. (In Apollo Server 4 (specifically, `@apollo/server@4.1.0` or newer), the features work properly together, setting the header based on the combined cache policy of all operations.) This could theoretically have led to data tagged as uncacheable being cached and potentially served to different users. More details are available at the [security advisory](https://github.com/apollographql/apollo-server/security/advisories/GHSA-8r69-3cvp-wxc3).
 - `apollo-server-core`: New field `GraphQLRequestContext.requestIsBatched` available to plugins.
