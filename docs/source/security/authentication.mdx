@@ -3,12 +3,16 @@ title: Authentication and authorization
 description: Control access to your GraphQL API
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 Your GraphQL API probably needs to control which users can see and interact with the various data it provides.
 
 - **Authentication** is determining whether a given user is logged in, and subsequently determining _which_ user someone is.
 - **Authorization** is then determining what a given user has permission to do or see.
 
 ## Putting authenticated user info on the `context`
+
+<TopLevelAwait />
 
 Before we can correctly control access to data, we have to authenticate a user. There are many patterns for providing authentication credentials, including HTTP headers and JSON web tokens.
 

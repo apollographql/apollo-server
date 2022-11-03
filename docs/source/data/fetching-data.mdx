@@ -3,6 +3,8 @@ title: Fetching Data
 description: Manage connections to databases and other data sources
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 > Looking to fetch data from a REST API? Check out [Fetching from REST](./fetching-rest).
 
 Apollo Server can fetch data from any source you need, such as a [REST API](./fetching-rest) or a database. Your server can use any number of different data sources:
@@ -131,6 +133,8 @@ const { url } = await startStandaloneServer(server, {
 </MultiCodeBlock>
 
 ## Adding data sources to your context
+
+<TopLevelAwait />
 
 You can add data sources to your server's `context` initialization function, like so:
 

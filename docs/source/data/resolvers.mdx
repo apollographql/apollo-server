@@ -3,6 +3,8 @@ title: Resolvers
 description: How Apollo Server processes GraphQL operations
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 Apollo Server needs to know how to populate data for every field in your schema so that it can respond to requests for that data. To accomplish this, it uses resolvers.
 
 **A resolver is a function that's responsible for populating the data for a single field in your schema.** It can populate that data in any way you define, such as by fetching data from a back-end database or a third-party API.
@@ -98,6 +100,8 @@ const resolvers = {
 > Notice that this example _doesn't_ define resolvers for `User` fields (`id` and `name`). That's because the [default resolver](#default-resolvers) that Apollo Server creates for these fields does the right thing: it obtains the value directly from the object returned by the `user` resolver.
 
 ## Passing resolvers to Apollo Server
+
+<TopLevelAwait />
 
 After you define all of your resolvers, you pass them to the constructor of `ApolloServer` (as the `resolvers` property), along with your schema's definition (as the `typeDefs` property).
 

@@ -3,7 +3,11 @@ title: 'API Reference: Drain HTTP server plugin'
 api_reference: true
 ---
 
+import TopLevelAwait from "../../shared/top-level-await.mdx"
+
 ## Using the plugin
+
+<TopLevelAwait />
 
 This article documents the options for the `ApolloServerPluginDrainHttpServer` plugin, which you can import from `@apollo/server/plugin/drainHttpServer`.
 
@@ -39,32 +43,33 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const app = express();
-  // Our httpServer handles incoming requests to our Express app.
-  // Below, we tell Apollo Server to "drain" this httpServer,
-  // enabling our servers to shut down gracefully.
-  const httpServer = http.createServer(app);
-  const server = new ApolloServer<MyContext>({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
-  await server.start();
-  app.use(
-    '/graphql',
-    cors<cors.CorsRequest>(),
-    json(),
-    expressMiddleware(server, {
-      context: async ({ req }) => ({ token: req.headers.token }),
-    }),
-  );
-  await new Promise<void>((resolve) =>
-    httpServer.listen({ port: 4000 }, resolve),
-  );
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
-  return { server, app };
-}
+const app = express();
+// Our httpServer handles incoming requests to our Express app.
+// Below, we tell Apollo Server to "drain" this httpServer,
+// enabling our servers to shut down gracefully.
+const httpServer = http.createServer(app);
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+await server.start();
+
+app.use(
+  '/graphql',
+  cors<cors.CorsRequest>(),
+  json(),
+  expressMiddleware(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+  }),
+);
+
+await new Promise<void>((resolve) =>
+  httpServer.listen({ port: 4000 }, resolve),
+);
+
+console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 ```
 
 </MultiCodeBlock>

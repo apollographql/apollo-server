@@ -3,6 +3,8 @@ title: "API Reference: startStandaloneServer"
 api_reference: true
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 This API reference documents the `startStandaloneServer` function.
 
 ## Overview
@@ -12,6 +14,8 @@ This `startStandaloneServer` function helps you get started with Apollo Server q
 Because it sets helpful defaults, this function is less configurable than other Apollo Server integrations. Complex projects might eventually need to [swap to using `expressMiddleware`](#swapping-to-expressmiddleware) (this process is straightforward).
 
 ## `startStandaloneServer`
+
+<TopLevelAwait />
 
 The `startStandaloneServer` function accepts two arguments. The first **required** argument is the instance of `ApolloServer` to begin listening for incoming requests:
 
@@ -103,14 +107,13 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
-  const { url } = await startStandaloneServer(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
-    listen: { port: 4000 },
-  });
-  console.log(`🚀  Server ready at ${url}`);
-}
+
+const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
+const { url } = await startStandaloneServer(server, {
+  context: async ({ req }) => ({ token: req.headers.token }),
+  listen: { port: 4000 },
+});
+console.log(`🚀  Server ready at ${url}`);
 ```
 
 </MultiCodeBlock>
@@ -138,14 +141,12 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
-  const { url } = await startStandaloneServer(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
-    listen: { port: 4000 },
-  });
-  console.log(`🚀  Server ready at ${url}`);
-}
+const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
+const { url } = await startStandaloneServer(server, {
+  context: async ({ req }) => ({ token: req.headers.token }),
+  listen: { port: 4000 },
+});
+console.log(`🚀  Server ready at ${url}`);
 ```
 </MultiCodeBlock>
 
@@ -174,39 +175,37 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  // Required logic for integrating with Express
-  const app = express();
-  // Our httpServer handles incoming requests to our Express app.
-  // Below, we tell Apollo Server to "drain" this httpServer,
-  // enabling our servers to shut down gracefully.
-  const httpServer = http.createServer(app);
+// Required logic for integrating with Express
+const app = express();
+// Our httpServer handles incoming requests to our Express app.
+// Below, we tell Apollo Server to "drain" this httpServer,
+// enabling our servers to shut down gracefully.
+const httpServer = http.createServer(app);
 
-  // Same ApolloServer initialization as before, plus the drain plugin
-  // for our httpServer.
-  const server = new ApolloServer<MyContext>({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
-  // Ensure we wait for our server to start
-  await server.start();
+// Same ApolloServer initialization as before, plus the drain plugin
+// for our httpServer.
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+// Ensure we wait for our server to start
+await server.start();
 
-  // Set up our Express middleware to handle CORS, body parsing,
-  // and our expressMiddleware function.
-  app.use('/',
-    cors<cors.CorsRequest>(),
-    bodyParser.json(),
-    // expressMiddleware accepts the same arguments:
-    // an Apollo Server instance and optional configuration options
-    expressMiddleware(server, {
-      context: async ({ req }) => ({ token: req.headers.token }),
-    }),
-  );
+// Set up our Express middleware to handle CORS, body parsing,
+// and our expressMiddleware function.
+app.use('/',
+  cors<cors.CorsRequest>(),
+  bodyParser.json(),
+  // expressMiddleware accepts the same arguments:
+  // an Apollo Server instance and optional configuration options
+  expressMiddleware(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+  }),
+);
 
-  // Modified server startup
-  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/`);
-}
+// Modified server startup
+await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+console.log(`🚀 Server ready at http://localhost:4000/`);
 ```
 </MultiCodeBlock>

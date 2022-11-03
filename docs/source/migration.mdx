@@ -2,6 +2,8 @@
 title: Migrating to Apollo Server 4
 ---
 
+import TopLevelAwait from "./shared/top-level-await.mdx"
+
 > 📣 **Apollo Server 4 is [generally available](/resources/product-launch-stages#general-availability)!**
 
 Apollo Server 4 focuses on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/24a841bc68d/ROADMAP.md).
@@ -62,6 +64,8 @@ Below are a few high-level changes for using framework integrations:
 
 The following sections show how servers using `apollo-server` or `apollo-server-express` can update to Apollo Server 4.
 
+<TopLevelAwait />
+
 ### Migrate from `apollo-server`
 
 In Apollo Server 3, the `apollo-server` package is a "batteries-included" package that wraps `apollo-server-express`, providing an HTTP server with minimal HTTP-level customization.
@@ -81,15 +85,13 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: async ({ req }) => ({ token: req.headers.token }),
-  });
-  const { url } = await server.listen(4000);
-  console.log(`🚀  Server ready at ${url}`);
-}
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => ({ token: req.headers.token }),
+});
+const { url } = await server.listen(4000);
+console.log(`🚀  Server ready at ${url}`);
 ```
 
 </MultiCodeBlock>
@@ -108,14 +110,13 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
-  const { url } = await startStandaloneServer(server, {
-    context: async ({ req }) => ({ token: req.headers.token }),
-    listen: { port: 4000 },
-  });
-  console.log(`🚀  Server ready at ${url}`);
-}
+
+const server = new ApolloServer<MyContext>({ typeDefs, resolvers });
+const { url } = await startStandaloneServer(server, {
+  context: async ({ req }) => ({ token: req.headers.token }),
+  listen: { port: 4000 },
+});
+console.log(`🚀  Server ready at ${url}`);
 ```
 
 </MultiCodeBlock>
@@ -205,20 +206,18 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const app = express();
-  const httpServer = http.createServer(app);
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    context: async ({ req }) => ({ token: req.headers.token }),
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
-  await server.start();
-  server.applyMiddleware({ app });
-  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
-}
+const app = express();
+const httpServer = http.createServer(app);
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  context: async ({ req }) => ({ token: req.headers.token }),
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+await server.start();
+server.applyMiddleware({ app });
+await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 ```
 
 </MultiCodeBlock>
@@ -242,25 +241,24 @@ interface MyContext {
   token?: String;
 }
 
-async function startApolloServer() {
-  const app = express();
-  const httpServer = http.createServer(app);
-  const server = new ApolloServer<MyContext>({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
-  await server.start();
-  app.use('/graphql',
-    cors<cors.CorsRequest>(),
-    json(),
-    expressMiddleware(server, {
-      context: async ({ req }) => ({ token: req.headers.token }),
-    }),
-  );
-  await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
-}
+const app = express();
+const httpServer = http.createServer(app);
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+await server.start();
+app.use('/graphql',
+  cors<cors.CorsRequest>(),
+  json(),
+  expressMiddleware(server, {
+    context: async ({ req }) => ({ token: req.headers.token }),
+  }),
+);
+
+await new Promise<void>(resolve => httpServer.listen({ port: 4000 }, resolve));
+console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 ```
 
 </MultiCodeBlock>

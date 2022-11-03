@@ -3,6 +3,8 @@ title: Mocking
 description: Mock your GraphQL data based on a schema.
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 > 📣 **New in Apollo Server 4:** Apollo Server 4 removes both the [`mocks` and `mockEntireSchema`](../migration/#mocks-and-mockentireschema) constructor options. This article has been updated to use the `@graphql-tools` package to mock data for Apollo Server. For the most up-to-date information on `@graphql-tools`, we recommend referencing [their documentation](https://www.graphql-tools.com/docs/mocking).
 
 Mocking enables Apollo Server to return simulated data for GraphQL operations based on your server's schema. The strongly-typed nature of a GraphQL API lends itself to mocking, which is an important part of a GraphQL-first development process.
@@ -18,6 +20,8 @@ To mock data based on your schema start by installing the [`@graphql-tools/mock`
 ```
 
 You can combine `addMocksToSchema` (from `@graphql-tools/mock`) and `makeExecutableSchema` (from `@graphql-tools/schema`) to provide mock data for every field in your server's schema:
+
+<MultiCodeBlock>
 
 ```ts
 import { ApolloServer } from '@apollo/server';
@@ -36,6 +40,8 @@ new ApolloServer({
   // highlight-end
 });
 ```
+
+</MultiCodeBlock>
 
 Mocking logic looks at the type returned by each schema field and returns a default value for that type.
 
@@ -124,11 +130,15 @@ When using mocks, you don't have to specify `resolvers`. By default, any `resolv
 
 ## Customizing mocks
 
+<TopLevelAwait />
+
 For more sophisticated testing, you can customize your mocks to return user-specified data. You can customize your mocks by providing an object that specifies the values to return for different return types.
 
 By default, the functions you define in your `mocks` take precedence over any currently defined resolvers.
 
 For example, below, both `Query.hello` and `Query.resolved` return `Hello`:
+
+<MultiCodeBlock>
 
 ```ts
 import { ApolloServer } from '@apollo/server';
@@ -169,7 +179,11 @@ const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
 console.log(`🚀 Server listening at: ${url}`);
 ```
 
+</MultiCodeBlock>
+
 You can also use `mocks` to define object types and the fields belonging to those object types (much like a [resolver map](../data/resolvers/#base-syntax)). In the below example, our mocked `Person` object calls a function returning an object with fields that contain _other_ functions:
+
+<MultiCodeBlock>
 
 ```ts 
 // importing the casual library
@@ -183,11 +197,15 @@ const mocks = {
 };
 ```
 
+</MultiCodeBlock>
+
 This example uses [casual](https://github.com/boo1ean/casual), a fake data generator for JavaScript that returns a different result every time the function is called. In other scenarios, such as testing, a collection of fake objects or a generator that always uses a consistent seed are often necessary to provide consistent data.
 
 ### Using lists in mocks
 
 To automate mocking a list, return an array of the desired length. Using `[...new Array(n)]` is convenient syntax for creating an array that contains _n_ copies of `undefined`.
+
+<MultiCodeBlock>
 
 ```ts
 import casual from 'casual';
@@ -203,9 +221,13 @@ const mocks = {
 };
 ```
 
+</MultiCodeBlock>
+
 ### Using existing resolvers with mocks
 
 By default, mocks overwrite your server's existing resolvers. To use your server's resolvers while mocking, set the `makeExecutableSchema` function's `preserveResolvers` option to `true`:
+
+<MultiCodeBlock>
 
 ```ts
 import { ApolloServer } from '@apollo/server';
@@ -244,5 +266,7 @@ const { url } = await startStandaloneServer(server, { listen: { port: 4000 } });
 
 console.log(`🚀 Server listening at: ${url}`);
 ```
+
+</MultiCodeBlock>
 
 Above, the `resolved` query now uses its defined resolver, so it returns the string `Resolved`.

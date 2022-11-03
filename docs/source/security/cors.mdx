@@ -110,29 +110,27 @@ import { typeDefs, resolvers } from './schema';
 import cors from 'cors';
 // highlight-end
 
-async function startApolloServer() {
-  const app = express();
-  const httpServer = http.createServer(app);
-  const server = new ApolloServer({
-    typeDefs,
-    resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-  });
+const app = express();
+const httpServer = http.createServer(app);
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
 
-  await server.start();
+await server.start();
 
-  app.use(
-    '/graphql',
-    // highlight-start
-    cors<cors.CorsRequest>({ origin: ['https://www.your-app.example', 'https://studio.apollographql.com'] }),
-    // highlight-end
-    json(),
-    expressMiddleware(server),
-  );
+app.use(
+  '/graphql',
+  // highlight-start
+  cors<cors.CorsRequest>({ origin: ['https://www.your-app.example', 'https://studio.apollographql.com'] }),
+  // highlight-end
+  json(),
+  expressMiddleware(server),
+);
 
-  await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve));
-  console.log(`🚀 Server ready at http://localhost:4000/graphql`);
-}
+await new Promise<void>((resolve) => httpServer.listen({ port: 4000 }, resolve));
+console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 ```
 
 </MultiCodeBlock>
