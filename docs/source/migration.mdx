@@ -398,7 +398,7 @@ class MoviesAPI extends RESTDataSource {
 
   async updateMovie(movie: Movie): Promise<Movie>  {
     return this.patch(
-      `movies`,
+      'movies',
       // Syntax for passing a request body
       { id: movie.id, movie }, //highlight-line
     );
@@ -466,7 +466,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
 
   async updateMovie(movie: Movie): Promise<Movie>  {
     return this.patch(
-      `movies`,
+      'movies',
       // Note the way we pass request bodies has also changed!
       { body: { id: movie.id, movie } }, //highlight-line
     );
@@ -480,7 +480,6 @@ interface ContextValue {
   }; 
 } 
 // highlight-end
-
 
 const server = new ApolloServer<ContextValue>({
   typeDefs,
@@ -605,8 +604,10 @@ export const ApolloDataSources = <
 });
 
 // 
-const plugins = [ApolloDataSources({ dataSources })];
-const server = buildServer({ schema, plugins });
+const server = new ApolloServer({
+  schema,
+  plugins: [ApolloDataSources({ dataSources })],
+});
 ```
 
 </ExpansionPanel>
