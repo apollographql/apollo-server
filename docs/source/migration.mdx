@@ -574,36 +574,25 @@ import { ApolloServerPlugin, BaseContext } from '@apollo/server';
 import type { DataSource } from 'apollo-datasource';
 
 type DataSources = Record<string, DataSource>;
-type DataSourcesFn<TDataSources extends DataSources = DataSources> =
-  () => TDataSources;
+type DataSourcesFn = () => DataSources;
 
-interface ContextWithDataSources<TDataSources extends DataSources = DataSources>
-  extends BaseContext {
-  dataSources?: TDataSources;
+interface ContextWithDataSources extends BaseContext {
+  dataSources?: DataSources
 }
 
-export const ApolloDataSources = <
-  TDataSources extends DataSources = DataSources,
->(options: {
-  dataSources: DataSourcesFn<TDataSources>;
-}): ApolloServerPlugin<ContextWithDataSources<TDataSources>> => ({
+export const ApolloDataSources = (options: {dataSources: DataSourcesFn}):ApolloServerPlugin<ContextWithDataSources> => ({
   requestDidStart: async (requestContext) => {
     const dataSources = options.dataSources();
     const initializers = Object.values(dataSources).map(async (dataSource) => {
-      if (dataSource.initialize)
-        dataSource.initialize({
-          cache: requestContext.cache,
-          context: requestContext.contextValue,
-        });
+      if (dataSource.initialize) dataSource.initialize({cache: requestContext.cache, context: requestContext.contextValue})
     });
 
-    await Promise.all(initializers);
-
+    await Promise.all(initializers);  
+    
     requestContext.contextValue.dataSources = dataSources;
-  },
+  }
 });
 
-// 
 const server = new ApolloServer({
   schema,
   plugins: [ApolloDataSources({ dataSources })],
