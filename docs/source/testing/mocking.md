@@ -3,6 +3,8 @@ title: Mocking
 description: Mock your GraphQL data based on a schema.
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 > 📣 **New in Apollo Server 4:** Apollo Server 4 removes both the [`mocks` and `mockEntireSchema`](../migration/#mocks-and-mockentireschema) constructor options. This article has been updated to use the `@graphql-tools` package to mock data for Apollo Server. For the most up-to-date information on `@graphql-tools`, we recommend referencing [their documentation](https://www.graphql-tools.com/docs/mocking).
 
 Mocking enables Apollo Server to return simulated data for GraphQL operations based on your server's schema. The strongly-typed nature of a GraphQL API lends itself to mocking, which is an important part of a GraphQL-first development process.
@@ -123,6 +125,8 @@ When using mocks, you don't have to specify `resolvers`. By default, any `resolv
 > Note: If `typeDefs` has any [custom scalar types](../schema/custom-scalars/#providing-custom-scalars-to-apollo-server), you will need to specify what your server should return for those types. You can do this by creating a customized mock with resolvers for each custom scalar type, as described below.
 
 ## Customizing mocks
+
+<TopLevelAwait />
 
 For more sophisticated testing, you can customize your mocks to return user-specified data. You can customize your mocks by providing an object that specifies the values to return for different return types.
 

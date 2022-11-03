@@ -2,6 +2,8 @@
 title: Custom scalars
 ---
 
+import TopLevelAwait from "../shared/top-level-await.mdx"
+
 The GraphQL specification includes default scalar types `Int`, `Float`, `String`, `Boolean`, and `ID`. Although these scalars cover the majority of use cases, some applications need to support other atomic data types (such as `Date`) or add validation to an existing type. To enable this, you can define custom scalar types.
 
 ## Defining a custom scalar
@@ -91,6 +93,8 @@ When an incoming query string includes the scalar as a hard-coded argument value
 In [the example above](#example-the-date-scalar), `parseLiteral` converts the AST value from a string to an integer, and _then_ converts from integer to `Date` to match the result of `parseValue`.
 
 ## Providing custom scalars to Apollo Server
+
+<TopLevelAwait />
 
 After you define your `GraphQLScalarType` instance, you include it in the same [resolver map](../data/resolvers/#defining-a-resolver) that contains resolvers for your schema's other types and fields:
 
