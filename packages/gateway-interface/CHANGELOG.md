@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 1.0.5
+
+### Patch Changes
+
+- [#7118](https://github.com/apollographql/apollo-server/pull/7118) [`c835637be`](https://github.com/apollographql/apollo-server/commit/c835637be07929e3bebe8f3b262588c6d918e694) Thanks [@glasser](https://github.com/glasser)! - Provide new `GraphQLRequestContext.requestIsBatched` field to gateways, because we did add it in a backport to AS3 and the gateway interface is based on AS3.
+
 ## 1.0.4
 
 ### Patch Changes
