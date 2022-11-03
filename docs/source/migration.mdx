@@ -570,27 +570,33 @@ If you want to migrate quickly to Apollo Server 4 *without* altering your data s
 <ExpansionPanel title="Click to expand">
 
 ```ts
-import { ApolloServerPlugin, BaseContext } from '@apollo/server';
-import type { DataSource } from 'apollo-datasource';
+import { ApolloServerPlugin, BaseContext } from "@apollo/server";
+import type { DataSource } from "apollo-datasource";
 
 type DataSources = Record<string, DataSource>;
 type DataSourcesFn = () => DataSources;
 
 interface ContextWithDataSources extends BaseContext {
-  dataSources?: DataSources
+  dataSources?: DataSources;
 }
 
-export const ApolloDataSources = (options: {dataSources: DataSourcesFn}):ApolloServerPlugin<ContextWithDataSources> => ({
+export const ApolloDataSources = (options: {
+  dataSources: DataSourcesFn,
+}): ApolloServerPlugin<ContextWithDataSources> => ({
   requestDidStart: async (requestContext) => {
     const dataSources = options.dataSources();
     const initializers = Object.values(dataSources).map(async (dataSource) => {
-      if (dataSource.initialize) dataSource.initialize({cache: requestContext.cache, context: requestContext.contextValue})
+      if (dataSource.initialize)
+        dataSource.initialize({
+          cache: requestContext.cache,
+          context: requestContext.contextValue,
+        });
     });
 
-    await Promise.all(initializers);  
-    
+    await Promise.all(initializers);
+
     requestContext.contextValue.dataSources = dataSources;
-  }
+  },
 });
 
 const server = new ApolloServer({
