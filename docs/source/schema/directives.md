@@ -74,6 +74,7 @@ Usually, a given directive appears _exclusively_ in GraphQL schemas or _exclusiv
 For example, among the [default directives](#default-directives), `@deprecated` is a schema-exclusive directive and `@skip` and `@include` are operation-exclusive directives.
 
 The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives) lists all possible directive locations. Schema locations are listed under `TypeSystemDirectiveLocation`, and operation locations are listed under `ExecutableDirectiveLocation`.
+
 ## Default directives
 
 > If you want to define a _custom_ schema directive, we recommend using the [`@graphql-tools`](https://www.the-guild.dev/graphql/tools/docs/schema-directives) library. You can also check out our [example of using a custom directive with Apollo Server.](https://github.com/apollographql/docs-examples/tree/main/apollo-server/v4/custom-directives/upper-case-directive)
