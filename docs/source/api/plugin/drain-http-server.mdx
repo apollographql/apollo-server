@@ -7,6 +7,8 @@ import TopLevelAwait from "../../shared/top-level-await.mdx"
 
 ## Using the plugin
 
+<TopLevelAwait />
+
 This article documents the options for the `ApolloServerPluginDrainHttpServer` plugin, which you can import from `@apollo/server/plugin/drainHttpServer`.
 
 This plugin is designed for use with `expressMiddleware` and other [framework integrations](../../integrations/integration-index) built on top of [Node `http.Server`s](https://nodejs.org/api/http.html#http_class_http_server). **We highly recommend** using this plugin to ensure your server shuts down gracefully.
@@ -23,11 +25,7 @@ Specifically, it will:
 - Wait for all connections to be closed
 - After a grace period, if any connections remain active, forcefully close them.
 
-This plugin is exported from the `@apollo/server` package.
-
-<TopLevelAwait />
-
-Here's a basic example of how to use it with Express:
+This plugin is exported from the `@apollo/server` package. Here's a basic example of how to use it with Express:
 
 <MultiCodeBlock>
 

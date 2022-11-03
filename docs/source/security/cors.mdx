@@ -3,9 +3,6 @@ title: Configuring CORS
 description: Control access to your server's resources
 ---
 
-
-import TopLevelAwait from "../shared/top-level-await.mdx"
-
 > 📣 By default, Apollo Server 4 ships with a feature that protects users from CSRF and XS-Search attacks. This feature requires that any client sending operations via `GET` or multipart upload requests _must_ include a special header (such as `Apollo-Require-Preflight`) in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
 
 [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header-based protocol that enables a server to dictate which origins can access its resources. Put another way, your server can specify which websites can tell a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
@@ -89,7 +86,6 @@ If you create a public API or an API to embed in websites you don't control your
 If your application doesn't fit into any of the above categories, [`startStandaloneServer`](../api/standalone)'s CORS behavior should suit your use case. You can always choose to swap to another Apollo Server integration later to [customize your CORS configuration](#configuring-cors-options-for-apollo-server).
 
 ## Configuring CORS options for Apollo Server
-
 > 📣 **New in Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#body-parser-and-cors).
 
 Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standalone)) serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
@@ -99,8 +95,6 @@ Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standa
 The [`startStandaloneServer` function](../api/standalone) **doesn't support** configuring your server's CORS behavior.  If you want to customize your server's CORS behavior (e.g., by specifying origins or passing cookies), swap to using [`expressMiddleware`](../api/standalone#swapping-to-expressmiddleware) (or any other Apollo Server integration).
 
 Below, we set up and customize the CORS behavior for our `expressMiddleware` function using the [`cors` package](https://github.com/expressjs/cors#configuration-options):
-
-<TopLevelAwait />
 
 <MultiCodeBlock>
 
