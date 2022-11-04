@@ -505,7 +505,7 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-> In Apollo Server 4, we've updated `apollo-datasource-rest` to the new [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest) package. Most of the functionality between the two packages is the same. However, some small syntax differences exist in how we pass a request's `headers`, `params`, `cacheOptions`, and `body`. See [Fetching from REST](./data/fetching-rest#method-parameters) for more details.
+> In Apollo Server 4, we've moved `apollo-datasource-rest` to the new [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest) package. Most of the functionality between the two packages is the same. However, some small syntax differences exist in how we pass a request's `headers`, `params`, `cacheOptions`, and `body`. See [Fetching from REST](./data/fetching-rest#method-parameters) for more details.
 
 If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class` (enabling it to refer to itself via `this` in its constructor):
 
