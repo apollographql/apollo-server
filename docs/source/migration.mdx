@@ -365,6 +365,8 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 ### `dataSources`
 
+> 📣 See our new [Fetching Data](./data/fetching-data) article for more information on how the _concept_ of a data source has changed in Apollo Sever 4. 
+
 In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/v3/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](./data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
 Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
@@ -379,7 +381,9 @@ For example, below, we use the `RESTDataSource` class to create a `DataSource` w
 import { RESTDataSource, RequestOptions } from 'apollo-datasource-rest';
 import { ApolloServer } from 'apollo-server';
 
-class MoviesAPI extends RESTDataSource { //highlight-line
+// highlight-start
+class MoviesAPI extends RESTDataSource { 
+  // highlight-end
   override baseURL = 'https://movies-api.example.com/';
 
   override willSendRequest(request: RequestOptions) {
@@ -388,6 +392,14 @@ class MoviesAPI extends RESTDataSource { //highlight-line
 
   async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
+  }
+
+  async updateMovie(movie: Movie): Promise<Movie>  {
+    return this.patch(
+      'movies',
+      // Syntax for passing a request body
+      { id: movie.id, movie }, //highlight-line
+    );
   }
 }
 
@@ -401,7 +413,9 @@ interface ContextValue {
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => { //highlight-line
+  //highlight-start
+  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => { 
+    //highlight-end
     return {
       token: getTokenFromRequest(req),
     };
@@ -447,15 +461,22 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
-}
 
-// highlight-start
-interface ContextValue {
-  token: string;
-  dataSources: {
-    moviesAPI: MoviesAPI;
-  };
+  async updateMovie(movie: Movie): Promise<Movie>  {
+    return this.patch(
+      'movies',
+      // Note the way we pass request bodies has also changed!
+      { body: { id: movie.id, movie } }, //highlight-line
+    );
+  }
 }
+// highlight-start
+interface ContextValue { 
+  token: string; 
+  dataSources: { 
+    moviesAPI: MoviesAPI; 
+  }; 
+} 
 // highlight-end
 
 const server = new ApolloServer<ContextValue>({
@@ -472,8 +493,7 @@ const { url } = await startStandaloneServer(server, {
       //highlight-start
       dataSources: {
         moviesAPI: new MoviesAPI({ cache, token }),
-      },
-      //highlight-end
+      }, //highlight-end
     };
   },
 });
@@ -483,7 +503,7 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-> For Apollo Server 4, `apollo-datasource-rest` package has been updated and renamed [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest).
+> In Apollo Server 4, we've moved `apollo-datasource-rest` to the new [`@apollo/datasource-rest`](https://www.npmjs.com/package/@apollo/datasource-rest) package. Most of the functionality between the two packages is the same. However, some small syntax differences exist in how we pass a request's `headers`, `params`, `cacheOptions`, and `body`. See [Fetching from REST](./data/fetching-rest#method-parameters) for more details.
 
 If you want to access your entire context's value within your `DataSource`, you can do so by making your context value a `class` (enabling it to refer to itself via `this` in its constructor):
 
@@ -543,6 +563,49 @@ await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
+If you want to migrate quickly to Apollo Server 4 *without* altering your data sources, the snippet below replicates Apollo Server 3's `dataSources` behavior with a custom plugin.
+
+<ExpansionPanel title="Click to expand">
+
+```ts
+import { ApolloServerPlugin, BaseContext } from "@apollo/server";
+import type { DataSource } from "apollo-datasource";
+
+type DataSources = Record<string, DataSource>;
+type DataSourcesFn = () => DataSources;
+
+interface ContextWithDataSources extends BaseContext {
+  dataSources?: DataSources;
+}
+
+export const ApolloDataSources = (options: {
+  dataSources: DataSourcesFn,
+}): ApolloServerPlugin<ContextWithDataSources> => ({
+  requestDidStart: async (requestContext) => {
+    const dataSources = options.dataSources();
+    const initializers = Object.values(dataSources).map(async (dataSource) => {
+      if (dataSource.initialize)
+        dataSource.initialize({
+          cache: requestContext.cache,
+          context: requestContext.contextValue,
+        });
+    });
+
+    await Promise.all(initializers);
+
+    requestContext.contextValue.dataSources = dataSources;
+  },
+});
+
+const server = new ApolloServer({
+  schema,
+  plugins: [ApolloDataSources({ dataSources })],
+});
+```
+
+</ExpansionPanel>
+
+We include this as a short-term fix and encourage you to [create custom data source classes](./data/fetching-data#creating-data-source-classes) best suited for each source.
 
 ### `modules`
 
