@@ -39,7 +39,7 @@
   },
   "devDependencies": {
     "@apollo/client": "3.7.1",
-    "@apollo/gateway": "2.1.4",
+    "@apollo/gateway": "https://output.circle-artifacts.com/output/job/3ea84c49-ca22-4dba-be5d-31004cf8d66a/artifacts/0/storage/@apollo/gateway/gateway-2.1.4.tgz",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
     "@apollo/subgraph": "2.1.4",
     "@apollo/utils.createhash": "2.0.0",

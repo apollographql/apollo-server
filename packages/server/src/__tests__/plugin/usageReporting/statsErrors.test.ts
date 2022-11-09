@@ -75,12 +75,12 @@ describe('TODO', () => {
             "publicCacheTtlCount": [],
             "registeredOperationCount": 0,
             "requestCount": 1,
-            "requestsWithErrorsCount": 0,
+            "requestsWithErrorsCount": 1,
             "requestsWithoutFieldInstrumentation": 1,
             "rootErrorStats": {
               "children": {},
-              "errorsCount": 0,
-              "requestsWithErrorsCount": 0,
+              "errorsCount": 2,
+              "requestsWithErrorsCount": 1,
             },
           }
         `);
@@ -173,8 +173,8 @@ describe('TODO', () => {
                   "requestsWithErrorsCount": 0,
                 },
               },
-              "errorsCount": 0,
-              "requestsWithErrorsCount": 0,
+              "errorsCount": 1,
+              "requestsWithErrorsCount": 1,
             },
           }
         `);

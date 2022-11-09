@@ -105,16 +105,6 @@ export class TraceTreeBuilder {
 
   public didEncounterErrors(errors: readonly GraphQLError[]) {
     errors.forEach((err) => {
-      // This is an error from a federated service. We will already be reporting
-      // it in the nested Trace in the query plan.
-      //
-      // XXX This probably shouldn't skip query or validation errors, which are
-      //      not in nested Traces because format() isn't called in this case! Or
-      //      maybe format() should be called in that case?
-      if (err.extensions?.serviceName) {
-        return;
-      }
-
       // In terms of reporting, errors can be re-written by the user by
       // utilizing the `transformError` parameter.  This allows changing
       // the message or stack to remove potentially sensitive information.

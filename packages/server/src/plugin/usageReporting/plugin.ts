@@ -579,6 +579,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           },
 
           async didEncounterSubsequentErrors(_requestContext, errors) {
+            // FIXME: do I need to filter out errors that have a `serviceName` here as well?
             treeBuilder.didEncounterErrors(errors);
           },
 
@@ -592,8 +593,19 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             // Search above for a comment about "didResolveSource" to see which
             // of the pre-source-resolution errors we are intentionally avoiding.
             if (!didResolveSource) return;
-            if (requestContext.errors) {
-              treeBuilder.didEncounterErrors(requestContext.errors);
+
+            if (requestContext.metrics.nonFtv1Errors) {
+              treeBuilder.didEncounterErrors(requestContext.metrics.nonFtv1Errors);
+            } else if (requestContext.errors) {
+              treeBuilder.didEncounterErrors(requestContext.errors.filter(error => {
+                // This is an error from a federated service. We will already be reporting
+                // it in the nested Trace in the query plan.
+                //
+                // XXX This probably shouldn't skip query or validation errors, which are
+                //      not in nested Traces because format() isn't called in this case! Or
+                //      maybe format() should be called in that case?
+                return !error.extensions?.serviceName;
+              }));
             }
 
             // If there isn't any defer/stream coming later, we're done.
@@ -736,7 +748,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               asTrace:
                 sendTraces &&
                 (!isExecutable || !!metrics.captureTraces) &&
-                sendOperationAsTrace(trace, statsReportKey),
+                sendOperationAsTrace(trace, statsReportKey) &&
+                !metrics.nonFtv1Errors?.length,
               referencedFieldsByType,
             });
 
