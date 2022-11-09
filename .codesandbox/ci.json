@@ -2,7 +2,10 @@
   "buildCommand": "compile",
   "installCommand": "install-with-npm-8.5",
   "packages": [
+    "packages/cache-control-types",
+    "packages/gateway-interface",
     "packages/integration-testsuite",
+    "packages/plugin-response-cache",
     "packages/server",
     "packages/usage-reporting-protobuf"
   ],

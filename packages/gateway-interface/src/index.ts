@@ -118,6 +118,7 @@ export interface GatewayGraphQLRequestMetrics {
   registeredOperation?: boolean;
   startHrTime?: [number, number];
   queryPlanTrace?: Trace.QueryPlanNode;
+  nonFtv1Errors?: GraphQLError[];
 }
 
 export interface GatewayCachePolicy extends GatewayCacheHint {
