@@ -18,6 +18,8 @@ Apollo Server 4 provides the following features:
 
 ## The new `@apollo/server` package
 
+> 🚚 This guide helps you migrate from Apollo Server 3 to Apollo Server 4. If you are using Apollo Server 2, you must first [migrate to Apollo Server 3](https://www.apollographql.com/docs/apollo-server/v3/migration) before following this guide.
+
 Apollo Server 3 is distributed as a [fixed set of packages](/apollo-server/v3/integrations/middleware) for integrating with different web frameworks and environments. The main "batteries-included" [`apollo-server` package](/apollo-server/v3/integrations/middleware#apollo-server) reduces setup time by providing a minimally customizable GraphQL server.
 
 In Apollo Server 3, the `apollo-server-core` package defines an `ApolloServer` "base" class, which each integration package (`apollo-server-express`,`apollo-server-lambda`, etc.) subclasses with a slightly different API. This packaging structure means that new integration package releases are lockstep versioned to Apollo Server itself, making it challenging to support major versions of frameworks and add integration-specific changes. Additionally, Apollo Server 3 doesn't provide a way to add new integrations for additional frameworks.
@@ -365,7 +367,7 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 ### `dataSources`
 
-> 📣 See our new [Fetching Data](./data/fetching-data) article for more information on how the _concept_ of a data source has changed in Apollo Sever 4. 
+> 📣 See our new [Fetching Data](./data/fetching-data) article for more information on how the _concept_ of a data source has changed in Apollo Sever 4.
 
 In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/v3/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](./data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
@@ -382,7 +384,7 @@ import { RESTDataSource, RequestOptions } from 'apollo-datasource-rest';
 import { ApolloServer } from 'apollo-server';
 
 // highlight-start
-class MoviesAPI extends RESTDataSource { 
+class MoviesAPI extends RESTDataSource {
   // highlight-end
   override baseURL = 'https://movies-api.example.com/';
 
@@ -414,7 +416,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   //highlight-start
-  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => { 
+  context: ({ req: ExpressRequest }): Omit<ContextValue, 'dataSources'> => {
     //highlight-end
     return {
       token: getTokenFromRequest(req),
@@ -471,12 +473,12 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   }
 }
 // highlight-start
-interface ContextValue { 
-  token: string; 
-  dataSources: { 
-    moviesAPI: MoviesAPI; 
-  }; 
-} 
+interface ContextValue {
+  token: string;
+  dataSources: {
+    moviesAPI: MoviesAPI;
+  };
+}
 // highlight-end
 
 const server = new ApolloServer<ContextValue>({
