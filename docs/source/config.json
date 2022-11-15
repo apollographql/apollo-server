@@ -1,7 +1,10 @@
 {
   "title": "Apollo Server",
   "version": "v4",
-  "algoliaFilters": ["docset:apollo-server", ["docset:apollo-client", "docset:federation"]],
+  "algoliaFilters": [
+    "docset:apollo-server",
+    ["docset:apollo-client", "docset:federation"]
+  ],
   "sidebar": {
     "Introduction": "/",
     "Get started": "/getting-started",
@@ -15,14 +18,16 @@
       "Custom scalars": "/schema/custom-scalars",
       "Directives": "/schema/directives"
     },
-    "Fetching Data": {
+    "Resolving Operations": {
       "Resolvers": "/data/resolvers",
-      "Fetching data": "/data/fetching-data",
-      "Fetching from REST": "/data/fetching-rest",
       "Error handling": "/data/errors",
       "Subscriptions": "/data/subscriptions"
     },
-    "Web frameworks": {
+    "Fetching Data": {
+      "Overview": "/data/fetching-data",
+      "REST APIs": "/data/fetching-rest"
+    },
+    "Web Frameworks": {
       "Integrations": "/integrations/integration-index",
       "Building integrations": "/integrations/building-integrations"
     },
@@ -60,18 +65,20 @@
       "@apollo/subgraph": "https://www.apollographql.com/docs/federation/api/apollo-subgraph/",
       "@apollo/gateway": "https://www.apollographql.com/docs/federation/api/apollo-gateway/"
     },
-    "Built-in Plugins": {
+    "Plugins": {
       "Overview": "/builtin-plugins",
-      "Usage reporting": "/api/plugin/usage-reporting",
-      "Schema reporting": "/api/plugin/schema-reporting",
-      "Inline trace": "/api/plugin/inline-trace",
-      "Drain HTTP server": "/api/plugin/drain-http-server",
-      "Cache control": "/api/plugin/cache-control",
-      "Landing pages": "/api/plugin/landing-pages"
-    },
-    "Custom Plugins": {
-      "Creating plugins": "/integrations/plugins",
-      "Event reference": "/integrations/plugins-event-reference"
+      "Built-in": {
+        "Usage reporting": "/api/plugin/usage-reporting",
+        "Schema reporting": "/api/plugin/schema-reporting",
+        "Inline trace": "/api/plugin/inline-trace",
+        "Drain HTTP server": "/api/plugin/drain-http-server",
+        "Cache control": "/api/plugin/cache-control",
+        "Landing pages": "/api/plugin/landing-pages"
+      },
+      "Custom": {
+        "Creating plugins": "/integrations/plugins",
+        "Event reference": "/integrations/plugins-event-reference"
+      }
     }
   }
 }
