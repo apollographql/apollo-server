@@ -4,25 +4,32 @@ title: Other versions of Apollo Server
 
 ## Apollo Server 4 is generally available
 
-Apollo Server 4 is the latest version of Apollo Server and is [generally available](/resources/product-launch-stages#general-availability). Apollo considers Apollo Server 4 to be ready for use in a production environment and provides official support. There is currently no planned end-of-life date.
+Apollo Server 4 is the latest version of Apollo Server and is [generally available](/resources/product-launch-stages#general-availability). Apollo Server 4 is ready for use in a production environment, and Apollo provides official support for this library. There is currently no planned end-of-life date.
 
-## Previous deprecated versions
+## Deprecated versions
 
-Both previous major versions of Apollo Server are currently [deprecated](/resources/product-launch-stages#deprecated) with end-of-life scheduled for **October 22, 2023**. Additionally, some features of Apollo Server v2 have an earlier end-of-life date of **December 31st, 2022**.
+> [Learn more about deprecation and end-of-life.](https://www.apollographql.com/docs/resources/product-launch-stages#stages-for-discontinuing-support)
+
+Both previous major versions of Apollo Server are currently [deprecated](/resources/product-launch-stages#deprecated), with end-of-life scheduled for **October 22nd, 2023**. Additionally, [certain features](#apollo-server-2) of Apollo Server 2 have an earlier end-of-life date of **December 31st, 2022**.
 
 Deprecated versions continue to receive security patches and updates to address major regressions until their end-of-life date. They typically do not receive new features and other kinds of bug fixes may or may not be backported to deprecated versions at Apollo's discretion.
 
 ### Apollo Server 3
 
-[Apollo Server 3](/apollo-server/v3/) is deprecated and will transition to end-of-life on **October 22, 2023**. We encourage all users of Apollo Server 3 to upgrade to Apollo Server 4 now, by following our [migration guide](./migration). Note that Apollo Server 2 and 3 used a variety of npm packages such as `apollo-server`, `apollo-server-core`, and `apollo-server-express`; Apollo Server 4 combines these packages into a single new [`@apollo/server` package](./migration/#the-new-apolloserver-package).
+[Apollo Server 3](/apollo-server/v3/) is deprecated and will transition to end-of-life on **October 22nd, 2023**. We encourage all Apollo Server 3 users to [**upgrade** to Apollo Server 4 now](./migration). Note that Apollo Server 2 and 3 were distributed in various npm packages (such as `apollo-server`, `apollo-server-core`, and `apollo-server-express`); Apollo Server 4 combines these packages into a single new [`@apollo/server` package](./migration/#the-new-apolloserver-package).
 
 ### Apollo Server 2
 
-[Apollo Server 2](/apollo-server/v2/) is deprecated and will transition to end-of-life on **October 22, 2023**. We encourage all users of Apollo Server 2 to upgrade to Apollo Server 4 now, by first following the [v3 migration guide](/apollo-server/v3/migration) and then following the [v4 migration guide](./migration). Note that Apollo Server 2 and 3 used a variety of npm packages such as `apollo-server`, `apollo-server-core`, and `apollo-server-express`; Apollo Server 4 combines these packages into a single new [`@apollo/server` package](./migration/#the-new-apolloserver-package).
+[Apollo Server 2](/apollo-server/v2/) is deprecated and will transition to end-of-life on **October 22, 2023**. We encourage all users of Apollo Server 2 to **upgrade** to Apollo Server 4, first by following the [v3 migration guide](/apollo-server/v3/migration) and then following the [v4 migration guide](./migration). Note that Apollo Server 2 and 3 were distributed in various npm packages (such as `apollo-server`, `apollo-server-core`, and `apollo-server-express`); Apollo Server 4 combines these packages into a single new [`@apollo/server` package](./migration/#the-new-apolloserver-package).
 
-Each part of the upgrade may require several changes to your server depending on which Apollo Server features you use, but in general the changes required for the v3 upgrade and the changes for the v4 upgrade are to separate parts of the Apollo Server API. We recommend you upgrade all the way to v4 as soon as possible, but you will likely find it easiest to structure this as first upgrading to v3 and then (once everything works) to v4 as a second step.
+We recommend upgrading to Apollo Server 4 as _soon as possible_. Depending on which Apollo Server features you use, the upgrade process might require several changes to your server. The most straightforward upgrade path is to first upgrade from Apollo Server 2 to 3, then once everything works, continue upgrading from Apollo Server 3 to 4. 
 
-Additionally, three features of Apollo Server 2 have an earlier end-of-life date: **December 31, 2022**. These features are [subscriptions](/apollo-server/v2/data/subscriptions/), [file uploads](/apollo-server/v2/data/file-uploads/), and [GraphQL Playground](/apollo-server/v2/testing/graphql-playground/). These features are based on third-party software that is unmaintained (or in the case of file uploads, based on an older version that cannot be upgraded for compatibility reasons), and are no longer part of the default experience in Apollo Server 3 or 4. Apollo does not promise that security issues or major regressions to these features will be addressed after 2022. In other words, issues that cannot be reproduced when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })` may not be addressed after 2022.
+Three features of Apollo Server 2 have an earlier end-of-life date: **December 31st, 2022**. These three features are:
+* [Subscriptions](/apollo-server/v2/data/subscriptions/)
+* [File uploads](/apollo-server/v2/data/file-uploads/) 
+* [GraphQL Playground](/apollo-server/v2/testing/graphql-playground/). 
+
+These features incorporate third-party software that is unmaintained (or can't be upgraded for compatibility reasons). Additionally, these features aren't in the default experiences of either Apollo Server 3 or 4. Apollo generally won't support these features' security issues or significant regressions after 2022. In other words, problems that are solved when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })` might not be addressed after 2022.
 
 
 ### Apollo Server 1
