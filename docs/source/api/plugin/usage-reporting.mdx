@@ -191,7 +191,7 @@ By default, all requests are included in usage reports.
 </td>
 <td>
 
-Specify this function to provide Apollo Studio with client details for each processed request. Apollo Studio uses this information to [segment metrics by client](/studio/metrics/client-awareness/).
+Specify this function to provide Apollo Studio with client details for each processed request. Apollo Studio uses this information to [segment metrics by client](/graphos/metrics/client-awareness/).
 
 This function is passed a [`GraphQLRequestContext`](https://github.com/apollographql/apollo-server/blob/6b4945935a786d06e7ff904be94c0035fe27aeb1/packages/server/src/externalTypes/graphql.ts#L47) object containing all available information about the request. It should return an object with `clientName` and `clientVersion` fields that identify the associated client.
 
