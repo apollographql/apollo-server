@@ -1,6 +1,6 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
-import bodyParser from 'body-parser'; // note that importing 'json' directly doesn't work in ESM
-import cors from 'cors';
+import bodyParser, { OptionsJson } from 'body-parser'; // note that importing 'json' directly doesn't work in ESM
+import cors, { CorsOptions } from 'cors';
 import express from 'express';
 import http, { IncomingMessage, ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
@@ -28,23 +28,22 @@ export interface StartStandaloneServerOptions<TContext extends BaseContext> {
     [StandaloneServerContextFunctionArgument],
     TContext
   >;
+  listen?: ListenOptions;
+  corsOptions?: CorsOptions;
+  bodyParserOptions?: OptionsJson;
 }
 
 export async function startStandaloneServer(
   server: ApolloServer<BaseContext>,
-  options?: StartStandaloneServerOptions<BaseContext> & {
-    listen?: ListenOptions;
-  },
+  options?: StartStandaloneServerOptions<BaseContext>,
 ): Promise<{ url: string }>;
 export async function startStandaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  options: WithRequired<StartStandaloneServerOptions<TContext>, 'context'> & {
-    listen?: ListenOptions;
-  },
+  options: WithRequired<StartStandaloneServerOptions<TContext>, 'context'>,
 ): Promise<{ url: string }>;
 export async function startStandaloneServer<TContext extends BaseContext>(
   server: ApolloServer<TContext>,
-  options?: StartStandaloneServerOptions<TContext> & { listen?: ListenOptions },
+  options?: StartStandaloneServerOptions<TContext>,
 ): Promise<{ url: string }> {
   const app: express.Express = express();
   const httpServer: http.Server = http.createServer(app);
@@ -56,7 +55,11 @@ export async function startStandaloneServer<TContext extends BaseContext>(
   await server.start();
 
   const context = options?.context ?? (async () => ({} as TContext));
-  app.use(cors(), bodyParser.json(), expressMiddleware(server, { context }));
+  app.use(
+    cors(options?.corsOptions),
+    bodyParser.json(options?.bodyParserOptions),
+    expressMiddleware(server, { context }),
+  );
 
   const listenOptions = options?.listen ?? { port: 4000 };
   // Wait for server to start listening

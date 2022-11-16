@@ -8,6 +8,8 @@ defineIntegrationTestSuite(async function (serverOptions, testOptions) {
   const { url } = await startStandaloneServer(server, {
     ...opts,
     listen: { port: 0 },
+    corsOptions: { preflightContinue: true },
+    bodyParserOptions: { limit: '5mb' },
   });
 
   return {
