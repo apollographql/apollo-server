@@ -10,7 +10,7 @@
   ],
   "versionBanner": {
     "link": "/apollo-server/previous-versions",
-    "content": "Apollo Server 3 is officially deprecated. **Learn more about updating to a supported Apollo Server version.**"
+    "content": "Apollo Server 3 is officially deprecated, with end-of-life scheduled for 22 October 2023. **Learn more about upgrading to a supported Apollo Server version.**"
   },
   "sidebar": {
     "Introduction": "/",
