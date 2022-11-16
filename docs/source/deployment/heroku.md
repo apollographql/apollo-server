@@ -123,7 +123,7 @@ Then from the app's detail page, select the **Deploy** tab. On that tab, you can
 
 To enable the production mode of Apollo Server, you need to set the `NODE_ENV` variable to `production`. To ensure you have visibility into your GraphQL performance in Apollo Studio, you'll want to add the `APOLLO_KEY` environment variable to Heroku. For the API key, log in to [Apollo Studio](https://studio.apollographql.com) and navigate to your graph or create a new one.
 
-Under your Heroku app's Settings tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and [copy your graph API key](/studio/api-keys/#graph-api-keys) from Apollo Studio as the value for `APOLLO_KEY`.
+Under your Heroku app's Settings tab, click **Reveal Config Vars**. Next, set `NODE_ENV` to `production` and [copy your graph API key](/graphos/api-keys/#graph-api-keys) from Apollo Studio as the value for `APOLLO_KEY`.
 
 <img class="screenshot" src="../images/deployment/heroku/config-vars.jpg" alt="Adding config vars" />
 

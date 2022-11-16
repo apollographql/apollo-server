@@ -15,7 +15,7 @@ The `expressMiddleware` function enables you to attach Apollo Server to an Expre
 
 The `expressMiddleware` function expects you to set up HTTP body parsing and CORS headers for your web framework. Specifically, you should install the [`body-parser`](https://www.npmjs.com/package/body-parser) and [`cors`](https://www.npmjs.com/package/cors) packages and use them to set up your Express app, as shown below.
 
-> See [Configuring CORS](../../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project.
+> See [Configuring CORS](../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project.
 
 The `expressMiddleware` function accepts two arguments. The first **required** argument is an instance of `ApolloServer` that has been `start`ed:
 
