@@ -37,7 +37,7 @@ The new `@apollo/server` package contains:
 
 There are no integration-specific subclasses in Apollo Server 4. Instead, there's a single `ApolloServer` class with a single API that all integrations use.
 
-In Apollo Server 3, the Apollo Server core team was responsible for maintaining every integration package. With Apollo Server 4, the AS core team will stop directly maintaining most integration packages. Instead, we will work with the broader open source community [to maintain Apollo Server integrations](https://github.com/apollographql/apollo-server/labels/integration-collaborators), enabling those who regularly use different web frameworks to make the best choices for their framework's integration.
+In Apollo Server 3, the Apollo Server core team was responsible for maintaining every integration package. With Apollo Server 4, the AS core team no longer directly maintains most integration packages. Instead, we work with the broader open source community [to maintain Apollo Server integrations](./integrations/integration-index/), enabling those who regularly use different web frameworks to make the best choices for their framework's integration.
 
 For those migrating from Apollo Server 3 to Apollo Server 4, use the below flowchart to see your migration path:
 
@@ -270,9 +270,7 @@ console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 
 ### Removed integrations
 
-The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4. We are [looking for collaborators](https://github.com/apollographql/apollo-server/labels/integration-collaborators) who actively use these frameworks to maintain Apollo Server 4 compatible integration packages.
-
-Apollo Server 4 removes the below integration packages:
+The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4:
 * [`apollo-server-fastify`](https://www.npmjs.com/package/apollo-server-fastify)
 * [`apollo-server-hapi`](https://www.npmjs.com/package/apollo-server-hapi)
 * [`apollo-server-koa`](https://www.npmjs.com/package/apollo-server-koa)
@@ -281,6 +279,8 @@ Apollo Server 4 removes the below integration packages:
 * [`apollo-server-cloud-functions`](https://www.npmjs.com/package/apollo-server-cloud-functions)
 * [`apollo-server-cloudflare`](https://www.npmjs.com/package/apollo-server-cloudflare)
 * [`apollo-server-azure-functions`](https://www.npmjs.com/package/apollo-server-azure-functions)
+
+If you use one of these packages, see [the community integration index](./integrations/integration-index/) to see if an integration exists for your environment yet, or [build your own](./integrations/building-integrations).
 
 In Apollo Server 3, the `apollo-server-express` package supported both Express and its older predecessor [Connect](https://github.com/senchalabs/connect). In Apollo Server 4, `expressMiddleware` no longer supports Connect. An interested developer could [build a Connect-specific middleware](./integrations/building-integrations), and a PR to this migration guide is welcome if someone does this!
 
@@ -1087,10 +1087,10 @@ const server = new ApolloServer({
   resolvers,
 });
 
-exports.handler = lambdaHandler(server);
+exports.handler = startServerAndCreateLambdaHandler(server);
 ```
 
-In the above example, the `lambdaHandler` serverless integration function should call the
+In the above example, the `startServerAndCreateLambdaHandler` serverless integration function should call the
 `server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests()`
 method.
 
