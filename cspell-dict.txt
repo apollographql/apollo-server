@@ -81,6 +81,7 @@ graphqlcodegenerator
 GraphQLJSON
 gzipped
 hackily
+hapi
 herokuapp
 Hofmann
 hrtime
