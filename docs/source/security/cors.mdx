@@ -137,9 +137,11 @@ console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 
 > Invoking the `cors` function with no arguments sets your server's `Access-Control-Allow-Origin` HTTP header to the wildcard value (`*`), allowing scripts on any origin to make requests. So, your server would have the same CORS behavior as `startStandaloneServer`.
 
-Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`. If you use a string to specify the URL of an allowed origin, that string must match your client's URL exactly (e.g., `http://example.com` is *not* the same as `http://example.com/`).
+Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`. 
 
 > If you want to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE, you should include `https://studio.apollographql.com` in your list of valid origins. However, if you plan to embed the [Explorer](https://www.apollographql.com/docs/studio/explorer/embed-explorer/) or use [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox), you *don't* need to specify Studio's URL in your CORS origins because requests will go through the page embedding Studio.
+
+Note that an origin _doesn't_ include the path of a URL, meaning two URLs with different paths can still have the _same_ origin. So when specifying an origin, don't include any paths or trailing slashes (e.g., use `http://example.com`, not `http://example.com/`).
 
 If you're using another integration of Apollo Server, you can add and configure CORS for your server using your framework's standard functionality.
 
