@@ -7,6 +7,7 @@ import type {
 import { describe } from '@jest/globals';
 import { defineIntegrationTestSuiteApolloServerTests } from './apolloServerTests.js';
 import { defineIntegrationTestSuiteHttpServerTests } from './httpServerTests.js';
+import { defineIntegrationTestSuiteHttpSpecTests } from './httpSpecTests.js';
 
 export interface CreateServerForIntegrationTestsResult {
   server: ApolloServer<BaseContext>;
@@ -33,5 +34,6 @@ export function defineIntegrationTestSuite(
   describe('integration tests', () => {
     defineIntegrationTestSuiteApolloServerTests(createServer, options);
     defineIntegrationTestSuiteHttpServerTests(createServer, options);
+    defineIntegrationTestSuiteHttpSpecTests(createServer);
   });
 }

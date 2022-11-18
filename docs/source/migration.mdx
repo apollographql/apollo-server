@@ -1070,6 +1070,8 @@ Whereas this query would be invalid:
 }
 ```
 
+(Moreover, Apollo Server 4 responds with a 400 status code if `variables` and `extensions` are provided in a `POST` body with any type other than object, such as array, boolean, or null. Similarly, it responds with a 400 status code if `operationName` is provided in a `POST` body with any type other than string.)
+
 
 ## Changed features
 
