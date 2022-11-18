@@ -2,4 +2,4 @@
 '@apollo/server': patch
 ---
 
-Restore body-parser limit of standalone server to 50mb (as it was in the `apollo-server` package)
+startStandaloneServer: Restore body-parser request limit to 50mb (as it was in the `apollo-server` package in Apollo Server 3)
