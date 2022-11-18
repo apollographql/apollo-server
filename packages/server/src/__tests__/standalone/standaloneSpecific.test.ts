@@ -1,6 +1,7 @@
+import { describe, expect, it } from '@jest/globals';
+import fetch from 'node-fetch';
 import { ApolloServer } from '../..';
 import { startStandaloneServer } from '../../standalone';
-import { describe, it, expect } from '@jest/globals';
 
 describe('Typings: TContext inference', () => {
   it('correctly infers BaseContext when no `context` function is provided', async () => {
@@ -121,11 +122,11 @@ describe('Configuration', () => {
 
     const excessivelyLargeBody = JSON.stringify({
       query: `{hello}`,
-      variables: Object.fromEntries([...Array(7960)].map((_, i) => [i, 'foo'])),
+      variables: { foo: 'a'.repeat(102400) },
     });
 
     // 100kib limit = 102400 bytes
-    expect(Buffer.byteLength(excessivelyLargeBody)).toBe(102403);
+    expect(Buffer.byteLength(excessivelyLargeBody)).toBeGreaterThan(102400);
 
     const result = await fetch(url, {
       method: 'POST',
