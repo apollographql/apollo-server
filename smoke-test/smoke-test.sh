@@ -59,14 +59,6 @@ node generated/tsc/smoke-test.mjs
 # because we used to really like putting `<` engine constraints on all our
 # packages.
 #
-# `--node-version=16.0.0` tricks npm into thinking we are Node v16 for the
-# purpose of choosing versions. Even with `--no-engine-strict` or `--force`,
-# when it evaluates `@apollo/gateway@0.x` it will rule out versions whose
-# `engines` rule out the current Node version. We should hopefully publish a new
-# latest 0.x version soon which doesn't have `< 18` for Node but for now lie
-# about our version. (This flag will go away in npm v9 so this is only a
-# short-term solution.)
-#
 # This runs into some weird issues when we install the graphql@17 canary that
 # seems to just be about ending up with two copies of `graphql` installed at
 # different levels. For simplicity, we skip this part of the test in the canary
@@ -74,7 +66,7 @@ node generated/tsc/smoke-test.mjs
 if [[ -z "${INCREMENTAL_DELIVERY_TESTS_ENABLED:-}" ]]; then
   pushd gateway-compatibility
     for version in 0.50.1 0.51.0 0.x 2.0.0 2.0.5 2.x; do
-      npm i --no-save --legacy-peer-deps --node-version=16.0.0 --no-engine-strict "@apollo/gateway@$version"
+      npm i --no-save --legacy-peer-deps --no-engine-strict "@apollo/gateway@$version"
       tsc --build tsconfig.json
     done
   popd
