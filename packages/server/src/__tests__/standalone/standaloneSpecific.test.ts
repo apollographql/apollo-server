@@ -105,10 +105,14 @@ describe('Typings: TContext inference', () => {
 });
 
 describe('Configuration', () => {
-  it('allows > 100kb bodies to be sent', async () => {
+  it('allows > 100KiB bodies to be sent (body-parser default)', async () => {
     const server = new ApolloServer({
-      typeDefs: `type Query { foo: String }`,
-      validationRules: [], // validations take way too long on large bodies
+      typeDefs: `type Query { hello: String }`,
+      resolvers: {
+        Query: {
+          hello: () => 'hello world!',
+        },
+      },
     });
 
     const { url } = await startStandaloneServer(server, {
@@ -116,13 +120,12 @@ describe('Configuration', () => {
     });
 
     const excessivelyLargeBody = JSON.stringify({
-      query: `{foo}`,
+      query: `{hello}`,
       variables: Object.fromEntries([...Array(7960)].map((_, i) => [i, 'foo'])),
     });
 
-    expect(
-      Buffer.byteLength(excessivelyLargeBody, 'utf8'),
-    ).toMatchInlineSnapshot(`102401`); // 100kib limit = 102400 bytes
+    // 100kib limit = 102400 bytes
+    expect(Buffer.byteLength(excessivelyLargeBody)).toBe(102403);
 
     const result = await fetch(url, {
       method: 'POST',
@@ -131,9 +134,9 @@ describe('Configuration', () => {
       },
       body: excessivelyLargeBody,
     });
-    const text = await result.text();
+    const { data } = await result.json();
 
-    expect(text).toMatch('PayloadTooLargeError');
+    expect(data.hello).toEqual('hello world!');
 
     await server.stop();
   });
