@@ -1,6 +1,7 @@
+import { describe, expect, it } from '@jest/globals';
+import fetch from 'node-fetch';
 import { ApolloServer } from '../..';
 import { startStandaloneServer } from '../../standalone';
-import { describe, it } from '@jest/globals';
 
 describe('Typings: TContext inference', () => {
   it('correctly infers BaseContext when no `context` function is provided', async () => {
@@ -100,6 +101,44 @@ describe('Typings: TContext inference', () => {
       },
       listen: { port: 0 },
     });
+    await server.stop();
+  });
+});
+
+describe('Configuration', () => {
+  it('allows > 100KiB bodies to be sent (body-parser default)', async () => {
+    const server = new ApolloServer({
+      typeDefs: `type Query { hello: String }`,
+      resolvers: {
+        Query: {
+          hello: () => 'hello world!',
+        },
+      },
+    });
+
+    const { url } = await startStandaloneServer(server, {
+      listen: { port: 0 },
+    });
+
+    const excessivelyLargeBody = JSON.stringify({
+      query: `{hello}`,
+      variables: { foo: 'a'.repeat(102400) },
+    });
+
+    // 100kib limit = 102400 bytes
+    expect(Buffer.byteLength(excessivelyLargeBody)).toBeGreaterThan(102400);
+
+    const result = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: excessivelyLargeBody,
+    });
+    const { data } = await result.json();
+
+    expect(data.hello).toEqual('hello world!');
+
     await server.stop();
   });
 });

@@ -56,7 +56,11 @@ export async function startStandaloneServer<TContext extends BaseContext>(
   await server.start();
 
   const context = options?.context ?? (async () => ({} as TContext));
-  app.use(cors(), bodyParser.json(), expressMiddleware(server, { context }));
+  app.use(
+    cors(),
+    bodyParser.json({ limit: '50mb' }),
+    expressMiddleware(server, { context }),
+  );
 
   const listenOptions = options?.listen ?? { port: 4000 };
   // Wait for server to start listening
