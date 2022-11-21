@@ -3,7 +3,7 @@ import type {
   CreateServerForIntegrationTestsResult,
 } from './index.js';
 import { afterAll, beforeAll, describe, test } from '@jest/globals';
-import { ServerAuditOptions, serverAudits } from 'graphql-http';
+import { serverAudits } from 'graphql-http';
 import fetch from 'node-fetch';
 
 export function defineIntegrationTestSuiteHttpSpecTests(
@@ -12,15 +12,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
   describe('httpSpecTests.ts', () => {
     let createServerResult: CreateServerForIntegrationTestsResult | null = null;
 
-    const serverAuditOptions: ServerAuditOptions = {
-      // We don't actually have access to the URL when we need to call
-      // serverAudits. Fortunately it's not actually read until the tests are
-      // run, so we can just pass some garbage and overwrite it.
-      // See https://github.com/graphql/graphql-http/issues/24
-      url: 'http://should-not-happen.invalid',
-      fetchFn: fetch,
-    };
-
+    let url: string;
     beforeAll(async () => {
       createServerResult = await createServer({
         // Any schema will do (the tests just run `{__typename}`).
@@ -29,9 +21,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
         // with GETs. We could override `fetchFn` to add it but this seems simple enough.
         csrfPrevention: false,
       });
-      // Until https://github.com/graphql/graphql-http/issues/24 is addressed,
-      // this hack happens to work.
-      serverAuditOptions.url = createServerResult.url;
+      url = createServerResult.url;
     });
 
     afterAll(async () => {
@@ -39,7 +29,10 @@ export function defineIntegrationTestSuiteHttpSpecTests(
       await createServerResult?.extraCleanup?.();
     });
 
-    for (const audit of serverAudits(serverAuditOptions)) {
+    for (const audit of serverAudits({
+      url: () => url,
+      fetchFn: fetch,
+    })) {
       test(audit.name, async () => {
         const result = await audit.fn();
 
