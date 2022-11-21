@@ -153,6 +153,33 @@ export async function runHttpQuery<TContext extends BaseContext>({
         );
       }
 
+      if (
+        'extensions' in httpRequest.body &&
+        !isStringRecord(httpRequest.body.extensions)
+      ) {
+        throw new BadRequestError(
+          '`extensions` in a POST body must be an object if provided.',
+        );
+      }
+
+      if (
+        'variables' in httpRequest.body &&
+        !isStringRecord(httpRequest.body.variables)
+      ) {
+        throw new BadRequestError(
+          '`variables` in a POST body must be an object if provided.',
+        );
+      }
+
+      if (
+        'operationName' in httpRequest.body &&
+        typeof httpRequest.body.operationName !== 'string'
+      ) {
+        throw new BadRequestError(
+          '`operationName` in a POST body must be a string if provided.',
+        );
+      }
+
       graphQLRequest = {
         query: fieldIfString(httpRequest.body, 'query'),
         operationName: fieldIfString(httpRequest.body, 'operationName'),
