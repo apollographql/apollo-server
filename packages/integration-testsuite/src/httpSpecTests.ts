@@ -10,7 +10,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
   createServer: CreateServerForIntegrationTests,
 ) {
   describe('httpSpecTests.ts', () => {
-    let createServerResult: CreateServerForIntegrationTestsResult | null = null;
+    let createServerResult: CreateServerForIntegrationTestsResult;
 
     beforeAll(async () => {
       createServerResult = await createServer({
@@ -23,12 +23,12 @@ export function defineIntegrationTestSuiteHttpSpecTests(
     });
 
     afterAll(async () => {
-      await createServerResult?.server.stop();
-      await createServerResult?.extraCleanup?.();
+      await createServerResult.server.stop();
+      await createServerResult.extraCleanup?.();
     });
 
     for (const audit of serverAudits({
-      url: () => createServerResult!.url,
+      url: () => createServerResult.url,
       fetchFn: fetch,
     })) {
       test(audit.name, async () => {
