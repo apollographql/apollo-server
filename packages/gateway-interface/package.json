@@ -18,9 +18,9 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "dependencies": {
-    "@apollo/utils.fetcher": "^1.0.0",
-    "@apollo/utils.logger": "^1.0.0",
-    "@apollo/utils.keyvaluecache": "^1.0.1",
+    "@apollo/utils.fetcher": "^2.0.0",
+    "@apollo/utils.logger": "^2.0.0",
+    "@apollo/utils.keyvaluecache": "^2.0.0",
     "@apollo/usage-reporting-protobuf": "^4.0.0"
   },
   "peerDependencies": {
