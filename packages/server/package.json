@@ -89,7 +89,7 @@
     "@apollo/usage-reporting-protobuf": "^4.0.0",
     "@apollo/utils.createhash": "^1.1.0",
     "@apollo/utils.fetcher": "^1.0.0",
-    "@apollo/utils.isnodelike": "^1.1.0",
+    "@apollo/utils.isnodelike": "^2.0.0",
     "@apollo/utils.keyvaluecache": "^1.0.1",
     "@apollo/utils.logger": "^1.0.0",
     "@apollo/utils.usagereporting": "^1.0.0",
