@@ -29,7 +29,7 @@
     "node": ">=14.16.0"
   },
   "dependencies": {
-    "@apollo/utils.createhash": "^1.1.0",
+    "@apollo/utils.createhash": "^2.0.0",
     "@apollo/utils.keyvaluecache": "^1.0.1"
   },
   "peerDependencies": {
