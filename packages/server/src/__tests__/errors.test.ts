@@ -56,7 +56,9 @@ describe('Errors', () => {
       const error = new GraphQLError(message, {
         extensions: { code, key },
       });
-      const formatError = jest.fn((fErr, _err) => fErr);
+      const formatError = jest.fn(
+        (fErr: GraphQLFormattedError, _err: unknown) => fErr,
+      );
       normalizeAndFormatErrors([error], {
         formatError,
         includeStacktraceInErrorResponses: true,
@@ -66,8 +68,8 @@ describe('Errors', () => {
 
       const formatErrorArgs = formatError.mock.calls[0];
       expect(formatErrorArgs[0].message).toEqual(message);
-      expect(formatErrorArgs[0].extensions.key).toEqual(key);
-      expect(formatErrorArgs[0].extensions.code).toEqual(code);
+      expect(formatErrorArgs[0].extensions?.key).toEqual(key);
+      expect(formatErrorArgs[0].extensions?.code).toEqual(code);
       expect(formatErrorArgs[1]).toEqual(error);
     });
     it('Formats native Errors in a JSON-compatible way', () => {

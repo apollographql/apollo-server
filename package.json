@@ -69,8 +69,8 @@
     "@types/type-is": "1.6.3",
     "@types/uuid": "8.3.4",
     "@types/whatwg-mimetype": "3.0.0",
-    "@typescript-eslint/eslint-plugin": "5.43.0",
-    "@typescript-eslint/parser": "5.43.0",
+    "@typescript-eslint/eslint-plugin": "5.44.0",
+    "@typescript-eslint/parser": "5.44.0",
     "@vendia/serverless-express": "4.10.1",
     "awaiting": "3.0.0",
     "body-parser": "1.20.1",
@@ -100,7 +100,7 @@
     "supertest": "6.3.1",
     "test-listen": "1.1.0",
     "ts-jest": "29.0.3",
-    "typescript": "4.7.4"
+    "typescript": "4.9.3"
   },
   "jest": {
     "projects": [

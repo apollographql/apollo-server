@@ -16,6 +16,7 @@ import {
   DocumentNode,
   printSchema,
   FieldNode,
+  GraphQLFormattedError,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -234,7 +235,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             },
           });
 
-          const formatError = jest.fn((error) => {
+          const formatError = jest.fn((error: GraphQLFormattedError) => {
             expect(error).toMatchObject({ message: expect.any(String) });
             return error;
           });
@@ -686,7 +687,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           throw new Error('nope');
         });
 
-        const formatError = jest.fn((error) => {
+        const formatError = jest.fn((error: GraphQLFormattedError) => {
           expect(error).toMatchObject({ message: expect.any(String) });
           return error;
         });
@@ -1455,18 +1456,20 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const pluginCalled = jest.fn(() => {
           throw pluginError;
         });
-        const formatError = jest.fn((formattedError, error) => {
-          // Errors thrown by plugins are generally replaced with "Internal
-          // server error" and logged.
-          expect(error.message).toBe('Internal server error');
-          // extension should be called before formatError
-          expect(pluginCalled).toHaveBeenCalledTimes(1);
+        const formatError = jest.fn(
+          (formattedError: GraphQLFormattedError, error: unknown) => {
+            // Errors thrown by plugins are generally replaced with "Internal
+            // server error" and logged.
+            expect((error as Error).message).toBe('Internal server error');
+            // extension should be called before formatError
+            expect(pluginCalled).toHaveBeenCalledTimes(1);
 
-          return {
-            ...formattedError,
-            message: 'masked',
-          };
-        });
+            return {
+              ...formattedError,
+              message: 'masked',
+            };
+          },
+        );
         const logger = mockLogger();
         const unexpectedErrorProcessingRequest = jest.fn<() => Promise<void>>();
         const uri = await createServerAndGetUrl({
