@@ -55,12 +55,6 @@
       "allowedVersions": "2.x"
     },
     {
-      // We're uncomfortable running TS4.8 until this PR is released:
-      // https://github.com/microsoft/TypeScript/pull/50974 (it's not in 4.8.4).
-      matchPackageNames: ["typescript"],
-      allowedVersions: "4.7.x",
-    },
-    {
       // Major upgrade rollup plugins along with rollup itself.
       matchSourceUrlPrefixes: ["https://github.com/rollup/"],
       matchUpdateTypes: ["major"],
