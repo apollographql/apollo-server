@@ -12,7 +12,6 @@ export function defineIntegrationTestSuiteHttpSpecTests(
   describe('httpSpecTests.ts', () => {
     let createServerResult: CreateServerForIntegrationTestsResult | null = null;
 
-    let url: string;
     beforeAll(async () => {
       createServerResult = await createServer({
         // Any schema will do (the tests just run `{__typename}`).
@@ -21,7 +20,6 @@ export function defineIntegrationTestSuiteHttpSpecTests(
         // with GETs. We could override `fetchFn` to add it but this seems simple enough.
         csrfPrevention: false,
       });
-      url = createServerResult.url;
     });
 
     afterAll(async () => {
@@ -30,7 +28,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
     });
 
     for (const audit of serverAudits({
-      url: () => url,
+      url: () => createServerResult!.url,
       fetchFn: fetch,
     })) {
       test(audit.name, async () => {
