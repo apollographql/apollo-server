@@ -92,7 +92,7 @@
     "@apollo/utils.isnodelike": "^1.1.0",
     "@apollo/utils.keyvaluecache": "^1.0.1",
     "@apollo/utils.logger": "^1.0.0",
-    "@apollo/utils.usagereporting": "^1.0.0",
+    "@apollo/utils.usagereporting": "^2.0.0",
     "@apollo/utils.withrequired": "^1.0.0",
     "@graphql-tools/schema": "^9.0.0",
     "@josephg/resolvable": "^1.0.0",
