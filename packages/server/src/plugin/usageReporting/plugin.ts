@@ -39,6 +39,7 @@ import { makeTraceDetails } from './traceDetails.js';
 import { packageVersion } from '../../generated/packageVersion.js';
 import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
 import type { HeaderMap } from '../../utils/HeaderMap.js';
+import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
 
 const gzipPromise = promisify(gzip);
 
@@ -70,9 +71,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
       ? fieldLevelInstrumentationOption
       : async () => true;
 
-  let requestDidStartHandler: (
-    requestContext: GraphQLRequestContext<TContext>,
-  ) => GraphQLRequestListener<TContext>;
+  let requestDidStartHandler:
+    | ((
+        requestContext: GraphQLRequestContext<TContext>,
+      ) => GraphQLRequestListener<TContext>)
+    | null = null;
   return internalPlugin({
     __internal_plugin_id__: 'UsageReporting',
     __is_disabled_plugin__: false,
@@ -81,20 +84,19 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     // this little hack. (Perhaps we should also allow GraphQLServerListener to contain
     // a requestDidStart?)
     async requestDidStart(requestContext: GraphQLRequestContext<TContext>) {
-      if (!requestDidStartHandler) {
-        throw Error(
-          'The usage reporting plugin has been asked to handle a request before the ' +
-            'server has started. See https://github.com/apollographql/apollo-server/issues/4588 ' +
-            'for more details.',
-        );
+      if (requestDidStartHandler) {
+        return requestDidStartHandler(requestContext);
       }
-      return requestDidStartHandler(requestContext);
+      // This happens if usage reporting is disabled (eg because this is a
+      // subgraph).
+      return {};
     },
 
     async serverWillStart({
       logger: serverLogger,
       apollo,
       startedInBackground,
+      schema,
     }): Promise<GraphQLServerListener> {
       // Use the plugin-specific logger if one is provided; otherwise the general server one.
       const logger = options.logger ?? serverLogger;
@@ -106,6 +108,31 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             'the APOLLO_KEY/APOLLO_GRAPH_REF environment ' +
             'variables or via `new ApolloServer({apollo: {key, graphRef})`.',
         );
+      }
+
+      if (schemaIsSubgraph(schema)) {
+        if (options.__onlyIfSchemaIsNotSubgraph) {
+          logger.warn(
+            'You have specified an Apollo API key and graph ref but this server appears ' +
+              'to be a subgraph. Typically usage reports are sent to Apollo by your Router ' +
+              'or Gateway, not directly from your subgraph; usage reporting is disabled. To ' +
+              'enable usage reporting anyway, explicitly install `ApolloServerPluginUsageReporting`. ' +
+              'To disable this warning, install `ApolloServerPluginUsageReportingDisabled`.',
+          );
+          // This early return means we don't start background timers, don't
+          // register serverDidStart, don't assign requestDidStartHandler, etc.
+          return {};
+        } else {
+          // This is just a warning; usage reporting is still enabled. If it
+          // turns out there are lots of people who really need to have this odd
+          // setup and they don't like the warning, we can provide a new option
+          // to disable the warning (or they can filter in their `logger`).
+          logger.warn(
+            'You have installed `ApolloServerPluginUsageReporting` but this server appears to ' +
+              'be a subgraph. Typically usage reports are sent to Apollo by your Router ' +
+              'or Gateway, not directly from your subgraph.',
+          );
+        }
       }
 
       logger.info(

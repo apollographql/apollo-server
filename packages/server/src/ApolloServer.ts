@@ -869,7 +869,11 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           const { ApolloServerPluginUsageReporting } = await import(
             './plugin/usageReporting/index.js'
           );
-          plugins.unshift(ApolloServerPluginUsageReporting());
+          plugins.unshift(
+            ApolloServerPluginUsageReporting({
+              __onlyIfSchemaIsNotSubgraph: true,
+            }),
+          );
         } else {
           this.logger.warn(
             'You have specified an Apollo key but have not specified a graph ref; usage ' +
