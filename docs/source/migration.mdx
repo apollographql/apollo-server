@@ -1114,7 +1114,7 @@ const server = new ApolloServer({
 });
 ```
 
-In Apollo Server 4, the `context` function is a named argument passed into your web integration function (e.g., `expressMiddleware` or `startStandaloneServer`). `ApolloServer` itself now has a generic type parameter specifying the type of your context value. The `context` function should return an object, which is then accessible to your [server's resolvers](./data/context) and plugins (via the `contextValue` field).
+In Apollo Server 4, the `context` function is a named argument passed into your web integration function (e.g., `expressMiddleware` or `startStandaloneServer`). `ApolloServer` itself now has a generic type parameter specifying the type of your context value. The `context` function should return an object, which is then accessible to your server's resolvers and plugins (via the [`contextValue` field](./data/context)).
 
 Below is an example of providing a `context` initialization function to the `startStandaloneServer` function:
 

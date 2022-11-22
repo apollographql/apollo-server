@@ -68,7 +68,7 @@ interface MyContext {
   token: string
 }
 
-function myPlugin(): ApolloServerPlugin<MyContext> {
+export default function (): ApolloServerPlugin<MyContext> {
   return {
     async requestDidStart({ contextValue }) {
       // token is properly inferred as a string
