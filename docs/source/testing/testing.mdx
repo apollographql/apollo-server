@@ -18,7 +18,7 @@ The [`executeOperation` method](../api/apollo-server#executeoperation) accepts t
 
 - An object that describes the GraphQL operation to execute.
   - This object must include a `query` field specifying the GraphQL operation to run. You can use `executeOperation` to execute both queries and mutations, but both use the `query` field.
-- An optional second object that is used as the operation's [context value](../data/resolvers/#the-context-argument)).
+- An optional second object that is used as the operation's [context value](../data/context/#the-contextvalue-object)).
 
 Below is a simplified example of setting up a test using the JavaScript testing library [Jest](https://jestjs.io/):
 
@@ -120,7 +120,7 @@ it('fetches single launch', async () => {
 });
 ```
 
-The example above includes a test-specific [context value](../data/resolvers/#the-context-argument), which provides data directly to the `ApolloServer` instance, bypassing any `context` initialization function you have.
+The example above includes a test-specific [context value](../data/context/#the-contextvalue-object), which provides data directly to the `ApolloServer` instance, bypassing any `context` initialization function you have.
 
 If you want to test the behavior of your `context` function directly, we recommend running actual HTTP requests against your server.
 

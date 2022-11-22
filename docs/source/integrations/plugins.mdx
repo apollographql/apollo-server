@@ -59,15 +59,20 @@ export default (options: { logMessage: string }) => {
 
 </MultiCodeBlock>
 
-If your plugin needs to read the [`contextValue`] of a request (i.e., `requestContext.contextValue`), then you need to declare your plugin as `ApolloServerPlugin<YourContextType>`
+If your plugin needs to read the [`contextValue`](../data/context) of a request (i.e., `requestContext.contextValue`), you must declare your plugin as an `ApolloServerPlugin<YourContextType>`, like so:
 
 <MultiCodeBlock>
 
 ```ts title="myPlugin.ts"
-export default (options: { logMessage: string }) => {
+interface MyContext {
+  token: string
+}
+
+function myPlugin(): ApolloServerPlugin<MyContext> {
   return {
-    async serverWillStart() {
-      console.log(options.logMessage);
+    async requestDidStart({ contextValue }) {
+      // token is properly inferred as a string
+      console.log(contextValue.token);
     },
   };
 };

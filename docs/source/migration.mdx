@@ -371,7 +371,7 @@ The following `ApolloServer` constructor options have been removed in favor of o
 
 > 📣 See our new [Fetching Data](./data/fetching-data) article for more information on how the _concept_ of a data source has changed in Apollo Sever 4.
 
-In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/v3/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](./data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
+In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-server/v3/data/data-sources#adding-data-sources-to-apollo-server) essentially adds a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your [`context`](/apollo-server/v3/data/resolvers/#the-context-argument) object. This means the TypeScript type the `context` function returns is _different_ from the `context` type your resolvers and plugins receive. Additionally, this design obfuscates that `DataSource` objects are created once per request (i.e., like the rest of the context object).
 
 Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
 
@@ -1100,7 +1100,7 @@ Apollo Server 4's other non-serverless framework integrations expect the develop
 
 ### `context` initialization function
 
-In Apollo Server 3, you could provide an initial [`context`](./data/resolvers#the-context-argument) to your resolvers by adding a `context` initialization function to the `ApolloServer` constructor:
+In Apollo Server 3, you could provide an initial [`context`](/apollo-server/v3/data/resolvers#the-context-argument) to your resolvers by adding a `context` initialization function to the `ApolloServer` constructor:
 
 ```ts
 // Apollo Server 3 Constructor
@@ -1114,7 +1114,7 @@ const server = new ApolloServer({
 });
 ```
 
-In Apollo Server 4, the `context` function is a named argument passed into your web integration function (e.g., `expressMiddleware` or `startStandaloneServer`). `ApolloServer` itself now has a generic type parameter specifying the type of your context value. The `context` function should return an object, which is then accessible to your [server's resolvers](./data/resolvers/#the-context-argument) and plugins (via the `contextValue` field).
+In Apollo Server 4, the `context` function is a named argument passed into your web integration function (e.g., `expressMiddleware` or `startStandaloneServer`). `ApolloServer` itself now has a generic type parameter specifying the type of your context value. The `context` function should return an object, which is then accessible to your [server's resolvers](./data/context) and plugins (via the `contextValue` field).
 
 Below is an example of providing a `context` initialization function to the `startStandaloneServer` function:
 

@@ -183,7 +183,7 @@ export default mutations;
 
 ### Context typing for resolvers
 
-You can also configure GraphQL Code Generator to add a type for the context your resolvers share, ensuring TypeScript warns you if you attempt to use a context value that doesn't exist.
+You can also configure GraphQL Code Generator to add a type for the context your resolvers share, ensuring TypeScript warns you if you attempt to use a value that doesn't exist.
 
 To do this, you must first export the interface you pass to Apollo Server as a generic type parameter for typing your context value:
 
@@ -217,7 +217,7 @@ config:
   contextType: "../index#MyContext" # highlight-line
 ```
 
-Once you regenerate your types, your context is now automatically typed in all of your resolvers:
+Once you regenerate your types, your context value is now automatically typed in all of your resolvers:
 
 ```ts
 const resolvers: Resolvers = {

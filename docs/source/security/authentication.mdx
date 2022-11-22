@@ -16,7 +16,7 @@ Your GraphQL API probably needs to control which users can see and interact with
 
 Before we can correctly control access to data, we have to authenticate a user. There are many patterns for providing authentication credentials, including HTTP headers and JSON web tokens.
 
-The example below extracts a user token from the HTTP `Authorization` header included in each operation request. It then fetches the corresponding user object for that token and adds that object to [the `context` object](../data/resolvers/#the-context-argument) that's passed to every executed resolver. Each resolver can then use this object to determine what data the user has access to.
+The example below extracts a user token from the HTTP `Authorization` header included in each operation request. It then fetches the corresponding user object for that token and adds that object to [the `context` object](../data/context/#the-context-function) that's passed to every executed resolver. Each resolver can then use this object to determine what data the user has access to.
 
 <MultiCodeBlock>
 

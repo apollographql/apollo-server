@@ -21,6 +21,7 @@
     },
     "Resolving Operations": {
       "Resolvers": "/data/resolvers",
+      "Sharing context": "/data/context",
       "Error handling": "/data/errors",
       "Subscriptions": "/data/subscriptions"
     },

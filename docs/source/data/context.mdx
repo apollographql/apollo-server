@@ -1,0 +1,195 @@
+---
+title: Context and contextValue
+description: Sharing information and request details throughout your server
+---
+
+During a GraphQL operation, you can share data throughout your server's [resolvers](./resolvers) and [plugins](../builtin-plugins) by creating an object named `contextValue`.
+
+You can pass useful things through your `contextValue` that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-data/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-data/#batching-and-caching) across resolvers, you can also attach them to the shared `contextValue`.
+
+## The `context` function
+
+> 📣 Apollo Server 4 changes the syntax for defining a `context` function. [See more details.](../migration/#context-initialization-function)
+
+The `context` function should be _asynchronous_ and return an **object**. This object is then accessible to your server's resolvers and plugins using the name [`contextValue`](#the-contextvalue-object).
+
+You can pass a `context` function to your integration function of choice (e.g., `expressMiddleware` or `startStandaloneServer`).
+
+Your server calls the `context` function _once for every request_, enabling you to customize your `contextValue` with each request's details (such as HTTP headers):
+
+<MultiCodeBlock>
+
+```ts
+import { GraphQLError } from 'graphql';
+
+const resolvers = {
+  Query: {
+    // Example resolver
+    adminExample: (parent, args, contextValue, info) => {
+      if (contextValue.authScope !== ADMIN) {
+        throw new GraphQLError('not admin!', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+    },
+  },
+};
+
+interface MyContext {
+// You can optionally create a TS interface to set up types
+// for your contextValue
+  authScope?: String;
+}
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await startStandaloneServer(server, {
+  // Your async context function should async and
+  // return an object
+  // highlight-start
+  context: async ({ req, res }) => ({
+    authScope: getScope(req.headers.authorization),
+  }),
+  // highlight-end
+});
+```
+
+</MultiCodeBlock>
+
+> The above example assumes you're using either `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. Your `context` function's incoming arguments might differ if you're [using a different integration](../integrations/integration-index).
+
+If you are using TypeScript, you *must* provide a named `context` function if you type your context by passing a type parameter to `ApolloServer` (i.e., you don't use `ApolloServer<BaseContext>`).
+
+Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
+
+```ts
+context: async () => ({
+  db: await client.connect(),
+})
+
+// Resolver
+(parent, args, contextValue, info) => {
+  return contextValue.db.query('SELECT * FROM table_name');
+}
+```
+
+### Throwing errors
+
+By default, if your `context` function throws an error, Apollo Server returns that error in a JSON response with a 500 HTTP status code. If the error is not a `GraphQLError`, the error's message is prepended with `"Context creation failed: "`.
+
+You can change the HTTP status code of an error by throwing a [`GraphQLError` with an `http` extension](./errors/#setting-http-status-code-and-headers). For example:
+
+```ts
+context: async ({ req }) => {
+  const user = await getUserFromReq(req);
+  if (!user) {
+    throw new GraphQLError('User is not authenticated', {
+      extensions: {
+        code: 'UNAUTHENTICATED',
+        http: { status: 401 },
+      }
+    });
+  }
+
+  // If the below throws a non-GraphQLError, the server returns
+  // `code: "INTERNAL_SERVER_ERROR"` with an HTTP status code 500, and
+  // a message starting with "Context creation failed: ".
+  const db = await getDatabaseConnection();
+
+  return { user, db };
+},
+```
+
+## The `contextValue` object
+
+The [`context` function](#the-context-function) returns an object, `contextValue`, that is accessible to your plugins and resolvers.
+
+### Resolvers
+
+> **Resolvers should never destructively modify the `contextValue` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
+
+Your resolvers can access the shared `contextValue` object via their third positional argument. All resolvers that are executing for a particular operation have access to `contextValue`:
+
+<MultiCodeBlock>
+
+```ts
+import { AnimalAPI } from "./datasources/animals";
+
+const resolvers = {
+  Query: {
+    // All of our resolvers can access our shared contextValue!
+    dogs: (_, __, contextValue) => {
+      return contextValue.dataSources.animalApi.getDogs();
+    },
+    cats: (_, __, contextValue) => {
+      return contextValue.dataSources.animalApi.getCats();
+    },
+  },
+};
+
+interface MyContext { // Context typing
+  dataSources: {
+    animalApi: AnimalAPI;
+  }
+}
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+const { url } = await startStandaloneServer(server, {
+  context: async () => {
+    const animalApi = new AnimalAPI();
+    return {
+      dataSources: {
+        animalApi
+      }
+    }
+  }
+});
+```
+
+</MultiCodeBlock>
+
+### Plugins
+
+Built-in and [custom plugins](../integrations/plugins/#the-anatomy-of-a-plugin) can access `contextValue` through [request lifecycle functions](../integrations/plugins/#inspecting-request-and-response-details), like so:
+
+<MultiCodeBlock>
+
+```ts
+interface MyContext {
+  token: String
+}
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers: {
+    Query: {
+      hello: (root, args, { token }) => {
+        return token;
+      },
+    },
+  },
+  //highlight-start
+  plugins: [{
+    async requestDidStart({ contextValue }) {
+      // token is properly inferred as a string
+      console.log(contextValue.token);
+    },
+  }],
+  //highlight-end
+});
+
+const { url } = await startStandaloneServer(server, {
+  context: async ({req, res}) => ({
+    token: await getTokenForRequest(req),
+  })
+});
+```
+
+</MultiCodeBlock>

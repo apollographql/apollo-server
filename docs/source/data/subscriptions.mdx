@@ -286,7 +286,7 @@ A basic resolver for `createPost` might look like this:
 ```ts {3-6}
 const resolvers = {
   Mutation: {
-    createPost(parent, args, context) {
+    createPost(parent, args, { postController }) {
       // Datastore logic lives in postController
       return postController.createPost(args);
     },
@@ -300,7 +300,7 @@ Before we persist the new post's details in our datastore, we can `publish` an e
 ```ts
 const resolvers = {
   Mutation: {
-    createPost(parent, args, context) {
+    createPost(parent, args, { postController }) {
       pubsub.publish('POST_CREATED', { postCreated: args }); // highlight-line
       return postController.createPost(args);
     },
@@ -417,11 +417,11 @@ After you start up the server in CodeSandbox, follow the instructions in the bro
 
 ## Operation context
 
-When [initializing context](../data/resolvers/#the-context-argument) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
+When [initializing context](../data/context) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
 **For subscriptions,** you can extract information from a client's request by adding [options](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md) to the first argument passed to the `useServer` function.
 
-For example, you can provide a [`context` property](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md#context) to add values to your GraphQL operation [`context`](./resolvers/#the-context-argument):
+For example, you can provide a [`context` property](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md#context) to add values to your GraphQL operation [`contextValue`](./context#the-contextvalue-object):
 
 ```ts
 // ...
@@ -429,7 +429,7 @@ useServer(
   {
     // Our GraphQL schema.
     schema,
-    // Adding a context property lets you add data to your GraphQL operation context
+    // Adding a context property lets you add data to your GraphQL operation contextValue
     context: async (ctx, msg, args) => {
       // You can define your own function for setting a dynamic context
       // or provide a static value
@@ -440,7 +440,7 @@ useServer(
 );
 ```
 
-Notice that the first parameter passed to the `context` function above is `ctx`. The [`ctx object`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.Context.md) represents the context of your _subscription server_, not the _GraphQL operation context_ that's passed to your resolvers.
+Notice that the first parameter passed to the `context` function above is `ctx`. The [`ctx object`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.Context.md) represents the context of your _subscription server_, not the _GraphQL operation `contextValue`_ that's passed to your resolvers.
 
 You can access the parameters of a client's `subscription` request to your WebSocket server via the `ctx.connectionParams` property.
 
@@ -460,10 +460,9 @@ const getDynamicContext = async (ctx, msg, args) => {
 useServer(
   {
     schema,
-    // Adding a context property lets you add data to your GraphQL operation context
     context: async (ctx, msg, args) => {
-      // Returning an object will add that information to our
-      // GraphQL context, which all of our resolvers have access to.
+      // Returning an object will add that information to
+      // contextValue, which all of our resolvers have access to.
       return getDynamicContext(ctx, msg, args);
     },
   },
@@ -471,7 +470,7 @@ useServer(
 );
 ```
 
-Putting it all together, if the `useServer.context` function returns an _object_, that object is passed to the GraphQL operation `context`, which is available to your resolvers.
+Putting it all together, the `useServer.context` function returns an _object_, `contextValue`, which is available to your resolvers.
 
 Note that the `context` option is called once per `subscription` request, not once per event emission. This means that in the above example, every time a client sends a `subscription` operation, we check their authentication token.
 
