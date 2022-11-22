@@ -109,7 +109,7 @@ Here's a basic `__resolveType` function for the `SearchResult` union defined abo
 ```ts {3-13}
 const resolvers = {
   SearchResult: {
-    __resolveType(obj, context, info){
+    __resolveType(obj, contextValue, info){
       // Only Author has a name field
       if(obj.name){
         return 'Author';
@@ -274,7 +274,7 @@ Here's an example `__resolveType` function for the `Book` interface defined abov
 ```ts {3-13}
 const resolvers = {
   Book: {
-    __resolveType(book, context, info){
+    __resolveType(book, contextValue, info){
       // Only Textbook has a courses field
       if(book.courses){
         return 'Textbook';

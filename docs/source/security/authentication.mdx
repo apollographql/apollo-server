@@ -162,11 +162,11 @@ users: (parent, args, contextValue) => {
 
 This example looks almost the same as the previous one, with one addition: it expects the `roles` array on a user to include an `admin` role. Otherwise, it returns `null`. The benefit of doing authorization like this is that we can short-circuit our resolvers and not even call lookup functions when we don't have permission to use them, limiting the possible errors that could expose sensitive data.
 
-Because our resolvers have access to everything in `contextValue`, an important question to ask is how much information we want in that object. For example, we don't need the user's id, name, or age (at least not yet). It's best to keep things out of the context until they're needed, since they're easy to add back in later.
+Because our resolvers have access to everything in `contextValue`, an important question to ask is how much information we want in that object. For example, we don't need the user's id, name, or age (at least not yet). It's best to keep things out of the `contextValue` until they're needed, since they're easy to add back in later.
 
 ### In data models
 
-As our server gets more complex, there will probably be multiple places in the schema that need to fetch the same kind of data. In our last example, you may have noticed the return array was replaced with a call to `context.models.User.getAll()`.
+As our server gets more complex, there will probably be multiple places in the schema that need to fetch the same kind of data. In our last example, you may have noticed the return array was replaced with a call to `contextValue.models.User.getAll()`.
 
 As always, we recommend moving the actual data fetching and transformation logic from your resolvers to [data sources](../data/fetching-data/) or model objects that each represent a concept from your application: `User`, `Post`, etc. This allows you to make your resolvers a thin routing layer, and put all of your business logic in one place.
 
@@ -208,7 +208,7 @@ Rather than having the same fetching logic for a single user in two separate pla
 
 #### Delegating authorization to models
 
-You may have noticed that our models also exist on the context, alongside the user object we added earlier. We can add the models to the context in exactly the same way as we did the user.
+You may have noticed that our models also exist on the `contextValue`, alongside the user object we added earlier. We can add the models to the context in exactly the same way as we did the user.
 
 ```ts
 context: async ({ req }) => {
@@ -226,7 +226,7 @@ context: async ({ req }) => {
     },
   });
 
- // add the user to the context
+ // add the user to the contextValue
  return {
    user,
    models: {
