@@ -10,13 +10,13 @@ Your GraphQL API probably needs to control which users can see and interact with
 - **Authentication** is determining whether a given user is logged in, and subsequently determining _which_ user someone is.
 - **Authorization** is then determining what a given user has permission to do or see.
 
-## Putting authenticated user info on the `context`
+## Putting authenticated user info in your `contextValue`
 
 <TopLevelAwait />
 
 Before we can correctly control access to data, we have to authenticate a user. There are many patterns for providing authentication credentials, including HTTP headers and JSON web tokens.
 
-The example below extracts a user token from the HTTP `Authorization` header included in each operation request. It then fetches the corresponding user object for that token and adds that object to [the `context` object](../data/context/#the-context-function) that's passed to every executed resolver. Each resolver can then use this object to determine what data the user has access to.
+The example below extracts a user token from the HTTP `Authorization` header included in each operation request. It then fetches the corresponding user object for that token and adds it to [the `contextValue` object](../data/context) that's passed to every executing resolver. Each resolver can then use this object to determine what data the user has access to.
 
 <MultiCodeBlock>
 
@@ -62,9 +62,9 @@ console.log(`🚀 Server listening at: ${url}`);
 
 </MultiCodeBlock>
 
-> Because `context` is generated separately for every new request, we don't have to worry about cleaning up user data at the end of an operation's execution.
+> Because your `contextValue` is generated separately for every new request, we don't have to worry about cleaning up user data at the end of an operation's execution.
 
-The specifics of retrieving a user will look different for each method of authentication, but the final part will look about the same every time. The authorization needs for your schema may require you to put nothing more than `{ loggedIn: true }` into context, but also may require an id or roles, like `{ user: { id: 12345, roles: ['user', 'admin'] } }`.
+The specifics of retrieving a user will look different for each method of authentication, but the final part will look about the same every time. The authorization needs for your schema might require you to put nothing more than `{ loggedIn: true }` into `contextValue`, but also may require an id or roles, like `{ user: { id: 12345, roles: ['user', 'admin'] } }`.
 
 In the next section, we'll look at ways to use the user information we now have to secure your schema.
 
@@ -132,37 +132,37 @@ The only difference from the basic context function is the check for the user. I
 
 API-wide authorization might be useful in specific instances, but more commonly, a GraphQL API has at least a few fields that are public. For example, a news site might show article previews to anyone, but restrict the full body of articles to paying customers.
 
-Luckily, GraphQL offers very granular control over data. In GraphQL servers, individual field resolvers have the ability to check user roles and make decisions as to what to return for each user. In the previous sections, we saw how to attach user information to the context object. In the rest of the article, we'll discuss how to use that context object.
+Luckily, GraphQL offers very granular control over data. In GraphQL servers, individual field resolvers have the ability to check user roles and make decisions as to what to return for each user. In the previous sections, we saw how to attach user information to the `contextValue` object. In the rest of the article, we'll discuss how to use that object.
 
 For our first example, let's look at a resolver that's only accessible with a valid user:
 
 ```ts disableCopy
-users: (parent, args, context) => {
+users: (parent, args, contextValue) => {
   // In this case, we'll pretend there is no data when
   // we're not logged in. Another option would be to
   // throw an error.
-  if (!context.user) return null;
+  if (!contextValue.user) return null;
 
   return ['bob', 'jake'];
 };
 ```
 
-This example is a field in our schema named `users` that returns a list of users' names. The `if` check on the first line of the function looks at the `context` generated from our request, checks for a `user` object, and if one doesn't exist, returns `null` for the whole field.
+This example is a field in our schema named `users` that returns a list of users' names. The `if` check on the first line of the function looks at the `contextValue` generated from our request, checks for a `user` object, and if one doesn't exist, returns `null` for the whole field.
 
 One choice to make when building out our resolvers is what an unauthorized field should return. In some use cases, returning `null` here is perfectly valid. Alternatives to this would be to return an empty array, `[]` or to throw an error, telling the client that they're not allowed to access that field. For the sake of simplicity, we just returned `null` in this example.
 
 Now let's expand that example a little further, and only allow users with an `admin` role to look at our user list. After all, we probably don't want just anyone to have access to all our users.
 
 ```ts
-users: (parent, args, context) => {
-  if (!context.user || !context.user.roles.includes('admin')) return null;
-  return context.models.User.getAll();
+users: (parent, args, contextValue) => {
+  if (!contextValue.user || !contextValue.user.roles.includes('admin')) return null;
+  return contextValue.models.User.getAll();
 };
 ```
 
 This example looks almost the same as the previous one, with one addition: it expects the `roles` array on a user to include an `admin` role. Otherwise, it returns `null`. The benefit of doing authorization like this is that we can short-circuit our resolvers and not even call lookup functions when we don't have permission to use them, limiting the possible errors that could expose sensitive data.
 
-Because our resolvers have access to everything in the context, an important question we need to ask is how much information we want in the context. For example, we don't need the user's id, name, or age (at least not yet). It's best to keep things out of the context until they're needed, since they're easy to add back in later.
+Because our resolvers have access to everything in `contextValue`, an important question to ask is how much information we want in that object. For example, we don't need the user's id, name, or age (at least not yet). It's best to keep things out of the context until they're needed, since they're easy to add back in later.
 
 ### In data models
 

@@ -381,7 +381,7 @@ Resolver functions are passed four arguments: `parent`, `args`, `contextValue`, 
 
 ### The `contextValue` argument
 
-**Resolvers should never destructively modify the `contextValue` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
+> **Resolvers should never destructively modify the `contextValue` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
 Your resolvers can access the shared `contextValue` object via their third positional argument. All resolvers that are executing for a particular operation have access to `contextValue`:
 
