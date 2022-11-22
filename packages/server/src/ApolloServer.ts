@@ -917,7 +917,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           './plugin/inlineTrace/index.js'
         );
         plugins.push(
-          ApolloServerPluginInlineTrace({ __onlyIfSchemaIsFederated: true }),
+          ApolloServerPluginInlineTrace({ __onlyIfSchemaIsSubgraph: true }),
         );
       }
     }

@@ -3,7 +3,7 @@ import { internalPlugin } from '../../internalPlugin.js';
 import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
 import { SchemaReporter } from './schemaReporter.js';
-import { schemaIsFederated } from '../schemaIsFederated.js';
+import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
 import type { SchemaReport } from './generated/operations.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import type { Fetcher } from '@apollo/utils.fetcher';
@@ -108,12 +108,12 @@ export function ApolloServerPluginSchemaReporting(
         }
       }
 
-      if (schemaIsFederated(schema)) {
+      if (schemaIsSubgraph(schema)) {
         throw Error(
           [
-            'Schema reporting is not yet compatible with federated services.',
-            "If you're interested in using schema reporting with federated",
-            'services, please contact Apollo support. To set up managed federation, see',
+            'Schema reporting is not yet compatible with Apollo Federation subgraphs.',
+            "If you're interested in using schema reporting with subgraphs,",
+            'please contact Apollo support. To set up managed federation, see',
             'https://go.apollo.dev/s/managed-federation',
           ].join(' '),
         );

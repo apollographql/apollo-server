@@ -2,7 +2,7 @@ import { Trace } from '@apollo/usage-reporting-protobuf';
 import { TraceTreeBuilder } from '../traceTreeBuilder.js';
 import type { SendErrorsOptions } from '../usageReporting/index.js';
 import { internalPlugin } from '../../internalPlugin.js';
-import { schemaIsFederated } from '../schemaIsFederated.js';
+import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 
 export interface ApolloServerPluginInlineTraceOptions {
@@ -29,14 +29,14 @@ export interface ApolloServerPluginInlineTraceOptions {
   /**
    * This option is for internal use by `@apollo/server` only.
    *
-   * By default we want to enable this plugin for federated schemas only, but we
+   * By default we want to enable this plugin for subgraph schemas only, but we
    * need to come up with our list of plugins before we have necessarily loaded
    * the schema. So (unless the user installs this plugin or
-   * ApolloServerPluginInlineTraceDisabled themselves), `@apollo/server`
-   * always installs this plugin and uses this option to make sure traces are
-   * only included if the schema appears to be federated.
+   * ApolloServerPluginInlineTraceDisabled themselves), `@apollo/server` always
+   * installs this plugin and uses this option to make sure traces are only
+   * included if the schema appears to be a subgraph.
    */
-  __onlyIfSchemaIsFederated?: boolean;
+  __onlyIfSchemaIsSubgraph?: boolean;
 }
 
 // This ftv1 plugin produces a base64'd Trace protobuf containing only the
@@ -47,7 +47,7 @@ export interface ApolloServerPluginInlineTraceOptions {
 export function ApolloServerPluginInlineTrace(
   options: ApolloServerPluginInlineTraceOptions = Object.create(null),
 ): ApolloServerPlugin {
-  let enabled: boolean | null = options.__onlyIfSchemaIsFederated ? null : true;
+  let enabled: boolean | null = options.__onlyIfSchemaIsSubgraph ? null : true;
   return internalPlugin({
     __internal_plugin_id__: 'InlineTrace',
     __is_disabled_plugin__: false,
@@ -57,10 +57,10 @@ export function ApolloServerPluginInlineTrace(
       // like the log line, just install `ApolloServerPluginInlineTrace()` in
       // `plugins` yourself.
       if (enabled === null) {
-        enabled = schemaIsFederated(schema);
+        enabled = schemaIsSubgraph(schema);
         if (enabled) {
           logger.info(
-            'Enabling inline tracing for this federated service. To disable, use ' +
+            'Enabling inline tracing for this subgraph. To disable, use ' +
               'ApolloServerPluginInlineTraceDisabled.',
           );
         }
