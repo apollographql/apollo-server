@@ -374,7 +374,7 @@ export interface ApolloServerPluginUsageReportingOptions<
    * we need to come up with our list of plugins before we have necessarily
    * loaded the schema. So (unless the user installs this plugin or
    * ApolloServerPluginUsageReportingDisabled themselves), `@apollo/server`
-   * always installs this plugin (if AQI key and graph ref are provided) and
+   * always installs this plugin (if API key and graph ref are provided) and
    * uses this option to disable usage reporting if the schema is a subgraph.
    */
   __onlyIfSchemaIsNotSubgraph?: boolean;
