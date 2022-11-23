@@ -6,8 +6,8 @@
     "esModuleInterop": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    // DOM types needed for @apollo/client - we can get rid of this line if we
-    // move to a node-based fetch that doesn't expect DOM types to be available
+    // DOM types needed for @apollo/client
+    // Ref: https://github.com/apollographql/apollo-client/issues/6376
     "lib": ["es2020", "dom"]
   },
   "include": ["src/**/*"],
