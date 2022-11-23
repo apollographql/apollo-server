@@ -1,5 +1,11 @@
 # @apollo/server-plugin-response-cache
 
+## 4.0.2
+
+### Patch Changes
+
+- [#7170](https://github.com/apollographql/apollo-server/pull/7170) [`4ce738193`](https://github.com/apollographql/apollo-server/commit/4ce738193f8d073287c34f84c0346276ae2efc30) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update @apollo/utils packages to v2 (dropping node 12 support)
+
 ## 4.0.1
 
 ### Patch Changes
