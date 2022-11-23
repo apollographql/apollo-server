@@ -1,5 +1,14 @@
 # @apollo/server
 
+## 4.2.1
+
+### Patch Changes
+
+- [#7187](https://github.com/apollographql/apollo-server/pull/7187) [`3fd7b5f26`](https://github.com/apollographql/apollo-server/commit/3fd7b5f26144a02e711037b7058a8471e9648bc8) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update `@apollo/utils.keyvaluecache` dependency to the latest patch which correctly specifies its version of `lru-cache`.
+
+- Updated dependencies [[`3fd7b5f26`](https://github.com/apollographql/apollo-server/commit/3fd7b5f26144a02e711037b7058a8471e9648bc8)]:
+  - @apollo/server-gateway-interface@1.0.7
+
 ## 4.2.0
 
 ### Minor Changes
