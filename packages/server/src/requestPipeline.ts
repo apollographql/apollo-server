@@ -458,7 +458,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // variable resolution from execution later; see
       // https://github.com/graphql/graphql-js/issues/3169
       const resultErrors = result.errors?.map((e) => {
-        if (isBadUserInputGraphQLError(e) && e.extensions?.code != null) {
+        if (isBadUserInputGraphQLError(e) && e.extensions?.code == null) {
           return new UserInputError(e);
         }
         return e;
