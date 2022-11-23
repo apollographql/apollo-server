@@ -5,7 +5,10 @@
     "moduleResolution": "node",
     "esModuleInterop": true,
     "rootDir": "./src",
-    "outDir": "./dist"
+    "outDir": "./dist",
+    // DOM types needed for @apollo/client - we can get rid of this line if we
+    // move to a node-based fetch that doesn't expect DOM types to be available
+    "lib": ["es2020", "dom"]
   },
   "include": ["src/**/*"],
   "references": [
