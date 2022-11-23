@@ -90,7 +90,7 @@
     "@apollo/utils.createhash": "^2.0.0",
     "@apollo/utils.fetcher": "^2.0.0",
     "@apollo/utils.isnodelike": "^2.0.0",
-    "@apollo/utils.keyvaluecache": "^2.0.0",
+    "@apollo/utils.keyvaluecache": "^2.0.1",
     "@apollo/utils.logger": "^2.0.0",
     "@apollo/utils.usagereporting": "^2.0.0",
     "@apollo/utils.withrequired": "^2.0.0",
