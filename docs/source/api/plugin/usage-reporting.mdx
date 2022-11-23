@@ -5,15 +5,19 @@ api_reference: true
 
 Apollo Server's built-in usage reporting plugin gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
 
+This plugin is designed to be used in an Apollo Gateway or in a monolithic server; it is not designed to be used from a subgraph. In a supergraph running Apollo Federation, the Apollo Gateway or Apollo Router will send usage reports to Apollo's cloud. Subgraphs don't need to also send usage reports to Apollo's cloud; instead, they send it to the Router via [inline traces](./inline-trace/) and the Router combines execution information across all subgraphs and sends summarized reports to the cloud.
+
 ## Default installation
 
 > 📣 **New in Apollo Server 4**: error details are not included in traces by default. For more details, see [Error Handling](../../data/errors/#masking-and-logging-errors).
 
-Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](../../monitoring/metrics/#connecting-to-apollo-studio). You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
+Apollo Server automatically installs and enables this plugin with default settings if you [provide a graph API key and a graph ref to Apollo Server](../../monitoring/metrics/#connecting-to-apollo-studio) and your server is not a federated subgraph. You usually do this by setting the `APOLLO_KEY` and `APOLLO_GRAPH_REF` (or `APOLLO_GRAPH_ID` and `APOLLO_GRAPH_VARIANT`) environment variables. No other action is required.
 
-If you don't provide an API key and graph ref, this plugin is not installed.
+If you don't provide an API key and graph ref, or if your server is a federated subgraph, this plugin is not automatically installed.
 
 If you provide an API key but _don't_ provide a graph ref, a warning is logged. You can [disable the plugin](#disabling-the-plugin) to hide the warning.
+
+If you provide an API key and graph ref but your server _is_ a federated subgraph, a warning is logged. You can [disable the plugin](#disabling-the-plugin) to hide the warning.
 
 ## Custom installation
 
@@ -37,6 +41,8 @@ const server = new ApolloServer({
 ```
 
 </MultiCodeBlock>
+
+> While you can install the usage reporting plugin in a server that is a federated subgraph, this is not recommended, and a warning will be logged.
 
 Supported configuration options are listed below.
 
@@ -529,4 +535,4 @@ const server = new ApolloServer({
 
 </MultiCodeBlock>
 
-This also disables the warning log if you provide an API key but do not provide a graph ref.
+This also disables the warning log if you provide an API key but do not provide a graph ref, or if you provide an API key and graph ref and your server is a federated subgraph.

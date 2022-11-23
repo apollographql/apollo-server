@@ -367,6 +367,17 @@ export interface ApolloServerPluginUsageReportingOptions<
    * about how the signature relates to the operation you executed.
    */
   calculateSignature?: (ast: DocumentNode, operationName: string) => string;
+  /**
+   * This option is for internal use by `@apollo/server` only.
+   *
+   * By default we want to enable this plugin for non-subgraph schemas only, but
+   * we need to come up with our list of plugins before we have necessarily
+   * loaded the schema. So (unless the user installs this plugin or
+   * ApolloServerPluginUsageReportingDisabled themselves), `@apollo/server`
+   * always installs this plugin (if API key and graph ref are provided) and
+   * uses this option to disable usage reporting if the schema is a subgraph.
+   */
+  __onlyIfSchemaIsNotSubgraph?: boolean;
   //#endregion
 }
 
