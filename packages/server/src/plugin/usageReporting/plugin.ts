@@ -130,7 +130,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           logger.warn(
             'You have installed `ApolloServerPluginUsageReporting` but this server appears to ' +
               'be a subgraph. Typically usage reports are sent to Apollo by your Router ' +
-              'or Gateway, not directly from your subgraph.',
+              'or Gateway, not directly from your subgraph. If this was unintentional, remove ' +
+              "`ApolloServerPluginUsageReporting` from your server's `plugins` array.",
           );
         }
       }
