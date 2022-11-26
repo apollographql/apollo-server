@@ -63,7 +63,7 @@
     "@types/node-fetch": "2.6.2",
     "@types/qs-middleware": "1.0.1",
     "@types/retry": "0.12.2",
-    "@types/superagent": "4.1.15",
+    "@types/superagent": "4.1.16",
     "@types/supertest": "2.0.12",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
