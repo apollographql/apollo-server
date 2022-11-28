@@ -1,0 +1,351 @@
+---
+title: Implementing a subgraph with Apollo Server
+---
+
+This article demonstrates how to create a **subgraph** for a federated supergraph using Node.js and Apollo Server.
+
+> To create a subgraph using a different language and/or framework, see the list of [Federation-compatible subgraph implementations](/federation/supported-subgraphs/). Note that not all listed libraries support _all_ Federation features.
+
+## Defining a subgraph
+
+> To be part of a supergraph, a subgraph must conform to the [Apollo Federation subgraph specification](/federation/subgraph-spec/), which exposes the subgraph's capabilities to your graph router, as well as to tools like Apollo Studio.
+
+Converting an existing monolithic graph into a single subgraph is a convenient first step in building a federated supergraph. To start, here's a _non-federated_ Apollo Server setup:
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import gql from 'graphql-tag';
+
+const typeDefs = gql`
+  type Query {
+    me: User
+  }
+
+  type User {
+    id: ID!
+    username: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    me() {
+      return { id: '1', username: '@ava' };
+    },
+  },
+};
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+// Note the top-level await!
+const { url } = await startStandaloneServer(server);
+console.log(`🚀  Server ready at ${url}`);
+```
+
+</MultiCodeBlock>
+
+> Above, we wrap our schema in the `gql` tag from the `graphql-tag` package, converting our schema into an AST (i.e., `DocumentNode`). While Apollo Server can accept a `string` (or `DocumentNode`) for its `typeDefs`, the [`buildSubgraphSchema`](./api/apollo-subgraph/#buildsubgraphschema) function below requires the schema we pass in to be a `DocumentNode`.
+
+This should look familiar if you've [set up Apollo Server](../getting-started/) before. If you haven't, we recommend you familiarize yourself with the basics before jumping into federation.
+
+Now, let's convert this to a subgraph!
+
+### 1. Install and import `@apollo/subgraph`
+
+The first step is to install the `@apollo/subgraph` package in our server project:
+
+```shell
+npm install @apollo/subgraph
+```
+
+We also need to require the `buildSubgraphSchema` function from this package in in the file where we initialize `ApolloServer` (we'll use it later):
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+import { buildSubgraphSchema } from '@apollo/subgraph'; //preserve-line
+```
+
+</MultiCodeBlock>
+
+### 2. Opt in to Federation 2
+
+For a subgraph to use [new features in Federation 2](/federation/federation-2/new-in-federation-2/), its schema needs to include the following `extend schema` definition:
+
+<MultiCodeBlock>
+
+```ts
+import gql from 'graphql-tag';
+
+const typeDefs = gql`
+  # highlight-start
+  extend schema
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.0"
+      import: ["@key", "@shareable"]
+    )
+  # highlight-end
+
+  type Query {
+    me: User
+  }
+
+  type User {
+    id: ID!
+    username: String
+  }
+`;
+```
+
+</MultiCodeBlock>
+
+This definition enables the schema to use Federation 2 features. Without it, Federation 2 composition assumes that a subgraph is using Federation 1, which sets certain defaults for backward compatibility.
+
+> As you begin using more [federation-specific directives](/federation/federated-types/federated-directives) beyond `@key` and `@shareable`, you'll need to add those directives to the `import` array shown above.
+
+### 3. Define an entity
+
+> Entities aren't _required_ in a subgraph, but they're a core building block of a federated supergraph, so it's good to get some practice defining them.
+
+As part of our federated architecture, we want _other_ subgraphs to be able to contribute fields to the `User` type. To enable this, we add the `@key` directive to the `User` type's definition to designate it as an [entity](/federation/entities/):
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+const typeDefs = gql`
+  extend schema
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.0"
+      import: ["@key", "@shareable"]
+    )
+
+  type Query {
+    me: User
+  }
+
+  type User
+    @key(fields: "id") { # highlight-line
+    id: ID!
+    username: String
+  }
+`;
+```
+
+</MultiCodeBlock>
+
+The `@key` directive tells the gateway which field(s) of the `User` entity can uniquely identify a particular instance of it. In this case, the gateway can use the single field `id`.
+
+Next, we add a **reference resolver** for the `User` entity. A reference resolver tells the gateway how to fetch an entity by its `@key` fields:
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+const resolvers = {
+  Query: {
+    me() {
+      return { id: '1', username: '@ava' };
+    },
+  },
+  User: {
+    __resolveReference(user, { fetchUserById }) {
+      return fetchUserById(user.id);
+    },
+  },
+};
+```
+
+</MultiCodeBlock>
+
+(This example requires defining the `fetchUserById` function to obtain the appropriate `User` from our backing data store.)
+
+> [Learn more about entities.](/federation/entities/)
+
+### 4. Generate the subgraph schema
+
+Finally, we use the `buildSubgraphSchema` function from the `@apollo/subgraph` package to augment our schema definition with federation support. We provide the result of this function to the `ApolloServer` constructor:
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+const server = new ApolloServer({
+  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});
+
+// Note the top level await!
+const { url } = await startStandaloneServer(server);
+console.log(`🚀  Server ready at ${url}`);
+```
+
+</MultiCodeBlock>
+
+The server is now ready to act as a subgraph in a federated graph!
+
+### Combined example
+
+Here are the snippets above combined (again, note that for this sample to be complete, you must define the `fetchUserById` function for your data source):
+
+<MultiCodeBlock>
+
+```ts title="index.ts"
+import { ApolloServer } from '@apollo/server';
+import { startStandaloneServer } from '@apollo/server/standalone';
+import gql from 'graphql-tag';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+
+const typeDefs = gql`
+  extend schema
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.0"
+      import: ["@key", "@shareable"]
+    )
+
+  type Query {
+    me: User
+  }
+
+  type User @key(fields: "id") {
+    id: ID!
+    username: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    me() {
+      return { id: '1', username: '@ava' };
+    },
+  },
+  User: {
+    __resolveReference(user, { fetchUserById }) {
+      return fetchUserById(user.id);
+    },
+  },
+};
+
+const server = new ApolloServer({
+  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});
+
+const { url } = await startStandaloneServer(server);
+console.log(`🚀  Server ready at ${url}`);
+```
+
+</MultiCodeBlock>
+
+## Custom directives in subgraphs
+
+The method for defining custom directives differs slightly for a federated graph, and it also depends on the [version of Apollo Server](../previous-versions) you're using.
+
+> ⚠️ **Important considerations**
+>
+> Before you use directives in a federated graph, make sure to consider the following:
+>
+> - Custom directives are _not_ included in your graph's composed supergraph schema. The composition process strips all subgraph directives. Only a given subgraph is aware of its own directives.
+> - Because directives are specific to individual subgraphs, it's valid for different subgraphs to define the _same_ directive with _different_ logic. Composition does not detect or warn about such inconsistencies.
+> - If multiple subgraphs can resolve a particular field, each subgraph should almost always apply the exact same set of custom directives (with the exact same accompanying logic) to that field. Otherwise, the behavior of that field might vary depending on _which_ subgraph resolves it.
+
+### Directives in Apollo Server 4.x and 3.x
+
+Apollo Server versions 3 and 4 do not provide _built-in_ support for custom directives, but you can install certain `@graphql-tools` libraries to enable support. To get started with these libraries in Apollo Server, first read [Creating schema directives](/apollo-server/v3/schema/creating-directives/).
+
+As the linked article describes, in Apollo Server 3 and 4 you define a **transformer function** for each of your subgraph schema's custom directives.
+
+To apply transformer functions to your executable subgraph schema, you first _generate_ the subgraph schema with `buildSubgraphSchema` as usual:
+
+<MultiCodeBlock>
+
+```ts
+let subgraphSchema = buildSubgraphSchema({ typeDefs, resolvers });
+```
+
+</MultiCodeBlock>
+
+But instead of passing the result directly to the `ApolloServer` constructor, you first apply all of your transformer functions to it:
+
+<MultiCodeBlock>
+
+```ts
+// Transformer function for an @upper directive
+subgraphSchema = upperDirectiveTransformer(subgraphSchema, 'upper');
+```
+
+</MultiCodeBlock>
+
+After applying all transformer functions, you provide your final subgraph schema to the `ApolloServer` constructor as usual:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  schema: subgraphSchema,
+  // ...other options...
+});
+```
+
+</MultiCodeBlock>
+
+### Directives in Apollo Server 2.x
+
+**Without Apollo Federation**, you provide your directive definitions to the constructor of `ApolloServer` in the `schemaDirectives` argument, like so:
+
+<ExpansionPanel title="Expand example">
+
+```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
+
+// typeDefs and resolvers defined here
+
+class DeprecatedDirective extends SchemaDirectiveVisitor {
+  public visitFieldDefinition(field: GraphQLField<any, any>) {
+    field.isDeprecated = true;
+    field.deprecationReason = this.args.reason;
+  }
+}
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  //highlight-start
+  schemaDirectives: {
+    deprecated: DeprecatedDirective
+  }
+  //highlight-end
+});
+```
+
+</ExpansionPanel>
+
+**With Apollo Federation**, you instead call `SchemaDirectiveVisitor.visitSchemaDirectives`, passing in your schema and your directives, _before_ you provide your schema to the constructor of `ApolloServer`:
+
+```js
+const { ApolloServer, gql, SchemaDirectiveVisitor } = require('apollo-server');
+const { buildSubgraphSchema } = require ('@apollo/subgraph')
+
+// typeDefs and resolvers defined here
+
+class DeprecatedDirective extends SchemaDirectiveVisitor {
+  public visitFieldDefinition(field: GraphQLField<any, any>) {
+    field.isDeprecated = true;
+    field.deprecationReason = this.args.reason;
+  }
+}
+
+const directives = {
+  deprecated: DeprecatedDirective
+};
+let schema = buildSubgraphSchema({ typeDefs, resolvers });
+
+SchemaDirectiveVisitor.visitSchemaDirectives(schema, directives);
+
+const server = new ApolloServer({
+  schema: schema
+});
+```
+
+Also make sure to read about the [gateway's support for custom directives](/router/#custom-directive-support).
