@@ -155,6 +155,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
       if (
         'extensions' in httpRequest.body &&
+        httpRequest.body.extensions !== null &&
         !isStringRecord(httpRequest.body.extensions)
       ) {
         throw new BadRequestError(
@@ -164,6 +165,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
       if (
         'variables' in httpRequest.body &&
+        httpRequest.body.variables !== null &&
         !isStringRecord(httpRequest.body.variables)
       ) {
         throw new BadRequestError(
@@ -173,6 +175,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
       if (
         'operationName' in httpRequest.body &&
+        httpRequest.body.operationName !== null &&
         typeof httpRequest.body.operationName !== 'string'
       ) {
         throw new BadRequestError(
