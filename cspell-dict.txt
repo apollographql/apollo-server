@@ -90,6 +90,7 @@ httpcache
 IHTTP
 importability
 instanceof
+iosapp
 isnodelike
 iteratees
 josephg
@@ -173,6 +174,7 @@ subpackage
 subqueries
 sumby
 supergraph
+supergraphs
 Supergraph
 testful
 testonly
