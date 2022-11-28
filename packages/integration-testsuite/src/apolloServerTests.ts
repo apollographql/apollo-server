@@ -17,6 +17,7 @@ import {
   printSchema,
   FieldNode,
   GraphQLFormattedError,
+  GraphQLScalarType,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -466,6 +467,106 @@ export function defineIntegrationTestSuiteApolloServerTests(
               `Expected non-nullable type "String!" not to be null.`,
           );
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
+        });
+
+        it('catches custom scalar parseValue and returns BAD_USER_INPUT', async () => {
+          const uri = await createServerAndGetUrl({
+            typeDefs: gql`
+              scalar CustomScalar
+              type Query {
+                hello(x: CustomScalar): String
+              }
+            `,
+            resolvers: {
+              CustomScalar: new GraphQLScalarType({
+                name: 'CustomScalar',
+                parseValue() {
+                  // Work-around for https://github.com/graphql/graphql-js/pull/3785
+                  // Once that's fixed, we can just directly throw this error.
+                  const e = new GraphQLError('Something bad happened', {
+                    extensions: { custom: 'foo' },
+                  });
+                  throw new GraphQLError(e.message, { originalError: e });
+                },
+              }),
+            },
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:CustomScalar) {hello(x:$x)}`,
+            variables: { x: 'foo' },
+          });
+          expect(result).toMatchInlineSnapshot(`
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "code": "BAD_USER_INPUT",
+                    "custom": "foo",
+                  },
+                  "locations": [
+                    {
+                      "column": 8,
+                      "line": 1,
+                    },
+                  ],
+                  "message": "Variable "$x" got invalid value "foo"; Something bad happened",
+                },
+              ],
+            }
+          `);
+        });
+
+        it('catches custom scalar parseValue and preserves code', async () => {
+          const uri = await createServerAndGetUrl({
+            typeDefs: gql`
+              scalar CustomScalar
+              type Query {
+                hello(x: CustomScalar): String
+              }
+            `,
+            resolvers: {
+              CustomScalar: new GraphQLScalarType({
+                name: 'CustomScalar',
+                parseValue() {
+                  // Work-around for https://github.com/graphql/graphql-js/pull/3785
+                  // Once that's fixed, we can just directly throw this error.
+                  const e = new GraphQLError('Something bad happened', {
+                    extensions: { custom: 'foo', code: 'CUSTOMIZED' },
+                  });
+                  throw new GraphQLError(e.message, { originalError: e });
+                },
+              }),
+            },
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({
+            query: `query ($x:CustomScalar) {hello(x:$x)}`,
+            variables: { x: 'foo' },
+          });
+          expect(result).toMatchInlineSnapshot(`
+            {
+              "errors": [
+                {
+                  "extensions": {
+                    "code": "CUSTOMIZED",
+                    "custom": "foo",
+                  },
+                  "locations": [
+                    {
+                      "column": 8,
+                      "line": 1,
+                    },
+                  ],
+                  "message": "Variable "$x" got invalid value "foo"; Something bad happened",
+                },
+              ],
+            }
+          `);
         });
       });
 

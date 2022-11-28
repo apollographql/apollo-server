@@ -1,5 +1,37 @@
 # @apollo/server-integration-testsuite
 
+## 4.2.1
+
+### Patch Changes
+
+- [#7187](https://github.com/apollographql/apollo-server/pull/7187) [`3fd7b5f26`](https://github.com/apollographql/apollo-server/commit/3fd7b5f26144a02e711037b7058a8471e9648bc8) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update `@apollo/utils.keyvaluecache` dependency to the latest patch which correctly specifies its version of `lru-cache`.
+
+- Updated dependencies [[`3fd7b5f26`](https://github.com/apollographql/apollo-server/commit/3fd7b5f26144a02e711037b7058a8471e9648bc8)]:
+  - @apollo/server@4.2.1
+
+## 4.2.0
+
+### Minor Changes
+
+- [#7171](https://github.com/apollographql/apollo-server/pull/7171) [`37b3b7fb5`](https://github.com/apollographql/apollo-server/commit/37b3b7fb57ea105f40776166c9532536fd3f053d) Thanks [@glasser](https://github.com/glasser)! - If a POST body contains a non-string `operationName` or a non-object `variables` or `extensions`, fail with status code 400 instead of ignoring the field.
+
+  In addition to being a reasonable idea, this provides more compliance with the "GraphQL over HTTP" spec.
+
+  This is a backwards incompatible change, but we are still early in the Apollo Server 4 adoption cycle and this is in line with the change already made in Apollo Server 4 to reject requests providing `variables` or `extensions` as strings. If this causes major problems for users who have already upgraded to Apollo Server 4 in production, we can consider reverting or partially reverting this change.
+
+### Patch Changes
+
+- [#7170](https://github.com/apollographql/apollo-server/pull/7170) [`4ce738193`](https://github.com/apollographql/apollo-server/commit/4ce738193f8d073287c34f84c0346276ae2efc30) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update @apollo/utils packages to v2 (dropping node 12 support)
+
+- [#7179](https://github.com/apollographql/apollo-server/pull/7179) [`c8129c23f`](https://github.com/apollographql/apollo-server/commit/c8129c23fd300b8048821544512ccc7df8f12470) Thanks [@renovate](https://github.com/apps/renovate)! - Fix a few tests to support (but not require) TypeScript 4.9.
+
+- [#7171](https://github.com/apollographql/apollo-server/pull/7171) [`37b3b7fb5`](https://github.com/apollographql/apollo-server/commit/37b3b7fb57ea105f40776166c9532536fd3f053d) Thanks [@glasser](https://github.com/glasser)! - The integration test suite now incorporates the `graphql-http` package's audit suite for the "GraphQL over HTTP" specification.
+
+- [#7183](https://github.com/apollographql/apollo-server/pull/7183) [`46af8255c`](https://github.com/apollographql/apollo-server/commit/46af8255c9a23174f0c9a640f0c90666ed80470f) Thanks [@glasser](https://github.com/glasser)! - Apollo Server tries to detect if execution errors are variable coercion errors in order to give them a `code` extension of `BAD_USER_INPUT` rather than `INTERNAL_SERVER_ERROR`. Previously this would unconditionally set the `code`; now, it only sets the `code` if no `code` is already set, so that (for example) custom scalar `parseValue` methods can throw errors with specific `code`s. (Note that a separate graphql-js bug can lead to these extensions being lost; see https://github.com/graphql/graphql-js/pull/3785 for details.)
+
+- Updated dependencies [[`4ce738193`](https://github.com/apollographql/apollo-server/commit/4ce738193f8d073287c34f84c0346276ae2efc30), [`37b3b7fb5`](https://github.com/apollographql/apollo-server/commit/37b3b7fb57ea105f40776166c9532536fd3f053d), [`b1548c1d6`](https://github.com/apollographql/apollo-server/commit/b1548c1d62c6dea656d360bf8f4176e23dd9ee48), [`7ff96f533`](https://github.com/apollographql/apollo-server/commit/7ff96f5331fbf14c0a25094007f6f05e799ee052), [`46af8255c`](https://github.com/apollographql/apollo-server/commit/46af8255c9a23174f0c9a640f0c90666ed80470f)]:
+  - @apollo/server@4.2.0
+
 ## 4.1.1
 
 ### Patch Changes

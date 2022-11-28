@@ -1,5 +1,19 @@
 # @apollo/server-gateway-interface
 
+## 1.0.7
+
+### Patch Changes
+
+- [#7187](https://github.com/apollographql/apollo-server/pull/7187) [`3fd7b5f26`](https://github.com/apollographql/apollo-server/commit/3fd7b5f26144a02e711037b7058a8471e9648bc8) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update `@apollo/utils.keyvaluecache` dependency to the latest patch which correctly specifies its version of `lru-cache`.
+
+## 1.0.6
+
+### Patch Changes
+
+- [#7170](https://github.com/apollographql/apollo-server/pull/7170) [`4ce738193`](https://github.com/apollographql/apollo-server/commit/4ce738193f8d073287c34f84c0346276ae2efc30) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update @apollo/utils packages to v2 (dropping node 12 support)
+
+- [#7173](https://github.com/apollographql/apollo-server/pull/7173) [`45856e1dd`](https://github.com/apollographql/apollo-server/commit/45856e1ddfd646c93682d3d8475bf77fbcc1c22c) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Remove unnecessary engines constraint on types-only package
+
 ## 1.0.5
 
 ### Patch Changes

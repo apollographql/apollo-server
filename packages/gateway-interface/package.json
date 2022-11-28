@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-gateway-interface",
-  "version": "1.0.5",
+  "version": "1.0.7",
   "description": "Interface used to connect Apollo Gateway to Apollo Server",
   "type": "module",
   "main": "",
@@ -20,7 +20,7 @@
   "dependencies": {
     "@apollo/utils.fetcher": "^2.0.0",
     "@apollo/utils.logger": "^2.0.0",
-    "@apollo/utils.keyvaluecache": "^2.0.0",
+    "@apollo/utils.keyvaluecache": "^2.0.1",
     "@apollo/usage-reporting-protobuf": "^4.0.0"
   },
   "peerDependencies": {
