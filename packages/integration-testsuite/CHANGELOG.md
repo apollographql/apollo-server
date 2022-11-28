@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.2.2
+
+### Patch Changes
+
+- [#7203](https://github.com/apollographql/apollo-server/pull/7203) [`2042ee761`](https://github.com/apollographql/apollo-server/commit/2042ee7616d150ef357f1964a28ef08415eb6089) Thanks [@glasser](https://github.com/glasser)! - Fix v4.2.0 (#7171) regression where `"operationName": null`, `"variables": null`, and `"extensions": null` in POST bodies were improperly rejected.
+
+- Updated dependencies [[`2042ee761`](https://github.com/apollographql/apollo-server/commit/2042ee7616d150ef357f1964a28ef08415eb6089)]:
+  - @apollo/server@4.2.2
+
 ## 4.2.1
 
 ### Patch Changes
