@@ -67,7 +67,7 @@
     "@types/supertest": "2.0.12",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
-    "@types/uuid": "8.3.4",
+    "@types/uuid": "9.0.0",
     "@types/whatwg-mimetype": "3.0.0",
     "@typescript-eslint/eslint-plugin": "5.45.0",
     "@typescript-eslint/parser": "5.45.0",
