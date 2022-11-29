@@ -67,11 +67,11 @@
     },
     "Using with Federation": {
       "As a subgraph": {
-        "Overview": "/using-federation/apollo-subgraph-setup",
+        "Setup": "/using-federation/apollo-subgraph-setup",
         "@apollo/subgraph": "/using-federation/api/apollo-subgraph/"
       },
       "As a gateway": {
-        "Overview": "/using-federation/apollo-gateway-setup",
+        "Setup": "/using-federation/apollo-gateway-setup",
         "@apollo/gateway": "/using-federation/api/apollo-gateway/"
       }
     },

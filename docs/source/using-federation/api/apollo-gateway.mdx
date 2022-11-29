@@ -341,8 +341,8 @@ The example below demonstrates adding an `x-user-id` HTTP header to every reques
 
 ```ts
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
-  willSendRequest({ request, contextValue }) {
-    request.http.headers.set('x-user-id', contextValue.userId);
+  willSendRequest({ request, context }) {
+    request.http.headers.set('x-user-id', context.userId);
   }
 }
 
@@ -504,15 +504,15 @@ Override this method in a subclass to modify each outgoing fetch request before 
 ```ts
 // Adds an `x-user-id` header to each outgoing fetch request
 class AuthenticatedDataSource extends RemoteGraphQLDataSource({
-  willSendRequest({ request, contextValue }) {
-    request.http.headers.set('x-user-id', contextValue.userId);
+  willSendRequest({ request, context }) {
+    request.http.headers.set('x-user-id', context.userId);
   }
 });
 ```
 
 </MultiCodeBlock>
 
-This method takes a `requestContext` object that contains both the original unmodified `request` and the current `contextValue`.
+This method takes a `requestContext` object that contains both the original unmodified `request` and the current `context` object (i.e., the `contextValue` object).
 
 #### `didReceiveResponse`
 
@@ -522,7 +522,7 @@ Override this method in a subclass to customize the gateway's behavior after it 
 
 ```ts
 class CookieDataSource extends RemoteGraphQLDataSource {
-  didReceiveResponse({ response, request, contextValue }) {
+  didReceiveResponse({ response, request, context }) {
     const cookie = request.http.headers.get('Cookie');
     if (cookie) {
       context.responseCookies.push(cookie);
@@ -540,7 +540,7 @@ This method takes a `requestContext` object that contains:
 
 - The subgraph's `response`
 - The gateway's `request` to the subgraph
-- The current operation's `contextValue`
+- The current operation's `context` (i.e., the `contextValue` object)
 
 This enables you to modify any combination of the operation's `contextValue` and the response of the fetch.
 
@@ -626,7 +626,7 @@ The details of the `fetch` response sent by the subgraph.
 <tr>
 <td>
 
-###### `contextValue`
+###### `context`
 
 `TContext`
 

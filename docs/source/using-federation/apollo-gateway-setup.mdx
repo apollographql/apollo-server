@@ -299,7 +299,7 @@ const { url } = await startStandaloneServer(server, {
     const token = req.headers.authorization || '';
     // Try to retrieve a user with the token
     const userId = getUserId(token);
-    // Add the user ID to the context
+    // Add the user ID to the contextValue
     return { userId };
   },
   //highlight-end
@@ -310,9 +310,9 @@ console.log(`🚀  Server ready at ${url}`);
 
 </ExpansionPanel>
 
-> The fields of the object passed to your `contextValue` function might differ if you're using a different [Apollo Server integration](../integrations/integration-index).
+> The fields of the object passed to your `context` function might differ if you're using a different [Apollo Server integration](../integrations/integration-index).
 
-The `buildService` function enables us to customize the requests that are sent to our subgraphs. In this example, we return a custom `RemoteGraphQLDataSource`. The datasource allows us to modify the outgoing request with information from the Apollo Server `context` before it's sent. Here, we add the `user-id` header to pass an authenticated user ID to downstream services.
+The `buildService` function enables us to customize the requests that are sent to our subgraphs. In this example, we return a custom `RemoteGraphQLDataSource`. This datasource enables us to modify the outgoing request with information from Apollo Server's `contextValue` before it's sent. Here, we add the `user-id` header to pass an authenticated user ID to downstream services.
 
 ### Customizing responses
 
@@ -339,7 +339,7 @@ To implement this flow, we can use the `didReceiveResponse` callback of the `Rem
 
 <ExpansionPanel title="Expand example">
 
-```javascript
+```ts
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { ApolloGateway, RemoteGraphQLDataSource } from '@apollo/gateway';
@@ -409,7 +409,7 @@ To learn more about `buildService` and `RemoteGraphQLDataSource`, see the [API d
 
 ## Custom directive support
 
-The `@apollo/gateway` library supports the use of custom [directives](/apollo-server/schema/directives/) in your subgraph schemas. This support differs depending on whether a given directive is a **type system directive** or an **executable directive**.
+The `@apollo/gateway` library supports the use of custom [directives](../schema/directives/) in your subgraph schemas. This support differs depending on whether a given directive is a **type system directive** or an **executable directive**.
 
 ### Type system directives
 
