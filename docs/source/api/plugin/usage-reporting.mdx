@@ -1,5 +1,5 @@
 ---
-title: 'API Reference: Usage reporting plugin'
+title: "API Reference: Usage reporting plugin"
 api_reference: true
 ---
 
@@ -35,7 +35,7 @@ const server = new ApolloServer({
   plugins: [
     ApolloServerPluginUsageReporting({
       fieldLevelInstrumentation: 0.5,
-    }),
+    })
   ],
 });
 ```
@@ -61,7 +61,6 @@ Supported configuration options are listed below.
 <td colspan="2">
 
 **Configuring which data is sent to Apollo Studio**
-
 </td>
 </tr>
 
@@ -71,7 +70,6 @@ Supported configuration options are listed below.
 ###### `sendVariableValues`
 
 `Object`
-
 </td>
 <td>
 
@@ -88,7 +86,6 @@ The default value is `{ none: true }`, which means **no** variable values are se
 ###### `sendHeaders`
 
 `Object`
-
 </td>
 <td>
 
@@ -105,7 +102,6 @@ The default value is `{ none: true }`, which means **no** header names or values
 ###### `sendErrors`
 
 `Object`
-
 </td>
 <td>
 
@@ -124,7 +120,6 @@ The default value is `{ masked: true }`, which means error messages are masked a
 ###### `fieldLevelInstrumentation`
 
 `async Function` or `number`
-
 </td>
 <td>
 
@@ -144,10 +139,10 @@ Providing a number `x` is equivalent to passing this function:
 
 **If the function returns `false` (or `0`):**
 
-- Apollo Server _doesn't_ calculate per-field statistics for the associated operation.
-- The operation _doesn't_ contribute to the "field executions" statistic on the Fields page in Studio, or to the execution timing hints displayed in the Explorer or in VS Code.
-- The operation _doesn't_ produce a trace that can be viewed in the Traces section of the Operations page in Studio.
-- The operation _does_ still contribute to most features of Studio, such as schema checks, the Operations page, and the "referencing operations" statistic on the Fields page.
+* Apollo Server _doesn't_ calculate per-field statistics for the associated operation.
+* The operation _doesn't_ contribute to the "field executions" statistic on the Fields page in Studio, or to the execution timing hints displayed in the Explorer or in VS Code.
+* The operation _doesn't_ produce a trace that can be viewed in the Traces section of the Operations page in Studio.
+* The operation _does_ still contribute to most features of Studio, such as schema checks, the Operations page, and the "referencing operations" statistic on the Fields page.
 
 (For more information about the difference between the "referencing operations" and "field executions" statistics, see [the Studio Fields page documentation](https://apollographql.com/docs/studio/metrics/field-usage/).)
 
@@ -155,16 +150,16 @@ Returning `false` (or `0`) for some or all operations can improve your server's 
 
 **If the function returns a positive number:**
 
-- Apollo Server _does_ calculate per-field statistics for the associated operation, and it sends those statistics to Apollo Studio.
-- Apollo Server sends Studio both an _observed_ execution count and an _estimated total_ execution count for each field.
-- The _observed_ execution count is exactly how many times each field was resolved in the associated operation.
-- The _estimated total_ execution count is the _observed_ execution count, _multiplied by the number returned by this function_. You can think of this returned number as an "estimation multiplier".
+* Apollo Server _does_ calculate per-field statistics for the associated operation, and it sends those statistics to Apollo Studio.
+* Apollo Server sends Studio both an _observed_ execution count and an _estimated total_ execution count for each field.
+* The _observed_ execution count is exactly how many times each field was resolved in the associated operation.
+* The _estimated total_ execution count is the _observed_ execution count, _multiplied by the number returned by this function_. You can think of this returned number as an "estimation multiplier".
 
 To determine the "estimation multiplier" that the function should return, take the reciprocal of the frequency with which the function returns a non-zero number for the associated operation.
 
 For example, if the function returns a non-zero number one out of every ten times for a particular operation, then the number it returns should be `10`. Your function can use different logic for different operations, such as to more frequently report rare operations than common operations.
 
-Note that returning `true` here does _not_ mean that the data derived from field-level instrumentation must be transmitted to Apollo Studio's servers in the form of a trace. The data can still be aggregated locally to statistics. Either way, this operation contributes to the "field executions" statistic in Studio, along with timing hints.
+Note that returning `true` here does *not* mean that the data derived from field-level instrumentation must be transmitted to Apollo Studio's servers in the form of a trace. The data can still be aggregated locally to statistics. Either way, this operation contributes to the "field executions" statistic in Studio, along with timing hints.
 
 The default value is a function that always returns `true`.
 
@@ -177,7 +172,6 @@ The default value is a function that always returns `true`.
 ###### `includeRequest`
 
 `async Function`
-
 </td>
 <td>
 
@@ -200,7 +194,6 @@ By default, all requests are included in usage reports.
 ###### `generateClientInfo`
 
 `Function`
-
 </td>
 <td>
 
@@ -219,7 +212,6 @@ By default, the plugin attempts to obtain these values from the incoming request
 ###### `overrideReportedSchema`
 
 `string`
-
 </td>
 <td>
 
@@ -234,7 +226,6 @@ If you're using the `overrideReportedSchema` option with the [schema reporting p
 ###### `sendUnexecutableOperationDocuments`
 
 `Boolean`
-
 </td>
 <td>
 
@@ -247,7 +238,6 @@ Statistics about operations that your server cannot execute are not reported und
 <td colspan="2">
 
 **Configuring communication protocol**
-
 </td>
 </tr>
 
@@ -257,7 +247,6 @@ Statistics about operations that your server cannot execute are not reported und
 ###### `sendReportsImmediately`
 
 `boolean`
-
 </td>
 <td>
 
@@ -276,12 +265,10 @@ Note that "immediately" does not mean _synchronously_ with completing the respon
 ###### `fetcher`
 
 `typeof fetch`
-
 </td>
 <td>
 
 Specifies which [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API) function implementation to use when sending usage reports.
-
 </td>
 </tr>
 
@@ -291,7 +278,6 @@ Specifies which [Fetch API](https://developer.mozilla.org/en-US/docs/Web/API/Fet
 ###### `reportIntervalMs`
 
 `number`
-
 </td>
 <td>
 
@@ -308,7 +294,6 @@ Regardless of this value, Apollo Server sends a trace report whenever the size o
 ###### `maxUncompressedReportSize`
 
 `number`
-
 </td>
 <td>
 
@@ -317,7 +302,6 @@ Apollo Server sends a trace report whenever the size of a pending batched trace 
 Note that this is a rough limit that includes the size of serialized traces and signatures. It ignores the size of the report's header and some other top-level bytes.
 
 The default value is 4MB (`4194304`).
-
 </td>
 </tr>
 
@@ -327,14 +311,12 @@ The default value is 4MB (`4194304`).
 ###### `maxAttempts`
 
 `number`
-
 </td>
 <td>
 
 The maximum number of times Apollo Server should attempt to report each trace report, performing exponential backoff between attempts.
 
 The default value is `5`.
-
 </td>
 </tr>
 
@@ -344,14 +326,12 @@ The default value is `5`.
 ###### `minimumRetryDelayMs`
 
 `number`
-
 </td>
 <td>
 
 The minimum amount of backoff (in milliseconds) Apollo Server should perform before retrying a failed trace report.
 
 The default value is `100`.
-
 </td>
 </tr>
 
@@ -361,7 +341,6 @@ The default value is `100`.
 ###### `requestTimeoutMs`
 
 `number`
-
 </td>
 <td>
 
@@ -369,7 +348,6 @@ Timeout for each individual attempt to send a report to Apollo. (This is for
 each HTTP POST, not for all potential retries.)
 
 The default value is `30000` (30 seconds).
-
 </td>
 </tr>
 
@@ -379,7 +357,6 @@ The default value is `30000` (30 seconds).
 ###### `logger`
 
 [`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
-
 </td>
 <td>
 
@@ -394,7 +371,6 @@ If you provide this object, the plugin sends it all log messages related to Apol
 ###### `reportErrorFunction`
 
 `Function`
-
 </td>
 <td>
 
@@ -409,7 +385,6 @@ By default, the plugin logs these errors to its specified `logger`. _Unlike_ the
 <td colspan="2">
 
 **Internal and non-recommended options**
-
 </td>
 </tr>
 
@@ -419,12 +394,10 @@ By default, the plugin logs these errors to its specified `logger`. _Unlike_ the
 ###### `endpointUrl`
 
 `string`
-
 </td>
 <td>
 
 The URL base that the plugin sends reports to (not including the path). This option only needs to be set for testing and Apollo-internal uses.
-
 </td>
 </tr>
 
@@ -434,12 +407,10 @@ The URL base that the plugin sends reports to (not including the path). This opt
 ###### `debugPrintReports`
 
 `boolean`
-
 </td>
 <td>
 
 If set, prints all reports as JSON when they are sent. (Note that for technical reasons, traces embedded in a report are printed separately when they are added to a report.)
-
 </td>
 </tr>
 
@@ -449,12 +420,10 @@ If set, prints all reports as JSON when they are sent. (Note that for technical 
 ###### `calculateSignature`
 
 `Function`
-
 </td>
 <td>
 
 Specify this function to create a signature for a query. This option is not recommended, because Apollo's servers make assumptions about how the signature relates to the operation you executed.
-
 </td>
 </tr>
 
@@ -463,28 +432,28 @@ Specify this function to create a signature for a query. This option is not reco
 
 #### Valid `sendVariableValues` object signatures
 
-| Object                                                      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{ none: true }`                                            | If you provide this object, no GraphQL variable values are sent to Apollo Studio. This is the default behavior.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| `{ all: true }`                                             | If you provide this object, **all** GraphQL variable values are sent to Apollo Studio.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `{ onlyNames: ["apple", "orange"]}`                         | If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. To filter individual fields of a variable that contains an input type, use the `transform` function below instead. Case-sensitive.                                                                                                                                                                                                                                                                                                                                    |
-| `{ exceptNames: ["apple", "orange"]}`                       | If you provide an object with this structure, all GraphQL variable values **except** values of the variables with names that appear in the array are sent to Apollo Studio. To filter individual fields of a variable that contains an input type, use the `transform` function below instead. Case-sensitive.                                                                                                                                                                                                                                                                                                          |
-| `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation and the operation string. The function returns a new variables map containing values for the operation's variables that should be sent to Apollo Studio. This map does not need to contain all of the operation's variables, but it cannot _add_ variables to the map. You should not mutate `variables` itself or any of the values contained in it.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`.</p> |
+| Object | Description |
+|--------|-------------|
+| `{ none: true }` | If you provide this object, no GraphQL variable values are sent to Apollo Studio. This is the default behavior. |
+| `{ all: true }` |  If you provide this object, **all** GraphQL variable values are sent to Apollo Studio. |
+| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only values of the GraphQL variables with names that appear in the array are sent to Apollo Studio. To filter individual fields of a variable that contains an input type, use the `transform` function below instead. Case-sensitive. |
+| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL variable values **except** values of the variables with names that appear in the array are sent to Apollo Studio. To filter individual fields of a variable that contains an input type, use the `transform` function below instead. Case-sensitive. |
+| `{ transform: ({ variables, operationString)} => { ... } }` | <p>The value of `transform` is a function that takes the values of all GraphQL variables for an operation and the operation string. The function returns a new variables map containing values for the operation's variables that should be sent to Apollo Studio. This map does not need to contain all of the operation's variables, but it cannot _add_ variables to the map. You should not mutate `variables` itself or any of the values contained in it.</p><p>For security reasons, if an error occurs in the `transform` function, **all** variable values are replaced with `[PREDICATE_FUNCTION_ERROR]`.</p>|
 
 #### Valid `sendHeaders` object signatures
 
-| Object                                | Description                                                                                                                                                                           |
-| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `{ none: true }`                      | If you provide this object, no request header names or values are sent to Apollo Studio. This is the default behavior.                                                                |
-| `{ all: true }`                       | If you provide this object, **all** GraphQL header names and values are sent to Apollo Studio, except for the protected headers listed below.                                         |
-| `{ onlyNames: ["apple", "orange"]}`   | If you provide an object with this structure, only names and values of the request headers with names that appear in the array are sent to Apollo Studio. Case-insensitive.           |
-| `{ exceptNames: ["apple", "orange"]}` | If you provide an object with this structure, all GraphQL header values **except** values of headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
+| Object | Description |
+|--------|-------------|
+| `{ none: true }` | If you provide this object, no request header names or values are sent to Apollo Studio. This is the default behavior. |
+| `{ all: true }` |  If you provide this object, **all** GraphQL header names and values are sent to Apollo Studio, except for the protected headers listed below. |
+| `{ onlyNames: ["apple", "orange"]}`| If you provide an object with this structure, only names and values of the request headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
+| `{ exceptNames: ["apple", "orange"]}`| If you provide an object with this structure, all GraphQL header values **except** values of headers with names that appear in the array are sent to Apollo Studio. Case-insensitive. |
 
 **Note:** Regardless of your configuration, Apollo Server **never** sends the values of the following headers to Apollo Studio:
 
-- `authorization`
-- `cookie`
-- `set-cookie`
+ * `authorization`
+ * `cookie`
+ * `set-cookie`
 
 #### Valid `sendErrors` object signatures
 
@@ -506,7 +475,7 @@ Specify this function to create a signature for a query. This option is not reco
 </td>
 <td>
 
-If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio. This is the default behavior.
+If you provide this object, error messages are masked and extensions omitted in the traces sent to Apollo Studio.  This is the default behavior.
 
 </td>
 </tr>
@@ -535,12 +504,15 @@ If you provide this object, all error messages and extensions are included in th
 The value of `transform` is a function that receives each error (`GraphQLError`) and must also return a `GraphQLError` object (or `null` to prevent Apollo Server from reporting a particular error entirely).
 
 The only properties of the reported error you can modify are its `message` and its `extensions`. See [Masking and logging errors](../../data/errors/#masking-and-logging-errors) for more details.
-
 </td>
 </tr>
 
+
 </tbody>
 </table>
+
+
+
 
 ## Disabling the plugin
 
@@ -555,7 +527,9 @@ import { ApolloServerPluginUsageReportingDisabled } from '@apollo/server/plugin/
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  plugins: [ApolloServerPluginUsageReportingDisabled()],
+  plugins: [
+    ApolloServerPluginUsageReportingDisabled(),
+  ],
 });
 ```
 
