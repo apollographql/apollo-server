@@ -3,14 +3,14 @@ title: 'API Reference: @apollo/gateway'
 api_reference: true
 ---
 
-This API reference documents the exports from the `@apollo/gateway` package. This package enables you to use Apollo Server as a gateway for a federated supergraph. For more information, see [Node.js gateway setup](/federation/building-supergraphs/router/#nodejs-gateway-setup).
+This API reference documents the exports from the `@apollo/gateway` package. This package enables you to use Apollo Server as a gateway for a federated supergraph. For more information, see [Implementing a gateway with Apollo Server](../apollo-gateway-setup).
 
 > We recommend that all supergraphs use the Apollo Router instead of this Node.js-based gateway. See [Choosing a router library](/federation/building-supergraphs/router/#choosing-a-router-library).
 
 ## `class ApolloGateway`
 
 The core class of Apollo Server's federated gateway implementation. For an
-example of using `ApolloGateway`, see [The graph router](/federation/building-supergraphs/router/).
+example of using `ApolloGateway`, see [Implementing a gateway with Apollo Server](../apollo-gateway-setup).
 
 ### Methods
 
@@ -27,7 +27,7 @@ const server = new ApolloServer({
     serviceList: [
       // ...
     ],
-  }),  
+  }),
   // highlight-end
 });
 ```
@@ -61,6 +61,7 @@ const gateway = new ApolloGateway({
 If you provide a [`buildService` function](#the-buildservice-function) to the constructor of `ApolloGateway`, the function is called once for each of your graph's subgraphs. This function can return a `RemoteGraphQLDataSource` with a custom `fetcher`, which is then used for all communication with subgraphs:
 
 <MultiCodeBlock>
+
 ```ts
 const gateway = new ApolloGateway({
   buildService({ url, name }) {
@@ -216,7 +217,7 @@ An object to use for logging in place of `console`. If provided, this object mus
 
 If you provide this value, the gateway automatically logs all messages of _all_ severity levels (`debug` through `error`), regardless of whether the `debug` option is set to `true`. It is the responsibility of the logger to determine how to handle logged messages of each level.
 
-This logger is automatically added to the `GraphQLRequestContext` object that's passed to all Apollo Server [plugin functions](/apollo-server/integrations/plugins/).
+This logger is automatically added to the `GraphQLRequestContext` object that's passed to all Apollo Server [plugin functions](../../integrations/plugins/).
 
 </td>
 </tr>
@@ -271,7 +272,7 @@ The default value is `false`.
 </td>
 <td>
 
-A list of Apollo Uplink URLs the gateway uses to poll for its managed configuration. For details and defaults, see [Apollo Uplink](https://www.apollographql.com/docs/federation/managed-federation/uplink/).
+A list of Apollo Uplink URLs the gateway uses to poll for its managed configuration. For details and defaults, see [Apollo Uplink](/federation/managed-federation/uplink/).
 
 Provide this field **only** if you are using managed federation _and_ your use case specifically requires it (this is uncommon).
 
@@ -340,8 +341,8 @@ The example below demonstrates adding an `x-user-id` HTTP header to every reques
 
 ```ts
 class AuthenticatedDataSource extends RemoteGraphQLDataSource {
-  willSendRequest({ request, context }) {
-    request.http.headers.set('x-user-id', context.userId);
+  willSendRequest({ request, contextValue }) {
+    request.http.headers.set('x-user-id', contextValue.userId);
   }
 }
 
@@ -354,6 +355,8 @@ const gateway = new ApolloGateway({
   // highlight-end
 });
 ```
+
+</MultiCodeBlock>
 
 ##### Experimental options
 
@@ -501,15 +504,15 @@ Override this method in a subclass to modify each outgoing fetch request before 
 ```ts
 // Adds an `x-user-id` header to each outgoing fetch request
 class AuthenticatedDataSource extends RemoteGraphQLDataSource({
-  willSendRequest({ request, context }) {
-    request.http.headers.set('x-user-id', context.userId);
+  willSendRequest({ request, contextValue }) {
+    request.http.headers.set('x-user-id', contextValue.userId);
   }
 });
 ```
 
 </MultiCodeBlock>
 
-This method takes a `requestContext` object that contains both the original unmodified `request` and the current `context`.
+This method takes a `requestContext` object that contains both the original unmodified `request` and the current `contextValue`.
 
 #### `didReceiveResponse`
 
@@ -519,7 +522,7 @@ Override this method in a subclass to customize the gateway's behavior after it 
 
 ```ts
 class CookieDataSource extends RemoteGraphQLDataSource {
-  didReceiveResponse({ response, request, context }) {
+  didReceiveResponse({ response, request, contextValue }) {
     const cookie = request.http.headers.get('Cookie');
     if (cookie) {
       context.responseCookies.push(cookie);
@@ -537,9 +540,9 @@ This method takes a `requestContext` object that contains:
 
 - The subgraph's `response`
 - The gateway's `request` to the subgraph
-- The current operation's `context`
+- The current operation's `contextValue`
 
-This enables you to modify any combination of the operation's `context` and the response of the fetch.
+This enables you to modify any combination of the operation's `contextValue` and the response of the fetch.
 
 The `http` property of the `request` and `response` objects contains additional HTTP-specific properties, such as `headers`.
 
@@ -623,14 +626,14 @@ The details of the `fetch` response sent by the subgraph.
 <tr>
 <td>
 
-###### `context`
+###### `contextValue`
 
 `TContext`
 
 </td>
 <td>
 
-[The `context` argument](/apollo-server/data/resolvers/#the-context-argument) passed between the GraphQL operation's resolvers.
+[The `contextValue` object](../../data/resolvers/#the-context-argument) passed between the GraphQL operation's resolvers.
 
 </td>
 </tr>
