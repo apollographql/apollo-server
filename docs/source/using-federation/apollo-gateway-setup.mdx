@@ -436,8 +436,6 @@ Effectively, the gateway supports type system directives by _ignoring_ them, mak
 
 Executable directives are directives that are applied to one of [these locations](http://spec.graphql.org/June2018/#ExecutableDirectiveLocation). These directives are _defined_ in your schema, but they're _used_ in operations that are sent by clients.
 
-> **Although the `@apollo/gateway` library supports executable directives, Apollo Server itself does not**. This guidance is provided primarily for architectures that use the `@apollo/gateway` library in combination with subgraphs that do _not_ use Apollo Server.
-
 Here's an example of an executable directive definition:
 
 ```graphql
