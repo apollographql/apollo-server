@@ -65,16 +65,6 @@
       "startStandaloneServer": "/api/standalone",
       "expressMiddleware": "/api/express-middleware"
     },
-    "Using with Federation": {
-      "As a subgraph": {
-        "Setup": "/using-federation/apollo-subgraph-setup",
-        "@apollo/subgraph reference": "/using-federation/api/apollo-subgraph/"
-      },
-      "As a gateway": {
-        "Setup": "/using-federation/apollo-gateway-setup",
-        "@apollo/gateway reference": "/using-federation/api/apollo-gateway/"
-      }
-    },
     "Plugins": {
       "Overview": "/builtin-plugins",
       "Built-in": {
@@ -88,6 +78,16 @@
       "Custom": {
         "Creating plugins": "/integrations/plugins",
         "Event reference": "/integrations/plugins-event-reference"
+      }
+    },
+        "Using with Federation": {
+      "As a subgraph": {
+        "Setup": "/using-federation/apollo-subgraph-setup",
+        "@apollo/subgraph reference": "/using-federation/api/apollo-subgraph/"
+      },
+      "As a gateway": {
+        "Setup": "/using-federation/apollo-gateway-setup",
+        "@apollo/gateway reference": "/using-federation/api/apollo-gateway/"
       }
     }
   }
