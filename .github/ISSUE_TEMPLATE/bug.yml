@@ -13,7 +13,7 @@ body:
   - type: input
     attributes:
       label: Link to Reproduction
-      description: GitHub or CodeSandbox link with runnable reproduction
+      description: GitHub or CodeSandbox link with runnable reproduction. Make sure this includes everything necessary (package.json, tsconfig.json, etc) so we don't have to guess anything!
     validations:
       required: true
   - type: textarea
