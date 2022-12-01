@@ -5,7 +5,7 @@ description: Sharing information and request details throughout your server
 
 During a GraphQL operation, you can share data throughout your server's [resolvers](./resolvers) and [plugins](../builtin-plugins) by creating an object named `contextValue`.
 
-You can pass useful things through your `contextValue` that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-data/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-data/#batching-and-caching) across resolvers, you can also attach them to the shared `contextValue`.
+You can pass useful things through your `contextValue` that any resolver might need, like [authentication scope](../security/authentication#putting-authenticated-user-info-on-the-context), [sources for fetching data](./fetching-data/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-data/#batching-and-caching) across resolvers, you can also attach them to the shared `contextValue`.
 
 ## The `context` function
 
