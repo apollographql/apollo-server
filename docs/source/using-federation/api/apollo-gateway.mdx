@@ -503,11 +503,11 @@ Override this method in a subclass to modify each outgoing fetch request before 
 
 ```ts
 // Adds an `x-user-id` header to each outgoing fetch request
-class AuthenticatedDataSource extends RemoteGraphQLDataSource({
+class AuthenticatedDataSource extends RemoteGraphQLDataSource {
   willSendRequest({ request, context }) {
     request.http.headers.set('x-user-id', context.userId);
   }
-});
+};
 ```
 
 </MultiCodeBlock>
