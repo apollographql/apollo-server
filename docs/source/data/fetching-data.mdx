@@ -132,7 +132,7 @@ const { url } = await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-## Adding data sources to your context
+## Adding data sources to your `context` function
 
 <TopLevelAwait />
 
@@ -180,9 +180,7 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-<!-- TODO(AS4) add link to context article once exists -->
-
-Apollo Server calls [the `context` initialization](./resolvers/#the-context-argument) function for _every incoming operation_. This means:
+Apollo Server calls [the `context` initialization](./context) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your data source classes (in this case, `DogsDataSource` and `CatsAPI`).
 - If your data source is stateful (e.g., uses an [in-memory cache](#batching-and-caching)), the `context` function should create a **new instance of your data source class for each operation**. This ensures that your data source doesn't accidentally cache results across requests.
@@ -217,7 +215,7 @@ Apollo maintains the following open-source data source for Apollo Server 4:
 
 <!-- prettier-ignore -->
 | Class | Examples | For Use With |
-| --- | --- | --- | 
+| --- | --- | --- |
 | [`RESTDataSource`](https://github.com/apollographql/datasource-rest) | [See Fetching Rest](./fetching-rest)|  HTTP/REST APIs |
 
 ### Legacy data source classes
@@ -230,7 +228,7 @@ The larger community maintains the following open-source implementations:
 
 <!-- prettier-ignore -->
 | Class | Source | For Use With |
-| --- | --- | --- | 
+| --- | --- | --- |
 | [`HTTPDataSource`](https://github.com/StarpTech/apollo-datasource-http) | Community | HTTP/REST APIs |
 | [`SQLDataSource`](https://github.com/cvburgess/SQLDataSource) | Community | SQL databases (via [Knex.js](http://knexjs.org/)) |
 | [`MongoDataSource`](https://github.com/GraphQLGuide/apollo-datasource-mongodb/) | Community | MongoDB |

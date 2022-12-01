@@ -84,7 +84,7 @@ Now we can define a resolver for the `user` field, like so:
 ```ts
 const resolvers = {
   Query: {
-    user(parent, args, context, info) {
+    user(parent, args, contextValue, info) {
       return users.find((user) => user.id === args.id);
     },
   },
@@ -93,7 +93,7 @@ const resolvers = {
 
 #### As this example shows:
 
-- A resolver can optionally accept four positional arguments: `(parent, args, context, info)`.
+- A resolver can optionally accept four positional arguments: `(parent, args, contextValue, info)`.
   - [Learn more about these arguments.](#resolver-arguments)
 - The `args` argument is an object that contains all _GraphQL_ arguments that were provided for the field by the GraphQL operation.
 
@@ -162,8 +162,6 @@ console.log(`🚀 Server listening at: ${url}`);
 </ExpansionPanel>
 
 Note that you can define your resolvers across as many different files and objects as you want, as long as you merge all of them into a single resolver map that's passed to the `ApolloServer` constructor.
-
-> To learn how to fetch data from a REST API, see [Fetching from REST](./fetching-rest/). To learn how to fetch data from other sources, see [Fetching Data](./fetching-data).
 
 ## Resolver chains
 
@@ -370,7 +368,7 @@ When a chain "diverges" like this, each subchain executes in parallel.
 
 ## Resolver arguments
 
-Resolver functions are passed four arguments: `parent`, `args`, `context`, and `info` (in that order).
+Resolver functions are passed four arguments: `parent`, `args`, `contextValue`, and `info` (in that order).
 
 > You can use any name for each argument in your code, but the Apollo docs use these names as a convention. Instead of `parent`, it's also common to use the parent type's name or `source`.
 
@@ -378,39 +376,35 @@ Resolver functions are passed four arguments: `parent`, `args`, `context`, and `
 |---|---|
 | `parent` | <p>The return value of the resolver for this field's parent (i.e., the previous resolver in the [resolver chain](#resolver-chains)).</p><p>For resolvers of top-level fields with no parent (such as fields of `Query`), this value is obtained from the `rootValue` function passed to [Apollo Server's constructor](../api/apollo-server/#constructor).</p>  |
 | `args` |  <p>An object that contains all GraphQL arguments provided for this field.</p><p> For example, when executing `query{ user(id: "4") }`, the `args` object passed to the `user` resolver is `{ "id": "4" }`.</p> |
-| `context` | <p>An object shared across all resolvers that are executing for a particular operation. Use this to share per-operation state, including authentication information, dataloader instances, and anything else to track across resolvers. </p><p>See [The `context` argument](#the-context-argument) for more information.</p> |
+| `contextValue` | <p>An object shared across all resolvers that are executing for a particular operation. Use this to share per-operation state, including authentication information, dataloader instances, and anything else to track across resolvers. </p><p>See [The `contextValue` argument](#the-contextvalue-argument) for more information.</p> |
 | `info` | <p>Contains information about the operation's execution state, including the field name, the path to the field from the root, and more. </p><p>Its core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/f851eba93167b04d6be1373ff27927b16352e202/src/type/definition.ts#L891-L902). Apollo Server extends it with a [`cacheControl` field](../performance/caching/#in-your-resolvers-dynamic).</p> |
 
-### The `context` argument
+### The `contextValue` argument
 
-The `context` argument is useful for passing things that any resolver might need, like [authentication scope](https://blog.apollographql.com/authorization-in-graphql-452b1c402a9), [sources for fetching data](./fetching-data/), database connections, and custom fetch functions. If you're using [dataloaders to batch requests](./fetching-data/#batching-and-caching) across resolvers, you can attach them to the `context` as well.
+> **Resolvers should never destructively modify the `contextValue` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
 
-**Resolvers should never destructively modify the `context` argument.** This ensures consistency across all resolvers and prevents unexpected errors.
-
-To provide an initial `context` to your resolvers, add an asynchronous `context` initialization function to your integration function (e.g., `expressMiddleware` or `startStandaloneServer`). This function is called _with every request_, so you can customize the context based on each request's details (such as HTTP headers).
-
-<Disclaimer />
+Your resolvers can access the shared `contextValue` object via their third positional argument. All resolvers that are executing for a particular operation have access to `contextValue`:
 
 <MultiCodeBlock>
 
 ```ts
-import { GraphQLError } from 'graphql';
+import { UserAPI } from "./datasources/users";
 
 const resolvers = {
   Query: {
-  // Example resolver
-    adminExample: (parent, args, context, info) => {
-      if (context.authScope !== ADMIN) {
-        throw new GraphQLError('not admin!', {
-          extensions: { code: 'UNAUTHENTICATED' }
-        });
-      }
+    // Our resolvers can access the fields in contextValue
+    // from their third argument
+    currentUser: (_, __, contextValue) => {
+      return contextValue.dataSources.userApi.findUser(contextValue.token);
     },
   },
 };
 
 interface MyContext { // Context typing
-  authScope?: String;
+  token?: String;
+  dataSources: {
+    userApi: UserAPI;
+  }
 }
 
 const server = new ApolloServer<MyContext>({
@@ -419,10 +413,11 @@ const server = new ApolloServer<MyContext>({
 });
 
 const { url } = await startStandaloneServer(server, {
-  // A named context function is required if you are not
-  // using ApolloServer<BaseContext>
-  context: async ({req, res}) => ({
-      authScope: getScope(req.headers.authorization),
+  context: async ({ req }) => ({
+    token: getToken(req.headers.authentication),
+    dataSources: {
+      userApi: new UserAPI()
+    }
   })
 });
 
@@ -430,49 +425,9 @@ const { url } = await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-> This example assumes you're using either the `startStandaloneServer` or `expressMiddleware`, both of which use Express under the hood. The fields of the object passed to your `context` function might differ if you're [using a different integration](../integrations/integration-index).
+> To learn more about manage connections to databases and other data sources, see [Fetching Data](./fetching-data).
 
-The `context` function should be *asynchronous* and return an object, which is then accessible to your server's resolvers and plugins (via the `contextValue` field).
-
-Because the `context` initialization function is asynchronous, you can use it to establish database connections and wait for other operations to complete:
-
-```ts
-context: async () => ({
-  db: await client.connect(),
-})
-
-// Resolver
-(parent, args, context, info) => {
-  return context.db.query('SELECT * FROM table_name');
-}
-```
-
-#### Throwing errors in `context`
-
-By default, if your `context` function throws an error, Apollo Server returns that error to the user in a JSON response with an HTTP status code of 500. If the thrown error is not a `GraphQLError`, the error's message will be prepended with `"Context creation failed: "`.
-
-You can control the HTTP status code of an error by throwing a [`GraphQLError` with an `http` extension](./errors/#setting-http-status-code-and-headers). For example:
-
-```ts
-context: async ({ req }) => {
-  const user = await getUserFromReq(req);
-  if (!user) {
-    throw new GraphQLError('User is not authenticated', {
-      extensions: {
-        code: 'UNAUTHENTICATED',
-        http: { status: 401 },
-      }
-    });
-  }
-
-  // If this throws a non-GraphQLError, it will be rendered with
-  // `code: "INTERNAL_SERVER_ERROR"` and HTTP status code 500, and
-  // with a message starting with "Context creation failed: ".
-  const db = await getDatabaseConnection();
-
-  return { user, db };
-},
-````
+For more information and examples, see [Sharing context](./context).
 
 ## Return values
 
