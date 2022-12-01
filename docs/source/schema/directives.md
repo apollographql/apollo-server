@@ -65,7 +65,7 @@ input SomeInputType {
 
 If `@deprecated` appears elsewhere in a GraphQL document, it produces an error.
 
-> If you create a [custom directive](), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
+> If you create a [custom directive](#custom-directives), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
 
 ### Schema directives vs. operation directives
 

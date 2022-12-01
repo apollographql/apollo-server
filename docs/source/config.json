@@ -80,7 +80,7 @@
         "Event reference": "/integrations/plugins-event-reference"
       }
     },
-        "Using with Federation": {
+    "Using with Federation": {
       "As a subgraph": {
         "Setup": "/using-federation/apollo-subgraph-setup",
         "@apollo/subgraph reference": "/using-federation/api/apollo-subgraph/"
