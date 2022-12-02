@@ -1,0 +1,14 @@
+```mermaid
+graph BT;
+  webapp(Web app);
+  iosapp(iOS app);
+  subgraph " ";
+  router([Graph router]);
+  serviceA[Users<br/>subgraph];
+  serviceB[Products<br/>subgraph];
+  serviceC[Reviews<br/>subgraph];
+  end;
+  webapp & iosapp -.- router;
+  router --- serviceA & serviceB & serviceC;
+  class webapp,iosapp secondary;
+```

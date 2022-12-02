@@ -1,0 +1,199 @@
+---
+title: 'API Reference: @apollo/subgraph'
+api_reference: true
+---
+
+This API reference documents the exports from the `@apollo/subgraph` package. This package enables you to use Apollo Server as a subgraph in a federated supergraph. For more information, see [Implementing a subgraph with Apollo Server](../apollo-subgraph-setup).
+
+> Note, we recommend using `@apollo/subgraph` with Apollo Server, but it is compatible with any GraphQL server built on `graphql-js`.
+
+## `buildSubgraphSchema`
+
+> This method was renamed from `buildFederatedSchema` after `@apollo/federation` v0.28.0 (the previous name still works, but it might be removed in a future release).
+
+A function that takes a schema module object (or an array of them) and returns a federation-ready subgraph schema:
+
+<MultiCodeBlock>
+
+```ts
+const server = new ApolloServer({
+  schema: buildSubgraphSchema({ typeDefs, resolvers }), //highlight-line
+});
+```
+
+</MultiCodeBlock>
+
+Used when [defining a subgraph](../apollo-subgraph-setup/#defining-a-subgraph) in a federated graph.
+
+Each schema module is an object with the following format:
+
+```ts
+{
+  typeDefs: DocumentNode,
+  resolvers: ResolverMap
+}
+```
+
+### Parameters
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+###### `modules`
+
+`Object` or `Array`
+
+</td>
+<td>
+
+**Required.** A schema module object (or an array of them) with the structure shown above.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+### Example
+
+<MultiCodeBlock>
+
+```ts
+import gql from 'graphql-tag';
+import { ApolloServer } from '@apollo/server';
+import { buildSubgraphSchema } from '@apollo/subgraph';
+
+const typeDefs = gql`
+  type Query {
+    me: User
+  }
+
+  type User @key(fields: "id") {
+    id: ID!
+    username: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    me() {
+      return { id: '1', username: '@ava' };
+    },
+  },
+  User: {
+    __resolveReference(user, { fetchUserById }) {
+      return fetchUserById(user.id);
+    },
+  },
+};
+
+const server = new ApolloServer({
+  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+});
+```
+
+</MultiCodeBlock>
+
+## `__resolveReference`
+
+The name of a special **reference resolver** function you can define for every [entity](/federation/entities/) in a subgraph schema's resolver map.
+
+The `__resolveReference` function enables your router's query planner to resolve a particular entity by whatever unique identifier your other subgraphs use to reference it. For details, see [Defining an entity](/federation/entities/#defining-an-entity).
+
+The function takes the parameters listed below.
+
+### Parameters
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `reference`
+
+`Object`
+
+</td>
+<td>
+
+The representation of the entity that's passed from another subgraph.
+
+This object includes a `__typename` field, along with whichever fields the subgraph uses for the entity's `@key`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `context`
+
+`Object`
+
+</td>
+<td>
+
+An object that's passed to every resolver that executes for a particular operation, enabling resolvers to share helpful context.
+
+Within resolvers and plugins, this object is named `contextValue`. For details, see [The `context` argument](../../data/context#the-contextvalue-object).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `info`
+
+`Object`
+
+</td>
+<td>
+
+Contains information about the operation's execution state, including the field name, the path to the field from the root, and more.
+
+This object's core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/a24a9f35b876bdd0d5050eca34d3020bd0db9a29/src/type/definition.ts#L891-L902).
+
+</td>
+</tr>
+</tbody>
+</table>
+
+### Example
+
+<MultiCodeBlock>
+
+```ts
+const typeDefs = gql`
+  type User @key(fields: "id") {
+    id: ID!
+    username: String
+  }
+`;
+
+const resolvers = {
+  User: {
+    __resolveReference(user, { dataSources }) {
+      // user will always have at least the `id` and the `__typename` here
+      return dataSources.users.fetchUserById(user.id);
+    },
+  },
+};
+```
+
+</MultiCodeBlock>
