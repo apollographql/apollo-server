@@ -79,8 +79,8 @@ describe('TODO', () => {
             "requestsWithoutFieldInstrumentation": 1,
             "rootErrorStats": {
               "children": {},
-              "errorsCount": 2,
-              "requestsWithErrorsCount": 1,
+              "errorsCount": 0,
+              "requestsWithErrorsCount": 0,
             },
           }
         `);
@@ -90,7 +90,6 @@ describe('TODO', () => {
       })
       .reply(200);
 
-    // const res =
     await gatewayServer.executeHTTPGraphQLRequest({
       httpGraphQLRequest: {
         method: 'POST',
@@ -100,8 +99,6 @@ describe('TODO', () => {
       },
       context: async () => ({}),
     });
-
-    // expect(res).toMatchInlineSnapshot();
 
     await gatewayServer.stop();
     await errorFtv1Subgraph.stop();
@@ -173,8 +170,8 @@ describe('TODO', () => {
                   "requestsWithErrorsCount": 0,
                 },
               },
-              "errorsCount": 1,
-              "requestsWithErrorsCount": 1,
+              "errorsCount": 0,
+              "requestsWithErrorsCount": 0,
             },
           }
         `);
@@ -211,7 +208,6 @@ describe('TODO', () => {
       })
       .reply(200);
 
-    // const res =
     await gatewayServer.executeHTTPGraphQLRequest({
       httpGraphQLRequest: {
         method: 'POST',
@@ -221,8 +217,6 @@ describe('TODO', () => {
       },
       context: async () => ({}),
     });
-
-    // expect(res).toMatchInlineSnapshot();
 
     await gatewayServer.stop();
     await errorFtv1Subgraph.stop();

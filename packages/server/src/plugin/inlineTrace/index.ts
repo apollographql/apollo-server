@@ -105,7 +105,6 @@ export function ApolloServerPluginInlineTrace(
         },
 
         async didEncounterErrors({ errors }) {
-          // FIXME: do I need to filter out errors that have a `serviceName` here as well?
           treeBuilder.didEncounterErrors(errors);
         },
 
