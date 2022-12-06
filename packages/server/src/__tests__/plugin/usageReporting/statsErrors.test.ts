@@ -24,7 +24,7 @@ import { nockAfterEach, nockBeforeEach } from '../../nockAssertions';
 
 const mockReportingEndpoint = 'https://my-reporting-endpoint.com';
 
-describe('TODO', () => {
+describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', () => {
   beforeEach(nockBeforeEach);
   afterEach(nockAfterEach);
 
