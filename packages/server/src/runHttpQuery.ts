@@ -18,7 +18,6 @@ import {
 } from './ApolloServer.js';
 import { FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
-import { URLSearchParams } from 'url';
 import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';
 
