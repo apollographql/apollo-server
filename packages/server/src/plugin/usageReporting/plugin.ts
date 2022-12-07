@@ -11,7 +11,6 @@ import type LRUCache from 'lru-cache';
 import { AbortController } from 'node-abort-controller';
 import fetch from 'node-fetch';
 import os from 'os';
-import { promisify } from 'util';
 import { gzip } from 'zlib';
 import type {
   ApolloServerPlugin,
@@ -40,8 +39,6 @@ import { packageVersion } from '../../generated/packageVersion.js';
 import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
 import type { HeaderMap } from '../../utils/HeaderMap.js';
 import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
-
-const gzipPromise = promisify(gzip);
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),
@@ -305,7 +302,11 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           );
         }
 
-        const compressed = await gzipPromise(message);
+        const compressed = await new Promise<Buffer>((resolve, reject) => {
+          gzip(message!, (error, result) => {
+            error ? reject(error) : resolve(result);
+          });
+        });
         // Let the uncompressed message be garbage collected (helpful if the
         // HTTP request is slow).
         message = null;
