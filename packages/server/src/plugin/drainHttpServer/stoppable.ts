@@ -29,6 +29,7 @@
 import type http from 'http';
 import https from 'https';
 import type { Socket } from 'net';
+import type { AbortSignal } from 'node-abort-controller';
 
 export class Stopper {
   private requestCountPerSocket = new Map<Socket, number>();
@@ -65,7 +66,7 @@ export class Stopper {
     );
   }
 
-  async stop(stopGracePeriodMillis = Infinity): Promise<boolean> {
+  async stop(hardDestroyAbortSignal?: AbortSignal): Promise<boolean> {
     let gracefully = true;
 
     // In the off-chance that we are calling `stop` directly from within the
@@ -75,28 +76,23 @@ export class Stopper {
     await new Promise<void>((resolve) => setImmediate(resolve));
     this.stopped = true;
 
-    let timeout: NodeJS.Timeout | null = null;
-    // Soon, hard-destroy everything.
-    if (stopGracePeriodMillis < Infinity) {
-      timeout = setTimeout(() => {
-        gracefully = false;
-        this.requestCountPerSocket.forEach((_, socket) => socket.end());
-        // (FYI, when importing from upstream, not sure why we need setImmediate
-        // here.)
-        setImmediate(() => {
-          this.requestCountPerSocket.forEach((_, socket) => socket.destroy());
-        });
-      }, stopGracePeriodMillis);
-    }
+    // When told to, hard-destroy everything.
+    const onAbort = () => {
+      gracefully = false;
+      this.requestCountPerSocket.forEach((_, socket) => socket.end());
+      // (FYI, this setImmediate was cargo-culted from the original
+      // implementation, but we don't understand why it's here.)
+      setImmediate(() => {
+        this.requestCountPerSocket.forEach((_, socket) => socket.destroy());
+      });
+    };
+    hardDestroyAbortSignal?.addEventListener('abort', onAbort);
 
     // Close the server and create a Promise that resolves when all connections
     // are closed. Note that we ignore any error from `close` here.
     const closePromise = new Promise<void>((resolve) =>
       this.server.close(() => {
-        if (timeout) {
-          clearTimeout(timeout);
-          timeout = null;
-        }
+        hardDestroyAbortSignal?.removeEventListener('abort', onAbort);
         resolve();
       }),
     );

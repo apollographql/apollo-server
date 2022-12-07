@@ -36,6 +36,7 @@ concat
 contravariance
 contravariantly
 createhash
+culted
 dataloaders
 datasource
 datasources
@@ -174,8 +175,8 @@ subpackage
 subqueries
 sumby
 supergraph
-supergraphs
 Supergraph
+supergraphs
 testful
 testonly
 testsuite

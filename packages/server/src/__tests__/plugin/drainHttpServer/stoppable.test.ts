@@ -36,6 +36,8 @@ import child from 'child_process';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
+import { AbortController } from 'node-abort-controller';
+import resolvable, { Resolvable } from '@josephg/resolvable';
 
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;
@@ -163,7 +165,7 @@ Object.keys(schemes).forEach((schemeName) => {
         expect(gracefully).toBe(true);
       });
 
-      it('with keep-alive connections', async () => {
+      it('with idle keep-alive connections', async () => {
         let closed = 0;
         const server = scheme.server();
         const stopper = new Stopper(server);
@@ -192,15 +194,16 @@ Object.keys(schemes).forEach((schemeName) => {
       });
     });
 
-    it('with a 0.5s grace period', async () => {
+    it('with unfinished requests', async () => {
       const server = scheme.server((_req, res) => {
         res.writeHead(200);
-        res.write('hi');
+        res.write('hi'); // note lack of end()!
       });
       const stopper = new Stopper(server);
       server.listen(0);
       const p = port(server);
       await a.event(server, 'listening');
+      // Send two requests and wait to receive headers.
       await Promise.all([
         request(`${schemeName}://localhost:${p}`).agent(
           scheme.agent({ keepAlive: true }),
@@ -209,76 +212,120 @@ Object.keys(schemes).forEach((schemeName) => {
           scheme.agent({ keepAlive: true }),
         ),
       ]);
-      const start = Date.now();
-      const closeEventPromise = a.event(server, 'close');
-      const gracefully = await stopper.stop(500);
+      let closeCalled: boolean = false;
+      const closeEventPromise = a.event(server, 'close').then(() => {
+        closeCalled = true;
+      });
+      const abortController = new AbortController();
+      let gracefully: boolean | null = null;
+      const stopPromise = stopper
+        .stop(abortController.signal)
+        .then((stopReturn) => {
+          gracefully = stopReturn;
+        });
+
+      // Wait a while. Stopping should not have happened yet,
+      await a.delay(500);
+      expect(closeCalled).toBe(false);
+      expect(gracefully).toBeNull();
+
+      // Now abort it; this should be sufficient for the two promises above to
+      // resolve.
+      abortController.abort();
+      await stopPromise;
       await closeEventPromise;
-      // These tests are a bit flakey; we should figure out a way to usefully
-      // test the grace period behavior without leading to flakiness due to
-      // speed variation.
-      const elapsed = Date.now() - start;
-      expect(elapsed).toBeGreaterThanOrEqual(450);
-      expect(elapsed).toBeLessThanOrEqual(550);
+      expect(closeCalled).toBe(true);
       expect(gracefully).toBe(false);
-      // It takes a moment for the `finish` events to happen.
-      await a.delay(20);
-      expect(stopper['requestCountPerSocket'].size).toBe(0);
+      // It takes a moment for the `finish` events to happen. Loop waiting for
+      // them to finish and update this data structure (if it never happens,
+      // we'll get a Jest timeout, which is the failure we want).
+      while (stopper['requestCountPerSocket'].size > 0) {
+        await a.delay(20);
+      }
     });
 
     it('with requests in-flight', async () => {
+      const barriers: Record<string, Resolvable<void>> = {
+        b250: resolvable(),
+        b500: resolvable(),
+      };
       const server = scheme.server((req, res) => {
-        const delay = parseInt(req.url!.slice(1), 10);
         res.writeHead(200);
         res.write('hello');
-        setTimeout(() => res.end('world'), delay);
+        barriers[req.url!.slice(1)].then(() => res.end('world'));
       });
       const stopper = new Stopper(server);
 
       server.listen(0);
       const p = port(server);
       await a.event(server, 'listening');
-      const start = Date.now();
       const res = await Promise.all([
-        request(`${schemeName}://localhost:${p}/250`).agent(
+        request(`${schemeName}://localhost:${p}/b250`).agent(
           scheme.agent({ keepAlive: true }),
         ),
-        request(`${schemeName}://localhost:${p}/500`).agent(
+        request(`${schemeName}://localhost:${p}/b500`).agent(
           scheme.agent({ keepAlive: true }),
         ),
       ]);
-      const closeEventPromise = a.event(server, 'close');
-      const gracefully = await stopper.stop();
-      const bodies = await Promise.all(res.map((r) => r.text()));
+      let closeCalled: boolean = false;
+      const closeEventPromise = a.event(server, 'close').then(() => {
+        closeCalled = true;
+      });
+      let gracefully: boolean | null = null;
+      const stopPromise = stopper.stop().then((stopReturn) => {
+        gracefully = stopReturn;
+      });
+
+      // Wait a while. Stopping should not have happened yet,
+      await a.delay(250);
+      expect(closeCalled).toBe(false);
+      expect(gracefully).toBeNull();
+
+      // Let the first request resolve and wait a bit more. Stopping should
+      // still not have happened.
+      barriers.b250.resolve();
+      await a.delay(250);
+      expect(closeCalled).toBe(false);
+      expect(gracefully).toBeNull();
+
+      // Let the second request resolve. Then things should stop properly.
+      barriers.b500.resolve();
       await closeEventPromise;
-      expect(bodies[0]).toBe('helloworld');
-      // These tests are a bit flakey; we should figure out a way to usefully
-      // test the grace period behavior without leading to flakiness due to
-      // speed variation.
-      const elapsed = Date.now() - start;
-      expect(elapsed).toBeGreaterThanOrEqual(400);
-      expect(elapsed).toBeLessThanOrEqual(600);
+      await stopPromise;
+      expect(closeCalled).toBe(true);
       expect(gracefully).toBe(true);
+
+      const bodies = await Promise.all(res.map((r) => r.text()));
+      expect(bodies).toStrictEqual(['helloworld', 'helloworld']);
     });
 
     if (schemeName === 'http') {
       it('with in-flights finishing before grace period ends', async () => {
         const file = path.join(__dirname, 'stoppable', 'server.js');
-        const server = child.spawn('node', [file, '500']);
+        const server = child.spawn('node', [file]);
         const [data] = await a.event(server.stdout, 'data');
         const port = +data.toString();
         expect(typeof port).toBe('number');
-        const start = Date.now();
-        const res = await request(
-          `${schemeName}://localhost:${port}/250`,
-        ).agent(scheme.agent({ keepAlive: true }));
-        const body = await res.text();
+        const res = await request(`${schemeName}://localhost:${port}/`).agent(
+          scheme.agent({ keepAlive: true }),
+        );
+        let gotBody = false;
+        const bodyPromise = res.text().then((body: string) => {
+          gotBody = true;
+          return body;
+        });
+
+        // Wait a while. We shouldn't have finished reading the response yet.
+        await a.delay(250);
+        expect(gotBody).toBe(false);
+
+        // Tell the server that its request should finish.
+        server.kill('SIGUSR1');
+
+        const body = await bodyPromise;
+        expect(gotBody).toBe(true);
         expect(body).toBe('helloworld');
-        // These tests are a bit flakey; we should figure out a way to usefully
-        // test the grace period behavior without leading to flakiness due to
-        // speed variation.
-        const elapsed = Date.now() - start;
-        expect(elapsed).toBeGreaterThanOrEqual(150);
-        expect(elapsed).toBeLessThanOrEqual(350);
+
         // Wait for subprocess to go away.
         await a.event(server, 'close');
       });
