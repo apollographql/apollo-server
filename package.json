@@ -43,12 +43,12 @@
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.7",
     "@changesets/cli": "2.25.2",
-    "@graphql-codegen/cli": "2.15.0",
-    "@graphql-codegen/typescript-operations": "2.5.8",
-    "@graphql-tools/mock": "8.7.12",
-    "@graphql-tools/schema": "9.0.10",
+    "@graphql-codegen/cli": "2.16.1",
+    "@graphql-codegen/typescript-operations": "2.5.10",
+    "@graphql-tools/mock": "8.7.14",
+    "@graphql-tools/schema": "9.0.12",
     "@josephg/resolvable": "1.0.1",
-    "@rollup/plugin-commonjs": "23.0.3",
+    "@rollup/plugin-commonjs": "23.0.4",
     "@types/async-retry": "1.4.5",
     "@types/body-parser": "1.19.2",
     "@types/compression": "1.7.2",
@@ -69,8 +69,8 @@
     "@types/type-is": "1.6.3",
     "@types/uuid": "9.0.0",
     "@types/whatwg-mimetype": "3.0.0",
-    "@typescript-eslint/eslint-plugin": "5.45.1",
-    "@typescript-eslint/parser": "5.45.1",
+    "@typescript-eslint/eslint-plugin": "5.46.0",
+    "@typescript-eslint/parser": "5.46.0",
     "@vendia/serverless-express": "4.10.1",
     "awaiting": "3.0.0",
     "body-parser": "1.20.1",
@@ -92,15 +92,15 @@
     "lodash.sumby": "4.6.0",
     "nock": "13.2.9",
     "node-fetch": "2.6.7",
-    "prettier": "2.8.0",
+    "prettier": "2.8.1",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
     "rimraf": "3.0.2",
-    "rollup": "3.6.0",
-    "supertest": "6.3.2",
+    "rollup": "3.7.0",
+    "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.0.3",
-    "typescript": "4.9.3"
+    "typescript": "4.9.4"
   },
   "jest": {
     "projects": [
@@ -109,6 +109,6 @@
   },
   "volta": {
     "node": "18.12.1",
-    "npm": "9.1.3"
+    "npm": "9.2.0"
   }
 }
