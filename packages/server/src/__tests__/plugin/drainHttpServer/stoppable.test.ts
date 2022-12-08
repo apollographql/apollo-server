@@ -224,7 +224,7 @@ Object.keys(schemes).forEach((schemeName) => {
           gracefully = stopReturn;
         });
 
-      // Wait a while. Stopping should not have happened yet,
+      // Wait a while (number chosen here is arbitrary). Stopping should not have happened yet.
       await a.delay(500);
       expect(closeCalled).toBe(false);
       expect(gracefully).toBeNull();
