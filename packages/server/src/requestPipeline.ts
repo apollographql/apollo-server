@@ -202,7 +202,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   if (schemaDerivedData.documentStore) {
     try {
       requestContext.document = await schemaDerivedData.documentStore.get(
-        queryHash,
+        schemaDerivedData.documentStoreKeyPrefix + queryHash,
       );
     } catch (err: unknown) {
       server.logger.warn(
@@ -271,7 +271,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // `Promise.resolve` invocation, it seems that the underlying cache store
       // is returning a non-native `Promise` (e.g. Bluebird, etc.).
       Promise.resolve(
-        schemaDerivedData.documentStore.set(queryHash, requestContext.document),
+        schemaDerivedData.documentStore.set(
+          schemaDerivedData.documentStoreKeyPrefix + queryHash,
+          requestContext.document,
+        ),
       ).catch((err) =>
         server.logger.warn(
           'Could not store validated document. ' + err?.message || err,

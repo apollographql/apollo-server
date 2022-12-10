@@ -98,6 +98,12 @@ export type SchemaDerivedData = {
   // versions of operations in-memory, allowing subsequent parses/validates
   // on the same operation to be executed immediately.
   documentStore: DocumentStore | null;
+  // Prefix for keys in the DocumentStore if a custom one is provided (to
+  // separate the cache for different schema versions). This is vital to
+  // security so we do it explicitly so that
+  // PrefixingKeyValueCache.cacheDangerouslyDoesNotNeedPrefixesForIsolation
+  // doesn't affect it.
+  documentStoreKeyPrefix: string;
 };
 
 type RunningServerState = {
@@ -214,6 +220,19 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const isDev = nodeEnv !== 'production';
 
+    if (
+      config.cache &&
+      config.cache !== 'bounded' &&
+      PrefixingKeyValueCache.prefixesAreUnnecessaryForIsolation(config.cache)
+    ) {
+      throw new Error(
+        'You cannot pass a cache returned from ' +
+          '`PrefixingKeyValueCache.cacheDangerouslyDoesNotNeedPrefixesForIsolation`' +
+          'to `new ApolloServer({ cache })`, because Apollo Server may use it for ' +
+          'multiple features whose cache keys must be distinct from each other.',
+      );
+    }
+
     const state: ServerState = config.gateway
       ? // ApolloServer has been initialized but we have not yet tried to load the
         // schema from the gateway. That will wait until `start()` or
@@ -256,7 +275,12 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     const introspectionEnabled = config.introspection ?? isDev;
 
-    this.cache = config.cache ?? new InMemoryLRUCache();
+    // We continue to allow 'bounded' for backwards-compatibility with the AS3.9
+    // API.
+    this.cache =
+      config.cache === undefined || config.cache === 'bounded'
+        ? new InMemoryLRUCache()
+        : config.cache;
 
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
@@ -682,7 +706,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     // missing/undefined means use the default (creating a new one each
     // time).
     // defined means wrap this one in a random prefix for each new schema.
-    providedUnprefixedDocumentStore: DocumentStore | null | undefined,
+    providedDocumentStore: DocumentStore | null | undefined,
   ): SchemaDerivedData {
     // Instead of waiting for the first operation execution against the schema
     // to find out if it's a valid schema or not, check right now. In the
@@ -703,14 +727,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       // new schema. If we're using a user-provided DocumentStore, then we use a
       // random prefix each time we get a new schema.
       documentStore:
-        providedUnprefixedDocumentStore === undefined
+        providedDocumentStore === undefined
           ? new InMemoryLRUCache<DocumentNode>()
-          : providedUnprefixedDocumentStore === null
-          ? null
-          : new PrefixingKeyValueCache(
-              providedUnprefixedDocumentStore,
-              `${uuid.v4()}:`,
-            ),
+          : providedDocumentStore,
+      documentStoreKeyPrefix: providedDocumentStore ? `${uuid.v4()}:` : '',
     };
   }
 

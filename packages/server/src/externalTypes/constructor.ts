@@ -84,7 +84,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules?: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  cache?: KeyValueCache<string>;
+  cache?: KeyValueCache<string> | 'bounded';
   includeStacktraceInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;
