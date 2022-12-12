@@ -353,7 +353,7 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 
 A [`KeyValueCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's plugins.
 
-The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB. (For backwards-compatibility with Apollo Server 3, specifying `cache: 'bounded'` also selects this default bounded cache.)
 
 To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
 
