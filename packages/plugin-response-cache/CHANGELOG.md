@@ -1,5 +1,11 @@
 # @apollo/server-plugin-response-cache
 
+## 4.1.0
+
+### Minor Changes
+
+- [#7241](https://github.com/apollographql/apollo-server/pull/7241) [`d7e9b9759`](https://github.com/apollographql/apollo-server/commit/d7e9b97595b063f1e796ec4449850a16d19e8b18) Thanks [@glasser](https://github.com/glasser)! - If the cache you provide to the `cache` option is created with `PrefixingKeyValueCache.cacheDangerouslyDoesNotNeedPrefixesForIsolation` (new in `@apollo/utils.keyvaluecache@2.1.0`), the `fqc:` prefix will not be added to cache keys.
+
 ## 4.0.3
 
 ### Patch Changes
