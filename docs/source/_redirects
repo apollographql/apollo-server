@@ -59,4 +59,4 @@
 /api/apollo-subgraph/ /docs/federation/api/apollo-subgraph/ 302!
 /federation/managed-federation /docs/studio/managed-federation/overview/
 /federation/introduction /docs/federation/ 302!
-/federation/\* /docs/federation/:splat 302!
+/federation/* /docs/federation/:splat 302!
