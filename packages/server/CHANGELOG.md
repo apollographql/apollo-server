@@ -1,5 +1,21 @@
 # @apollo/server
 
+## 4.3.0
+
+### Minor Changes
+
+- [#7241](https://github.com/apollographql/apollo-server/pull/7241) [`d7e9b9759`](https://github.com/apollographql/apollo-server/commit/d7e9b97595b063f1e796ec4449850a16d19e8b18) Thanks [@glasser](https://github.com/glasser)! - If the cache you provide to the `persistedQueries.cache` option is created with `PrefixingKeyValueCache.cacheDangerouslyDoesNotNeedPrefixesForIsolation` (new in `@apollo/utils.keyvaluecache@2.1.0`), the `apq:` prefix will not be added to cache keys. Providing such a cache to `new ApolloServer()` throws an error.
+
+### Patch Changes
+
+- [#7232](https://github.com/apollographql/apollo-server/pull/7232) [`3a4823e0d`](https://github.com/apollographql/apollo-server/commit/3a4823e0d85afb51b7fb82a9f3a525c1957eab5d) Thanks [@glasser](https://github.com/glasser)! - Refactor the implementation of `ApolloServerPluginDrainHttpServer`'s grace period. This is intended to be a no-op.
+
+- [#7229](https://github.com/apollographql/apollo-server/pull/7229) [`d057e2ffc`](https://github.com/apollographql/apollo-server/commit/d057e2ffccac2afc9c3e102db64d74d895157c3d) Thanks [@dnalborczyk](https://github.com/dnalborczyk)! - Improve compatibility with Cloudflare workers by avoiding the use of the Node `util` package. This change is intended to be a no-op.
+
+- [#7228](https://github.com/apollographql/apollo-server/pull/7228) [`f97e55304`](https://github.com/apollographql/apollo-server/commit/f97e55304ceacc5f1586131ad3eb6a99912bc821) Thanks [@dnalborczyk](https://github.com/dnalborczyk)! - Improve compatibility with Cloudflare workers by avoiding the use of the Node `url` package. This change is intended to be a no-op.
+
+- [#7241](https://github.com/apollographql/apollo-server/pull/7241) [`d7e9b9759`](https://github.com/apollographql/apollo-server/commit/d7e9b97595b063f1e796ec4449850a16d19e8b18) Thanks [@glasser](https://github.com/glasser)! - For ease of upgrade from the recommended configuration of Apollo Server v3.9+, you can now pass `new ApolloServer({ cache: 'bounded' })`, which is equivalent to not providing the `cache` option (as a bounded cache is now the default in AS4).
+
 ## 4.2.2
 
 ### Patch Changes
