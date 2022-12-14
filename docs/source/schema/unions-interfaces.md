@@ -163,7 +163,7 @@ A field can have an interface (or a list of that interface) as its return type. 
 
 ```graphql
 type Query {
-  books: [Book!] # Can include Textbook objects
+  books: [Book!]! # Can include Textbook objects
 }
 ```
 
