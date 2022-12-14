@@ -10,7 +10,6 @@
     "compile": "tsc --build tsconfig.build.json",
     "postcompile": "node scripts/postcompile.mjs",
     "watch": "tsc --build tsconfig.esm.json --watch",
-    "install-with-npm-8.5": "npm i -g npm@^8.5.0 && npm i",
     "pretest": "npm run compile",
     "test": "jest --verbose",
     "test:watch": "jest --verbose --watchAll",
