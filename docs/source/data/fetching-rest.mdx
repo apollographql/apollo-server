@@ -7,7 +7,7 @@ import TopLevelAwait from "../shared/top-level-await.mdx"
 
 > See the [`@apollo/datasource-rest` page](https://github.com/apollographql/datasource-rest) for the full details of the `RESTDataSource` API.
 
-The `RESTDataSource` class simplifies fetching data from REST APIs and helps handle caching, deduplication, and errors while resolving operations.
+The `RESTDataSource` class simplifies fetching data from REST APIs and helps handle caching, request deduplication, and errors while resolving operations.
 
 ```mermaid
 flowchart LR;
@@ -63,7 +63,7 @@ class MoviesAPI extends RESTDataSource {
 
 </MultiCodeBlock>
 
-You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods should use the built-in convenience methods (e.g., `get` and `post`) to perform HTTP requests, helping you add query parameters, parse and cache JSON results, dedupe requests, and handle errors.
+You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods should use the built-in convenience methods (e.g., `get` and `post`) to perform HTTP requests, helping you add query parameters, parse and cache JSON results, dedupe requests, and handle errors. More complex use cases can use the `fetch` method directly. The `fetch` method returns both the parsed body as well as the response object which affords more flexibility for use cases like reading response headers.
 
 ## Adding data sources to your server's context function
 
@@ -136,7 +136,10 @@ const resolvers = {
 
 The `RESTDataSource` class provides its subclasses with _two_ layers of caching:
 
-- The first layer **stores all outgoing `GET` requests** by their URLs in a separate memoized cache.
+- The first layer deduplicates _concurrent_ outgoing `GET` (and `HEAD`) requests by default. Deduplication is keyed on the request's method and URL. This behavior can be configured by overriding the `requestDeduplicationPolicyFor` method. For more details on how to configure this please consult [the README](https://github.com/apollographql/datasource-rest#requestdeduplicationpolicyfor).
+
+> Note: in versions prior to v5 of `RESTDataSource`, _all_ outgoing `GET` requests were deduplicated. This behavior can be restored using the `deduplicate-until-invalidated` policy (explained more in-depth in [the README](https://github.com/apollographql/datasource-rest#requestdeduplicationpolicyfor)).
+
 - The second layer caches the results from **HTTP responses that specify HTTP caching headers**.
 
 These caching layers effectively make the `RESTDataSource` class a Node HTTP client that offers browser-style caching. Below, we'll dive into each layer of caching and the advantage that layer provides.
