@@ -4,7 +4,7 @@
     "make-fetch-happen": "11.0.2"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "23.0.5",
+    "@rollup/plugin-commonjs": "23.0.7",
     "@rollup/plugin-json": "5.0.2",
     "@rollup/plugin-node-resolve": "15.0.1",
     "@types/make-fetch-happen": "10.0.1",
