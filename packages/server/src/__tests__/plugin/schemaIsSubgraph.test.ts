@@ -9,7 +9,7 @@ import {
   GraphQLNonNull,
 } from 'graphql';
 
-describe('end-to-end', () => {
+describe('schemaIsSubgraph', () => {
   it('returns false when there is no service field', async () => {
     const schema = new GraphQLSchema({
       query: new GraphQLObjectType({
