@@ -587,9 +587,7 @@ const response = await server.executeOperation({
   query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
   variables: { name: 'world' },
 }, {
-  contextValue: async () => {
-    return { userId: 'test' };
-  }
+  contextValue: { userId: 'test' },
 });
 ```
 
