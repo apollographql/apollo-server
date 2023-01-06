@@ -642,7 +642,7 @@ The details of the `fetch` response sent by the subgraph.
 
 ## `class IntrospectAndCompose`
 
-> ⚠️ **We strongly recommend _against_ using `IntrospectAndCompose` in production.** For details, see [Limitations of `IntrospectAndCompose`](/federation/building-supergraphs/router#limitations-of-introspectandcompose).
+> ⚠️ **We strongly recommend _against_ using `IntrospectAndCompose` in production.** For details, see [Limitations of `IntrospectAndCompose`](../apollo-gateway-setup#limitations-of-introspectandcompose).
 
 `IntrospectAndCompose` is a development tool for fetching and composing subgraph SDL into a supergraph for your gateway. Given a list of subgraphs and their URLs, `IntrospectAndCompose` will issue queries for their SDL, compose them into a supergraph, and provide that supergraph to the gateway. It can also be configured to update via polling and perform subgraph health checks to ensure that supergraphs are updated safely. `IntrospectAndCompose` implements the `SupergraphManager` interface and is passed in to `ApolloGateway`'s `supergraphSdl` constructor option.
 
