@@ -19,7 +19,8 @@ jobs:
       - name: Setup Node.js 16.x
         uses: actions/setup-node@v3
         with:
-          node-version: 16.x
+          # setup-node knows how to read the `volta.node` field.
+          node-version-file: package.json
       - name: Install Dependencies
         run: npm i
 
