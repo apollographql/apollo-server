@@ -286,7 +286,7 @@ If you ever want to remove the S3 bucket or Lambda functions that Serverless cre
 
 ## Customizing HTTP behavior
 
-The `@as-integrations/aws-lambda` package is compatible with the following event types `APIGatewayProxyEvent`, `APIGatewayProxyEventV2`, `ALBEvent`. This supports a wide range of eservices like  However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., S3 or DynamoDB).
+The `@as-integrations/aws-lambda` package is compatible with the following event types `APIGatewayProxyEvent`, `APIGatewayProxyEventV2`, `ALBEvent`. This supports a wide range of services like API Gateway HTTP Proxy APIs, API Gateway REST Proxy APIs, Lambda Function URLs, and Application Load Balancers. However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., S3 or DynamoDB).
 
 If you want to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
 
