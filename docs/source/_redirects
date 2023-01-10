@@ -8,8 +8,8 @@
 
 /testing/graphql-playground/ /docs/apollo-server/testing/build-run-queries/#graphql-playground
 /deployment /docs/apollo-server/deployment/heroku
-/deployment/gcp-functions/ /v3/deployment/gcp-functions/
-/deployment/azure-functions/ /v3/deployment/azure-functions/
+/deployment/gcp-functions/ /docs/apollo-server/v3/deployment/gcp-functions/
+/deployment/azure-functions/ /docs/apollo-server/v3/deployment/azure-functions/
 
 # Removing old hidden documentation
 
