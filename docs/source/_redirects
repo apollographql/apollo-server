@@ -1,5 +1,4 @@
 # The v4 docs were beta for a while, and non-default, but now that they are
-
 # default, the v4 docs don't exist anymore. So redirect them to the default!
 
 /v4 /docs/apollo-server
@@ -9,6 +8,8 @@
 
 /testing/graphql-playground/ /docs/apollo-server/testing/build-run-queries/#graphql-playground
 /deployment /docs/apollo-server/deployment/heroku
+/deployment/gcp-functions/ /v3/deployment/gcp-functions/
+/deployment/azure-functions/ /v3/deployment/azure-functions/
 
 # Removing old hidden documentation
 
