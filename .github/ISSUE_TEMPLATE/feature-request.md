@@ -3,8 +3,6 @@ name: 🚀 Feature Request
 about: Have a feature that you think is important? Help us understand it.
 ---
 
-<!--
-
 - Some features can be built as plugins.
 
   We encourage exploring the plugin API prior to opening a feature request:
@@ -34,4 +32,3 @@ about: Have a feature that you think is important? Help us understand it.
   necessitate a specific API design.  We also hope you'll be willing to engage
   in the on-going design discussion prior to opening a pull-request.
 
--->
