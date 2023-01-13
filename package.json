@@ -42,10 +42,10 @@
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",
-    "@graphql-codegen/cli": "2.16.2",
-    "@graphql-codegen/typescript-operations": "2.5.11",
-    "@graphql-tools/mock": "8.7.14",
-    "@graphql-tools/schema": "9.0.12",
+    "@graphql-codegen/cli": "2.16.4",
+    "@graphql-codegen/typescript-operations": "2.5.12",
+    "@graphql-tools/mock": "8.7.15",
+    "@graphql-tools/schema": "9.0.13",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "24.0.0",
     "@types/async-retry": "1.4.5",
@@ -68,8 +68,8 @@
     "@types/type-is": "1.6.3",
     "@types/uuid": "9.0.0",
     "@types/whatwg-mimetype": "3.0.0",
-    "@typescript-eslint/eslint-plugin": "5.48.0",
-    "@typescript-eslint/parser": "5.48.0",
+    "@typescript-eslint/eslint-plugin": "5.48.1",
+    "@typescript-eslint/parser": "5.48.1",
     "@vendia/serverless-express": "4.10.1",
     "awaiting": "3.0.0",
     "body-parser": "1.20.1",
@@ -78,7 +78,7 @@
     "cors": "2.8.5",
     "cspell": "6.18.1",
     "eslint": "8.31.0",
-    "eslint-plugin-import": "2.26.0",
+    "eslint-plugin-import": "2.27.4",
     "express": "4.18.2",
     "graphql": "16.6.0",
     "graphql-tag": "2.12.6",
@@ -89,16 +89,16 @@
     "jest-mock-random": "1.1.1",
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
-    "nock": "13.2.9",
-    "node-fetch": "2.6.7",
-    "prettier": "2.8.1",
+    "nock": "13.3.0",
+    "node-fetch": "2.6.8",
+    "prettier": "2.8.2",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
     "rimraf": "3.0.2",
-    "rollup": "3.9.1",
+    "rollup": "3.10.0",
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
-    "ts-jest": "29.0.3",
+    "ts-jest": "29.0.5",
     "typescript": "4.9.4"
   },
   "jest": {
@@ -107,7 +107,7 @@
     ]
   },
   "volta": {
-    "node": "18.12.1",
-    "npm": "9.2.0"
+    "node": "18.13.0",
+    "npm": "9.3.0"
   }
 }
