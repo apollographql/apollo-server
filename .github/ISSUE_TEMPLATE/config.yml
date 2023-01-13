@@ -1,12 +1,18 @@
 blank_issues_enabled: true
 contact_links:
-  - name: "📚 Questions: Stack Overflow tagged \"apollo\""
+  - name: "GraphOS Discord Server"
+    url: https://discord.com/invite/graphos
+    about: >-
+      Come join us in our GraphOS Discord server; our community and DevRel team
+      are happy to answer any questions you might have.
+  - name: "Apollo Discourse Community"
+    url: https://community.apollographql.com/tag/server
+    about: >-
+      The Apollo Server tag in our Apollo Discourse Community has many existing
+      questions and answers. You can see if your question has already been
+      answered there or ask a new one.
+  - name: "Stack Overflow tagged \"apollo\""
     url: https://stackoverflow.com/questions/tagged/apollo
     about: >-
-      Many questions are already answered on Stack Overflow!
-      We suggest starting here!
-  - name: "💬 Questions: Spectrum Community Support"
-    url: https://spectrum.chat/apollo/apollo-server
-    about: >-
-      If you're unable to find an answer on Stack Overflow, the Apollo
-      Server channel on our Apollo Community Spectrum is the next best place.
+      If you can't find what you're looking for, many questions are already
+      answered on Stack Overflow.
