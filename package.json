@@ -37,7 +37,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.7.3",
+    "@apollo/client": "3.7.4",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
