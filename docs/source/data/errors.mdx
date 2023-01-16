@@ -411,7 +411,7 @@ For example, if you are using a database package in your app and you'd like to d
 
 Note, if a _resolver_ throws the error, a `GraphQLError` is wrapped around the initially thrown error. This `GraphQLError` neatly formats the error and contains useful fields, such as the `path` where the error occurred.
 
-In you want to remove the outer `GraphQLError` to access the originally thrown error you can use `unwrapResolverError` from `@apollo/server/errors`. The `unwrapResolverError` function can remove the `GraphQLError` wrapping from a resolver error or return the error unaltered if it isn't from a resolver.
+If you want to remove the outer `GraphQLError` to access the originally thrown error you can use `unwrapResolverError` from `@apollo/server/errors`. The `unwrapResolverError` function can remove the `GraphQLError` wrapping from a resolver error or return the error unaltered if it isn't from a resolver.
 
 So, we can rewrite the above code snippet to work for errors thrown in and outside of resolvers, like so:
 
