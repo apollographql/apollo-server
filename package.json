@@ -95,7 +95,7 @@
     "prettier": "2.8.3",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
-    "rimraf": "4.0.5",
+    "rimraf": "4.0.7",
     "rollup": "3.10.0",
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
