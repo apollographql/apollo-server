@@ -43,6 +43,10 @@ export type {
   ApolloConfig,
   PersistedQueryOptions,
   CSRFPreventionOptions,
+  ApolloServerOptionsWithSchema,
+  ApolloServerOptionsWithTypeDefs,
+  ApolloServerOptionsWithStaticSchema,
+  ApolloServerOptionsWithGateway,
   ApolloServerOptions,
 } from './constructor.js';
 
