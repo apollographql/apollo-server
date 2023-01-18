@@ -7,6 +7,7 @@ import type {
   HTTPGraphQLRequest,
 } from '../externalTypes/index.js';
 import { parse as urlParse } from 'url';
+import { HeaderMap } from '../utils/HeaderMap.js';
 
 export interface ExpressContextFunctionArgument {
   req: express.Request;
@@ -56,7 +57,7 @@ export function expressMiddleware<TContext extends BaseContext>(
       return;
     }
 
-    const headers = new Map<string, string>();
+    const headers = new HeaderMap();
     for (const [key, value] of Object.entries(req.headers)) {
       if (value !== undefined) {
         // Node/Express headers can be an array or a single value. We join
