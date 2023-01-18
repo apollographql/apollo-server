@@ -2456,9 +2456,15 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
     describe('Federated tracing', () => {
       // Enable federated tracing by pretending to be federated.
-      const federationTypeDefs = gql`
+      const federationV1TypeDefs = gql`
         type _Service {
           sdl: String
+        }
+      `;
+
+      const federationV2TypeDefs = gql`
+        type _Service {
+          sdl: String!
         }
       `;
 
@@ -2479,7 +2485,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
         }
       `;
 
-      const allTypeDefs = [federationTypeDefs, baseTypeDefs];
+      const v1TypeDefs = [federationV1TypeDefs, baseTypeDefs];
+      const v2TypeDefs = [federationV2TypeDefs, baseTypeDefs];
 
       const resolvers = {
         Query: {
@@ -2506,7 +2513,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
       it("doesn't include federated trace without the special header", async () => {
         const uri = await createServerAndGetUrl({
-          typeDefs: allTypeDefs,
+          typeDefs: v2TypeDefs,
           resolvers,
           logger: quietLogger,
         });
@@ -2535,94 +2542,102 @@ export function defineIntegrationTestSuiteApolloServerTests(
         expect(result.extensions).toBeUndefined();
       });
 
-      it('reports a total duration that is longer than the duration of its resolvers', async () => {
-        const uri = await createServerAndGetUrl({
-          typeDefs: allTypeDefs,
-          resolvers,
-          logger: quietLogger,
-        });
+      describe.each([
+        ['nullable _Service.sdl field', v1TypeDefs],
+        ['non-nullable _Service.sdl! field', v2TypeDefs],
+      ])('with %s', (_, typeDefs) => {
+        it('reports a total duration that is longer than the duration of its resolvers', async () => {
+          const uri = await createServerAndGetUrl({
+            typeDefs,
+            resolvers,
+            logger: quietLogger,
+          });
 
-        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+          const apolloFetch = createApolloFetchAsIfFromGateway(uri);
 
-        const result = await apolloFetch({
-          query: `{ books { title author } }`,
-        });
+          const result = await apolloFetch({
+            query: `{ books { title author } }`,
+          });
 
-        const ftv1: string = result.extensions.ftv1;
+          const ftv1: string = result.extensions.ftv1;
 
-        expect(ftv1).toBeTruthy();
-        const encoded = Buffer.from(ftv1, 'base64');
-        const trace = Trace.decode(encoded);
+          expect(ftv1).toBeTruthy();
+          const encoded = Buffer.from(ftv1, 'base64');
+          const trace = Trace.decode(encoded);
 
-        let earliestStartOffset = Infinity;
-        let latestEndOffset = -Infinity;
+          let earliestStartOffset = Infinity;
+          let latestEndOffset = -Infinity;
 
-        function walk(node: Trace.Node) {
-          if (node.startTime !== 0 && node.endTime !== 0) {
-            earliestStartOffset = Math.min(earliestStartOffset, node.startTime);
-            latestEndOffset = Math.max(latestEndOffset, node.endTime);
+          function walk(node: Trace.Node) {
+            if (node.startTime !== 0 && node.endTime !== 0) {
+              earliestStartOffset = Math.min(
+                earliestStartOffset,
+                node.startTime,
+              );
+              latestEndOffset = Math.max(latestEndOffset, node.endTime);
+            }
+            node.child.forEach((n) => walk(n as Trace.Node));
           }
-          node.child.forEach((n) => walk(n as Trace.Node));
-        }
 
-        walk(trace.root as Trace.Node);
-        expect(earliestStartOffset).toBeLessThan(Infinity);
-        expect(latestEndOffset).toBeGreaterThan(-Infinity);
-        const resolverDuration = latestEndOffset - earliestStartOffset;
-        expect(resolverDuration).toBeGreaterThan(0);
-        expect(trace.durationNs).toBeGreaterThanOrEqual(resolverDuration);
+          walk(trace.root as Trace.Node);
+          expect(earliestStartOffset).toBeLessThan(Infinity);
+          expect(latestEndOffset).toBeGreaterThan(-Infinity);
+          const resolverDuration = latestEndOffset - earliestStartOffset;
+          expect(resolverDuration).toBeGreaterThan(0);
+          expect(trace.durationNs).toBeGreaterThanOrEqual(resolverDuration);
 
-        expect(trace.startTime!.seconds).toBeLessThanOrEqual(
-          trace.endTime!.seconds!,
-        );
-        if (trace.startTime!.seconds === trace.endTime!.seconds) {
-          expect(trace.startTime!.nanos).toBeLessThanOrEqual(
-            trace.endTime!.nanos!,
+          expect(trace.startTime!.seconds).toBeLessThanOrEqual(
+            trace.endTime!.seconds!,
           );
-        }
-      });
+          if (trace.startTime!.seconds === trace.endTime!.seconds) {
+            expect(trace.startTime!.nanos).toBeLessThanOrEqual(
+              trace.endTime!.nanos!,
+            );
+          }
+        });
 
-      it('includes errors in federated trace', async () => {
-        const uri = await createServerAndGetUrl({
-          typeDefs: allTypeDefs,
-          resolvers,
-          formatError(err) {
-            return {
-              ...err,
-              message: `Formatted: ${err.message}`,
-            };
-          },
-          plugins: [
-            ApolloServerPluginInlineTrace({
-              includeErrors: {
-                transform(err) {
-                  err.message = `Rewritten for Usage Reporting: ${err.message}`;
-                  return err;
+        it('includes errors in federated trace', async () => {
+          const uri = await createServerAndGetUrl({
+            typeDefs,
+            resolvers,
+            formatError(err) {
+              return {
+                ...err,
+                message: `Formatted: ${err.message}`,
+              };
+            },
+            plugins: [
+              ApolloServerPluginInlineTrace({
+                includeErrors: {
+                  transform(err) {
+                    err.message = `Rewritten for Usage Reporting: ${err.message}`;
+                    return err;
+                  },
                 },
-              },
-            }),
-          ],
+              }),
+            ],
+          });
+
+          const apolloFetch = createApolloFetchAsIfFromGateway(uri);
+
+          const result = await apolloFetch({
+            query: `{ error }`,
+          });
+
+          expect(result.data).toStrictEqual({ error: null });
+          expect(result.errors).toBeTruthy();
+          expect(result.errors.length).toBe(1);
+          expect(result.errors[0].message).toBe('Formatted: It broke');
+
+          const ftv1: string = result.extensions.ftv1;
+
+          expect(ftv1).toBeTruthy();
+          const encoded = Buffer.from(ftv1, 'base64');
+          const trace = Trace.decode(encoded);
+          expect(trace.root!.child![0].error![0].message).toBe(
+            'Rewritten for Usage Reporting: It broke',
+          );
         });
-
-        const apolloFetch = createApolloFetchAsIfFromGateway(uri);
-
-        const result = await apolloFetch({
-          query: `{ error }`,
-        });
-
-        expect(result.data).toStrictEqual({ error: null });
-        expect(result.errors).toBeTruthy();
-        expect(result.errors.length).toBe(1);
-        expect(result.errors[0].message).toBe('Formatted: It broke');
-
-        const ftv1: string = result.extensions.ftv1;
-
-        expect(ftv1).toBeTruthy();
-        const encoded = Buffer.from(ftv1, 'base64');
-        const trace = Trace.decode(encoded);
-        expect(trace.root!.child![0].error![0].message).toBe(
-          'Rewritten for Usage Reporting: It broke',
-        );
       });
     });
 
