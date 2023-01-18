@@ -1,5 +1,20 @@
 # @apollo/server
 
+## 4.3.1
+
+### Patch Changes
+
+- [#7313](https://github.com/apollographql/apollo-server/pull/7313) [`ec28b4b33`](https://github.com/apollographql/apollo-server/commit/ec28b4b33e95ac4df862e67ac70c77895c21bb9c) Thanks [@vtipparam](https://github.com/vtipparam)! - Allow case insensitive lookup on headers. Use HeaderMap instead of plain Map for headers in expressMiddleware.
+
+- [#7311](https://github.com/apollographql/apollo-server/pull/7311) [`322b5ebbc`](https://github.com/apollographql/apollo-server/commit/322b5ebbc57f854b58577d14d6ec0b5351f5c858) Thanks [@axe-me](https://github.com/axe-me)! - Export intermediate ApolloServerOptions\* types
+
+- [#7274](https://github.com/apollographql/apollo-server/pull/7274) [`3b0ec8529`](https://github.com/apollographql/apollo-server/commit/3b0ec852994f86dd84bdccf77829fb81f8455579) Thanks [@patrick91](https://github.com/patrick91)! - The subgraph spec has evolved in Federation v2 such that the type of
+  `_Service.sdl` (formerly nullable) is now non-nullable. Apollo Server now
+  detects both cases correctly in order to determine whether to:
+  1. install / enable the `ApolloServerPluginInlineTrace` plugin
+  2. throw on startup if `ApolloServerPluginSchemaReporting` should not be installed
+  3. warn when `ApolloServerPluginUsageReporting` is installed and configured with the `__onlyIfSchemaIsNotSubgraph` option
+
 ## 4.3.0
 
 ### Minor Changes

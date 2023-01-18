@@ -1,5 +1,16 @@
 # @apollo/server-integration-testsuite
 
+## 4.3.1
+
+### Patch Changes
+
+- [#7285](https://github.com/apollographql/apollo-server/pull/7285) [`35fa72bdd`](https://github.com/apollographql/apollo-server/commit/35fa72bdd694ec3649708b34c89dda3c371389ea) Thanks [@glasser](https://github.com/glasser)! - Adds an integration test verifying that Rover's introspection query works. This should not break any integration that passes other tests.
+
+- [#7276](https://github.com/apollographql/apollo-server/pull/7276) [`15c912f4c`](https://github.com/apollographql/apollo-server/commit/15c912f4cb56bb220168b53b3657da6e680c328d) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- Updated dependencies [[`ec28b4b33`](https://github.com/apollographql/apollo-server/commit/ec28b4b33e95ac4df862e67ac70c77895c21bb9c), [`322b5ebbc`](https://github.com/apollographql/apollo-server/commit/322b5ebbc57f854b58577d14d6ec0b5351f5c858), [`3b0ec8529`](https://github.com/apollographql/apollo-server/commit/3b0ec852994f86dd84bdccf77829fb81f8455579)]:
+  - @apollo/server@4.3.1
+
 ## 4.3.0
 
 ### Patch Changes
