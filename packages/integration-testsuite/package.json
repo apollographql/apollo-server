@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-integration-testsuite",
-  "version": "4.3.0",
+  "version": "4.3.1",
   "description": "Test suite for Apollo Server integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.2",
     "@apollo/client": "^3.6.9",
-    "@apollo/server": "4.3.0",
+    "@apollo/server": "4.3.1",
     "@apollo/server-plugin-landing-page-graphql-playground": "^4.0.0",
     "@apollo/utils.keyvaluecache": "^2.1.0",
     "@apollo/utils.createhash": "^2.0.0",
