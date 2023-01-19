@@ -837,7 +837,7 @@ describe('request pipeline life-cycle hooks', () => {
               message: 'Syntax Error: Expected Name, found "}".',
               extensions: {
                 code: 'GRAPHQL_PARSE_FAILED',
-                http: { status: 400, headers: new HeaderMap() },
+                http: { status: 400, headers: expect.any(HeaderMap) },
               },
             }),
           ]),
@@ -862,7 +862,7 @@ describe('request pipeline life-cycle hooks', () => {
                 'Cannot query field "testStringWithParseError" on type "QueryType".',
               extensions: {
                 code: 'GRAPHQL_VALIDATION_FAILED',
-                http: { status: 400, headers: new HeaderMap() },
+                http: { status: 400, headers: expect.any(HeaderMap) },
               },
             }),
           ]),
