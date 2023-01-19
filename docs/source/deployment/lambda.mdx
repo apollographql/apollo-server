@@ -28,6 +28,10 @@ Begin by installing the necessary packages for using Apollo Server and its integ
 npm install @apollo/server graphql @as-integrations/aws-lambda
 ```
 
+```shell
+npm install -D typescript
+```
+
 Next, we'll create a file with a basic Apollo Server setup. Note the file's name and location; we'll need those in a later step:
 
 <MultiCodeBlock>
@@ -201,12 +205,14 @@ You can store a mock HTTP requests locally by creating a `query.json` file, like
 
 ```json title="query.json"
 {
+  "version": "2",
   "httpMethod": "POST",
   "path": "/",
   "headers": {
     "content-type": "application/json"
   },
   "requestContext": {},
+  "rawQueryString": "",
   "body": "{\"operationName\": null, \"variables\": null, \"query\": \"{ hello }\"}"
 }
 ```
@@ -280,7 +286,7 @@ If you ever want to remove the S3 bucket or Lambda functions that Serverless cre
 
 ## Customizing HTTP behavior
 
-The `@as-integrations/aws-lambda` package is compatible with Lambda's API Gateway V1 (REST) and V2 (HTTP). However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., Application Load Balancers).
+The `@as-integrations/aws-lambda` package is compatible with the following event types `APIGatewayProxyEvent`, `APIGatewayProxyEventV2`, `ALBEvent`. This supports a wide range of services like API Gateway HTTP Proxy APIs, API Gateway REST Proxy APIs, Lambda Function URLs, and Application Load Balancers. However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., S3 or DynamoDB).
 
 If you want to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
 

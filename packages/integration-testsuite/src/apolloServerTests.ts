@@ -1,6 +1,5 @@
 import http from 'http';
 import { createHash } from '@apollo/utils.createhash';
-import { URL } from 'url';
 import express from 'express';
 import bodyParser from 'body-parser';
 import loglevel from 'loglevel';

@@ -3,6 +3,7 @@ title: Migrating to Apollo Server 4
 ---
 
 import TopLevelAwait from "./shared/top-level-await.mdx"
+import IntegrationTable from "./shared/integration-table.mdx"
 
 > 📣 **Apollo Server 4 is [generally available](/resources/product-launch-stages#general-availability)!**
 
@@ -270,7 +271,9 @@ console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 
 ### Removed integrations
 
-The Apollo Server core team no longer maintains the following integration packages in Apollo Server 4:
+Apollo Server 4 takes a fundamentally different approach to web framework integrations. By offering a well-defined API with a stable HTTP abstraction, Apollo Server 4 enables contributors to build and maintain integrations for the first time.
+
+To that end, the Apollo Server core team no longer maintains the following integration packages in Apollo Server 4:
 * [`apollo-server-fastify`](https://www.npmjs.com/package/apollo-server-fastify)
 * [`apollo-server-hapi`](https://www.npmjs.com/package/apollo-server-hapi)
 * [`apollo-server-koa`](https://www.npmjs.com/package/apollo-server-koa)
@@ -280,7 +283,11 @@ The Apollo Server core team no longer maintains the following integration packag
 * [`apollo-server-cloudflare`](https://www.npmjs.com/package/apollo-server-cloudflare)
 * [`apollo-server-azure-functions`](https://www.npmjs.com/package/apollo-server-azure-functions)
 
-If you use one of these packages, see [the community integration index](./integrations/integration-index/) to see if an integration exists for your environment yet, or [build your own](./integrations/building-integrations).
+Instead, we now work with the broader community to maintain the following open-source integrations for Apollo Server:
+
+<IntegrationTable />
+
+> If an integration doesn't exist for your framework, you can always [build your own](./integrations/building-integrations)!
 
 In Apollo Server 3, the `apollo-server-express` package supported both Express and its older predecessor [Connect](https://github.com/senchalabs/connect). In Apollo Server 4, `expressMiddleware` no longer supports Connect. An interested developer could [build a Connect-specific middleware](./integrations/building-integrations), and a PR to this migration guide is welcome if someone does this!
 

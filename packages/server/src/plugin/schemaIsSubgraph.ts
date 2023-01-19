@@ -1,4 +1,9 @@
-import { GraphQLSchema, isObjectType, isScalarType } from 'graphql';
+import {
+  GraphQLSchema,
+  isObjectType,
+  isScalarType,
+  isNonNullType,
+} from 'graphql';
 
 // Returns true if it appears that the schema was appears to be of a subgraph
 // (eg, returned from @apollo/subgraph's buildSubgraphSchema). This strategy
@@ -24,7 +29,11 @@ export function schemaIsSubgraph(schema: GraphQLSchema): boolean {
   if (!sdlField) {
     return false;
   }
-  const sdlFieldType = sdlField.type;
+
+  let sdlFieldType = sdlField.type;
+  if (isNonNullType(sdlFieldType)) {
+    sdlFieldType = sdlFieldType.ofType;
+  }
   if (!isScalarType(sdlFieldType)) {
     return false;
   }

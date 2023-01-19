@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.3.0
+
+### Patch Changes
+
+- [#7228](https://github.com/apollographql/apollo-server/pull/7228) [`f97e55304`](https://github.com/apollographql/apollo-server/commit/f97e55304ceacc5f1586131ad3eb6a99912bc821) Thanks [@dnalborczyk](https://github.com/dnalborczyk)! - Improve compatibility with Cloudflare workers by avoiding the use of the Node `url` package. This change is intended to be a no-op.
+
+- Updated dependencies [[`3a4823e0d`](https://github.com/apollographql/apollo-server/commit/3a4823e0d85afb51b7fb82a9f3a525c1957eab5d), [`d057e2ffc`](https://github.com/apollographql/apollo-server/commit/d057e2ffccac2afc9c3e102db64d74d895157c3d), [`f97e55304`](https://github.com/apollographql/apollo-server/commit/f97e55304ceacc5f1586131ad3eb6a99912bc821), [`d7e9b9759`](https://github.com/apollographql/apollo-server/commit/d7e9b97595b063f1e796ec4449850a16d19e8b18), [`d7e9b9759`](https://github.com/apollographql/apollo-server/commit/d7e9b97595b063f1e796ec4449850a16d19e8b18)]:
+  - @apollo/server@4.3.0
+
 ## 4.2.2
 
 ### Patch Changes

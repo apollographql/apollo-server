@@ -353,7 +353,7 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 
 A [`KeyValueCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) which Apollo Server uses for several features, including APQs and full response caching. This cache is also available to Apollo Server's plugins.
 
-The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB.
+The default cache is an [`InMemoryLRUCache`](https://www.npmjs.com/package/@apollo/utils.keyvaluecache) with a default size of roughly 30MiB. (For backwards-compatibility with Apollo Server 3, specifying `cache: 'bounded'` also selects this default bounded cache.)
 
 To learn more about configuring Apollo Server's cache, see [Configuring cache backends](../performance/cache-backends).
 
@@ -581,6 +581,15 @@ The `executeOperation` method takes two arguments:
 - The first argument is an object describing the GraphQL operation to be executed.
   - Supported fields are listed in the table below.
 - The second argument is the optional options object. This object includes the operation's optional [`contextValue`](../data/context#the-contextvalue-object). This argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
+  
+```js
+const response = await server.executeOperation({
+  query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
+  variables: { name: 'world' },
+}, {
+  contextValue: { userId: 'test' },
+});
+```
 
 The `response` object returned from `executeOperation` is a `GraphQLResponse`, which has `body` and `http` fields.
 

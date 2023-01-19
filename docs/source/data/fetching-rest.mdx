@@ -5,9 +5,9 @@ description: Using RESTDataSource to fetch data from REST APIs
 
 import TopLevelAwait from "../shared/top-level-await.mdx"
 
-> See the [`@apollo/datasource-rest` page](https://github.com/apollographql/datasource-rest) for the full details of the `RESTDataSource` API.
+> See the [`@apollo/datasource-rest` README](https://github.com/apollographql/datasource-rest) for the full details of the `RESTDataSource` API.
 
-The `RESTDataSource` class simplifies fetching data from REST APIs and helps handle caching, deduplication, and errors while resolving operations.
+The `RESTDataSource` class simplifies fetching data from REST APIs and helps handle caching, request deduplication, and errors while resolving operations.
 
 ```mermaid
 flowchart LR;
@@ -63,7 +63,7 @@ class MoviesAPI extends RESTDataSource {
 
 </MultiCodeBlock>
 
-You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods should use the built-in convenience methods (e.g., `get` and `post`) to perform HTTP requests, helping you add query parameters, parse and cache JSON results, dedupe requests, and handle errors.
+You can extend the `RESTDataSource` class to implement whatever data-fetching methods your resolvers need. These methods should use the built-in convenience methods (e.g., `get` and `post`) to perform HTTP requests, helping you add query parameters, parse and cache JSON results, dedupe requests, and handle errors. More complex use cases can use the `fetch` method directly. The `fetch` method returns both the parsed body and the response object, which provides more flexibility for use cases like reading response headers.
 
 ## Adding data sources to your server's context function
 
@@ -136,18 +136,21 @@ const resolvers = {
 
 The `RESTDataSource` class provides its subclasses with _two_ layers of caching:
 
-- The first layer **stores all outgoing `GET` requests** by their URLs in a separate memoized cache.
+- The first layer deduplicates _concurrent_ outgoing `GET` (and `HEAD`) requests by default. Deduplication is keyed on the request's method and URL. You can configure this behavior by overriding the `requestDeduplicationPolicyFor` method. For more details, see [the README](https://github.com/apollographql/datasource-rest#requestdeduplicationpolicyfor).
+
+> **Note:** In versions of `RESTDataSource` prior to v5, _all_ outgoing `GET` requests are deduplicated. You can achieve this same behavior with the `deduplicate-until-invalidated` policy (explained further in [the README](https://github.com/apollographql/datasource-rest#requestdeduplicationpolicyfor)).
+
 - The second layer caches the results from **HTTP responses that specify HTTP caching headers**.
 
 These caching layers effectively make the `RESTDataSource` class a Node HTTP client that offers browser-style caching. Below, we'll dive into each layer of caching and the advantage that layer provides.
 
-### `GET` requests and responses
+### `GET` (and `HEAD`) requests and responses
 
-Every time you create a new instance of a `RESTDataSource` subclass, under the hood, it makes an internal memoized cache. By default, `RESTDataSource` [automatically stores](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L263) _all_ outgoing `GET` requests (by their URLs) alongside their results in this internal cache.
+Every time you instantiate a `RESTDataSource` subclass, under the hood that instance creates an internal cache. By default, `RESTDataSource` automatically deduplicates _concurrent_ `GET` (and `HEAD`) requests (keyed by their method and URLs) alongside their results in this internal cache. This behavior is called request deduplication. You can configure this default behavior by overriding the [`requestDeduplicationPolicyFor`](https://github.com/apollographql/datasource-rest/blob/main/README.md#requestdeduplicationpolicyfor) method on the class.
 
-> The `RESTDataSource` class caches `GET` requests and responses _regardless_ of HTTP caching headers.
+> The `RESTDataSource` class caches `GET` (and `HEAD`) requests and responses _regardless_ of HTTP caching headers.
 
-This internal cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` requests from different resolvers trying to get the same information. This works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
+The request deduplication cache enables `RESTDataSource` to optimize the current operation by eliminating redundant `GET` (and `HEAD`) requests from different resolvers trying to get the same information. This works much like [`DataLoader`'s caching functionality](https://github.com/graphql/dataloader#caching).
 
 As an example, let's say we have two `RESTDataSource` subclasses for fetching data from a Posts API and an Authors API. We can write a query fetching a post's content and that post's author's name:
 
@@ -172,9 +175,9 @@ If any resolver in the current operation attempts a parallel `GET` request to th
 
 > This internal caching mechanism is why we create a new `RESTDataSource` instance for _every_ request. Otherwise, responses would be cached across requests even if they specify they shouldn't be!
 
-You can change how `GET` requests are stored in `RESTDataSource`'s memoized cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor).
+You can change how `GET` (and `HEAD`) requests are stored in `RESTDataSource`'s deduplication cache by overwriting the [`cacheKeyFor` method](https://github.com/apollographql/datasource-rest#cachekeyfor). By default, a request's cache key is the combination of its HTTP method and URL.
 
-If you'd like to disable `GET` request caching you can set `memoizeGetRequests` to `false`:
+To restore the deduplication policy from before `RESTDataSource` v5, you can configure `requestDeduplicationPolicyFor` like so:
 
 <MultiCodeBlock>
 
@@ -186,8 +189,53 @@ class MoviesAPI extends RESTDataSource {
   constructor(options: { token: string; cache: KeyValueCache }) {
     super(options); // this sends our server's `cache` through
     this.token = options.token;
-    this.memoizeGetRequests = false; // highlight-line
   }
+
+  // highlight-start
+  protected override requestDeduplicationPolicyFor(
+    url: URL,
+    request: RequestOptions,
+  ) {
+    const cacheKey = this.cacheKeyFor(url, request);
+    return {
+      policy: 'deduplicate-until-invalidated',
+      deduplicationKey: `${request.method ?? 'GET'} ${cacheKey}`
+    };
+  }
+  // highlight-end
+
+  // Duplicate requests are cached indefinitely
+  async getMovie(id) {
+    return this.get(`movies/${encodeURIComponent(id)}`);
+  }
+}
+```
+
+</MultiCodeBlock>
+
+To disable request deduplication entirely, you can configure `requestDeduplicationPolicyFor` like so:
+
+<MultiCodeBlock>
+
+```ts
+class MoviesAPI extends RESTDataSource {
+  override baseURL = 'https://movies-api.example.com/';
+  private token: string;
+
+  constructor(options: { token: string; cache: KeyValueCache }) {
+    super(options); // this sends our server's `cache` through
+    this.token = options.token;
+  }
+
+  // highlight-start
+  protected override requestDeduplicationPolicyFor(
+    url: URL,
+    request: RequestOptions,
+  ) {
+    const cacheKey = this.cacheKeyFor(url, request);
+    return { policy: 'do-not-deduplicate' } as const;
+  }
+  // highlight-end
 
   // Outgoing requests aren't cached, but the HTTP response cache still works!
   async getMovie(id) {
@@ -204,7 +252,7 @@ class MoviesAPI extends RESTDataSource {
 
 The `RESTDataSource` class can cache results from the REST API it fetches from **if either of the following is true**:
 
-- The request is a `GET`, and the response specifies caching headers (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)).
+- The request method is `GET` (or `HEAD`), and the response specifies caching headers (e.g., [`cache-control`](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)).
 - The `RESTDataSource` instance's [`cacheOptions`](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L46) specify a TTL.
   - You can do this by overriding the [`cacheOptionsFor`](https://github.com/apollographql/datasource-rest/blob/e9c6e1bd5498a44fce3046aeb6556ef9d4c0fc6a/src/RESTDataSource.ts#L98) method or in the HTTP method making the request.
 
@@ -345,7 +393,7 @@ class MoviesAPI extends RESTDataSource {
 
 Data sources also have access to the GraphQL operation context, which is useful for storing a user token or other relevant information.
 
-> If you're using TypeScript, make sure to import the `WillSendRequestOptions` type.
+> If you're using TypeScript, make sure to import the `AugmentedRequest` type.
 
 ### Setting a header
 
@@ -354,7 +402,7 @@ Data sources also have access to the GraphQL operation context, which is useful 
 ```ts
 import {
   RESTDataSource,
-  WillSendRequestOptions,
+  AugmentedRequest,
 } from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
@@ -368,7 +416,7 @@ class PersonalizationAPI extends RESTDataSource {
   }
 
   // highlight-start
-  override willSendRequest(request: WillSendRequestOptions) {
+  override willSendRequest(request: AugmentedRequest) {
     request.headers['authorization'] = this.token;
   }
   // highlight-end
@@ -384,7 +432,7 @@ class PersonalizationAPI extends RESTDataSource {
 ```ts
 import {
   RESTDataSource,
-  WillSendRequestOptions,
+  AugmentedRequest,
 } from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
@@ -398,7 +446,7 @@ class PersonalizationAPI extends RESTDataSource {
   }
 
   // highlight-start
-  override willSendRequest(request: WillSendRequestOptions) {
+  override willSendRequest(request: AugmentedRequest) {
     request.params.set('api_key', this.token);
   }
   // highlight-end
@@ -414,7 +462,7 @@ In some cases, you'll want to set the URL based on the environment or other cont
 <MultiCodeBlock>
 
 ```ts
-import { RESTDataSource, RequestOptions } from '@apollo/datasource-rest';
+import { RESTDataSource, AugmentedRequest } from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
 class PersonalizationAPI extends RESTDataSource {
@@ -425,7 +473,7 @@ class PersonalizationAPI extends RESTDataSource {
     this.token = options.token;
   }
 
-  override async resolveURL(path: string, request: RequestOptions) {
+  override async resolveURL(path: string, request: AugmentedRequest) {
     if (!this.baseURL) {
       const addresses = await resolveSrv(
         path.split('/')[1] + '.service.consul',
@@ -461,7 +509,7 @@ We recommend that you restrict batching to requests that _can't_ be cached. In t
 import DataLoader from 'dataloader';
 import {
   RESTDataSource,
-  WillSendRequestOptions,
+  AugmentedRequest,
 } from '@apollo/datasource-rest';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 
@@ -474,7 +522,7 @@ class PersonalizationAPI extends RESTDataSource {
     this.token = options.token;
   }
 
-  override willSendRequest(request: WillSendRequestOptions) {
+  override willSendRequest(request: AugmentedRequest) {
     request.headers['authorization'] = this.token;
   }
 

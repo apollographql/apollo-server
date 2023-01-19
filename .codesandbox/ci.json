@@ -1,6 +1,5 @@
 {
   "buildCommand": "compile",
-  "installCommand": "install-with-npm-8.5",
   "packages": [
     "packages/cache-control-types",
     "packages/gateway-interface",
@@ -10,5 +9,5 @@
     "packages/usage-reporting-protobuf"
   ],
   "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],
-  "node": "16"
+  "node": "18"
 }
