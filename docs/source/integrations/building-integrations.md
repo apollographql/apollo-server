@@ -149,7 +149,7 @@ With the request body parsed, we can now construct an `HTTPGraphQLRequest`:
 ```ts
 interface HTTPGraphQLRequest {
   method: string;
-  headers: Map<string, string>;
+  headers: HeaderMap; // the `HeaderMap` class is exported by @apollo/server
   search: string;
   body: unknown;
 }
@@ -164,7 +164,9 @@ Finally, we have to create the `headers` property because Apollo Server expects 
 In the Express integration, we construct a `Map` by iterating over the `headers` object, like so:
 
 ```ts
-const headers = new Map<string, string>();
+import { HeaderMap } from '@apollo/server';
+
+const headers = new HeaderMap();
 for (const [key, value] of Object.entries(req.headers)) {
   if (value !== undefined) {
     headers.set(key, Array.isArray(value) ? value.join(', ') : value);
@@ -221,7 +223,7 @@ After awaiting the Promise returned by `executeHTTPGraphQLRequest`, we receive a
 ```ts
 interface HTTPGraphQLHead {
   status?: number;
-  headers: Map<string, string>;
+  headers: HeaderMap;
 }
 
 type HTTPGraphQLResponseBody =
