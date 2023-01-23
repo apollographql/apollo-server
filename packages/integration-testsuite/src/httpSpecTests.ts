@@ -62,7 +62,8 @@ export function defineIntegrationTestSuiteHttpSpecTests(
         if (
           audit.name.startsWith('SHOULD use 200 status code') &&
           audit.name.endsWith('when accepting application/json') &&
-          result.reason === 'Status code 400 is not 200'
+          result.reason === 'Response status code is not 200' &&
+          result.response.status === 400
         ) {
           return;
         }
