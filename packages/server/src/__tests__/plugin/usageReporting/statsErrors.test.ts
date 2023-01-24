@@ -78,7 +78,30 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
             "requestsWithErrorsCount": 1,
             "requestsWithoutFieldInstrumentation": 1,
             "rootErrorStats": {
-              "children": {},
+              "children": {
+                "service:error-ftv1-subgraph": {
+                  "children": {
+                    "errorFtv1": {
+                      "children": {},
+                      "errorsCount": 1,
+                      "requestsWithErrorsCount": 1,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+                "service:error-no-ftv1-subgraph": {
+                  "children": {
+                    "errorNoFtv1": {
+                      "children": {},
+                      "errorsCount": 1,
+                      "requestsWithErrorsCount": 1,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+              },
               "errorsCount": 0,
               "requestsWithErrorsCount": 0,
             },
@@ -161,6 +184,17 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
                 "service:error-ftv1-subgraph": {
                   "children": {
                     "errorFtv1": {
+                      "children": {},
+                      "errorsCount": 1,
+                      "requestsWithErrorsCount": 1,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+                "service:error-no-ftv1-subgraph": {
+                  "children": {
+                    "errorNoFtv1": {
                       "children": {},
                       "errorsCount": 1,
                       "requestsWithErrorsCount": 1,
