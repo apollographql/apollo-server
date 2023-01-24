@@ -13,7 +13,6 @@ import {
   Trace,
 } from '@apollo/usage-reporting-protobuf';
 import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
-import type { GraphQLError } from 'graphql';
 import { DurationHistogram } from './durationHistogram.js';
 import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace.js';
 
