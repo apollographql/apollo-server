@@ -356,7 +356,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
     // iterate over nonFtv1ErrorPaths, using some bits from traceNodeStats function
     // TODO: use subgraph
-    for (const {subgraph: _subgraph, path} of nonFtv1ErrorPaths) {
+    for (const { subgraph: _subgraph, path } of nonFtv1ErrorPaths) {
       hasError = true;
       if (path) {
         let currPathErrorStats = this.queryLatencyStats.rootErrorStats;
