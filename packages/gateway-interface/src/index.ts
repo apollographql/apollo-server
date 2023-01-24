@@ -1,8 +1,3 @@
-// NOTE: Once Apollo Server 4 is released, move this package into the
-// apollo-server repo. We're placing it in the apollo-utils repo for now to
-// enable us to make non-alpha releases that can be used on the apollo-server
-// version-4 branch.
-
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type {
   DocumentNode,
