@@ -738,9 +738,9 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 sendTraces &&
                 (!isExecutable || !!metrics.captureTraces) &&
                 sendOperationAsTrace(trace, statsReportKey) &&
-                !metrics.nonFtv1Errors?.length,
+                !metrics.nonFtv1ErrorPaths?.length,
               referencedFieldsByType,
-              nonFtv1Errors: metrics.nonFtv1Errors ?? [],
+              nonFtv1ErrorPaths: metrics.nonFtv1ErrorPaths ?? [],
             });
 
             // If the buffer gets big (according to our estimate), send.

@@ -501,7 +501,7 @@ describe('Add trace to report', () => {
       trace: baseTrace,
       asTrace: false,
       referencedFieldsByType,
-      nonFtv1Errors: [],
+      nonFtv1ErrorPaths: [],
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
@@ -518,7 +518,7 @@ describe('Add trace to report', () => {
       asTrace: true,
       referencedFieldsByType,
       maxTraceBytes: 10,
-      nonFtv1Errors: [],
+      nonFtv1ErrorPaths: [],
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(0);
@@ -535,7 +535,7 @@ describe('Add trace to report', () => {
       asTrace: true,
       referencedFieldsByType,
       maxTraceBytes: 500 * 1024,
-      nonFtv1Errors: [],
+      nonFtv1ErrorPaths: [],
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);
@@ -551,7 +551,7 @@ describe('Add trace to report', () => {
       trace: baseTrace,
       asTrace: true,
       referencedFieldsByType,
-      nonFtv1Errors: [],
+      nonFtv1ErrorPaths: [],
     });
 
     expect(report.tracesPerQuery['key']?.trace?.length).toBe(1);

@@ -66,14 +66,14 @@ export class OurReport implements Required<IReport> {
     // Apollo reporting ingress server will never store any traces over 10mb
     // anyway. They will still be converted to stats as we would do here.
     maxTraceBytes = 10 * 1024 * 1024,
-    nonFtv1Errors,
+    nonFtv1ErrorPaths,
   }: {
     statsReportKey: string;
     trace: Trace;
     asTrace: boolean;
     referencedFieldsByType: ReferencedFieldsByType;
     maxTraceBytes?: number;
-    nonFtv1Errors: GraphQLError[];
+    nonFtv1ErrorPaths: { subgraph: string; path: GraphQLError['path'] }[];
   }) {
     const tracesAndStats = this.getTracesAndStats({
       statsReportKey,
@@ -86,7 +86,7 @@ export class OurReport implements Required<IReport> {
         tracesAndStats.statsWithContext.addTrace(
           trace,
           this.sizeEstimator,
-          nonFtv1Errors,
+          nonFtv1ErrorPaths,
         );
       } else {
         tracesAndStats.trace.push(encodedTrace);
@@ -96,7 +96,7 @@ export class OurReport implements Required<IReport> {
       tracesAndStats.statsWithContext.addTrace(
         trace,
         this.sizeEstimator,
-        nonFtv1Errors,
+        nonFtv1ErrorPaths,
       );
     }
   }
@@ -171,12 +171,12 @@ class StatsByContext {
   addTrace(
     trace: Trace,
     sizeEstimator: SizeEstimator,
-    nonFtv1Errors: GraphQLError[],
+    nonFtv1ErrorPaths: { subgraph: string; path: GraphQLError['path'] }[],
   ) {
     this.getContextualizedStats(trace, sizeEstimator).addTrace(
       trace,
       sizeEstimator,
-      nonFtv1Errors,
+      nonFtv1ErrorPaths,
     );
   }
 
@@ -226,7 +226,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
   addTrace(
     trace: Trace,
     sizeEstimator: SizeEstimator,
-    nonFtv1Errors: GraphQLError[] = [],
+    nonFtv1ErrorPaths: { subgraph: string; path: GraphQLError['path'] }[] = [],
   ) {
     const { fieldExecutionWeight } = trace;
     if (!fieldExecutionWeight) {
@@ -354,12 +354,13 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
     iterateOverTrace(trace, traceNodeStats, true);
 
-    // iterate over nonFtv1Errors, using some bits from traceNodeStats function
-    for (const error of nonFtv1Errors) {
+    // iterate over nonFtv1ErrorPaths, using some bits from traceNodeStats function
+    // TODO: use subgraph
+    for (const {subgraph: _subgraph, path} of nonFtv1ErrorPaths) {
       hasError = true;
-      if (error.path) {
+      if (path) {
         let currPathErrorStats = this.queryLatencyStats.rootErrorStats;
-        error.path.forEach((subPath) => {
+        path.forEach((subPath) => {
           if (typeof subPath === 'string') {
             currPathErrorStats = currPathErrorStats.getChild(
               subPath,

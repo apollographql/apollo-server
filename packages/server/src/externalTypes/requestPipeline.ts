@@ -33,7 +33,7 @@ export interface GraphQLRequestMetrics {
   registeredOperation?: boolean;
   startHrTime?: [number, number];
   queryPlanTrace?: Trace.QueryPlanNode;
-  nonFtv1Errors?: GraphQLError[];
+  nonFtv1ErrorPaths?: { subgraph: string; path: GraphQLError['path'] }[];
 }
 
 export interface GraphQLRequestContext<TContext extends BaseContext> {
