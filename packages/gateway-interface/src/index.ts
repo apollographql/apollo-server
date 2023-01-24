@@ -109,6 +109,11 @@ export interface GatewayHTTPResponse {
 
 export type GatewaySchemaHash = string & { __fauxpaque: 'SchemaHash' };
 
+export interface NonFtv1ErrorPath {
+  subgraph: string;
+  path: GraphQLError['path'];
+}
+
 export interface GatewayGraphQLRequestMetrics {
   captureTraces?: boolean;
   persistedQueryHit?: boolean;
@@ -118,10 +123,7 @@ export interface GatewayGraphQLRequestMetrics {
   registeredOperation?: boolean;
   startHrTime?: [number, number];
   queryPlanTrace?: Trace.QueryPlanNode;
-  nonFtv1ErrorPaths?: {
-    subgraph: string;
-    path: GraphQLError['path'];
-  }[];
+  nonFtv1ErrorPaths?: NonFtv1ErrorPath[];
 }
 
 export interface GatewayCachePolicy extends GatewayCacheHint {

@@ -1,3 +1,4 @@
+import type { NonFtv1ErrorPath } from '@apollo/server-gateway-interface';
 import {
   type google,
   type IContextualizedStats,
@@ -73,7 +74,7 @@ export class OurReport implements Required<IReport> {
     asTrace: boolean;
     referencedFieldsByType: ReferencedFieldsByType;
     maxTraceBytes?: number;
-    nonFtv1ErrorPaths: { subgraph: string; path: GraphQLError['path'] }[];
+    nonFtv1ErrorPaths: NonFtv1ErrorPath[];
   }) {
     const tracesAndStats = this.getTracesAndStats({
       statsReportKey,
@@ -171,7 +172,7 @@ class StatsByContext {
   addTrace(
     trace: Trace,
     sizeEstimator: SizeEstimator,
-    nonFtv1ErrorPaths: { subgraph: string; path: GraphQLError['path'] }[],
+    nonFtv1ErrorPaths: NonFtv1ErrorPath[],
   ) {
     this.getContextualizedStats(trace, sizeEstimator).addTrace(
       trace,
@@ -226,7 +227,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
   addTrace(
     trace: Trace,
     sizeEstimator: SizeEstimator,
-    nonFtv1ErrorPaths: { subgraph: string; path: GraphQLError['path'] }[] = [],
+    nonFtv1ErrorPaths: NonFtv1ErrorPath[] = [],
   ) {
     const { fieldExecutionWeight } = trace;
     if (!fieldExecutionWeight) {
