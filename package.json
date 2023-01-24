@@ -38,9 +38,9 @@
   },
   "devDependencies": {
     "@apollo/client": "3.7.4",
-    "@apollo/gateway": "https://pkg.csb.dev/apollographql/federation/commit/ca4c450d/@apollo/gateway",
+    "@apollo/gateway": "https://pkg.csb.dev/apollographql/federation/commit/1e821c02/@apollo/gateway",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
-    "@apollo/subgraph": "2.1.4",
+    "@apollo/subgraph": "https://pkg.csb.dev/apollographql/federation/commit/1e821c02/@apollo/subgraph",
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",

@@ -355,11 +355,13 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
     iterateOverTrace(trace, traceNodeStats, true);
 
     // iterate over nonFtv1ErrorPaths, using some bits from traceNodeStats function
-    // TODO: use subgraph
-    for (const { subgraph: _subgraph, path } of nonFtv1ErrorPaths) {
+    for (const { subgraph, path } of nonFtv1ErrorPaths) {
       hasError = true;
       if (path) {
-        let currPathErrorStats = this.queryLatencyStats.rootErrorStats;
+        let currPathErrorStats = this.queryLatencyStats.rootErrorStats.getChild(
+          `service:${subgraph}`,
+          sizeEstimator,
+        );
         path.forEach((subPath) => {
           if (typeof subPath === 'string') {
             currPathErrorStats = currPathErrorStats.getChild(
