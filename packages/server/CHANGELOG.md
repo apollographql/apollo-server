@@ -1,5 +1,25 @@
 # @apollo/server
 
+## 4.3.2
+
+### Patch Changes
+
+- [#7314](https://github.com/apollographql/apollo-server/pull/7314) [`f246ddb71`](https://github.com/apollographql/apollo-server/commit/f246ddb7142d978a927de743108b602c511be119) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add an `__identity` property to `HeaderMap` class to disallow standard `Map`s (in TypeScript).
+
+  This ensures that typechecking occurs on fields which are declared to accept a
+  `HeaderMap` (notably, the `httpGraphQLRequest.headers` option to
+  `ApolloServer.executeHTTPGraphQLRequest` and the `http.headers` option to
+  `ApolloServer.executeOperation`). This might be a breaking change for
+  integration authors, but should be easily fixed by switching from `new
+Map<string, string>()` to `new HeaderMap()`.
+
+- [#7326](https://github.com/apollographql/apollo-server/pull/7326) [`e25cb58ff`](https://github.com/apollographql/apollo-server/commit/e25cb58fffe54301fec562a72f845394c8ff4408) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Pin `node-abort-controller` version to avoid breaking change. Apollo Server users can enter a broken state if they update their package-lock.json due to a breaking change in a minor release of the mentioned package.
+
+  Ref: https://github.com/southpolesteve/node-abort-controller/issues/39
+
+- Updated dependencies [[`e0f959a63`](https://github.com/apollographql/apollo-server/commit/e0f959a637c1bc4f07cc8c8dac3a078c7debc9ad)]:
+  - @apollo/server-gateway-interface@1.1.0
+
 ## 4.3.1
 
 ### Patch Changes
