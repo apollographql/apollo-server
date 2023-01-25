@@ -57,8 +57,9 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
       .post('/api/ingress/traces', (body) => {
         const gzipReportBuffer = Buffer.from(body, 'hex');
         const report = Report.decode(gunzipSync(gzipReportBuffer));
+        const statsKey = Object.keys(report.tracesPerQuery)[0];
         const { queryLatencyStats, perTypeStat } = (
-          report.tracesPerQuery['# -\n{errorFtv1 errorNoFtv1 success}']
+          report.tracesPerQuery[statsKey]
             ?.statsWithContext as IContextualizedStats[]
         )[0];
         expect(cleanLatencyCount(queryLatencyStats!)).toMatchInlineSnapshot(`
@@ -92,10 +93,44 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
                 },
                 "service:error-no-ftv1-subgraph": {
                   "children": {
+                    "_entities": {
+                      "children": {
+                        "color": {
+                          "children": {
+                            "blueErrorNoFtv1": {
+                              "children": {},
+                              "errorsCount": 1,
+                              "requestsWithErrorsCount": 1,
+                            },
+                          },
+                          "errorsCount": 0,
+                          "requestsWithErrorsCount": 0,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
+                    },
                     "errorNoFtv1": {
                       "children": {},
                       "errorsCount": 1,
                       "requestsWithErrorsCount": 1,
+                    },
+                    "productsWithErrorsNoFtv1": {
+                      "children": {
+                        "color": {
+                          "children": {
+                            "blueErrorNoFtv1": {
+                              "children": {},
+                              "errorsCount": 1,
+                              "requestsWithErrorsCount": 1,
+                            },
+                          },
+                          "errorsCount": 0,
+                          "requestsWithErrorsCount": 0,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
                     },
                   },
                   "errorsCount": 0,
@@ -117,7 +152,33 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
       httpGraphQLRequest: {
         method: 'POST',
         headers: new HeaderMap([['content-type', 'application/json']]),
-        body: { query: '{ errorFtv1 errorNoFtv1 success }' },
+        body: {
+          query: `{
+            errorFtv1
+            errorNoFtv1
+            productsWithErrorsNoFtv1 {
+              id
+              type
+              weight
+              color {
+                blueErrorNoFtv1
+                green
+                red
+              }
+            }
+            productsWithFtv1Errors {
+              id
+              type
+              weight
+              color {
+                blueErrorNoFtv1
+                green
+                red
+              }
+            }
+            success
+          }`,
+        },
         search: '',
       },
       context: async () => ({}),
@@ -158,8 +219,9 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
       .post('/api/ingress/traces', (body) => {
         const gzipReportBuffer = Buffer.from(body, 'hex');
         const report = Report.decode(gunzipSync(gzipReportBuffer));
+        const statsKey = Object.keys(report.tracesPerQuery)[0];
         const { queryLatencyStats, perTypeStat } = (
-          report.tracesPerQuery['# -\n{errorFtv1 errorNoFtv1 success}']
+          report.tracesPerQuery[statsKey]
             ?.statsWithContext as IContextualizedStats[]
         )[0];
 
@@ -194,10 +256,44 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
                 },
                 "service:error-no-ftv1-subgraph": {
                   "children": {
+                    "_entities": {
+                      "children": {
+                        "color": {
+                          "children": {
+                            "blueErrorNoFtv1": {
+                              "children": {},
+                              "errorsCount": 1,
+                              "requestsWithErrorsCount": 1,
+                            },
+                          },
+                          "errorsCount": 0,
+                          "requestsWithErrorsCount": 0,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
+                    },
                     "errorNoFtv1": {
                       "children": {},
                       "errorsCount": 1,
                       "requestsWithErrorsCount": 1,
+                    },
+                    "productsWithErrorsNoFtv1": {
+                      "children": {
+                        "color": {
+                          "children": {
+                            "blueErrorNoFtv1": {
+                              "children": {},
+                              "errorsCount": 1,
+                              "requestsWithErrorsCount": 1,
+                            },
+                          },
+                          "errorsCount": 0,
+                          "requestsWithErrorsCount": 0,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
                     },
                   },
                   "errorsCount": 0,
@@ -211,6 +307,30 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
         `);
         expect(cleanLatencyCount(perTypeStat!)).toMatchInlineSnapshot(`
           {
+            "Product": {
+              "perFieldStat": {
+                "id": {
+                  "errorsCount": 0,
+                  "estimatedExecutionCount": 1,
+                  "latencyCount": [
+                    "*redacted for snapshot*",
+                  ],
+                  "observedExecutionCount": 1,
+                  "requestsWithErrorsCount": 0,
+                  "returnType": "String!",
+                },
+                "type": {
+                  "errorsCount": 0,
+                  "estimatedExecutionCount": 1,
+                  "latencyCount": [
+                    "*redacted for snapshot*",
+                  ],
+                  "observedExecutionCount": 1,
+                  "requestsWithErrorsCount": 0,
+                  "returnType": "String!",
+                },
+              },
+            },
             "Query": {
               "perFieldStat": {
                 "errorFtv1": {
@@ -222,6 +342,16 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
                   "observedExecutionCount": 1,
                   "requestsWithErrorsCount": 1,
                   "returnType": "String",
+                },
+                "productsWithFtv1Errors": {
+                  "errorsCount": 0,
+                  "estimatedExecutionCount": 1,
+                  "latencyCount": [
+                    "*redacted for snapshot*",
+                  ],
+                  "observedExecutionCount": 1,
+                  "requestsWithErrorsCount": 0,
+                  "returnType": "[Product!]!",
                 },
                 "success": {
                   "errorsCount": 0,
@@ -246,7 +376,33 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
       httpGraphQLRequest: {
         method: 'POST',
         headers: new HeaderMap([['content-type', 'application/json']]),
-        body: { query: '{ errorFtv1 errorNoFtv1 success }' },
+        body: {
+          query: `{
+          errorFtv1
+          errorNoFtv1
+          productsWithErrorsNoFtv1 {
+            id
+            type
+            weight
+            color {
+              blueErrorNoFtv1
+              green
+              red
+            }
+          }
+          productsWithFtv1Errors {
+            id
+            type
+            weight
+            color {
+              blueErrorNoFtv1
+              green
+              red
+            }
+          }
+          success
+        }`,
+        },
         search: '',
       },
       context: async () => ({}),
@@ -264,15 +420,47 @@ function getErrorNoFtv1Subgraph(logger: Logger) {
     schema: buildSubgraphSchema([
       {
         typeDefs: gql`
-          #graphql
           type Query {
             errorNoFtv1: String
+            productsWithErrorsNoFtv1: [Product!]!
+          }
+
+          type Product @key(fields: "id") {
+            id: String!
+            weight: Float!
+            color: Color!
+          }
+
+          type Color {
+            red: Float!
+            green: Float!
+            blueErrorNoFtv1: Float!
           }
         `,
         resolvers: {
           Query: {
             errorNoFtv1: () => {
               throw new Error('errorNoFtv1');
+            },
+            productsWithErrorsNoFtv1: () => {
+              return [{ id: '1' }];
+            },
+          },
+          Product: {
+            id: () => '1',
+            weight: () => 2,
+            color: () => {
+              return {};
+            },
+            __resolveReference() {
+              return { id: '1' };
+            },
+          },
+          Color: {
+            red: () => 255,
+            green: () => 255,
+            blueErrorNoFtv1: () => {
+              throw new Error('Color.blue no ftv1 error');
             },
           },
         },
@@ -299,15 +487,28 @@ function getErrorFtv1Subgraph(logger: Logger) {
     schema: buildSubgraphSchema([
       {
         typeDefs: gql`
-          #graphql
           type Query {
             errorFtv1: String
+            productsWithFtv1Errors: [Product!]!
+          }
+
+          type Product @key(fields: "id") {
+            id: String!
+            type: String!
           }
         `,
         resolvers: {
           Query: {
             errorFtv1: () => {
               throw new Error('errorFtv1');
+            },
+            productsWithFtv1Errors: () => [{ id: '1' }],
+          },
+          Product: {
+            id: () => '1',
+            type: () => 'consumable',
+            __resolveReference() {
+              return { id: '1' };
             },
           },
         },
