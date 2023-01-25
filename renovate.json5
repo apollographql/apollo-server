@@ -59,6 +59,10 @@
       matchSourceUrlPrefixes: ["https://github.com/rollup/"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
-    }
+    },
+    {
+      "matchPackageNames": ["node-abort-controller"],
+      "allowedVersions": "3.0.1"
+    },
   ]
 }
