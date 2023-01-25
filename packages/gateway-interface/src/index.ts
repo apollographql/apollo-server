@@ -1,8 +1,3 @@
-// NOTE: Once Apollo Server 4 is released, move this package into the
-// apollo-server repo. We're placing it in the apollo-utils repo for now to
-// enable us to make non-alpha releases that can be used on the apollo-server
-// version-4 branch.
-
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type {
   DocumentNode,
@@ -109,6 +104,11 @@ export interface GatewayHTTPResponse {
 
 export type GatewaySchemaHash = string & { __fauxpaque: 'SchemaHash' };
 
+export interface NonFtv1ErrorPath {
+  subgraph: string;
+  path: GraphQLError['path'];
+}
+
 export interface GatewayGraphQLRequestMetrics {
   captureTraces?: boolean;
   persistedQueryHit?: boolean;
@@ -118,6 +118,7 @@ export interface GatewayGraphQLRequestMetrics {
   registeredOperation?: boolean;
   startHrTime?: [number, number];
   queryPlanTrace?: Trace.QueryPlanNode;
+  nonFtv1ErrorPaths?: NonFtv1ErrorPath[];
 }
 
 export interface GatewayCachePolicy extends GatewayCacheHint {
