@@ -106,7 +106,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
-interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
+export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   gateway: GatewayInterface;
   schema?: undefined;
@@ -114,7 +114,7 @@ interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
+export interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   schema: GraphQLSchema;
   gateway?: undefined;
@@ -122,7 +122,7 @@ interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
   resolvers?: undefined;
 }
 
-interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
+export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
   extends ApolloServerOptionsBase<TContext> {
   // These two options are always only passed directly through to
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass

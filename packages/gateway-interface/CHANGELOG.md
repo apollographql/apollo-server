@@ -1,5 +1,13 @@
 # @apollo/server-gateway-interface
 
+## 1.1.0
+
+### Minor Changes
+
+- [#7325](https://github.com/apollographql/apollo-server/pull/7325) [`e0f959a63`](https://github.com/apollographql/apollo-server/commit/e0f959a637c1bc4f07cc8c8dac3a078c7debc9ad) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add optional `nonFtv1ErrorPaths` to Gateway metrics data. This change is a prerequisite to:
+  - https://github.com/apollographql/federation/pull/2242
+  - https://github.com/apollographql/apollo-server/pull/7136
+
 ## 1.0.7
 
 ### Patch Changes

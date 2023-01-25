@@ -1,5 +1,40 @@
 # @apollo/server
 
+## 4.3.2
+
+### Patch Changes
+
+- [#7314](https://github.com/apollographql/apollo-server/pull/7314) [`f246ddb71`](https://github.com/apollographql/apollo-server/commit/f246ddb7142d978a927de743108b602c511be119) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add an `__identity` property to `HeaderMap` class to disallow standard `Map`s (in TypeScript).
+
+  This ensures that typechecking occurs on fields which are declared to accept a
+  `HeaderMap` (notably, the `httpGraphQLRequest.headers` option to
+  `ApolloServer.executeHTTPGraphQLRequest` and the `http.headers` option to
+  `ApolloServer.executeOperation`). This might be a breaking change for
+  integration authors, but should be easily fixed by switching from `new
+Map<string, string>()` to `new HeaderMap()`.
+
+- [#7326](https://github.com/apollographql/apollo-server/pull/7326) [`e25cb58ff`](https://github.com/apollographql/apollo-server/commit/e25cb58fffe54301fec562a72f845394c8ff4408) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Pin `node-abort-controller` version to avoid breaking change. Apollo Server users can enter a broken state if they update their package-lock.json due to a breaking change in a minor release of the mentioned package.
+
+  Ref: https://github.com/southpolesteve/node-abort-controller/issues/39
+
+- Updated dependencies [[`e0f959a63`](https://github.com/apollographql/apollo-server/commit/e0f959a637c1bc4f07cc8c8dac3a078c7debc9ad)]:
+  - @apollo/server-gateway-interface@1.1.0
+
+## 4.3.1
+
+### Patch Changes
+
+- [#7313](https://github.com/apollographql/apollo-server/pull/7313) [`ec28b4b33`](https://github.com/apollographql/apollo-server/commit/ec28b4b33e95ac4df862e67ac70c77895c21bb9c) Thanks [@vtipparam](https://github.com/vtipparam)! - Allow case insensitive lookup on headers. Use HeaderMap instead of plain Map for headers in expressMiddleware.
+
+- [#7311](https://github.com/apollographql/apollo-server/pull/7311) [`322b5ebbc`](https://github.com/apollographql/apollo-server/commit/322b5ebbc57f854b58577d14d6ec0b5351f5c858) Thanks [@axe-me](https://github.com/axe-me)! - Export intermediate ApolloServerOptions\* types
+
+- [#7274](https://github.com/apollographql/apollo-server/pull/7274) [`3b0ec8529`](https://github.com/apollographql/apollo-server/commit/3b0ec852994f86dd84bdccf77829fb81f8455579) Thanks [@patrick91](https://github.com/patrick91)! - The subgraph spec has evolved in Federation v2 such that the type of
+  `_Service.sdl` (formerly nullable) is now non-nullable. Apollo Server now
+  detects both cases correctly in order to determine whether to:
+  1. install / enable the `ApolloServerPluginInlineTrace` plugin
+  2. throw on startup if `ApolloServerPluginSchemaReporting` should not be installed
+  3. warn when `ApolloServerPluginUsageReporting` is installed and configured with the `__onlyIfSchemaIsNotSubgraph` option
+
 ## 4.3.0
 
 ### Minor Changes

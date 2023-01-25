@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-integration-testsuite",
-  "version": "4.3.0",
+  "version": "4.3.2",
   "description": "Test suite for Apollo Server integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -28,7 +28,7 @@
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.2",
     "@apollo/client": "^3.6.9",
-    "@apollo/server": "4.3.0",
+    "@apollo/server": "4.3.2",
     "@apollo/server-plugin-landing-page-graphql-playground": "^4.0.0",
     "@apollo/utils.keyvaluecache": "^2.1.0",
     "@apollo/utils.createhash": "^2.0.0",
@@ -36,7 +36,7 @@
     "@josephg/resolvable": "^1.0.1",
     "body-parser": "^1.20.0",
     "express": "^4.18.1",
-    "graphql-http": "1.11.0",
+    "graphql-http": "1.12.0",
     "graphql-tag": "^2.12.6",
     "loglevel": "^1.8.0",
     "node-fetch": "^2.6.7",
