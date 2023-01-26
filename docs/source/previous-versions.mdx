@@ -31,8 +31,7 @@ Three features of Apollo Server 2 have reached their end-of-life date as of **De
 * [File uploads](/apollo-server/v2/data/file-uploads/)
 * [GraphQL Playground](/apollo-server/v2/testing/graphql-playground/).
 
-These features incorporate third-party software that is unmaintained (or can't be upgraded for compatibility reasons). Additionally, these features aren't in the default experiences of either Apollo Server 3 or 4. Apollo generally won't support these features' security issues or significant regressions after 2022. In other words, problems that are solved when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })` might not be addressed after 2022.
-
+As of 2023, Apollo no longer commits to providing any support for these three features. While you may still file issues about security concerns or significant regressions, if the problems do not exist when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })`, Apollo may choose not to address them.
 
 ### Apollo Server 1
 
