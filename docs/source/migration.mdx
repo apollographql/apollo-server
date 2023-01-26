@@ -465,7 +465,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
     this.token = options.token;
   }
 
-  override willSendRequest(path, request: WillSendRequestOptions) {
+  override willSendRequest(path: string, request: WillSendRequestOptions) {
     request.headers['authorization'] = this.token;
   }
 
@@ -536,7 +536,7 @@ class MoviesAPI extends RESTDataSource {
     this.contextValue = options.contextValue;
   }
 
-  override willSendRequest(path, request: WillSendRequestOptions) {
+  override willSendRequest(path: string, request: WillSendRequestOptions) {
     request.headers['authorization'] = this.contextValue.token;
   }
 
