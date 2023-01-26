@@ -59,7 +59,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
         // for a long time, and in fact a major reason these are merely SHOULDs
         // in the spec is so that AS can pass without backwards-incompatible
         // changes here. So we ignore these particular SHOULD failures.
-        const warning400InsteadOf200Ids = [
+        const expectedWarning400InsteadOf200Ids = [
           '3715',
           '9FE0',
           '9FE1',
@@ -84,7 +84,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
         ];
 
         if (
-          warning400InsteadOf200Ids.includes(audit.id) &&
+          expectedWarning400InsteadOf200Ids.includes(audit.id) &&
           result.response.status === 400
         ) {
           return;
