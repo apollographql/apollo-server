@@ -5,8 +5,8 @@
     "link": {
       "to": "/apollo-server/previous-versions",
       "content": "Learn more about upgrading to a supported Apollo Server version."
-    }, 
-    "message": "Apollo Server 2 is officially deprecated, with end-of-life scheduled for 22 October 2023."
+    },
+    "message": "Apollo Server 2 is officially deprecated, with end-of-life scheduled for 22 October 2023. Additionally, certain features are end-of-life as of 31 December 2023. See our article on [previous versions](https://www.apollographql.com/docs/apollo-server/previous-versions) for more details."
   },
   "algoliaFilters": [
     "docset:server",
