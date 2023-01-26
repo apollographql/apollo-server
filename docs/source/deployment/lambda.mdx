@@ -60,30 +60,6 @@ const server = new ApolloServer({
 });
 ```
 
-```js title="server.js"
-import { ApolloServer } from '@apollo/server';
-
-// The GraphQL schema
-const typeDefs = `#graphql
-  type Query {
-    hello: String
-  }
-`;
-
-// A map of functions which return data for the schema.
-const resolvers = {
-  Query: {
-    hello: () => 'world',
-  },
-};
-
-// Set up Apollo Server
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-```
-
 </MultiCodeBlock>
 
 Now we can import the `startServerAndCreateLambdaHandler` function from [`@as-integrations/aws-lambda`](https://www.npmjs.com/package/@as-integrations/aws-lambda), passing in our `ApolloServer` instance:
@@ -92,7 +68,12 @@ Now we can import the `startServerAndCreateLambdaHandler` function from [`@as-in
 
 ```ts title="src/server.ts"
 import { ApolloServer } from '@apollo/server';
-import { startServerAndCreateLambdaHandler } from '@as-integrations/aws-lambda'; //highlight-line
+// highlight-start
+import {
+  startServerAndCreateLambdaHandler,
+  handlers,
+} from '@as-integrations/aws-lambda';
+// highlight-end
 
 const typeDefs = `#graphql
   type Query {
@@ -112,32 +93,13 @@ const server = new ApolloServer({
 });
 
 // This final export is important!
-export const graphqlHandler = startServerAndCreateLambdaHandler(server); //highlight-line
-```
-
-```js title="server.js"
-import { ApolloServer } from '@apollo/server';
-import { startServerAndCreateLambdaHandler } from '@as-integrations/aws-lambda'; //highlight-line
-
-const typeDefs = `#graphql
-  type Query {
-    hello: String
-  }
-`;
-
-const resolvers = {
-  Query: {
-    hello: () => 'world',
-  },
-};
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-// This final export is important!
-export const graphqlHandler = startServerAndCreateLambdaHandler(server); //highlight-line
+// highlight-start
+export const graphqlHandler = startServerAndCreateLambdaHandler(
+  server,
+  // We will be using the Proxy V2 handler
+  handlers.createAPIGatewayProxyEventV2RequestHandler()
+);
+// highlight-end
 ```
 
 </MultiCodeBlock>
@@ -206,13 +168,19 @@ You can store a mock HTTP requests locally by creating a `query.json` file, like
 ```json title="query.json"
 {
   "version": "2",
-  "httpMethod": "POST",
-  "path": "/",
   "headers": {
-    "content-type": "application/json"
+    "content-type": "application/json",
   },
-  "requestContext": {},
+  "isBase64Encoded": false,
   "rawQueryString": "",
+  "requestContext": {
+    "http": {
+      "method": "POST",
+    },
+    // Other requestContext properties omitted for brevity
+  },
+  "rawPath": "/",
+  "routeKey": "/",
   "body": "{\"operationName\": null, \"variables\": null, \"query\": \"{ hello }\"}"
 }
 ```
@@ -284,42 +252,177 @@ If you ever want to remove the S3 bucket or Lambda functions that Serverless cre
  serverless remove
 ```
 
-## Customizing HTTP behavior
+## Middleware
 
-The `@as-integrations/aws-lambda` package is compatible with the following event types `APIGatewayProxyEvent`, `APIGatewayProxyEventV2`, `ALBEvent`. This supports a wide range of services like API Gateway HTTP Proxy APIs, API Gateway REST Proxy APIs, Lambda Function URLs, and Application Load Balancers. However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., S3 or DynamoDB).
+In order to impelment event and result mutations, type-safe middleware can be passed to the `startServerAndCreateLambdaHandler` call. The API is as follows:
 
-If you want to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
+```ts
 
-You can update your Apollo Server setup to the following to have a fully functioning Lambda server that works in a variety of AWS features:
+import { middleware, startServerAndCreateLambdaHandler, handlers } from "@as-integrations/aws-lambda";
+
+const requestHandler = handlers.createAPIGatewayProxyEventV2RequestHandler()
+
+// All middleware must be async and will be strictly typed based on the `requestHandler`'s types
+const middlewareFn: middleware.MiddlewareFn<typeof requestHandler> = async (event) => {
+  // event is intended to be mutable and can be updated here
+
+  // optional result mutation, otherwise function returns `Promise<void>`
+  return async (result) => {
+    // result is intended to be mutable and can be updated here
+
+    // `Promise<void>` return
+  }
+}
+
+startServerAndCreateLambdaHandler(..., ..., {
+  middleware: [middlewareFn],
+})
+```
+
+An example use case would be for cookie modificaiton. The `APIGatewayProxyStructuredResultV2` type contains a property `cookies` that then mutate to multiple `Set-Cookie` headers.
+
+```ts
+import {
+  startServerAndCreateLambdaHandler,
+  middleware,
+  handlers,
+} from '@as-integrations/aws-lambda';
+import { server } from './server';
+import { refreshCookie } from './cookies';
+
+const requestHandler = handlers.createAPIGatewayProxyEventV2RequestHandler();
+
+// Utilizing typeof
+const cookieMiddleware: middleware.MiddlewareFn<typeof requestHandler> = async (
+  event,
+) => {
+  // Access existing cookies and produce a refreshed one
+  const cookie = refreshCookie(event.cookies);
+  return async (result) => {
+    // Assure proper initialization of the cookies property on the result
+    result.cookies = result.cookies ?? [];
+    // Result is mutable so it can be updated here
+    result.cookies.push(cookie);
+  };
+};
+
+
+export default startServerAndCreateLambdaHandler(server, requestHandler, {
+  middleware: [
+    cookieMiddleware,
+  ],
+});
+```
+
+More use-cases and API information can be found in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda#middleware).
+
+
+## Event extensions
+
+In many cases, API Gateway events will have an authorizer infront of them that contains custom state that will be used for authorization during GraphQL resolution. All of the handlers that are packged with the library contain a generic type which allows you to explicitly extend the base event type. By passing an event with authorization information, that event type will be used during the creation of `contextValue` and for `middleware`. Below is an example, and more information can be found in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda/blob/main/README.md#event-extensions).
+
+
+```ts
+import {
+  startServerAndCreateLambdaHandler,
+  middleware,
+  handlers,
+} from '@as-integrations/aws-lambda';
+import type { APIGatewayProxyEventV2WithLambdaAuthorizer } from 'aws-lambda';
+import { server } from './server';
+
+export default startServerAndCreateLambdaHandler(
+  server,
+  handlers.createAPIGatewayProxyEventV2RequestHandler<
+    APIGatewayProxyEventV2WithLambdaAuthorizer<{
+      myAuthorizerContext: string;
+    }>
+  >(),
+);
+```
+
+## Custom request handling
+
+In order to support all event types from AWS Lambda (including custom ones), a request handler creation utility is exposed as `handlers.createHandler(eventParser, resultGenerator)`. This function returns a fully typed request handler that can be passed as the second argument to the `startServerAndCreateLambdaHandler` call. Below is an example and the exact API is documented in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda/blob/main/README.md#custom-request-handlers).
 
 <MultiCodeBlock>
 
-```ts
-const { ApolloServer } = require('@apollo/server');
-const { expressMiddleware } = require('@apollo/server/express4');
-const serverlessExpress = require('@vendia/serverless-express');
-const express = require('express');
-const { json } = require('body-parser');
-const cors = require('cors');
+  ```ts
+  import {
+    startServerAndCreateLambdaHandler,
+    handlers,
+  } from '@as-integrations/aws-lambda';
+  import type { APIGatewayProxyEventV2 } from 'aws-lambda';
+  import { HeaderMap } from '@apollo/server';
+  import { server } from './server';
 
-const server = new ApolloServer({
-  typeDefs: 'type Query { x: ID }',
-  resolvers: { Query: { x: () => 'hi!' } },
-});
+  type CustomInvokeEvent = {
+    httpMethod: string;
+    queryParams: string;
+    headers: Record<string, string>;
+    body: string;
+  };
 
-server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
+  type CustomInvokeResult =
+    | {
+        success: true;
+        body: string;
+      }
+    | {
+        success: false;
+        error: string;
+      };
 
-const app = express();
-app.use(cors(), json(), expressMiddleware(server));
+  const requestHandler = handlers.createRequestHandler<
+    CustomInvokeEvent,
+    CustomInvokeResult
+  >(
+    {
+      parseHttpMethod(event) {
+        return event.httpMethod;
+      },
+      parseHeaders(event) {
+        const headerMap = new HeaderMap();
+        for (const [key, value] of Object.entries(event.headers)) {
+          headerMap.set(key, value);
+        }
+        return headerMap;
+      },
+      parseQueryParams(event) {
+        return event.queryParams;
+      },
+      parseBody(event) {
+        return event.body;
+      },
+    },
+    {
+      success({ body }) {
+        return {
+          success: true,
+          body: body.string,
+        };
+      },
+      error(e) {
+        if (e instanceof Error) {
+          return {
+            success: false,
+            error: e.toString(),
+          };
+        }
+        console.error('Unknown error type encountered!', e);
+        throw e;
+      },
+    },
+  );
 
-exports.graphqlHandler = serverlessExpress({ app });
-```
+  export default startServerAndCreateLambdaHandler(server, requestHandler);
+  ```
 
 </MultiCodeBlock>
 
-The setup enables you to customize your HTTP behavior as needed.
 
-## Using request information
+
+## Using event information
 
 You can use the [`context` function](../data/context/#the-context-function) to get information about the current operation from the original Lambda data structures.
 
@@ -394,3 +497,40 @@ exports.handler = serverlessExpress({ app });
 ```
 
 </MultiCodeBlock>
+
+
+## Customizing HTTP behavior
+
+The `@as-integrations/aws-lambda` package is compatible with the following event types `APIGatewayProxyEvent`, `APIGatewayProxyEventV2`, `ALBEvent`. This supports a wide range of services like API Gateway HTTP Proxy APIs, API Gateway REST Proxy APIs, Lambda Function URLs, and Application Load Balancers. However, it does not let you customize HTTP behavior directly or support other AWS products that invoke Lambda functions (e.g., S3 or DynamoDB).
+
+If you want to customize your HTTP behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
+
+You can update your Apollo Server setup to the following to have a fully functioning Lambda server that works in a variety of AWS features:
+
+<MultiCodeBlock>
+
+```ts
+const { ApolloServer } = require('@apollo/server');
+const { expressMiddleware } = require('@apollo/server/express4');
+const serverlessExpress = require('@vendia/serverless-express');
+const express = require('express');
+const { json } = require('body-parser');
+const cors = require('cors');
+
+const server = new ApolloServer({
+  typeDefs: 'type Query { x: ID }',
+  resolvers: { Query: { x: () => 'hi!' } },
+});
+
+server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
+
+const app = express();
+app.use(cors(), json(), expressMiddleware(server));
+
+exports.graphqlHandler = serverlessExpress({ app });
+```
+
+</MultiCodeBlock>
+
+The setup enables you to customize your HTTP behavior as needed.
+
