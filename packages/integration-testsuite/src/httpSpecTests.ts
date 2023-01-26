@@ -59,10 +59,32 @@ export function defineIntegrationTestSuiteHttpSpecTests(
         // for a long time, and in fact a major reason these are merely SHOULDs
         // in the spec is so that AS can pass without backwards-incompatible
         // changes here. So we ignore these particular SHOULD failures.
+        const warning400InsteadOf200Ids = [
+          '3715',
+          '9FE0',
+          '9FE1',
+          '9FE2',
+          '9FE3',
+          'FB90',
+          'FB91',
+          'FB92',
+          'FB93',
+          'F050',
+          'F051',
+          'F052',
+          'F053',
+          '3680',
+          '3681',
+          '3682',
+          '3683',
+          'D477',
+          'F5AF',
+          '572B',
+          'FDE2',
+        ];
+
         if (
-          audit.name.startsWith('SHOULD use 200 status code') &&
-          audit.name.endsWith('when accepting application/json') &&
-          result.reason === 'Response status code is not 200' &&
+          warning400InsteadOf200Ids.includes(audit.id) &&
           result.response.status === 400
         ) {
           return;
