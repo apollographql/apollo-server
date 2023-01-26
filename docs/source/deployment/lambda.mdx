@@ -254,7 +254,7 @@ If you ever want to remove the S3 bucket or Lambda functions that Serverless cre
 
 ## Middleware
 
-In order to impelment event and result mutations, type-safe middleware can be passed to the `startServerAndCreateLambdaHandler` call. The API is as follows:
+In order to implement event and result mutations, type-safe middleware can be passed to the `startServerAndCreateLambdaHandler` call. The API is as follows:
 
 ```ts
 
@@ -279,7 +279,7 @@ startServerAndCreateLambdaHandler(..., ..., {
 })
 ```
 
-An example use case would be for cookie modificaiton. The `APIGatewayProxyStructuredResultV2` type contains a property `cookies` that then mutate to multiple `Set-Cookie` headers.
+An example use case would be for cookie modification. The `APIGatewayProxyStructuredResultV2` type contains a property `cookies` that then mutate to multiple `Set-Cookie` headers.
 
 ```ts
 import {
@@ -319,7 +319,7 @@ More use-cases and API information can be found in the [library's README](https:
 
 ## Event extensions
 
-In many cases, API Gateway events will have an authorizer infront of them that contains custom state that will be used for authorization during GraphQL resolution. All of the handlers that are packged with the library contain a generic type which allows you to explicitly extend the base event type. By passing an event with authorization information, that event type will be used during the creation of `contextValue` and for `middleware`. Below is an example, and more information can be found in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda/blob/main/README.md#event-extensions).
+In many cases, API Gateway events will have an authorizer in front of them that contains custom state that will be used for authorization during GraphQL resolution. All of the handlers that are packaged with the library contain a generic type which allows you to explicitly extend the base event type. By passing an event with authorization information, that event type will be used during the creation of `contextValue` and for `middleware`. Below is an example, and more information can be found in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda/blob/main/README.md#event-extensions).
 
 
 ```ts
