@@ -2,7 +2,7 @@
 title: File uploads
 description: Enabling file uploads in Apollo Server
 ---
-> ⚠️ **Apollo Server 2's file uploads feature has an end-of-life date of 31 December 2022.**
+> ⚠️ **Apollo Server 2's file uploads feature is officially end-of-life as of 31 December 2022 and will no longer receive updates of any kind.**
 >
 >[Learn more about this deprecation and end-of-life.](/apollo-server/previous-versions#apollo-server-2)
 >

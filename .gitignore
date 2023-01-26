@@ -26,3 +26,7 @@ node_modules/
 
 # Intellij Configuration Files
 .idea/
+
+# From the future (things that might carry over from `main`)
+.volta
+packages/server
