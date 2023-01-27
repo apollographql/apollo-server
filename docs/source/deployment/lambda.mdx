@@ -62,7 +62,7 @@ const server = new ApolloServer({
 
 </MultiCodeBlock>
 
-Now we can import the `startServerAndCreateLambdaHandler` function from [`@as-integrations/aws-lambda`](https://www.npmjs.com/package/@as-integrations/aws-lambda), passing in our `ApolloServer` instance:
+Now we can import the `startServerAndCreateLambdaHandler` function and `handlers` object from [`@as-integrations/aws-lambda`](https://www.npmjs.com/package/@as-integrations/aws-lambda), passing in our `ApolloServer` instance:
 
 <MultiCodeBlock>
 
@@ -256,30 +256,34 @@ If you ever want to remove the S3 bucket or Lambda functions that Serverless cre
 
 In order to implement event and result mutations, type-safe middleware can be passed to the `startServerAndCreateLambdaHandler` call. The API is as follows:
 
+<MultiCodeBlock>
+
 ```ts
 
 import { middleware, startServerAndCreateLambdaHandler, handlers } from "@as-integrations/aws-lambda";
+import {server} from "./server";
 
-const requestHandler = handlers.createAPIGatewayProxyEventV2RequestHandler()
+const requestHandler = handlers.createAPIGatewayProxyEventV2RequestHandler();
 
-// All middleware must be async and will be strictly typed based on the `requestHandler`'s types
+// Middleware is an async function whose type is based on your request handler. Middleware
+// can read and mutate the incoming event. Additionally, returning an async function from your
+// middleware allows you to read and mutate the result before it's sent.
 const middlewareFn: middleware.MiddlewareFn<typeof requestHandler> = async (event) => {
-  // event is intended to be mutable and can be updated here
-
-  // optional result mutation, otherwise function returns `Promise<void>`
+  // read or update the event here
+  // optionally return a callback to access the result
   return async (result) => {
-    // result is intended to be mutable and can be updated here
-
-    // `Promise<void>` return
+    // read or update the result here
   }
 }
 
-startServerAndCreateLambdaHandler(..., ..., {
+startServerAndCreateLambdaHandler(server, requestHandler, {
   middleware: [middlewareFn],
-})
+});
 ```
 
-An example use case would be for cookie modification. The `APIGatewayProxyStructuredResultV2` type contains a property `cookies` that then mutate to multiple `Set-Cookie` headers.
+</MultiCodeBlock>
+
+One use case for middleware is cookie modification. The `APIGatewayProxyStructuredResultV2` type contains a property `cookies` which can be pushed to. This allows you to set multiple `set-cookie` headers in the response.
 
 ```ts
 import {
@@ -299,7 +303,7 @@ const cookieMiddleware: middleware.MiddlewareFn<typeof requestHandler> = async (
   // Access existing cookies and produce a refreshed one
   const cookie = refreshCookie(event.cookies);
   return async (result) => {
-    // Assure proper initialization of the cookies property on the result
+    // Ensure proper initialization of the cookies property on the result
     result.cookies = result.cookies ?? [];
     // Result is mutable so it can be updated here
     result.cookies.push(cookie);
@@ -321,6 +325,7 @@ More use-cases and API information can be found in the [library's README](https:
 
 In many cases, API Gateway events will have an authorizer in front of them that contains custom state that will be used for authorization during GraphQL resolution. All of the handlers that are packaged with the library contain a generic type which allows you to explicitly extend the base event type. By passing an event with authorization information, that event type will be used during the creation of `contextValue` and for `middleware`. Below is an example, and more information can be found in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda/blob/main/README.md#event-extensions).
 
+<MultiCodeBlock>
 
 ```ts
 import {
@@ -341,82 +346,84 @@ export default startServerAndCreateLambdaHandler(
 );
 ```
 
+</MultiCodeBlock>
+
 ## Custom request handling
 
 In order to support all event types from AWS Lambda (including custom ones), a request handler creation utility is exposed as `handlers.createHandler(eventParser, resultGenerator)`. This function returns a fully typed request handler that can be passed as the second argument to the `startServerAndCreateLambdaHandler` call. Below is an example and the exact API is documented in the [library's README](https://github.com/apollo-server-integrations/apollo-server-integration-aws-lambda/blob/main/README.md#custom-request-handlers).
 
 <MultiCodeBlock>
 
-  ```ts
-  import {
-    startServerAndCreateLambdaHandler,
-    handlers,
-  } from '@as-integrations/aws-lambda';
-  import type { APIGatewayProxyEventV2 } from 'aws-lambda';
-  import { HeaderMap } from '@apollo/server';
-  import { server } from './server';
+```ts
+import {
+  startServerAndCreateLambdaHandler,
+  handlers,
+} from '@as-integrations/aws-lambda';
+import type { APIGatewayProxyEventV2 } from 'aws-lambda';
+import { HeaderMap } from '@apollo/server';
+import { server } from './server';
 
-  type CustomInvokeEvent = {
-    httpMethod: string;
-    queryParams: string;
-    headers: Record<string, string>;
-    body: string;
-  };
+type CustomInvokeEvent = {
+  httpMethod: string;
+  queryParams: string;
+  headers: Record<string, string>;
+  body: string;
+};
 
-  type CustomInvokeResult =
-    | {
-        success: true;
-        body: string;
+type CustomInvokeResult =
+  | {
+      success: true;
+      body: string;
+    }
+  | {
+      success: false;
+      error: string;
+    };
+
+const requestHandler = handlers.createRequestHandler<
+  CustomInvokeEvent,
+  CustomInvokeResult
+>(
+  {
+    parseHttpMethod(event) {
+      return event.httpMethod;
+    },
+    parseHeaders(event) {
+      const headerMap = new HeaderMap();
+      for (const [key, value] of Object.entries(event.headers)) {
+        headerMap.set(key, value);
       }
-    | {
-        success: false;
-        error: string;
+      return headerMap;
+    },
+    parseQueryParams(event) {
+      return event.queryParams;
+    },
+    parseBody(event) {
+      return event.body;
+    },
+  },
+  {
+    success({ body }) {
+      return {
+        success: true,
+        body: body.string,
       };
-
-  const requestHandler = handlers.createRequestHandler<
-    CustomInvokeEvent,
-    CustomInvokeResult
-  >(
-    {
-      parseHttpMethod(event) {
-        return event.httpMethod;
-      },
-      parseHeaders(event) {
-        const headerMap = new HeaderMap();
-        for (const [key, value] of Object.entries(event.headers)) {
-          headerMap.set(key, value);
-        }
-        return headerMap;
-      },
-      parseQueryParams(event) {
-        return event.queryParams;
-      },
-      parseBody(event) {
-        return event.body;
-      },
     },
-    {
-      success({ body }) {
+    error(e) {
+      if (e instanceof Error) {
         return {
-          success: true,
-          body: body.string,
+          success: false,
+          error: e.toString(),
         };
-      },
-      error(e) {
-        if (e instanceof Error) {
-          return {
-            success: false,
-            error: e.toString(),
-          };
-        }
-        console.error('Unknown error type encountered!', e);
-        throw e;
-      },
+      }
+      console.error('Unknown error type encountered!', e);
+      throw e;
     },
-  );
+  },
+);
 
-  export default startServerAndCreateLambdaHandler(server, requestHandler);
-  ```
+export default startServerAndCreateLambdaHandler(server, requestHandler);
+```
 
 </MultiCodeBlock>
 
@@ -499,7 +506,7 @@ exports.handler = serverlessExpress({ app });
 </MultiCodeBlock>
 
 
-## Customizing HTTP behavior
+## Customizing HTTP routing behavior
 
 If you want to customize your HTTP routing behavior, you can couple Apollo Server's Express integration (i.e., [`expressMiddleware`](../api/express-middleware)) with the [`@vendia/serverless-express`](https://github.com/vendia/serverless-express) package. The `@vendia/serverless-express` library translates between Lambda events and Express requests. Despite their similar names, the Serverless CLI and the `@vendia/serverless-express` package are unrelated.
 
