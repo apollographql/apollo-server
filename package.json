@@ -91,7 +91,7 @@
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
     "nock": "13.3.0",
-    "node-fetch": "2.6.8",
+    "node-fetch": "2.6.9",
     "prettier": "2.8.3",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
@@ -100,7 +100,7 @@
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.0.5",
-    "typescript": "4.9.4"
+    "typescript": "4.9.5"
   },
   "jest": {
     "projects": [
