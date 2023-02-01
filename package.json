@@ -37,7 +37,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.7.5",
+    "@apollo/client": "3.7.6",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
@@ -68,8 +68,8 @@
     "@types/type-is": "1.6.3",
     "@types/uuid": "9.0.0",
     "@types/whatwg-mimetype": "3.0.0",
-    "@typescript-eslint/eslint-plugin": "5.49.0",
-    "@typescript-eslint/parser": "5.49.0",
+    "@typescript-eslint/eslint-plugin": "5.50.0",
+    "@typescript-eslint/parser": "5.50.0",
     "@vendia/serverless-express": "4.10.1",
     "awaiting": "3.0.0",
     "body-parser": "1.20.1",
