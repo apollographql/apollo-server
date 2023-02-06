@@ -9,6 +9,7 @@ jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    if: github.repository == 'apollographql/apollo-server'
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v3
