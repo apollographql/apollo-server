@@ -416,7 +416,7 @@ class PersonalizationAPI extends RESTDataSource {
   }
 
   // highlight-start
-  override willSendRequest(request: AugmentedRequest) {
+  override willSendRequest(_path: string, request: AugmentedRequest) {
     request.headers['authorization'] = this.token;
   }
   // highlight-end
@@ -446,7 +446,7 @@ class PersonalizationAPI extends RESTDataSource {
   }
 
   // highlight-start
-  override willSendRequest(request: AugmentedRequest) {
+  override willSendRequest(_path: string, request: AugmentedRequest) {
     request.params.set('api_key', this.token);
   }
   // highlight-end
@@ -522,7 +522,7 @@ class PersonalizationAPI extends RESTDataSource {
     this.token = options.token;
   }
 
-  override willSendRequest(request: AugmentedRequest) {
+  override willSendRequest(_path: string, request: AugmentedRequest) {
     request.headers['authorization'] = this.token;
   }
 
