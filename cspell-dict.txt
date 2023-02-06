@@ -189,6 +189,7 @@ typeis
 typeof
 typesafe
 unawaited
+unbreaking
 uncacheable
 undersupported
 undici
