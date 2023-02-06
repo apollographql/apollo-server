@@ -45,8 +45,8 @@ describe('Landing Page Config HTML', () => {
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
           initialEndpoint,
-          includeCookies: true,
-          initialState: {"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"}},
+          initialState: {"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"includeCookies":true},
+          hideCookieToggle: false,
         });
       </script>
     `);
@@ -82,8 +82,8 @@ describe('Landing Page Config HTML', () => {
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
           initialEndpoint,
-          includeCookies: false,
-          initialState: {},
+          initialState: {"includeCookies":false},
+          hideCookieToggle: false,
         });
       </script>
     `);

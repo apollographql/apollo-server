@@ -51,7 +51,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script>
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"graph@current","displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"includeCookies":true,"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"embed":{"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"},"persistExplorerState":true},"graphRef":"graph@current","displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"hideCookieToggle":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -89,7 +89,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script>
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"includeCookies":false,"embed":true,"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"includeCookies":false,"embed":true,"graphRef":"graph@current","displayOptions":{}},"persistExplorerState":false};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"includeCookies":false,"embed":true,"graphRef":"graph@current","displayOptions":{}},"persistExplorerState":false,"hideCookieToggle":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
