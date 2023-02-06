@@ -1,3 +1,4 @@
+import type { NonFtv1ErrorPath } from '@apollo/server-gateway-interface';
 import {
   type google,
   type IContextualizedStats,
@@ -65,12 +66,14 @@ export class OurReport implements Required<IReport> {
     // Apollo reporting ingress server will never store any traces over 10mb
     // anyway. They will still be converted to stats as we would do here.
     maxTraceBytes = 10 * 1024 * 1024,
+    nonFtv1ErrorPaths,
   }: {
     statsReportKey: string;
     trace: Trace;
     asTrace: boolean;
     referencedFieldsByType: ReferencedFieldsByType;
     maxTraceBytes?: number;
+    nonFtv1ErrorPaths: NonFtv1ErrorPath[];
   }) {
     const tracesAndStats = this.getTracesAndStats({
       statsReportKey,
@@ -80,13 +83,21 @@ export class OurReport implements Required<IReport> {
       const encodedTrace = Trace.encode(trace).finish();
 
       if (!isNaN(maxTraceBytes) && encodedTrace.length > maxTraceBytes) {
-        tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
+        tracesAndStats.statsWithContext.addTrace(
+          trace,
+          this.sizeEstimator,
+          nonFtv1ErrorPaths,
+        );
       } else {
         tracesAndStats.trace.push(encodedTrace);
         this.sizeEstimator.bytes += 2 + encodedTrace.length;
       }
     } else {
-      tracesAndStats.statsWithContext.addTrace(trace, this.sizeEstimator);
+      tracesAndStats.statsWithContext.addTrace(
+        trace,
+        this.sizeEstimator,
+        nonFtv1ErrorPaths,
+      );
     }
   }
 
@@ -157,10 +168,15 @@ class StatsByContext {
     }
   }
 
-  addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
+  addTrace(
+    trace: Trace,
+    sizeEstimator: SizeEstimator,
+    nonFtv1ErrorPaths: NonFtv1ErrorPath[],
+  ) {
     this.getContextualizedStats(trace, sizeEstimator).addTrace(
       trace,
       sizeEstimator,
+      nonFtv1ErrorPaths,
     );
   }
 
@@ -207,7 +223,11 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
   // We only add to the estimate when adding whole sub-messages. If it really
   // mattered, we could do a lot more careful things like incrementing it
   // whenever a numeric field on queryLatencyStats gets incremented over 0.
-  addTrace(trace: Trace, sizeEstimator: SizeEstimator) {
+  addTrace(
+    trace: Trace,
+    sizeEstimator: SizeEstimator,
+    nonFtv1ErrorPaths: NonFtv1ErrorPath[] = [],
+  ) {
     const { fieldExecutionWeight } = trace;
     if (!fieldExecutionWeight) {
       this.queryLatencyStats.requestsWithoutFieldInstrumentation++;
@@ -258,6 +278,8 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
 
     let hasError = false;
 
+    const errorPathStats = new Set<OurPathErrorStats>();
+
     const traceNodeStats = (node: Trace.INode, path: ResponseNamePath) => {
       // Generate error stats and error path information
       if (node.error?.length) {
@@ -271,7 +293,7 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
           );
         });
 
-        currPathErrorStats.requestsWithErrorsCount += 1;
+        errorPathStats.add(currPathErrorStats);
         currPathErrorStats.errorsCount += node.error.length;
       }
 
@@ -331,6 +353,33 @@ export class OurContextualizedStats implements Required<IContextualizedStats> {
     };
 
     iterateOverTrace(trace, traceNodeStats, true);
+
+    // iterate over nonFtv1ErrorPaths, using some bits from traceNodeStats function
+    for (const { subgraph, path } of nonFtv1ErrorPaths) {
+      hasError = true;
+      if (path) {
+        let currPathErrorStats = this.queryLatencyStats.rootErrorStats.getChild(
+          `service:${subgraph}`,
+          sizeEstimator,
+        );
+        path.forEach((subPath) => {
+          if (typeof subPath === 'string') {
+            currPathErrorStats = currPathErrorStats.getChild(
+              subPath,
+              sizeEstimator,
+            );
+          }
+        });
+
+        errorPathStats.add(currPathErrorStats);
+        currPathErrorStats.errorsCount += 1;
+      }
+    }
+
+    for (const errorPath of errorPathStats) {
+      errorPath.requestsWithErrorsCount += 1;
+    }
+
     if (hasError) {
       this.queryLatencyStats.requestsWithErrorsCount++;
     }

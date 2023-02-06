@@ -722,11 +722,12 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             getReportWhichMustBeUsedImmediately(executableSchemaId).addTrace({
               statsReportKey,
               trace,
-              // We include the operation as a trace (rather than aggregated
-              // into stats) only if the user didn't set `sendTraces: false`
-              // *and* we believe it's possible that our organization's plan
-              // allows for viewing traces *and* we actually captured this as
-              // a full trace *and* sendOperationAsTrace says so.
+              // We include the operation as a trace (rather than aggregated into stats) only if:
+              // * the user didn't set `sendTraces: false` AND
+              // * it's possible that the organization's plan allows for viewing traces AND
+              // * we captured this as a full trace AND
+              // * gateway reported no errors missing ftv1 data AND
+              // * sendOperationAsTrace says so
               //
               // (As an edge case, if the reason metrics.captureTraces is
               // falsey is that this is an unexecutable operation and thus we
@@ -737,8 +738,10 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               asTrace:
                 sendTraces &&
                 (!isExecutable || !!metrics.captureTraces) &&
+                !metrics.nonFtv1ErrorPaths?.length &&
                 sendOperationAsTrace(trace, statsReportKey),
               referencedFieldsByType,
+              nonFtv1ErrorPaths: metrics.nonFtv1ErrorPaths ?? [],
             });
 
             // If the buffer gets big (according to our estimate), send.

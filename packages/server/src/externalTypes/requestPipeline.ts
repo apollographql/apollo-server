@@ -19,6 +19,7 @@ import type {
   OperationDefinitionNode,
 } from 'graphql';
 import type { CachePolicy } from '@apollo/cache-control-types';
+import type { NonFtv1ErrorPath } from '@apollo/server-gateway-interface';
 
 export interface GraphQLRequestMetrics {
   // It would be more accurate to call this fieldLevelInstrumentation (it is
@@ -33,6 +34,7 @@ export interface GraphQLRequestMetrics {
   registeredOperation?: boolean;
   startHrTime?: [number, number];
   queryPlanTrace?: Trace.QueryPlanNode;
+  nonFtv1ErrorPaths?: NonFtv1ErrorPath[];
 }
 
 export interface GraphQLRequestContext<TContext extends BaseContext> {
