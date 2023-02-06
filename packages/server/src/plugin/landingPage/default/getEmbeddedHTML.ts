@@ -42,7 +42,7 @@ export const getEmbeddedExplorerHTML = (
 
     endpointUrl: string;
 
-    includeCookies?: boolean; // defaults to 'false'
+    hideCookieToggle?: boolean; // defaults to 'true'
   }
   const productionLandingPageConfigOrDefault = {
     displayOptions: {},
@@ -61,6 +61,7 @@ export const getEmbeddedExplorerHTML = (
       },
       persistExplorerState:
         productionLandingPageConfigOrDefault.persistExplorerState,
+      hideCookieToggle: false,
     };
 
   return `
@@ -121,6 +122,7 @@ id="embeddableSandbox"
       variables: config.variables ?? undefined,
       headers: config.headers ?? undefined,
     })},
+    hideCookieToggle: false,
   });
 </script>
 `;
