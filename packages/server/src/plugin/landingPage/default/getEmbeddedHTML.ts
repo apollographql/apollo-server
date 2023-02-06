@@ -32,6 +32,7 @@ export const getEmbeddedExplorerHTML = (
       document?: string;
       variables?: Record<string, any>;
       headers?: Record<string, string>;
+      includeCookies?: boolean;
       displayOptions: {
         docsPanelState?: 'open' | 'closed'; // default to 'open',
         showHeadersAndEnvVars?: boolean; // default to `false`
@@ -116,11 +117,11 @@ id="embeddableSandbox"
   new window.EmbeddedSandbox({
     target: '#embeddableSandbox',
     initialEndpoint,
-    includeCookies: ${config.includeCookies ?? 'false'},
     initialState: ${getConfigStringForHtml({
       document: config.document ?? undefined,
       variables: config.variables ?? undefined,
       headers: config.headers ?? undefined,
+      includeCookies: config.includeCookies ?? undefined,
     })},
     hideCookieToggle: false,
   });
