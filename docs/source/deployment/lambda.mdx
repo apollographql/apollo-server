@@ -261,7 +261,7 @@ In order to implement event and result mutations, type-safe middleware can be pa
 ```ts
 
 import { middleware, startServerAndCreateLambdaHandler, handlers } from "@as-integrations/aws-lambda";
-import {server} from "./server";
+import { server } from "./server";
 
 const requestHandler = handlers.createAPIGatewayProxyEventV2RequestHandler();
 
