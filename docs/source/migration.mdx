@@ -465,7 +465,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
     this.token = options.token;
   }
 
-  override willSendRequest(request: WillSendRequestOptions) {
+  override willSendRequest(path: string, request: WillSendRequestOptions) {
     request.headers['authorization'] = this.token;
   }
 
@@ -504,7 +504,8 @@ const { url } = await startStandaloneServer(server, {
       //highlight-start
       dataSources: {
         moviesAPI: new MoviesAPI({ cache, token }),
-      }, //highlight-end
+      },
+      //highlight-end
     };
   },
 });
@@ -536,7 +537,7 @@ class MoviesAPI extends RESTDataSource {
     this.contextValue = options.contextValue;
   }
 
-  override willSendRequest(request: WillSendRequestOptions) {
+  override willSendRequest(path: string, request: WillSendRequestOptions) {
     request.headers['authorization'] = this.contextValue.token;
   }
 

@@ -1,14 +1,14 @@
 {
   "dependencies": {
     "graphql": "16.6.0",
-    "make-fetch-happen": "11.0.2"
+    "make-fetch-happen": "11.0.3"
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "24.0.1",
     "@rollup/plugin-json": "6.0.0",
     "@rollup/plugin-node-resolve": "15.0.1",
     "@types/make-fetch-happen": "10.0.1",
-    "rollup": "3.10.1"
+    "rollup": "3.14.0"
   },
   "volta": {
     "extends": "../package.json"

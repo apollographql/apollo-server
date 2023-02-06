@@ -10,7 +10,7 @@ Apollo Server 4 is the latest version of Apollo Server and is [generally availab
 
 > [Learn more about deprecation and end-of-life.](https://www.apollographql.com/docs/resources/product-launch-stages#stages-for-discontinuing-support)
 
-Both previous major versions of Apollo Server are currently [deprecated](/resources/product-launch-stages#deprecated), with end-of-life scheduled for **October 22nd, 2023**. Additionally, [certain features](#apollo-server-2) of Apollo Server 2 have an earlier end-of-life date of **December 31st, 2022**.
+Both previous major versions of Apollo Server are currently [deprecated](/resources/product-launch-stages#deprecated), with end-of-life scheduled for **October 22nd, 2023**. Additionally, [certain features](#apollo-server-2) of Apollo Server 2 have reached their end-of-life date of **December 31st, 2022**.
 
 Deprecated versions continue to receive security patches and updates to address major regressions until their end-of-life date. They typically do not receive new features and other kinds of bug fixes may or may not be backported to deprecated versions at Apollo's discretion.
 
@@ -26,13 +26,12 @@ End-of-life versions will remain available in the npm registry and can still be 
 
 We recommend upgrading to Apollo Server 4 as _soon as possible_. Depending on which Apollo Server features you use, the upgrade process might require several changes to your server. The most straightforward upgrade path is to first upgrade from Apollo Server 2 to 3, then once everything works, continue upgrading from Apollo Server 3 to 4.
 
-Three features of Apollo Server 2 have an earlier end-of-life date: **December 31st, 2022**. These three features are:
+Three features of Apollo Server 2 have reached their end-of-life date as of **December 31st, 2022**. These three features are:
 * [Subscriptions](/apollo-server/v2/data/subscriptions/)
 * [File uploads](/apollo-server/v2/data/file-uploads/)
 * [GraphQL Playground](/apollo-server/v2/testing/graphql-playground/).
 
-These features incorporate third-party software that is unmaintained (or can't be upgraded for compatibility reasons). Additionally, these features aren't in the default experiences of either Apollo Server 3 or 4. Apollo generally won't support these features' security issues or significant regressions after 2022. In other words, problems that are solved when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })` might not be addressed after 2022.
-
+As of 2023, Apollo no longer commits to providing any support for these three features. While you may still file issues about security concerns or significant regressions, if the problems do not exist when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })`, Apollo may choose not to address them.
 
 ### Apollo Server 1
 
