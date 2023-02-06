@@ -1,5 +1,17 @@
 # @apollo/server
 
+## 4.3.3
+
+### Patch Changes
+
+- [#7331](https://github.com/apollographql/apollo-server/pull/7331) [`9de18b34c`](https://github.com/apollographql/apollo-server/commit/9de18b34cd2ead3da0e0fbbe3eec74a84e20a5d8) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Unpin `node-abort-controller` and update to latest unbreaking patch
+
+- [#7136](https://github.com/apollographql/apollo-server/pull/7136) [`8c635d104`](https://github.com/apollographql/apollo-server/commit/8c635d104739c9d3fd9c15ac04f5d3a23b1c1917) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Errors reported by subgraphs (with no trace data in the response) are now accurately reflected in the numeric error stats.
+
+  Operations that receive errors from subgraphs (with no trace data in the response) are no longer sent as incomplete, error-less traces.
+
+  Note: in order for this fix to take effect, your `@apollo/gateway` version must be updated to v2.3.1 or later.
+
 ## 4.3.2
 
 ### Patch Changes
