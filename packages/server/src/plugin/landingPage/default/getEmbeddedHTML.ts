@@ -52,7 +52,7 @@ export const getEmbeddedExplorerHTML = (
   };
   const embeddedExplorerParams: Omit<EmbeddableExplorerOptions, 'endpointUrl'> =
     {
-      ...config,
+      graphRef: config.graphRef,
       target: '#embeddableExplorer',
       initialState: {
         ...config,
