@@ -32,7 +32,6 @@ export const getEmbeddedExplorerHTML = (
       document?: string;
       variables?: Record<string, any>;
       headers?: Record<string, string>;
-      includeCookies?: boolean;
       displayOptions: {
         docsPanelState?: 'open' | 'closed'; // default to 'open',
         showHeadersAndEnvVars?: boolean; // default to `false`
