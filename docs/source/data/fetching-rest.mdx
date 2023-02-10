@@ -393,8 +393,9 @@ this.get('/movies/1', options);
 ```
 
 ### Setting timeouts
-To set a timeout with a fetch implementation you need to set the `signal` option to a [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) which will allow you to abort the request with custom logic.
+To set a timeout with a fetch implementation you need to set the `signal` option to an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) which will allow you to abort the request with custom logic.
 
+Here is an example of a simple timeout after a fixed time for every request:
 ```
 this.get('/movies/1', {signal: AbortSignal.timeout(myTimeoutMilliseconds)});
 ```
