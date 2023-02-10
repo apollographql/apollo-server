@@ -246,7 +246,7 @@ class MoviesAPI extends RESTDataSource {
 
 </MultiCodeBlock>
 
-### Requests specifying TTL
+### Specifying cache TTL
 
 > 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](../migration/#datasources).
 
@@ -383,6 +383,20 @@ class MoviesAPI extends RESTDataSource {
     );
   }
 }
+```
+
+## Setting fetch options
+When you make a call to one of the REST methods, the second parameter has some predefined TypeScript types provided by `@apollo/datasource-rest`, but ultimately it is the same `options` object that is passed to your [fetch implementation](https://developer.mozilla.org/en-US/docs/Web/API/fetch#syntax). If you are looking for other advanced options that you can not find in the Apollo docs, you can set them here and refer to your Fetch API docs.
+
+```
+this.get('/movies/1', options);
+```
+
+### Setting timeouts
+To set a timeout with a fetch implementation you need to set the `signal` option to a [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) which will allow you to abort the request with custom logic.
+
+```
+this.get('/movies/1', {signal: AbortSignal.timeout(myTimeoutMilliseconds)});
 ```
 
 ## Intercepting fetches
