@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.4.0
+
+### Minor Changes
+
+- [#7358](https://github.com/apollographql/apollo-server/pull/7358) [`f2d433b4f`](https://github.com/apollographql/apollo-server/commit/f2d433b4f5c92b1a56816c55a8bda2b1e338beeb) Thanks [@esilverm](https://github.com/esilverm)! - Show "Include Cookies" toggle in Embedded Sandbox landing page.
+
 ## 4.3.3
 
 ### Patch Changes
