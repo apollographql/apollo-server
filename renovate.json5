@@ -33,18 +33,18 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
-    // The testsuite depends directly on the tests in `graphql-http`. Because of
-    // this, updates to `graphql-http` affect the contents of published packages,
-    // require a changeset, and cannot be auto-merged. So we split it into its
-    // own Renovate PRs so that it doesn't block other upgrades.
     {
-      "matchPackageNames": ["graphql-http"],
-      "rangeStrategy": "pin",
-    },
-    // We want the testsuite to explicitly pin the version of @apollo/server
-    // since they are supposed to be in lockstep.
-    {
-      matchPackageNames: ["@apollo/server"],
+      matchPackageNames: [
+        // We want the testsuite to explicitly pin the version of @apollo/server
+        // since they are supposed to be in lockstep.
+        "@apollo/server",
+        // The testsuite depends directly on the tests in `graphql-http`.
+        // Because of this, updates to `graphql-http` affect the contents of
+        // published packages, require a changeset, and cannot be auto-merged.
+        // So we split it into its own Renovate PRs so that it doesn't block
+        // other upgrades.
+        "graphql-http"
+      ],
       matchPaths: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
