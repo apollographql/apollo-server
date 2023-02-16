@@ -45,7 +45,7 @@ import { RESTDataSource } from '@apollo/datasource-rest';
 class MoviesAPI extends RESTDataSource {
   override baseURL = 'https://movies-api.example.com/';
 
-  async getMovie(id): Promise<Movie> {
+  async getMovie(id: string): Promise<Movie> {
     return this.get<Movie>(`movies/${encodeURIComponent(id)}`);
   }
 
