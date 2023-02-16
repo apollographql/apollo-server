@@ -386,18 +386,18 @@ class MoviesAPI extends RESTDataSource {
 ```
 
 ## Setting fetch options
-When you make a call to one of the REST methods, the second parameter has some predefined TypeScript types provided by `@apollo/datasource-rest`, but ultimately it is the same `options` object that is passed to your [fetch implementation](https://developer.mozilla.org/en-US/docs/Web/API/fetch#syntax). If you are looking for other advanced options that you can not find in the Apollo docs, you can set them here and refer to your Fetch API docs.
+The second parameter to each of the REST methods is the request options object. This object includes some of the common options you might typically pass to [`fetch`](https://developer.mozilla.org/en-US/docs/Web/API/fetch#syntax), including `method`, `headers`, `body`, and `signal`. If you are looking for other advanced options that you cannot find in the Apollo docs, you can set them here and refer to your Fetch API docs.
 
 ```
 this.get('/movies/1', options);
 ```
 
 ### Setting timeouts
-To set a timeout with a fetch implementation you need to set the `signal` option to an [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) which will allow you to abort the request with custom logic.
+To set a `fetch` timeout, you need to provide an [`AbortSignal`](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) via the `signal` option which will allow you to abort the request with custom logic.
 
 Here is an example of a simple timeout after a fixed time for every request:
 ```
-this.get('/movies/1', {signal: AbortSignal.timeout(myTimeoutMilliseconds)});
+this.get('/movies/1', { signal: AbortSignal.timeout(myTimeoutMilliseconds) });
 ```
 
 ## Intercepting fetches
