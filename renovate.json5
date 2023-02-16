@@ -33,6 +33,14 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
+    // The testsuite depends directly on the tests in `graphql-http`. We want
+    // integrations using our testsuite to have a deterministic set of
+    // tests run so we should pin it. This way, the tests being run don't
+    // surprisingly change in the integration repo with, e.g a lockfile update.
+    {
+      "matchPackageNames": ["graphql-http"],
+      "rangeStrategy": "pin",
+    },
     // We want the testsuite to explicitly pin the version of @apollo/server
     // since they are supposed to be in lockstep.
     {
