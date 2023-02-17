@@ -390,7 +390,7 @@ The second parameter passed to each REST method is an object containing request 
 
 > If you're looking for other advanced options that aren't covered in the Apollo docs, you can set them here and refer to your Fetch API docs.
 
-```
+```ts
 this.get('/movies/1', options);
 ```
 
@@ -399,7 +399,7 @@ To set a `fetch` timeout, provide an [`AbortSignal`](https://developer.mozilla.o
 
 Here's an example of a simple timeout after a fixed time for every request:
 
-```
+```ts
 this.get('/movies/1', { signal: AbortSignal.timeout(myTimeoutMilliseconds) });
 ```
 
