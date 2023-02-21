@@ -44,8 +44,8 @@
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",
-    "@graphql-codegen/cli": "3.0.0",
-    "@graphql-codegen/typescript-operations": "3.0.0",
+    "@graphql-codegen/cli": "3.1.0",
+    "@graphql-codegen/typescript-operations": "3.0.1",
     "@graphql-tools/mock": "8.7.18",
     "@graphql-tools/schema": "9.0.16",
     "@josephg/resolvable": "1.0.1",
@@ -110,7 +110,7 @@
     ]
   },
   "volta": {
-    "node": "18.14.1",
+    "node": "18.14.2",
     "npm": "9.5.0"
   }
 }
