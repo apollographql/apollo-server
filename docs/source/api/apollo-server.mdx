@@ -370,9 +370,9 @@ To learn more about configuring Apollo Server's cache, see [Configuring cache ba
 </td>
 <td>
 
-An array of [plugins](../integrations/plugins) to install in your server instance. Each array element can be either a valid plugin object or a zero-argument function that _returns_ a valid plugin object.
+An array of [plugins](../integrations/plugins) to install in your server instance.
 
-You can _also_ add plugins to your server before you start it using the [`addPlugin`](#addplugin) method.
+You can _also_ add plugins to your server before you start it using the [`addPlugin`](#addplugin) method. This might be useful in the event that your plugin needs to access the `ApolloServer` instance.
 
 Apollo Server comes with several plugins that it installs automatically in their default configuration if certain conditions are met. For example, the usage reporting plugin is installed if you provide a graph API key and a graph ref. Apollo Server skips this automatic installation if you manually provide the plugin (in the `plugins` array or with the `addPlugin` method), or if you provide the plugin's corresponding "disabled" plugin (such as `ApolloServerPluginUsageReportingDisabled()` for `ApolloServerPluginUsageReporting`). For details, see the API references for these plugins: [usage reporting](./plugin/usage-reporting/), [schema reporting](./plugin/schema-reporting/), [landing page](./plugin/landing-pages/), [cache control](./plugin/cache-control/), and [inline trace](./plugin/inline-trace/).
 
@@ -581,7 +581,7 @@ The `executeOperation` method takes two arguments:
 - The first argument is an object describing the GraphQL operation to be executed.
   - Supported fields are listed in the table below.
 - The second argument is the optional options object. This object includes the operation's optional [`contextValue`](../data/context#the-contextvalue-object). This argument is only optional if your server _doesn't_ expect a context value (i.e., your server uses the default context because you didn't explicitly provide another one).
-  
+
 ```js
 const response = await server.executeOperation({
   query: 'query SayHelloWorld($name: String) { hello(name: $name) }',
