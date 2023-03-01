@@ -147,6 +147,9 @@ As shown, the `requestDidStart` function can optionally return an object that
 defines functions that respond to request lifecycle events. This structure
 organizes and encapsulates all of your plugin's request lifecycle logic, making it
 easier to reason about.
+  
+> If you're using TypeScript, the object returned by `requestDidStart` should implement the [`GraphQLRequestListener` interface](https://github.com/apollographql/apollo-server/blob/cc447c5687f67938efb976d7aa282f7a95e313db/packages/server/src/externalTypes/plugins.ts#L104).
+  This interface contains the functions that you can define to respond to the different lifecycle events. 
 
 ### Request lifecycle event flow
 
