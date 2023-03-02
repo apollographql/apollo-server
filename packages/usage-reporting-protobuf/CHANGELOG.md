@@ -1,5 +1,11 @@
 # @apollo/usage-reporting-protobuf
 
+## 4.1.0
+
+### Minor Changes
+
+- [#7411](https://github.com/apollographql/apollo-server/pull/7411) [`021460e95`](https://github.com/apollographql/apollo-server/commit/021460e95c34ce921dc1c8caa3e5ded3463487ee) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update protobuf which includes updates for supporting (notably) ConditionNode in the gateway
+
 ## 4.0.2
 
 ### Patch Changes

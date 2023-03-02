@@ -1,5 +1,12 @@
 # @apollo/server
 
+## 4.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`021460e95`](https://github.com/apollographql/apollo-server/commit/021460e95c34ce921dc1c8caa3e5ded3463487ee)]:
+  - @apollo/usage-reporting-protobuf@4.1.0
+
 ## 4.4.0
 
 ### Minor Changes
