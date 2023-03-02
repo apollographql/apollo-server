@@ -14,6 +14,9 @@ export interface ITrace {
     /** Trace root */
     root?: (Trace.INode|null);
 
+    /** Trace isIncomplete */
+    isIncomplete?: (boolean|null);
+
     /** Trace signature */
     signature?: (string|null);
 
@@ -80,6 +83,9 @@ export class Trace implements ITrace {
 
     /** Trace root. */
     public root?: (Trace.INode|null);
+
+    /** Trace isIncomplete. */
+    public isIncomplete: boolean;
 
     /** Trace signature. */
     public signature: string;
@@ -487,12 +493,6 @@ export namespace Trace {
         /** HTTP method */
         method?: (Trace.HTTP.Method|null);
 
-        /** HTTP host */
-        host?: (string|null);
-
-        /** HTTP path */
-        path?: (string|null);
-
         /** HTTP requestHeaders */
         requestHeaders?: ({ [k: string]: Trace.HTTP.IValues }|null);
 
@@ -501,12 +501,6 @@ export namespace Trace {
 
         /** HTTP statusCode */
         statusCode?: (number|null);
-
-        /** HTTP secure */
-        secure?: (boolean|null);
-
-        /** HTTP protocol */
-        protocol?: (string|null);
     }
 
     /** Represents a HTTP. */
@@ -521,12 +515,6 @@ export namespace Trace {
         /** HTTP method. */
         public method: Trace.HTTP.Method;
 
-        /** HTTP host. */
-        public host: string;
-
-        /** HTTP path. */
-        public path: string;
-
         /** HTTP requestHeaders. */
         public requestHeaders: { [k: string]: Trace.HTTP.IValues };
 
@@ -535,12 +523,6 @@ export namespace Trace {
 
         /** HTTP statusCode. */
         public statusCode: number;
-
-        /** HTTP secure. */
-        public secure: boolean;
-
-        /** HTTP protocol. */
-        public protocol: string;
 
         /**
          * Creates a new HTTP instance using the specified properties.
@@ -949,6 +931,12 @@ export namespace Trace {
 
         /** QueryPlanNode flatten */
         flatten?: (Trace.QueryPlanNode.IFlattenNode|null);
+
+        /** QueryPlanNode defer */
+        defer?: (Trace.QueryPlanNode.IDeferNode|null);
+
+        /** QueryPlanNode condition */
+        condition?: (Trace.QueryPlanNode.IConditionNode|null);
     }
 
     /** Represents a QueryPlanNode. */
@@ -972,8 +960,14 @@ export namespace Trace {
         /** QueryPlanNode flatten. */
         public flatten?: (Trace.QueryPlanNode.IFlattenNode|null);
 
+        /** QueryPlanNode defer. */
+        public defer?: (Trace.QueryPlanNode.IDeferNode|null);
+
+        /** QueryPlanNode condition. */
+        public condition?: (Trace.QueryPlanNode.IConditionNode|null);
+
         /** QueryPlanNode node. */
-        public node?: ("sequence"|"parallel"|"fetch"|"flatten");
+        public node?: ("sequence"|"parallel"|"fetch"|"flatten"|"defer"|"condition");
 
         /**
          * Creates a new QueryPlanNode instance using the specified properties.
@@ -1404,6 +1398,463 @@ export namespace Trace {
 
             /**
              * Converts this FlattenNode to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a DeferNode. */
+        interface IDeferNode {
+
+            /** DeferNode primary */
+            primary?: (Trace.QueryPlanNode.IDeferNodePrimary|null);
+
+            /** DeferNode deferred */
+            deferred?: (Trace.QueryPlanNode.IDeferredNode[]|null);
+        }
+
+        /** Represents a DeferNode. */
+        class DeferNode implements IDeferNode {
+
+            /**
+             * Constructs a new DeferNode.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: Trace.QueryPlanNode.IDeferNode);
+
+            /** DeferNode primary. */
+            public primary?: (Trace.QueryPlanNode.IDeferNodePrimary|null);
+
+            /** DeferNode deferred. */
+            public deferred: Trace.QueryPlanNode.IDeferredNode[];
+
+            /**
+             * Creates a new DeferNode instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns DeferNode instance
+             */
+            public static create(properties?: Trace.QueryPlanNode.IDeferNode): Trace.QueryPlanNode.DeferNode;
+
+            /**
+             * Encodes the specified DeferNode message. Does not implicitly {@link Trace.QueryPlanNode.DeferNode.verify|verify} messages.
+             * @param message DeferNode message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: Trace.QueryPlanNode.IDeferNode, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified DeferNode message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferNode.verify|verify} messages.
+             * @param message DeferNode message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: Trace.QueryPlanNode.IDeferNode, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a DeferNode message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns DeferNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Trace.QueryPlanNode.DeferNode;
+
+            /**
+             * Decodes a DeferNode message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns DeferNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Trace.QueryPlanNode.DeferNode;
+
+            /**
+             * Verifies a DeferNode message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a plain object from a DeferNode message. Also converts values to other types if specified.
+             * @param message DeferNode
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: Trace.QueryPlanNode.DeferNode, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this DeferNode to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a ConditionNode. */
+        interface IConditionNode {
+
+            /** ConditionNode condition */
+            condition?: (string|null);
+
+            /** ConditionNode ifClause */
+            ifClause?: (Trace.IQueryPlanNode|null);
+
+            /** ConditionNode elseClause */
+            elseClause?: (Trace.IQueryPlanNode|null);
+        }
+
+        /** Represents a ConditionNode. */
+        class ConditionNode implements IConditionNode {
+
+            /**
+             * Constructs a new ConditionNode.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: Trace.QueryPlanNode.IConditionNode);
+
+            /** ConditionNode condition. */
+            public condition: string;
+
+            /** ConditionNode ifClause. */
+            public ifClause?: (Trace.IQueryPlanNode|null);
+
+            /** ConditionNode elseClause. */
+            public elseClause?: (Trace.IQueryPlanNode|null);
+
+            /**
+             * Creates a new ConditionNode instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns ConditionNode instance
+             */
+            public static create(properties?: Trace.QueryPlanNode.IConditionNode): Trace.QueryPlanNode.ConditionNode;
+
+            /**
+             * Encodes the specified ConditionNode message. Does not implicitly {@link Trace.QueryPlanNode.ConditionNode.verify|verify} messages.
+             * @param message ConditionNode message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: Trace.QueryPlanNode.IConditionNode, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified ConditionNode message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.ConditionNode.verify|verify} messages.
+             * @param message ConditionNode message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: Trace.QueryPlanNode.IConditionNode, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a ConditionNode message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns ConditionNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Trace.QueryPlanNode.ConditionNode;
+
+            /**
+             * Decodes a ConditionNode message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns ConditionNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Trace.QueryPlanNode.ConditionNode;
+
+            /**
+             * Verifies a ConditionNode message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a plain object from a ConditionNode message. Also converts values to other types if specified.
+             * @param message ConditionNode
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: Trace.QueryPlanNode.ConditionNode, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this ConditionNode to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a DeferNodePrimary. */
+        interface IDeferNodePrimary {
+
+            /** DeferNodePrimary node */
+            node?: (Trace.IQueryPlanNode|null);
+        }
+
+        /** Represents a DeferNodePrimary. */
+        class DeferNodePrimary implements IDeferNodePrimary {
+
+            /**
+             * Constructs a new DeferNodePrimary.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: Trace.QueryPlanNode.IDeferNodePrimary);
+
+            /** DeferNodePrimary node. */
+            public node?: (Trace.IQueryPlanNode|null);
+
+            /**
+             * Creates a new DeferNodePrimary instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns DeferNodePrimary instance
+             */
+            public static create(properties?: Trace.QueryPlanNode.IDeferNodePrimary): Trace.QueryPlanNode.DeferNodePrimary;
+
+            /**
+             * Encodes the specified DeferNodePrimary message. Does not implicitly {@link Trace.QueryPlanNode.DeferNodePrimary.verify|verify} messages.
+             * @param message DeferNodePrimary message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: Trace.QueryPlanNode.IDeferNodePrimary, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified DeferNodePrimary message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferNodePrimary.verify|verify} messages.
+             * @param message DeferNodePrimary message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: Trace.QueryPlanNode.IDeferNodePrimary, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a DeferNodePrimary message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns DeferNodePrimary
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Trace.QueryPlanNode.DeferNodePrimary;
+
+            /**
+             * Decodes a DeferNodePrimary message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns DeferNodePrimary
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Trace.QueryPlanNode.DeferNodePrimary;
+
+            /**
+             * Verifies a DeferNodePrimary message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a plain object from a DeferNodePrimary message. Also converts values to other types if specified.
+             * @param message DeferNodePrimary
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: Trace.QueryPlanNode.DeferNodePrimary, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this DeferNodePrimary to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a DeferredNode. */
+        interface IDeferredNode {
+
+            /** DeferredNode depends */
+            depends?: (Trace.QueryPlanNode.IDeferredNodeDepends[]|null);
+
+            /** DeferredNode label */
+            label?: (string|null);
+
+            /** DeferredNode path */
+            path?: (Trace.QueryPlanNode.IResponsePathElement[]|null);
+
+            /** DeferredNode node */
+            node?: (Trace.IQueryPlanNode|null);
+        }
+
+        /** Represents a DeferredNode. */
+        class DeferredNode implements IDeferredNode {
+
+            /**
+             * Constructs a new DeferredNode.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: Trace.QueryPlanNode.IDeferredNode);
+
+            /** DeferredNode depends. */
+            public depends: Trace.QueryPlanNode.IDeferredNodeDepends[];
+
+            /** DeferredNode label. */
+            public label: string;
+
+            /** DeferredNode path. */
+            public path: Trace.QueryPlanNode.IResponsePathElement[];
+
+            /** DeferredNode node. */
+            public node?: (Trace.IQueryPlanNode|null);
+
+            /**
+             * Creates a new DeferredNode instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns DeferredNode instance
+             */
+            public static create(properties?: Trace.QueryPlanNode.IDeferredNode): Trace.QueryPlanNode.DeferredNode;
+
+            /**
+             * Encodes the specified DeferredNode message. Does not implicitly {@link Trace.QueryPlanNode.DeferredNode.verify|verify} messages.
+             * @param message DeferredNode message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: Trace.QueryPlanNode.IDeferredNode, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified DeferredNode message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferredNode.verify|verify} messages.
+             * @param message DeferredNode message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: Trace.QueryPlanNode.IDeferredNode, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a DeferredNode message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns DeferredNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Trace.QueryPlanNode.DeferredNode;
+
+            /**
+             * Decodes a DeferredNode message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns DeferredNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Trace.QueryPlanNode.DeferredNode;
+
+            /**
+             * Verifies a DeferredNode message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a plain object from a DeferredNode message. Also converts values to other types if specified.
+             * @param message DeferredNode
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: Trace.QueryPlanNode.DeferredNode, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this DeferredNode to JSON.
+             * @returns JSON object
+             */
+            public toJSON(): { [k: string]: any };
+        }
+
+        /** Properties of a DeferredNodeDepends. */
+        interface IDeferredNodeDepends {
+
+            /** DeferredNodeDepends id */
+            id?: (string|null);
+
+            /** DeferredNodeDepends deferLabel */
+            deferLabel?: (string|null);
+        }
+
+        /** Represents a DeferredNodeDepends. */
+        class DeferredNodeDepends implements IDeferredNodeDepends {
+
+            /**
+             * Constructs a new DeferredNodeDepends.
+             * @param [properties] Properties to set
+             */
+            constructor(properties?: Trace.QueryPlanNode.IDeferredNodeDepends);
+
+            /** DeferredNodeDepends id. */
+            public id: string;
+
+            /** DeferredNodeDepends deferLabel. */
+            public deferLabel: string;
+
+            /**
+             * Creates a new DeferredNodeDepends instance using the specified properties.
+             * @param [properties] Properties to set
+             * @returns DeferredNodeDepends instance
+             */
+            public static create(properties?: Trace.QueryPlanNode.IDeferredNodeDepends): Trace.QueryPlanNode.DeferredNodeDepends;
+
+            /**
+             * Encodes the specified DeferredNodeDepends message. Does not implicitly {@link Trace.QueryPlanNode.DeferredNodeDepends.verify|verify} messages.
+             * @param message DeferredNodeDepends message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encode(message: Trace.QueryPlanNode.IDeferredNodeDepends, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Encodes the specified DeferredNodeDepends message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferredNodeDepends.verify|verify} messages.
+             * @param message DeferredNodeDepends message or plain object to encode
+             * @param [writer] Writer to encode to
+             * @returns Writer
+             */
+            public static encodeDelimited(message: Trace.QueryPlanNode.IDeferredNodeDepends, writer?: $protobuf.Writer): $protobuf.Writer;
+
+            /**
+             * Decodes a DeferredNodeDepends message from the specified reader or buffer.
+             * @param reader Reader or buffer to decode from
+             * @param [length] Message length if known beforehand
+             * @returns DeferredNodeDepends
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decode(reader: ($protobuf.Reader|Uint8Array), length?: number): Trace.QueryPlanNode.DeferredNodeDepends;
+
+            /**
+             * Decodes a DeferredNodeDepends message from the specified reader or buffer, length delimited.
+             * @param reader Reader or buffer to decode from
+             * @returns DeferredNodeDepends
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            public static decodeDelimited(reader: ($protobuf.Reader|Uint8Array)): Trace.QueryPlanNode.DeferredNodeDepends;
+
+            /**
+             * Verifies a DeferredNodeDepends message.
+             * @param message Plain object to verify
+             * @returns `null` if valid, otherwise the reason why it is not
+             */
+            public static verify(message: { [k: string]: any }): (string|null);
+
+            /**
+             * Creates a plain object from a DeferredNodeDepends message. Also converts values to other types if specified.
+             * @param message DeferredNodeDepends
+             * @param [options] Conversion options
+             * @returns Plain object
+             */
+            public static toObject(message: Trace.QueryPlanNode.DeferredNodeDepends, options?: $protobuf.IConversionOptions): { [k: string]: any };
+
+            /**
+             * Converts this DeferredNodeDepends to JSON.
              * @returns JSON object
              */
             public toJSON(): { [k: string]: any };
@@ -2438,6 +2889,9 @@ export interface IReport {
 
     /** Report operationCount */
     operationCount?: (number|null);
+
+    /** Report tracesPreAggregated */
+    tracesPreAggregated?: (boolean|null);
 }
 
 /** Represents a Report. */
@@ -2460,6 +2914,9 @@ export class Report implements IReport {
 
     /** Report operationCount. */
     public operationCount: number;
+
+    /** Report tracesPreAggregated. */
+    public tracesPreAggregated: boolean;
 
     /**
      * Creates a new Report instance using the specified properties.

@@ -34,6 +34,12 @@ export class SizeEstimator {
   bytes = 0;
 }
 export class OurReport implements Required<IReport> {
+  // Apollo Server includes each operation either as aggregated stats or as a
+  // trace, but not both. Other reporting agents such as Apollo Router include
+  // all operations in stats (even those that are sent as traces), and they set
+  // this flag to true.
+  tracesPreAggregated = false;
+
   constructor(readonly header: ReportHeader) {}
   readonly tracesPerQuery: Record<string, OurTracesAndStats> =
     Object.create(null);

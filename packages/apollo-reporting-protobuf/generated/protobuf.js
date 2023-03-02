@@ -19,6 +19,7 @@ $root.Trace = (function() {
      * @property {google.protobuf.ITimestamp|null} [endTime] Trace endTime
      * @property {number|null} [durationNs] Trace durationNs
      * @property {Trace.INode|null} [root] Trace root
+     * @property {boolean|null} [isIncomplete] Trace isIncomplete
      * @property {string|null} [signature] Trace signature
      * @property {string|null} [unexecutedOperationBody] Trace unexecutedOperationBody
      * @property {string|null} [unexecutedOperationName] Trace unexecutedOperationName
@@ -73,7 +74,7 @@ $root.Trace = (function() {
      * @memberof Trace
      * @instance
      */
-    Trace.prototype.durationNs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    Trace.prototype.durationNs = 0;
 
     /**
      * Trace root.
@@ -82,6 +83,14 @@ $root.Trace = (function() {
      * @instance
      */
     Trace.prototype.root = null;
+
+    /**
+     * Trace isIncomplete.
+     * @member {boolean} isIncomplete
+     * @memberof Trace
+     * @instance
+     */
+    Trace.prototype.isIncomplete = false;
 
     /**
      * Trace signature.
@@ -265,6 +274,8 @@ $root.Trace = (function() {
             writer.uint32(/* id 28, wireType 2 =*/226).string(message.unexecutedOperationName);
         if (message.fieldExecutionWeight != null && Object.hasOwnProperty.call(message, "fieldExecutionWeight"))
             writer.uint32(/* id 31, wireType 1 =*/249).double(message.fieldExecutionWeight);
+        if (message.isIncomplete != null && Object.hasOwnProperty.call(message, "isIncomplete"))
+            writer.uint32(/* id 33, wireType 0 =*/264).bool(message.isIncomplete);
         return writer;
     };
 
@@ -310,6 +321,9 @@ $root.Trace = (function() {
                 break;
             case 14:
                 message.root = $root.Trace.Node.decode(reader, reader.uint32());
+                break;
+            case 33:
+                message.isIncomplete = reader.bool();
                 break;
             case 19:
                 message.signature = reader.string();
@@ -409,6 +423,9 @@ $root.Trace = (function() {
             if (error)
                 return "root." + error;
         }
+        if (message.isIncomplete != null && message.hasOwnProperty("isIncomplete"))
+            if (typeof message.isIncomplete !== "boolean")
+                return "isIncomplete: boolean expected";
         if (message.signature != null && message.hasOwnProperty("signature"))
             if (!$util.isString(message.signature))
                 return "signature: string expected";
@@ -485,11 +502,7 @@ $root.Trace = (function() {
             object.clientName = "";
             object.clientVersion = "";
             object.http = null;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.durationNs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.durationNs = options.longs === String ? "0" : 0;
+            object.durationNs = 0;
             object.root = null;
             object.cachePolicy = null;
             object.signature = "";
@@ -502,6 +515,7 @@ $root.Trace = (function() {
             object.unexecutedOperationBody = "";
             object.unexecutedOperationName = "";
             object.fieldExecutionWeight = 0;
+            object.isIncomplete = false;
         }
         if (message.endTime != null && message.hasOwnProperty("endTime"))
             object.endTime = $root.google.protobuf.Timestamp.toObject(message.endTime, options);
@@ -544,6 +558,8 @@ $root.Trace = (function() {
             object.unexecutedOperationName = message.unexecutedOperationName;
         if (message.fieldExecutionWeight != null && message.hasOwnProperty("fieldExecutionWeight"))
             object.fieldExecutionWeight = options.json && !isFinite(message.fieldExecutionWeight) ? String(message.fieldExecutionWeight) : message.fieldExecutionWeight;
+        if (message.isIncomplete != null && message.hasOwnProperty("isIncomplete"))
+            object.isIncomplete = message.isIncomplete;
         return object;
     };
 
@@ -597,7 +613,7 @@ $root.Trace = (function() {
          * @memberof Trace.CachePolicy
          * @instance
          */
-        CachePolicy.prototype.maxAgeNs = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+        CachePolicy.prototype.maxAgeNs = 0;
 
         /**
          * Creates a new CachePolicy instance using the specified properties.
@@ -732,11 +748,7 @@ $root.Trace = (function() {
             var object = {};
             if (options.defaults) {
                 object.scope = options.enums === String ? "UNKNOWN" : 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, false);
-                    object.maxAgeNs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.maxAgeNs = options.longs === String ? "0" : 0;
+                object.maxAgeNs = 0;
             }
             if (message.scope != null && message.hasOwnProperty("scope"))
                 object.scope = options.enums === String ? $root.Trace.CachePolicy.Scope[message.scope] : message.scope;
@@ -1035,7 +1047,7 @@ $root.Trace = (function() {
          * @memberof Trace.Error
          * @instance
          */
-        Error.prototype.timeNs = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        Error.prototype.timeNs = 0;
 
         /**
          * Error json.
@@ -1199,11 +1211,7 @@ $root.Trace = (function() {
                 object.location = [];
             if (options.defaults) {
                 object.message = "";
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.timeNs = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.timeNs = options.longs === String ? "0" : 0;
+                object.timeNs = 0;
                 object.json = "";
             }
             if (message.message != null && message.hasOwnProperty("message"))
@@ -1244,13 +1252,9 @@ $root.Trace = (function() {
          * @memberof Trace
          * @interface IHTTP
          * @property {Trace.HTTP.Method|null} [method] HTTP method
-         * @property {string|null} [host] HTTP host
-         * @property {string|null} [path] HTTP path
          * @property {Object.<string,Trace.HTTP.IValues>|null} [requestHeaders] HTTP requestHeaders
          * @property {Object.<string,Trace.HTTP.IValues>|null} [responseHeaders] HTTP responseHeaders
          * @property {number|null} [statusCode] HTTP statusCode
-         * @property {boolean|null} [secure] HTTP secure
-         * @property {string|null} [protocol] HTTP protocol
          */
 
         /**
@@ -1279,22 +1283,6 @@ $root.Trace = (function() {
         HTTP.prototype.method = 0;
 
         /**
-         * HTTP host.
-         * @member {string} host
-         * @memberof Trace.HTTP
-         * @instance
-         */
-        HTTP.prototype.host = "";
-
-        /**
-         * HTTP path.
-         * @member {string} path
-         * @memberof Trace.HTTP
-         * @instance
-         */
-        HTTP.prototype.path = "";
-
-        /**
          * HTTP requestHeaders.
          * @member {Object.<string,Trace.HTTP.IValues>} requestHeaders
          * @memberof Trace.HTTP
@@ -1317,22 +1305,6 @@ $root.Trace = (function() {
          * @instance
          */
         HTTP.prototype.statusCode = 0;
-
-        /**
-         * HTTP secure.
-         * @member {boolean} secure
-         * @memberof Trace.HTTP
-         * @instance
-         */
-        HTTP.prototype.secure = false;
-
-        /**
-         * HTTP protocol.
-         * @member {string} protocol
-         * @memberof Trace.HTTP
-         * @instance
-         */
-        HTTP.prototype.protocol = "";
 
         /**
          * Creates a new HTTP instance using the specified properties.
@@ -1360,10 +1332,6 @@ $root.Trace = (function() {
                 writer = $Writer.create();
             if (message.method != null && Object.hasOwnProperty.call(message, "method"))
                 writer.uint32(/* id 1, wireType 0 =*/8).int32(message.method);
-            if (message.host != null && Object.hasOwnProperty.call(message, "host"))
-                writer.uint32(/* id 2, wireType 2 =*/18).string(message.host);
-            if (message.path != null && Object.hasOwnProperty.call(message, "path"))
-                writer.uint32(/* id 3, wireType 2 =*/26).string(message.path);
             if (message.requestHeaders != null && Object.hasOwnProperty.call(message, "requestHeaders"))
                 for (var keys = Object.keys(message.requestHeaders), i = 0; i < keys.length; ++i) {
                     writer.uint32(/* id 4, wireType 2 =*/34).fork().uint32(/* id 1, wireType 2 =*/10).string(keys[i]);
@@ -1376,10 +1344,6 @@ $root.Trace = (function() {
                 }
             if (message.statusCode != null && Object.hasOwnProperty.call(message, "statusCode"))
                 writer.uint32(/* id 6, wireType 0 =*/48).uint32(message.statusCode);
-            if (message.secure != null && Object.hasOwnProperty.call(message, "secure"))
-                writer.uint32(/* id 8, wireType 0 =*/64).bool(message.secure);
-            if (message.protocol != null && Object.hasOwnProperty.call(message, "protocol"))
-                writer.uint32(/* id 9, wireType 2 =*/74).string(message.protocol);
             return writer;
         };
 
@@ -1417,12 +1381,6 @@ $root.Trace = (function() {
                 case 1:
                     message.method = reader.int32();
                     break;
-                case 2:
-                    message.host = reader.string();
-                    break;
-                case 3:
-                    message.path = reader.string();
-                    break;
                 case 4:
                     reader.skip().pos++;
                     if (message.requestHeaders === $util.emptyObject)
@@ -1441,12 +1399,6 @@ $root.Trace = (function() {
                     break;
                 case 6:
                     message.statusCode = reader.uint32();
-                    break;
-                case 8:
-                    message.secure = reader.bool();
-                    break;
-                case 9:
-                    message.protocol = reader.string();
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -1499,12 +1451,6 @@ $root.Trace = (function() {
                 case 9:
                     break;
                 }
-            if (message.host != null && message.hasOwnProperty("host"))
-                if (!$util.isString(message.host))
-                    return "host: string expected";
-            if (message.path != null && message.hasOwnProperty("path"))
-                if (!$util.isString(message.path))
-                    return "path: string expected";
             if (message.requestHeaders != null && message.hasOwnProperty("requestHeaders")) {
                 if (!$util.isObject(message.requestHeaders))
                     return "requestHeaders: object expected";
@@ -1528,12 +1474,6 @@ $root.Trace = (function() {
             if (message.statusCode != null && message.hasOwnProperty("statusCode"))
                 if (!$util.isInteger(message.statusCode))
                     return "statusCode: integer expected";
-            if (message.secure != null && message.hasOwnProperty("secure"))
-                if (typeof message.secure !== "boolean")
-                    return "secure: boolean expected";
-            if (message.protocol != null && message.hasOwnProperty("protocol"))
-                if (!$util.isString(message.protocol))
-                    return "protocol: string expected";
             return null;
         };
 
@@ -1556,18 +1496,10 @@ $root.Trace = (function() {
             }
             if (options.defaults) {
                 object.method = options.enums === String ? "UNKNOWN" : 0;
-                object.host = "";
-                object.path = "";
                 object.statusCode = 0;
-                object.secure = false;
-                object.protocol = "";
             }
             if (message.method != null && message.hasOwnProperty("method"))
                 object.method = options.enums === String ? $root.Trace.HTTP.Method[message.method] : message.method;
-            if (message.host != null && message.hasOwnProperty("host"))
-                object.host = message.host;
-            if (message.path != null && message.hasOwnProperty("path"))
-                object.path = message.path;
             var keys2;
             if (message.requestHeaders && (keys2 = Object.keys(message.requestHeaders)).length) {
                 object.requestHeaders = {};
@@ -1581,10 +1513,6 @@ $root.Trace = (function() {
             }
             if (message.statusCode != null && message.hasOwnProperty("statusCode"))
                 object.statusCode = message.statusCode;
-            if (message.secure != null && message.hasOwnProperty("secure"))
-                object.secure = message.secure;
-            if (message.protocol != null && message.hasOwnProperty("protocol"))
-                object.protocol = message.protocol;
             return object;
         };
 
@@ -2093,7 +2021,7 @@ $root.Trace = (function() {
          * @memberof Trace.Node
          * @instance
          */
-        Node.prototype.startTime = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        Node.prototype.startTime = 0;
 
         /**
          * Node endTime.
@@ -2101,7 +2029,7 @@ $root.Trace = (function() {
          * @memberof Trace.Node
          * @instance
          */
-        Node.prototype.endTime = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+        Node.prototype.endTime = 0;
 
         /**
          * Node error.
@@ -2356,16 +2284,8 @@ $root.Trace = (function() {
             if (options.defaults) {
                 object.type = "";
                 object.cachePolicy = null;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.startTime = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.startTime = options.longs === String ? "0" : 0;
-                if ($util.Long) {
-                    var long = new $util.Long(0, 0, true);
-                    object.endTime = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                } else
-                    object.endTime = options.longs === String ? "0" : 0;
+                object.startTime = 0;
+                object.endTime = 0;
                 object.parentType = "";
                 object.originalFieldName = "";
             }
@@ -2434,6 +2354,8 @@ $root.Trace = (function() {
          * @property {Trace.QueryPlanNode.IParallelNode|null} [parallel] QueryPlanNode parallel
          * @property {Trace.QueryPlanNode.IFetchNode|null} [fetch] QueryPlanNode fetch
          * @property {Trace.QueryPlanNode.IFlattenNode|null} [flatten] QueryPlanNode flatten
+         * @property {Trace.QueryPlanNode.IDeferNode|null} [defer] QueryPlanNode defer
+         * @property {Trace.QueryPlanNode.IConditionNode|null} [condition] QueryPlanNode condition
          */
 
         /**
@@ -2483,17 +2405,33 @@ $root.Trace = (function() {
          */
         QueryPlanNode.prototype.flatten = null;
 
+        /**
+         * QueryPlanNode defer.
+         * @member {Trace.QueryPlanNode.IDeferNode|null|undefined} defer
+         * @memberof Trace.QueryPlanNode
+         * @instance
+         */
+        QueryPlanNode.prototype.defer = null;
+
+        /**
+         * QueryPlanNode condition.
+         * @member {Trace.QueryPlanNode.IConditionNode|null|undefined} condition
+         * @memberof Trace.QueryPlanNode
+         * @instance
+         */
+        QueryPlanNode.prototype.condition = null;
+
         // OneOf field names bound to virtual getters and setters
         var $oneOfFields;
 
         /**
          * QueryPlanNode node.
-         * @member {"sequence"|"parallel"|"fetch"|"flatten"|undefined} node
+         * @member {"sequence"|"parallel"|"fetch"|"flatten"|"defer"|"condition"|undefined} node
          * @memberof Trace.QueryPlanNode
          * @instance
          */
         Object.defineProperty(QueryPlanNode.prototype, "node", {
-            get: $util.oneOfGetter($oneOfFields = ["sequence", "parallel", "fetch", "flatten"]),
+            get: $util.oneOfGetter($oneOfFields = ["sequence", "parallel", "fetch", "flatten", "defer", "condition"]),
             set: $util.oneOfSetter($oneOfFields)
         });
 
@@ -2529,6 +2467,10 @@ $root.Trace = (function() {
                 $root.Trace.QueryPlanNode.FetchNode.encode(message.fetch, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
             if (message.flatten != null && Object.hasOwnProperty.call(message, "flatten"))
                 $root.Trace.QueryPlanNode.FlattenNode.encode(message.flatten, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+            if (message.defer != null && Object.hasOwnProperty.call(message, "defer"))
+                $root.Trace.QueryPlanNode.DeferNode.encode(message.defer, writer.uint32(/* id 5, wireType 2 =*/42).fork()).ldelim();
+            if (message.condition != null && Object.hasOwnProperty.call(message, "condition"))
+                $root.Trace.QueryPlanNode.ConditionNode.encode(message.condition, writer.uint32(/* id 6, wireType 2 =*/50).fork()).ldelim();
             return writer;
         };
 
@@ -2574,6 +2516,12 @@ $root.Trace = (function() {
                     break;
                 case 4:
                     message.flatten = $root.Trace.QueryPlanNode.FlattenNode.decode(reader, reader.uint32());
+                    break;
+                case 5:
+                    message.defer = $root.Trace.QueryPlanNode.DeferNode.decode(reader, reader.uint32());
+                    break;
+                case 6:
+                    message.condition = $root.Trace.QueryPlanNode.ConditionNode.decode(reader, reader.uint32());
                     break;
                 default:
                     reader.skipType(tag & 7);
@@ -2649,6 +2597,26 @@ $root.Trace = (function() {
                         return "flatten." + error;
                 }
             }
+            if (message.defer != null && message.hasOwnProperty("defer")) {
+                if (properties.node === 1)
+                    return "node: multiple values";
+                properties.node = 1;
+                {
+                    var error = $root.Trace.QueryPlanNode.DeferNode.verify(message.defer);
+                    if (error)
+                        return "defer." + error;
+                }
+            }
+            if (message.condition != null && message.hasOwnProperty("condition")) {
+                if (properties.node === 1)
+                    return "node: multiple values";
+                properties.node = 1;
+                {
+                    var error = $root.Trace.QueryPlanNode.ConditionNode.verify(message.condition);
+                    if (error)
+                        return "condition." + error;
+                }
+            }
             return null;
         };
 
@@ -2684,6 +2652,16 @@ $root.Trace = (function() {
                 object.flatten = $root.Trace.QueryPlanNode.FlattenNode.toObject(message.flatten, options);
                 if (options.oneofs)
                     object.node = "flatten";
+            }
+            if (message.defer != null && message.hasOwnProperty("defer")) {
+                object.defer = $root.Trace.QueryPlanNode.DeferNode.toObject(message.defer, options);
+                if (options.oneofs)
+                    object.node = "defer";
+            }
+            if (message.condition != null && message.hasOwnProperty("condition")) {
+                object.condition = $root.Trace.QueryPlanNode.ConditionNode.toObject(message.condition, options);
+                if (options.oneofs)
+                    object.node = "condition";
             }
             return object;
         };
@@ -3124,7 +3102,7 @@ $root.Trace = (function() {
              * @memberof Trace.QueryPlanNode.FetchNode
              * @instance
              */
-            FetchNode.prototype.sentTimeOffset = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+            FetchNode.prototype.sentTimeOffset = 0;
 
             /**
              * FetchNode sentTime.
@@ -3309,11 +3287,7 @@ $root.Trace = (function() {
                     object.serviceName = "";
                     object.traceParsingFailed = false;
                     object.trace = null;
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, true);
-                        object.sentTimeOffset = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.sentTimeOffset = options.longs === String ? "0" : 0;
+                    object.sentTimeOffset = 0;
                     object.sentTime = null;
                     object.receivedTime = null;
                 }
@@ -3553,6 +3527,1051 @@ $root.Trace = (function() {
             };
 
             return FlattenNode;
+        })();
+
+        QueryPlanNode.DeferNode = (function() {
+
+            /**
+             * Properties of a DeferNode.
+             * @memberof Trace.QueryPlanNode
+             * @interface IDeferNode
+             * @property {Trace.QueryPlanNode.IDeferNodePrimary|null} [primary] DeferNode primary
+             * @property {Array.<Trace.QueryPlanNode.IDeferredNode>|null} [deferred] DeferNode deferred
+             */
+
+            /**
+             * Constructs a new DeferNode.
+             * @memberof Trace.QueryPlanNode
+             * @classdesc Represents a DeferNode.
+             * @implements IDeferNode
+             * @constructor
+             * @param {Trace.QueryPlanNode.IDeferNode=} [properties] Properties to set
+             */
+            function DeferNode(properties) {
+                this.deferred = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * DeferNode primary.
+             * @member {Trace.QueryPlanNode.IDeferNodePrimary|null|undefined} primary
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @instance
+             */
+            DeferNode.prototype.primary = null;
+
+            /**
+             * DeferNode deferred.
+             * @member {Array.<Trace.QueryPlanNode.IDeferredNode>} deferred
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @instance
+             */
+            DeferNode.prototype.deferred = $util.emptyArray;
+
+            /**
+             * Creates a new DeferNode instance using the specified properties.
+             * @function create
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferNode=} [properties] Properties to set
+             * @returns {Trace.QueryPlanNode.DeferNode} DeferNode instance
+             */
+            DeferNode.create = function create(properties) {
+                return new DeferNode(properties);
+            };
+
+            /**
+             * Encodes the specified DeferNode message. Does not implicitly {@link Trace.QueryPlanNode.DeferNode.verify|verify} messages.
+             * @function encode
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferNode} message DeferNode message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferNode.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.primary != null && Object.hasOwnProperty.call(message, "primary"))
+                    $root.Trace.QueryPlanNode.DeferNodePrimary.encode(message.primary, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.deferred != null && message.deferred.length)
+                    for (var i = 0; i < message.deferred.length; ++i)
+                        $root.Trace.QueryPlanNode.DeferredNode.encode(message.deferred[i], writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                return writer;
+            };
+
+            /**
+             * Encodes the specified DeferNode message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferNode.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferNode} message DeferNode message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferNode.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a DeferNode message from the specified reader or buffer.
+             * @function decode
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {Trace.QueryPlanNode.DeferNode} DeferNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferNode.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Trace.QueryPlanNode.DeferNode();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.primary = $root.Trace.QueryPlanNode.DeferNodePrimary.decode(reader, reader.uint32());
+                        break;
+                    case 2:
+                        if (!(message.deferred && message.deferred.length))
+                            message.deferred = [];
+                        message.deferred.push($root.Trace.QueryPlanNode.DeferredNode.decode(reader, reader.uint32()));
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a DeferNode message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {Trace.QueryPlanNode.DeferNode} DeferNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferNode.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a DeferNode message.
+             * @function verify
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DeferNode.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.primary != null && message.hasOwnProperty("primary")) {
+                    var error = $root.Trace.QueryPlanNode.DeferNodePrimary.verify(message.primary);
+                    if (error)
+                        return "primary." + error;
+                }
+                if (message.deferred != null && message.hasOwnProperty("deferred")) {
+                    if (!Array.isArray(message.deferred))
+                        return "deferred: array expected";
+                    for (var i = 0; i < message.deferred.length; ++i) {
+                        var error = $root.Trace.QueryPlanNode.DeferredNode.verify(message.deferred[i]);
+                        if (error)
+                            return "deferred." + error;
+                    }
+                }
+                return null;
+            };
+
+            /**
+             * Creates a plain object from a DeferNode message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @static
+             * @param {Trace.QueryPlanNode.DeferNode} message DeferNode
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DeferNode.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults)
+                    object.deferred = [];
+                if (options.defaults)
+                    object.primary = null;
+                if (message.primary != null && message.hasOwnProperty("primary"))
+                    object.primary = $root.Trace.QueryPlanNode.DeferNodePrimary.toObject(message.primary, options);
+                if (message.deferred && message.deferred.length) {
+                    object.deferred = [];
+                    for (var j = 0; j < message.deferred.length; ++j)
+                        object.deferred[j] = $root.Trace.QueryPlanNode.DeferredNode.toObject(message.deferred[j], options);
+                }
+                return object;
+            };
+
+            /**
+             * Converts this DeferNode to JSON.
+             * @function toJSON
+             * @memberof Trace.QueryPlanNode.DeferNode
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DeferNode.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return DeferNode;
+        })();
+
+        QueryPlanNode.ConditionNode = (function() {
+
+            /**
+             * Properties of a ConditionNode.
+             * @memberof Trace.QueryPlanNode
+             * @interface IConditionNode
+             * @property {string|null} [condition] ConditionNode condition
+             * @property {Trace.IQueryPlanNode|null} [ifClause] ConditionNode ifClause
+             * @property {Trace.IQueryPlanNode|null} [elseClause] ConditionNode elseClause
+             */
+
+            /**
+             * Constructs a new ConditionNode.
+             * @memberof Trace.QueryPlanNode
+             * @classdesc Represents a ConditionNode.
+             * @implements IConditionNode
+             * @constructor
+             * @param {Trace.QueryPlanNode.IConditionNode=} [properties] Properties to set
+             */
+            function ConditionNode(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * ConditionNode condition.
+             * @member {string} condition
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @instance
+             */
+            ConditionNode.prototype.condition = "";
+
+            /**
+             * ConditionNode ifClause.
+             * @member {Trace.IQueryPlanNode|null|undefined} ifClause
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @instance
+             */
+            ConditionNode.prototype.ifClause = null;
+
+            /**
+             * ConditionNode elseClause.
+             * @member {Trace.IQueryPlanNode|null|undefined} elseClause
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @instance
+             */
+            ConditionNode.prototype.elseClause = null;
+
+            /**
+             * Creates a new ConditionNode instance using the specified properties.
+             * @function create
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {Trace.QueryPlanNode.IConditionNode=} [properties] Properties to set
+             * @returns {Trace.QueryPlanNode.ConditionNode} ConditionNode instance
+             */
+            ConditionNode.create = function create(properties) {
+                return new ConditionNode(properties);
+            };
+
+            /**
+             * Encodes the specified ConditionNode message. Does not implicitly {@link Trace.QueryPlanNode.ConditionNode.verify|verify} messages.
+             * @function encode
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {Trace.QueryPlanNode.IConditionNode} message ConditionNode message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ConditionNode.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.condition != null && Object.hasOwnProperty.call(message, "condition"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.condition);
+                if (message.ifClause != null && Object.hasOwnProperty.call(message, "ifClause"))
+                    $root.Trace.QueryPlanNode.encode(message.ifClause, writer.uint32(/* id 2, wireType 2 =*/18).fork()).ldelim();
+                if (message.elseClause != null && Object.hasOwnProperty.call(message, "elseClause"))
+                    $root.Trace.QueryPlanNode.encode(message.elseClause, writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                return writer;
+            };
+
+            /**
+             * Encodes the specified ConditionNode message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.ConditionNode.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {Trace.QueryPlanNode.IConditionNode} message ConditionNode message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            ConditionNode.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a ConditionNode message from the specified reader or buffer.
+             * @function decode
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {Trace.QueryPlanNode.ConditionNode} ConditionNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ConditionNode.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Trace.QueryPlanNode.ConditionNode();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.condition = reader.string();
+                        break;
+                    case 2:
+                        message.ifClause = $root.Trace.QueryPlanNode.decode(reader, reader.uint32());
+                        break;
+                    case 3:
+                        message.elseClause = $root.Trace.QueryPlanNode.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a ConditionNode message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {Trace.QueryPlanNode.ConditionNode} ConditionNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            ConditionNode.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a ConditionNode message.
+             * @function verify
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            ConditionNode.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.condition != null && message.hasOwnProperty("condition"))
+                    if (!$util.isString(message.condition))
+                        return "condition: string expected";
+                if (message.ifClause != null && message.hasOwnProperty("ifClause")) {
+                    var error = $root.Trace.QueryPlanNode.verify(message.ifClause);
+                    if (error)
+                        return "ifClause." + error;
+                }
+                if (message.elseClause != null && message.hasOwnProperty("elseClause")) {
+                    var error = $root.Trace.QueryPlanNode.verify(message.elseClause);
+                    if (error)
+                        return "elseClause." + error;
+                }
+                return null;
+            };
+
+            /**
+             * Creates a plain object from a ConditionNode message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @static
+             * @param {Trace.QueryPlanNode.ConditionNode} message ConditionNode
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            ConditionNode.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.condition = "";
+                    object.ifClause = null;
+                    object.elseClause = null;
+                }
+                if (message.condition != null && message.hasOwnProperty("condition"))
+                    object.condition = message.condition;
+                if (message.ifClause != null && message.hasOwnProperty("ifClause"))
+                    object.ifClause = $root.Trace.QueryPlanNode.toObject(message.ifClause, options);
+                if (message.elseClause != null && message.hasOwnProperty("elseClause"))
+                    object.elseClause = $root.Trace.QueryPlanNode.toObject(message.elseClause, options);
+                return object;
+            };
+
+            /**
+             * Converts this ConditionNode to JSON.
+             * @function toJSON
+             * @memberof Trace.QueryPlanNode.ConditionNode
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            ConditionNode.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return ConditionNode;
+        })();
+
+        QueryPlanNode.DeferNodePrimary = (function() {
+
+            /**
+             * Properties of a DeferNodePrimary.
+             * @memberof Trace.QueryPlanNode
+             * @interface IDeferNodePrimary
+             * @property {Trace.IQueryPlanNode|null} [node] DeferNodePrimary node
+             */
+
+            /**
+             * Constructs a new DeferNodePrimary.
+             * @memberof Trace.QueryPlanNode
+             * @classdesc Represents a DeferNodePrimary.
+             * @implements IDeferNodePrimary
+             * @constructor
+             * @param {Trace.QueryPlanNode.IDeferNodePrimary=} [properties] Properties to set
+             */
+            function DeferNodePrimary(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * DeferNodePrimary node.
+             * @member {Trace.IQueryPlanNode|null|undefined} node
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @instance
+             */
+            DeferNodePrimary.prototype.node = null;
+
+            /**
+             * Creates a new DeferNodePrimary instance using the specified properties.
+             * @function create
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferNodePrimary=} [properties] Properties to set
+             * @returns {Trace.QueryPlanNode.DeferNodePrimary} DeferNodePrimary instance
+             */
+            DeferNodePrimary.create = function create(properties) {
+                return new DeferNodePrimary(properties);
+            };
+
+            /**
+             * Encodes the specified DeferNodePrimary message. Does not implicitly {@link Trace.QueryPlanNode.DeferNodePrimary.verify|verify} messages.
+             * @function encode
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferNodePrimary} message DeferNodePrimary message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferNodePrimary.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.node != null && Object.hasOwnProperty.call(message, "node"))
+                    $root.Trace.QueryPlanNode.encode(message.node, writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                return writer;
+            };
+
+            /**
+             * Encodes the specified DeferNodePrimary message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferNodePrimary.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferNodePrimary} message DeferNodePrimary message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferNodePrimary.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a DeferNodePrimary message from the specified reader or buffer.
+             * @function decode
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {Trace.QueryPlanNode.DeferNodePrimary} DeferNodePrimary
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferNodePrimary.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Trace.QueryPlanNode.DeferNodePrimary();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.node = $root.Trace.QueryPlanNode.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a DeferNodePrimary message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {Trace.QueryPlanNode.DeferNodePrimary} DeferNodePrimary
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferNodePrimary.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a DeferNodePrimary message.
+             * @function verify
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DeferNodePrimary.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.node != null && message.hasOwnProperty("node")) {
+                    var error = $root.Trace.QueryPlanNode.verify(message.node);
+                    if (error)
+                        return "node." + error;
+                }
+                return null;
+            };
+
+            /**
+             * Creates a plain object from a DeferNodePrimary message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @static
+             * @param {Trace.QueryPlanNode.DeferNodePrimary} message DeferNodePrimary
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DeferNodePrimary.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults)
+                    object.node = null;
+                if (message.node != null && message.hasOwnProperty("node"))
+                    object.node = $root.Trace.QueryPlanNode.toObject(message.node, options);
+                return object;
+            };
+
+            /**
+             * Converts this DeferNodePrimary to JSON.
+             * @function toJSON
+             * @memberof Trace.QueryPlanNode.DeferNodePrimary
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DeferNodePrimary.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return DeferNodePrimary;
+        })();
+
+        QueryPlanNode.DeferredNode = (function() {
+
+            /**
+             * Properties of a DeferredNode.
+             * @memberof Trace.QueryPlanNode
+             * @interface IDeferredNode
+             * @property {Array.<Trace.QueryPlanNode.IDeferredNodeDepends>|null} [depends] DeferredNode depends
+             * @property {string|null} [label] DeferredNode label
+             * @property {Array.<Trace.QueryPlanNode.IResponsePathElement>|null} [path] DeferredNode path
+             * @property {Trace.IQueryPlanNode|null} [node] DeferredNode node
+             */
+
+            /**
+             * Constructs a new DeferredNode.
+             * @memberof Trace.QueryPlanNode
+             * @classdesc Represents a DeferredNode.
+             * @implements IDeferredNode
+             * @constructor
+             * @param {Trace.QueryPlanNode.IDeferredNode=} [properties] Properties to set
+             */
+            function DeferredNode(properties) {
+                this.depends = [];
+                this.path = [];
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * DeferredNode depends.
+             * @member {Array.<Trace.QueryPlanNode.IDeferredNodeDepends>} depends
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @instance
+             */
+            DeferredNode.prototype.depends = $util.emptyArray;
+
+            /**
+             * DeferredNode label.
+             * @member {string} label
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @instance
+             */
+            DeferredNode.prototype.label = "";
+
+            /**
+             * DeferredNode path.
+             * @member {Array.<Trace.QueryPlanNode.IResponsePathElement>} path
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @instance
+             */
+            DeferredNode.prototype.path = $util.emptyArray;
+
+            /**
+             * DeferredNode node.
+             * @member {Trace.IQueryPlanNode|null|undefined} node
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @instance
+             */
+            DeferredNode.prototype.node = null;
+
+            /**
+             * Creates a new DeferredNode instance using the specified properties.
+             * @function create
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferredNode=} [properties] Properties to set
+             * @returns {Trace.QueryPlanNode.DeferredNode} DeferredNode instance
+             */
+            DeferredNode.create = function create(properties) {
+                return new DeferredNode(properties);
+            };
+
+            /**
+             * Encodes the specified DeferredNode message. Does not implicitly {@link Trace.QueryPlanNode.DeferredNode.verify|verify} messages.
+             * @function encode
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferredNode} message DeferredNode message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferredNode.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.depends != null && message.depends.length)
+                    for (var i = 0; i < message.depends.length; ++i)
+                        $root.Trace.QueryPlanNode.DeferredNodeDepends.encode(message.depends[i], writer.uint32(/* id 1, wireType 2 =*/10).fork()).ldelim();
+                if (message.label != null && Object.hasOwnProperty.call(message, "label"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.label);
+                if (message.path != null && message.path.length)
+                    for (var i = 0; i < message.path.length; ++i)
+                        $root.Trace.QueryPlanNode.ResponsePathElement.encode(message.path[i], writer.uint32(/* id 3, wireType 2 =*/26).fork()).ldelim();
+                if (message.node != null && Object.hasOwnProperty.call(message, "node"))
+                    $root.Trace.QueryPlanNode.encode(message.node, writer.uint32(/* id 4, wireType 2 =*/34).fork()).ldelim();
+                return writer;
+            };
+
+            /**
+             * Encodes the specified DeferredNode message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferredNode.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferredNode} message DeferredNode message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferredNode.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a DeferredNode message from the specified reader or buffer.
+             * @function decode
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {Trace.QueryPlanNode.DeferredNode} DeferredNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferredNode.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Trace.QueryPlanNode.DeferredNode();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        if (!(message.depends && message.depends.length))
+                            message.depends = [];
+                        message.depends.push($root.Trace.QueryPlanNode.DeferredNodeDepends.decode(reader, reader.uint32()));
+                        break;
+                    case 2:
+                        message.label = reader.string();
+                        break;
+                    case 3:
+                        if (!(message.path && message.path.length))
+                            message.path = [];
+                        message.path.push($root.Trace.QueryPlanNode.ResponsePathElement.decode(reader, reader.uint32()));
+                        break;
+                    case 4:
+                        message.node = $root.Trace.QueryPlanNode.decode(reader, reader.uint32());
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a DeferredNode message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {Trace.QueryPlanNode.DeferredNode} DeferredNode
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferredNode.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a DeferredNode message.
+             * @function verify
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DeferredNode.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.depends != null && message.hasOwnProperty("depends")) {
+                    if (!Array.isArray(message.depends))
+                        return "depends: array expected";
+                    for (var i = 0; i < message.depends.length; ++i) {
+                        var error = $root.Trace.QueryPlanNode.DeferredNodeDepends.verify(message.depends[i]);
+                        if (error)
+                            return "depends." + error;
+                    }
+                }
+                if (message.label != null && message.hasOwnProperty("label"))
+                    if (!$util.isString(message.label))
+                        return "label: string expected";
+                if (message.path != null && message.hasOwnProperty("path")) {
+                    if (!Array.isArray(message.path))
+                        return "path: array expected";
+                    for (var i = 0; i < message.path.length; ++i) {
+                        var error = $root.Trace.QueryPlanNode.ResponsePathElement.verify(message.path[i]);
+                        if (error)
+                            return "path." + error;
+                    }
+                }
+                if (message.node != null && message.hasOwnProperty("node")) {
+                    var error = $root.Trace.QueryPlanNode.verify(message.node);
+                    if (error)
+                        return "node." + error;
+                }
+                return null;
+            };
+
+            /**
+             * Creates a plain object from a DeferredNode message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @static
+             * @param {Trace.QueryPlanNode.DeferredNode} message DeferredNode
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DeferredNode.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.arrays || options.defaults) {
+                    object.depends = [];
+                    object.path = [];
+                }
+                if (options.defaults) {
+                    object.label = "";
+                    object.node = null;
+                }
+                if (message.depends && message.depends.length) {
+                    object.depends = [];
+                    for (var j = 0; j < message.depends.length; ++j)
+                        object.depends[j] = $root.Trace.QueryPlanNode.DeferredNodeDepends.toObject(message.depends[j], options);
+                }
+                if (message.label != null && message.hasOwnProperty("label"))
+                    object.label = message.label;
+                if (message.path && message.path.length) {
+                    object.path = [];
+                    for (var j = 0; j < message.path.length; ++j)
+                        object.path[j] = $root.Trace.QueryPlanNode.ResponsePathElement.toObject(message.path[j], options);
+                }
+                if (message.node != null && message.hasOwnProperty("node"))
+                    object.node = $root.Trace.QueryPlanNode.toObject(message.node, options);
+                return object;
+            };
+
+            /**
+             * Converts this DeferredNode to JSON.
+             * @function toJSON
+             * @memberof Trace.QueryPlanNode.DeferredNode
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DeferredNode.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return DeferredNode;
+        })();
+
+        QueryPlanNode.DeferredNodeDepends = (function() {
+
+            /**
+             * Properties of a DeferredNodeDepends.
+             * @memberof Trace.QueryPlanNode
+             * @interface IDeferredNodeDepends
+             * @property {string|null} [id] DeferredNodeDepends id
+             * @property {string|null} [deferLabel] DeferredNodeDepends deferLabel
+             */
+
+            /**
+             * Constructs a new DeferredNodeDepends.
+             * @memberof Trace.QueryPlanNode
+             * @classdesc Represents a DeferredNodeDepends.
+             * @implements IDeferredNodeDepends
+             * @constructor
+             * @param {Trace.QueryPlanNode.IDeferredNodeDepends=} [properties] Properties to set
+             */
+            function DeferredNodeDepends(properties) {
+                if (properties)
+                    for (var keys = Object.keys(properties), i = 0; i < keys.length; ++i)
+                        if (properties[keys[i]] != null)
+                            this[keys[i]] = properties[keys[i]];
+            }
+
+            /**
+             * DeferredNodeDepends id.
+             * @member {string} id
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @instance
+             */
+            DeferredNodeDepends.prototype.id = "";
+
+            /**
+             * DeferredNodeDepends deferLabel.
+             * @member {string} deferLabel
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @instance
+             */
+            DeferredNodeDepends.prototype.deferLabel = "";
+
+            /**
+             * Creates a new DeferredNodeDepends instance using the specified properties.
+             * @function create
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferredNodeDepends=} [properties] Properties to set
+             * @returns {Trace.QueryPlanNode.DeferredNodeDepends} DeferredNodeDepends instance
+             */
+            DeferredNodeDepends.create = function create(properties) {
+                return new DeferredNodeDepends(properties);
+            };
+
+            /**
+             * Encodes the specified DeferredNodeDepends message. Does not implicitly {@link Trace.QueryPlanNode.DeferredNodeDepends.verify|verify} messages.
+             * @function encode
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferredNodeDepends} message DeferredNodeDepends message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferredNodeDepends.encode = function encode(message, writer) {
+                if (!writer)
+                    writer = $Writer.create();
+                if (message.id != null && Object.hasOwnProperty.call(message, "id"))
+                    writer.uint32(/* id 1, wireType 2 =*/10).string(message.id);
+                if (message.deferLabel != null && Object.hasOwnProperty.call(message, "deferLabel"))
+                    writer.uint32(/* id 2, wireType 2 =*/18).string(message.deferLabel);
+                return writer;
+            };
+
+            /**
+             * Encodes the specified DeferredNodeDepends message, length delimited. Does not implicitly {@link Trace.QueryPlanNode.DeferredNodeDepends.verify|verify} messages.
+             * @function encodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {Trace.QueryPlanNode.IDeferredNodeDepends} message DeferredNodeDepends message or plain object to encode
+             * @param {$protobuf.Writer} [writer] Writer to encode to
+             * @returns {$protobuf.Writer} Writer
+             */
+            DeferredNodeDepends.encodeDelimited = function encodeDelimited(message, writer) {
+                return this.encode(message, writer).ldelim();
+            };
+
+            /**
+             * Decodes a DeferredNodeDepends message from the specified reader or buffer.
+             * @function decode
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @param {number} [length] Message length if known beforehand
+             * @returns {Trace.QueryPlanNode.DeferredNodeDepends} DeferredNodeDepends
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferredNodeDepends.decode = function decode(reader, length) {
+                if (!(reader instanceof $Reader))
+                    reader = $Reader.create(reader);
+                var end = length === undefined ? reader.len : reader.pos + length, message = new $root.Trace.QueryPlanNode.DeferredNodeDepends();
+                while (reader.pos < end) {
+                    var tag = reader.uint32();
+                    switch (tag >>> 3) {
+                    case 1:
+                        message.id = reader.string();
+                        break;
+                    case 2:
+                        message.deferLabel = reader.string();
+                        break;
+                    default:
+                        reader.skipType(tag & 7);
+                        break;
+                    }
+                }
+                return message;
+            };
+
+            /**
+             * Decodes a DeferredNodeDepends message from the specified reader or buffer, length delimited.
+             * @function decodeDelimited
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {$protobuf.Reader|Uint8Array} reader Reader or buffer to decode from
+             * @returns {Trace.QueryPlanNode.DeferredNodeDepends} DeferredNodeDepends
+             * @throws {Error} If the payload is not a reader or valid buffer
+             * @throws {$protobuf.util.ProtocolError} If required fields are missing
+             */
+            DeferredNodeDepends.decodeDelimited = function decodeDelimited(reader) {
+                if (!(reader instanceof $Reader))
+                    reader = new $Reader(reader);
+                return this.decode(reader, reader.uint32());
+            };
+
+            /**
+             * Verifies a DeferredNodeDepends message.
+             * @function verify
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {Object.<string,*>} message Plain object to verify
+             * @returns {string|null} `null` if valid, otherwise the reason why it is not
+             */
+            DeferredNodeDepends.verify = function verify(message) {
+                if (typeof message !== "object" || message === null)
+                    return "object expected";
+                if (message.id != null && message.hasOwnProperty("id"))
+                    if (!$util.isString(message.id))
+                        return "id: string expected";
+                if (message.deferLabel != null && message.hasOwnProperty("deferLabel"))
+                    if (!$util.isString(message.deferLabel))
+                        return "deferLabel: string expected";
+                return null;
+            };
+
+            /**
+             * Creates a plain object from a DeferredNodeDepends message. Also converts values to other types if specified.
+             * @function toObject
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @static
+             * @param {Trace.QueryPlanNode.DeferredNodeDepends} message DeferredNodeDepends
+             * @param {$protobuf.IConversionOptions} [options] Conversion options
+             * @returns {Object.<string,*>} Plain object
+             */
+            DeferredNodeDepends.toObject = function toObject(message, options) {
+                if (!options)
+                    options = {};
+                var object = {};
+                if (options.defaults) {
+                    object.id = "";
+                    object.deferLabel = "";
+                }
+                if (message.id != null && message.hasOwnProperty("id"))
+                    object.id = message.id;
+                if (message.deferLabel != null && message.hasOwnProperty("deferLabel"))
+                    object.deferLabel = message.deferLabel;
+                return object;
+            };
+
+            /**
+             * Converts this DeferredNodeDepends to JSON.
+             * @function toJSON
+             * @memberof Trace.QueryPlanNode.DeferredNodeDepends
+             * @instance
+             * @returns {Object.<string,*>} JSON object
+             */
+            DeferredNodeDepends.prototype.toJSON = function toJSON() {
+                return this.constructor.toObject(this, $protobuf.util.toJSONOptions);
+            };
+
+            return DeferredNodeDepends;
         })();
 
         QueryPlanNode.ResponsePathElement = (function() {
@@ -4107,7 +5126,7 @@ $root.PathErrorStats = (function() {
      * @memberof PathErrorStats
      * @instance
      */
-    PathErrorStats.prototype.errorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    PathErrorStats.prototype.errorsCount = 0;
 
     /**
      * PathErrorStats requestsWithErrorsCount.
@@ -4115,7 +5134,7 @@ $root.PathErrorStats = (function() {
      * @memberof PathErrorStats
      * @instance
      */
-    PathErrorStats.prototype.requestsWithErrorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    PathErrorStats.prototype.requestsWithErrorsCount = 0;
 
     /**
      * Creates a new PathErrorStats instance using the specified properties.
@@ -4268,16 +5287,8 @@ $root.PathErrorStats = (function() {
         if (options.objects || options.defaults)
             object.children = {};
         if (options.defaults) {
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.errorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.errorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithErrorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithErrorsCount = options.longs === String ? "0" : 0;
+            object.errorsCount = 0;
+            object.requestsWithErrorsCount = 0;
         }
         var keys2;
         if (message.children && (keys2 = Object.keys(message.children)).length) {
@@ -4366,7 +5377,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.requestCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.requestCount = 0;
 
     /**
      * QueryLatencyStats cacheHits.
@@ -4374,7 +5385,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.cacheHits = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.cacheHits = 0;
 
     /**
      * QueryLatencyStats persistedQueryHits.
@@ -4382,7 +5393,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.persistedQueryHits = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.persistedQueryHits = 0;
 
     /**
      * QueryLatencyStats persistedQueryMisses.
@@ -4390,7 +5401,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.persistedQueryMisses = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.persistedQueryMisses = 0;
 
     /**
      * QueryLatencyStats cacheLatencyCount.
@@ -4414,7 +5425,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.requestsWithErrorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.requestsWithErrorsCount = 0;
 
     /**
      * QueryLatencyStats publicCacheTtlCount.
@@ -4438,7 +5449,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.registeredOperationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.registeredOperationCount = 0;
 
     /**
      * QueryLatencyStats forbiddenOperationCount.
@@ -4446,7 +5457,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.forbiddenOperationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.forbiddenOperationCount = 0;
 
     /**
      * QueryLatencyStats requestsWithoutFieldInstrumentation.
@@ -4454,7 +5465,7 @@ $root.QueryLatencyStats = (function() {
      * @memberof QueryLatencyStats
      * @instance
      */
-    QueryLatencyStats.prototype.requestsWithoutFieldInstrumentation = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    QueryLatencyStats.prototype.requestsWithoutFieldInstrumentation = 0;
 
     /**
      * Creates a new QueryLatencyStats instance using the specified properties.
@@ -4778,47 +5789,15 @@ $root.QueryLatencyStats = (function() {
             object.privateCacheTtlCount = [];
         }
         if (options.defaults) {
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.cacheHits = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.cacheHits = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.persistedQueryHits = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.persistedQueryHits = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.persistedQueryMisses = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.persistedQueryMisses = options.longs === String ? "0" : 0;
+            object.requestCount = 0;
+            object.cacheHits = 0;
+            object.persistedQueryHits = 0;
+            object.persistedQueryMisses = 0;
             object.rootErrorStats = null;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithErrorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithErrorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.registeredOperationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.registeredOperationCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.forbiddenOperationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.forbiddenOperationCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithoutFieldInstrumentation = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithoutFieldInstrumentation = options.longs === String ? "0" : 0;
+            object.requestsWithErrorsCount = 0;
+            object.registeredOperationCount = 0;
+            object.forbiddenOperationCount = 0;
+            object.requestsWithoutFieldInstrumentation = 0;
         }
         if (message.requestCount != null && message.hasOwnProperty("requestCount"))
             if (typeof message.requestCount === "number")
@@ -5554,7 +6533,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.errorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.errorsCount = 0;
 
     /**
      * FieldStat observedExecutionCount.
@@ -5562,7 +6541,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.observedExecutionCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.observedExecutionCount = 0;
 
     /**
      * FieldStat estimatedExecutionCount.
@@ -5570,7 +6549,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.estimatedExecutionCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.estimatedExecutionCount = 0;
 
     /**
      * FieldStat requestsWithErrorsCount.
@@ -5578,7 +6557,7 @@ $root.FieldStat = (function() {
      * @memberof FieldStat
      * @instance
      */
-    FieldStat.prototype.requestsWithErrorsCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    FieldStat.prototype.requestsWithErrorsCount = 0;
 
     /**
      * FieldStat latencyCount.
@@ -5774,26 +6753,10 @@ $root.FieldStat = (function() {
             object.latencyCount = [];
         if (options.defaults) {
             object.returnType = "";
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.errorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.errorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.observedExecutionCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.observedExecutionCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.requestsWithErrorsCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.requestsWithErrorsCount = options.longs === String ? "0" : 0;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.estimatedExecutionCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.estimatedExecutionCount = options.longs === String ? "0" : 0;
+            object.errorsCount = 0;
+            object.observedExecutionCount = 0;
+            object.requestsWithErrorsCount = 0;
+            object.estimatedExecutionCount = 0;
         }
         if (message.returnType != null && message.hasOwnProperty("returnType"))
             object.returnType = message.returnType;
@@ -6244,6 +7207,7 @@ $root.Report = (function() {
      * @property {Object.<string,ITracesAndStats>|null} [tracesPerQuery] Report tracesPerQuery
      * @property {google.protobuf.ITimestamp|null} [endTime] Report endTime
      * @property {number|null} [operationCount] Report operationCount
+     * @property {boolean|null} [tracesPreAggregated] Report tracesPreAggregated
      */
 
     /**
@@ -6292,7 +7256,15 @@ $root.Report = (function() {
      * @memberof Report
      * @instance
      */
-    Report.prototype.operationCount = $util.Long ? $util.Long.fromBits(0,0,true) : 0;
+    Report.prototype.operationCount = 0;
+
+    /**
+     * Report tracesPreAggregated.
+     * @member {boolean} tracesPreAggregated
+     * @memberof Report
+     * @instance
+     */
+    Report.prototype.tracesPreAggregated = false;
 
     /**
      * Creates a new Report instance using the specified properties.
@@ -6329,6 +7301,8 @@ $root.Report = (function() {
             }
         if (message.operationCount != null && Object.hasOwnProperty.call(message, "operationCount"))
             writer.uint32(/* id 6, wireType 0 =*/48).uint64(message.operationCount);
+        if (message.tracesPreAggregated != null && Object.hasOwnProperty.call(message, "tracesPreAggregated"))
+            writer.uint32(/* id 7, wireType 0 =*/56).bool(message.tracesPreAggregated);
         return writer;
     };
 
@@ -6379,6 +7353,9 @@ $root.Report = (function() {
                 break;
             case 6:
                 message.operationCount = reader.uint64();
+                break;
+            case 7:
+                message.tracesPreAggregated = reader.bool();
                 break;
             default:
                 reader.skipType(tag & 7);
@@ -6438,6 +7415,9 @@ $root.Report = (function() {
         if (message.operationCount != null && message.hasOwnProperty("operationCount"))
             if (!$util.isInteger(message.operationCount) && !(message.operationCount && $util.isInteger(message.operationCount.low) && $util.isInteger(message.operationCount.high)))
                 return "operationCount: integer|Long expected";
+        if (message.tracesPreAggregated != null && message.hasOwnProperty("tracesPreAggregated"))
+            if (typeof message.tracesPreAggregated !== "boolean")
+                return "tracesPreAggregated: boolean expected";
         return null;
     };
 
@@ -6459,11 +7439,8 @@ $root.Report = (function() {
         if (options.defaults) {
             object.header = null;
             object.endTime = null;
-            if ($util.Long) {
-                var long = new $util.Long(0, 0, true);
-                object.operationCount = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-            } else
-                object.operationCount = options.longs === String ? "0" : 0;
+            object.operationCount = 0;
+            object.tracesPreAggregated = false;
         }
         if (message.header != null && message.hasOwnProperty("header"))
             object.header = $root.ReportHeader.toObject(message.header, options);
@@ -6480,6 +7457,8 @@ $root.Report = (function() {
                 object.operationCount = options.longs === String ? String(message.operationCount) : message.operationCount;
             else
                 object.operationCount = options.longs === String ? $util.Long.prototype.toString.call(message.operationCount) : options.longs === Number ? new $util.LongBits(message.operationCount.low >>> 0, message.operationCount.high >>> 0).toNumber(true) : message.operationCount;
+        if (message.tracesPreAggregated != null && message.hasOwnProperty("tracesPreAggregated"))
+            object.tracesPreAggregated = message.tracesPreAggregated;
         return object;
     };
 
@@ -7093,7 +8072,7 @@ $root.google = (function() {
              * @memberof google.protobuf.Timestamp
              * @instance
              */
-            Timestamp.prototype.seconds = $util.Long ? $util.Long.fromBits(0,0,false) : 0;
+            Timestamp.prototype.seconds = 0;
 
             /**
              * Timestamp nanos.
@@ -7229,11 +8208,7 @@ $root.google = (function() {
                     options = {};
                 var object = {};
                 if (options.defaults) {
-                    if ($util.Long) {
-                        var long = new $util.Long(0, 0, false);
-                        object.seconds = options.longs === String ? long.toString() : options.longs === Number ? long.toNumber() : long;
-                    } else
-                        object.seconds = options.longs === String ? "0" : 0;
+                    object.seconds = 0;
                     object.nanos = 0;
                 }
                 if (message.seconds != null && message.hasOwnProperty("seconds"))

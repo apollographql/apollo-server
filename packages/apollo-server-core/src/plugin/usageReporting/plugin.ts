@@ -432,15 +432,6 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
               Trace.HTTP.Method[
                 http.method as keyof typeof Trace.HTTP.Method
               ] || Trace.HTTP.Method.UNKNOWN,
-            // Host and path are not used anywhere on the backend, so let's not bother
-            // trying to parse request.url to get them, which is a potential
-            // source of bugs because integrations have different behavior here.
-            // On Node's HTTP module, request.url only includes the path
-            // (see https://nodejs.org/api/http.html#http_message_url)
-            // The same is true on Lambda (where we pass event.path)
-            // But on environments like Cloudflare we do get a complete URL.
-            host: null,
-            path: null,
           });
 
           if (options.sendHeaders) {
