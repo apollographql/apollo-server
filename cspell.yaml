@@ -19,6 +19,7 @@ dictionaries:
 useGitignore: true
 ignorePaths:
   - '**/generated/**'
+  - 'packages/usage-reporting-protobuf/src/reports.proto'
   - '**/*.sketch'
   - '**/*.svg'
   - cspell.yaml
