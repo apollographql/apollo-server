@@ -34,6 +34,8 @@ export class SizeEstimator {
   bytes = 0;
 }
 export class OurReport implements Required<IReport> {
+  tracesPreAggregated = false;
+
   constructor(readonly header: ReportHeader) {}
   readonly tracesPerQuery: Record<string, OurTracesAndStats> =
     Object.create(null);

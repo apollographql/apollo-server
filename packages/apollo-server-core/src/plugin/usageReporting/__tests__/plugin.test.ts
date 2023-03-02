@@ -394,8 +394,6 @@ describe('sendHeaders makeHTTPRequestHeaders helper', () => {
   function makeTestHTTP(): Trace.HTTP {
     return new Trace.HTTP({
       method: Trace.HTTP.Method.UNKNOWN,
-      host: null,
-      path: null,
     });
   }
 
