@@ -9,6 +9,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 
 
 ## vNEXT
+- `apollo-reporting-protobuf`: Update protobuf file to be current [PR #7412](https://github.com/apollographql/apollo-server/pull/7412)
 
 ## v3.11.1
 - `apollo-server-core`: Follow-up to v3.11.0: make `GraphQLRequestContext.requestIsBatched` optional for better compatibility with older versions of `@apollo/gateway`.
