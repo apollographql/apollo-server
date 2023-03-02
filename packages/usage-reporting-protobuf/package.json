@@ -1,6 +1,6 @@
 {
   "name": "@apollo/usage-reporting-protobuf",
-  "version": "4.0.2",
+  "version": "4.1.0",
   "description": "Protobuf format for Apollo usage reporting",
   "type": "module",
   "exports": {
