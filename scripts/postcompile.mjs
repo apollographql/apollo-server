@@ -1,3 +1,4 @@
+// @ts-check
 // This script writes package.json files to the ESM and CJS generated code
 // directories teaching Node that .js files in those directories use the
 // corresponding module formats. It also removes all the .d.ts files from cjs
@@ -17,10 +18,13 @@ import glob from 'glob';
  */
 let rimrafPromise;
 // Remove CJS .d.ts files: we don't need two copies!
-glob(`packages/*/dist/cjs/**/*.d.ts`, (err, matches) => {
-  if (err) process.exit(1);
+try {
+  const matches = await glob(`packages/*/dist/cjs/**/*.d.ts`);
+  console.log(matches);
   rimrafPromise = rimraf(matches);
-});
+} catch (err) {
+  process.exit(1);
+}
 
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
 for (const dir of ['cache-control-types', 'plugin-response-cache', 'server']) {
