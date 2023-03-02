@@ -54,8 +54,6 @@ message Trace {
       PATCH = 9;
     }
     Method method = 1;
-    string host = 2;
-    string path = 3;
 
     // Should exclude manual blacklist ("Auth" by default)
     map<string, Values> request_headers = 4;
@@ -63,8 +61,7 @@ message Trace {
 
     uint32 status_code = 6;
 
-    bool secure = 8; // TLS was used
-    string protocol = 9; // by convention "HTTP/1.0", "HTTP/1.1", "HTTP/2" or "h2"
+    reserved 2, 3, 8, 9;
   }
 
   message Location {
@@ -113,14 +110,14 @@ message Trace {
 
   // represents a node in the query plan, under which there is a trace tree for that service fetch.
   // In particular, each fetch node represents a call to an implementing service, and calls to implementing
-  // services may not be unique. See https://github.com/apollographql/apollo-server/blob/main/packages/apollo-gateway/src/QueryPlan.ts
+  // services may not be unique. See https://github.com/apollographql/federation/blob/main/query-planner-js/src/QueryPlan.ts
   // for more information and details.
   message QueryPlanNode {
-    // This represents a set of nodes to be executed sequentially by the Gateway executor
+    // This represents a set of nodes to be executed sequentially by the Router/Gateway executor
     message SequenceNode {
       repeated QueryPlanNode nodes = 1;
     }
-    // This represents a set of nodes to be executed in parallel by the Gateway executor
+    // This represents a set of nodes to be executed in parallel by the Router/Gateway executor
     message ParallelNode {
       repeated QueryPlanNode nodes = 1;
     }
@@ -134,14 +131,14 @@ message Trace {
       bool trace_parsing_failed = 2;
 
       // This Trace only contains start_time, end_time, duration_ns, and root;
-      // all timings were calculated **on the federated service**, and clock skew
+      // all timings were calculated **on the subgraph**, and clock skew
       // will be handled by the ingress server.
       Trace trace = 3;
 
-      // relative to the outer trace's start_time, in ns, measured in the gateway.
+      // relative to the outer trace's start_time, in ns, measured in the Router/Gateway.
       uint64 sent_time_offset = 4;
 
-      // Wallclock times measured in the gateway for when this operation was
+      // Wallclock times measured in the Router/Gateway for when this operation was
       // sent and received.
       google.protobuf.Timestamp sent_time = 5;
       google.protobuf.Timestamp received_time = 6;
@@ -153,6 +150,33 @@ message Trace {
       repeated ResponsePathElement response_path = 1;
       QueryPlanNode node = 2;
     }
+
+    // A `DeferNode` corresponds to one or more @defer at the same level of "nestedness" in the planned query.
+    message DeferNode {
+      DeferNodePrimary primary = 1;
+      repeated DeferredNode deferred = 2;
+    }
+
+    message ConditionNode {
+      string condition = 1;
+      QueryPlanNode if_clause = 2;
+      QueryPlanNode else_clause = 3;
+    }
+
+    message DeferNodePrimary {
+      QueryPlanNode node = 1;
+    }
+    message DeferredNode {
+      repeated DeferredNodeDepends depends = 1;
+      string label = 2;
+      repeated ResponsePathElement path = 3;
+      QueryPlanNode node = 4;
+    }
+    message DeferredNodeDepends {
+      string id = 1;
+      string defer_label = 2;
+    }
+
     message ResponsePathElement {
       oneof id {
         string field_name = 1;
@@ -164,6 +188,8 @@ message Trace {
       ParallelNode parallel = 2;
       FetchNode fetch = 3;
       FlattenNode flatten = 4;
+      DeferNode defer = 5;
+      ConditionNode condition = 6;
     }
   }
 
@@ -178,9 +204,18 @@ message Trace {
   // service, including errors.
   Node root = 14;
 
+  // If this is true, the trace is potentially missing some nodes that were
+  // present on the query plan. This can happen if the trace span buffer used
+  // in the Router fills up and some spans have to be dropped. In these cases
+  // the overall trace timing will still be correct, but the trace data could
+  // be missing some referenced or executed fields, and some nodes may be
+  // missing. If this is true we should display a warning to the user when they
+  // view the trace in Explorer.
+  bool is_incomplete = 33;
+
   // -------------------------------------------------------------------------
-  // Fields below this line are *not* included in federated traces (the traces
-  // sent from federated services to the gateway).
+  // Fields below this line are *not* included in inline traces (the traces
+  // sent from subgraphs to the Router/Gateway).
 
   // In addition to details.raw_query, we include a "signature" of the query,
   // which can be normalized: for example, you may want to discard aliases, drop
@@ -209,10 +244,10 @@ message Trace {
 
   CachePolicy cache_policy = 18;
 
-  // If this Trace was created by a gateway, this is the query plan, including
-  // sub-Traces for federated services. Note that the 'root' tree on the
+  // If this Trace was created by a Router/Gateway, this is the query plan, including
+  // sub-Traces for subgraphs. Note that the 'root' tree on the
   // top-level Trace won't contain any resolvers (though it could contain errors
-  // that occurred in the gateway itself).
+  // that occurred in the Router/Gateway itself).
   QueryPlanNode query_plan = 26;
 
   // Was this response served from a full query response cache?  (In that case
@@ -401,6 +436,13 @@ message Report {
 
   // Total number of operations processed during this period.
   uint64 operation_count = 6;
+
+  // If this is set to true, the stats in TracesWithStats.stats_with_context
+  // represent all of the operations described from this report, and the
+  // traces in TracesWithStats.trace are a sampling of some of the same
+  // operations. If this is false, each operation is described in precisely
+  // one of those two fields.
+  bool traces_pre_aggregated = 7;
 }
 
 message ContextualizedStats {
@@ -412,8 +454,11 @@ message ContextualizedStats {
 
 }
 
-// A sequence of traces and stats. An individual operation should either be described as a trace
-// or as part of stats, but not both.
+// A sequence of traces and stats. If Report.traces_pre_aggregated (at the top
+// level of the report) is false, an individual operation should either be
+// described as a trace or as part of stats, but not both. If that flag
+// is true, then all operations are described as stats and some are also
+// described as traces.
 message TracesAndStats {
   repeated Trace trace = 1 [(js_preEncoded)=true];
   repeated ContextualizedStats stats_with_context = 2 [(js_use_toArray)=true];
