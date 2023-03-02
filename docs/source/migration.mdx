@@ -450,7 +450,7 @@ Below is how you write the same code in Apollo Server 4.
 <MultiCodeBlock>
 
 ```ts title="Apollo Server 4"
-import { RESTDataSource, WillSendRequestOptions } from '@apollo/datasource-rest';
+import { RESTDataSource, AugmentedRequest } from '@apollo/datasource-rest';
 // KeyValueCache is the type of Apollo server's default cache
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '@apollo/server';
@@ -465,7 +465,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
     this.token = options.token;
   }
 
-  override willSendRequest(path: string, request: WillSendRequestOptions) {
+  override willSendRequest(path: string, request: AugmentedRequest) {
     request.headers['authorization'] = this.token;
   }
 
