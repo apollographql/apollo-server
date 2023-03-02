@@ -8,7 +8,7 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
 
-## vNEXT
+## v3.12.0
 - `apollo-reporting-protobuf`: Update protobuf file to be current [PR #7412](https://github.com/apollographql/apollo-server/pull/7412)
 
 ## v3.11.1
