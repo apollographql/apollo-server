@@ -1622,6 +1622,8 @@ In Apollo Server 4, `requestDidStart` hooks are called in parallel rather than i
 
 Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks.  Each error is wrapped in an "Unexpected error handling request" error and invoked using the new `unexpectedErrorProcessingRequest` plugin hook.
 
+In Apollo Server 3, if a `didResolveOperation` hook threw a `GraphQLError`, the server would return a 400 error by default. In Apollo Server 4, the server will return a 500 by default, but this can be configured by setting [`extensions.http`](./data/errors/#setting-http-status-code-and-headers) on the `GraphQLError` object.
+
 ### Custom `gateway` and `GraphQLDataSource` implementations
 
 The `gateway` option to the `ApolloServer` constructor is designed to be used with the `ApolloGateway` class from the `@apollo/gateway` package. Apollo Server 4 changes the details of how Apollo Server interacts with this object. If you use [any version of `@apollo/gateway` that supports `graphql` 16](#graphql) as your server's `gateway`, these changes won't affect you. However, if you provide something _other_ than an `ApolloGateway` instance to this option, you might need to adjust your custom code.
