@@ -466,7 +466,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   }
 
   override willSendRequest(path: string, request: AugmentedRequest) {
-    request.headers['authorization'] = this.token;
+    request.headers.authorization. = this.token;
   }
 
   async getMovie(id: string): Promise<Movie> {
@@ -1503,6 +1503,10 @@ new ApolloServer({
   parseOptions,
 });
 ```
+
+### Content-Type response header
+
+In Apollo Server 3, the `Content-Type` response header is `application/json`. Apollo Server 4 this includes the encoding via the `charset` parameter: `application/json; charset=utf-8` as recommended by the [GraphQL over HTTP spec](https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#media-types).
 
 ## "Disabled" plugins cannot be combined with their enabled counterpart
 
