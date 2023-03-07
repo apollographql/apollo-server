@@ -466,7 +466,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   }
 
   override willSendRequest(path: string, request: AugmentedRequest) {
-    request.headers.authorization. = this.token;
+    request.headers.authorization = this.token;
   }
 
   async getMovie(id: string): Promise<Movie> {
