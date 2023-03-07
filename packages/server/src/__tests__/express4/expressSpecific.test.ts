@@ -181,5 +181,14 @@ it('supporting doubly-encoded variables example from migration guide', async () 
       variables: JSON.stringify({ s: 'doubly-encoded' }),
     })
     .expect(200, { data: { hello: 'doubly-encoded' } });
+
+  await request(app)
+    .post('/')
+    .send({
+      query: 'query Hello($s: String!){hello(s: $s)}',
+      variables: '{malformed JSON}',
+    })
+    .expect(500, {});
+
   await server.stop();
 });
