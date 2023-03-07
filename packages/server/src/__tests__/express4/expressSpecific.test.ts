@@ -141,3 +141,45 @@ it('incremental delivery works with compression', async () => {
 
   await server.stop();
 });
+
+it('supporting doubly-encoded variables example from migration guide', async () => {
+  const server = new ApolloServer({
+    typeDefs: 'type Query {hello(s: String!): String!}',
+    resolvers: {
+      Query: {
+        hello: (_root, { s }) => s,
+      },
+    },
+  });
+  await server.start();
+  const app = express();
+
+  app.use(json());
+
+  // Test will fail if you remove this middleware.
+  app.use((req, _res, next) => {
+    if (typeof req.body?.variables === 'string') {
+      req.body.variables = JSON.parse(req.body.variables);
+    }
+    next();
+  });
+
+  app.use(expressMiddleware(server));
+
+  await request(app)
+    .post('/')
+    .send({
+      query: 'query Hello($s: String!){hello(s: $s)}',
+      variables: { s: 'normally encoded' },
+    })
+    .expect(200, { data: { hello: 'normally encoded' } });
+
+  await request(app)
+    .post('/')
+    .send({
+      query: 'query Hello($s: String!){hello(s: $s)}',
+      variables: JSON.stringify({ s: 'doubly-encoded' }),
+    })
+    .expect(200, { data: { hello: 'doubly-encoded' } });
+  await server.stop();
+});
