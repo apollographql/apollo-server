@@ -1085,8 +1085,13 @@ If you'd like to restore the previous behavior, you can `JSON.parse` the `variab
 ```ts
 app.use(json());
 app.use((req, res, next) => {
-  if (typeof (req.body?.variables) === "string") {
-    req.body.variables = JSON.parse(req.body.variables);
+  if (typeof req.body?.variables === 'string') {
+    try {
+      req.body.variables = JSON.parse(req.body.variables);
+    } catch (e) {
+      // https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#json-parsing-failure
+      res.status(400).send(e instanceof Error ? e.message : e);
+    }
   }
   next();
 });

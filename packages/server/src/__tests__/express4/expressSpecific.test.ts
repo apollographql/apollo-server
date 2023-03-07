@@ -157,9 +157,14 @@ it('supporting doubly-encoded variables example from migration guide', async () 
   app.use(json());
 
   // Test will fail if you remove this middleware.
-  app.use((req, _res, next) => {
+  app.use((req, res, next) => {
     if (typeof req.body?.variables === 'string') {
-      req.body.variables = JSON.parse(req.body.variables);
+      try {
+        req.body.variables = JSON.parse(req.body.variables);
+      } catch (e) {
+        // https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#json-parsing-failure
+        res.status(400).send(e instanceof Error ? e.message : e);
+      }
     }
     next();
   });
@@ -188,7 +193,7 @@ it('supporting doubly-encoded variables example from migration guide', async () 
       query: 'query Hello($s: String!){hello(s: $s)}',
       variables: '{malformed JSON}',
     })
-    .expect(500, {});
+    .expect(400, 'Unexpected token m in JSON at position 1');
 
   await server.stop();
 });
