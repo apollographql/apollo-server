@@ -1080,7 +1080,7 @@ Whereas this query would be invalid:
 
 (Moreover, Apollo Server 4 responds with a 400 status code if `variables` and `extensions` are provided in a `POST` body with any type other than object, such as array, boolean, or null. Similarly, it responds with a 400 status code if `operationName` is provided in a `POST` body with any type other than string.)
 
-If you'd like to restore previous behavior, you can `JSON.parse` the `variables` and `extensions` fields after your framework has parsed the request body. In Express that might look like:
+If you'd like to restore the previous behavior, you can `JSON.parse` the `variables` and `extensions` fields after your framework has parsed the request body. In Express that might look like:
 
 ```ts
 app.use(json());
