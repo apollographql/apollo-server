@@ -141,3 +141,59 @@ it('incremental delivery works with compression', async () => {
 
   await server.stop();
 });
+
+it('supporting doubly-encoded variables example from migration guide', async () => {
+  const server = new ApolloServer({
+    typeDefs: 'type Query {hello(s: String!): String!}',
+    resolvers: {
+      Query: {
+        hello: (_root, { s }) => s,
+      },
+    },
+  });
+  await server.start();
+  const app = express();
+
+  app.use(json());
+
+  // Test will fail if you remove this middleware.
+  app.use((req, res, next) => {
+    if (typeof req.body?.variables === 'string') {
+      try {
+        req.body.variables = JSON.parse(req.body.variables);
+      } catch (e) {
+        // https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#json-parsing-failure
+        res.status(400).send(e instanceof Error ? e.message : e);
+      }
+    }
+    next();
+  });
+
+  app.use(expressMiddleware(server));
+
+  await request(app)
+    .post('/')
+    .send({
+      query: 'query Hello($s: String!){hello(s: $s)}',
+      variables: { s: 'normally encoded' },
+    })
+    .expect(200, { data: { hello: 'normally encoded' } });
+
+  await request(app)
+    .post('/')
+    .send({
+      query: 'query Hello($s: String!){hello(s: $s)}',
+      variables: JSON.stringify({ s: 'doubly-encoded' }),
+    })
+    .expect(200, { data: { hello: 'doubly-encoded' } });
+
+  await request(app)
+    .post('/')
+    .send({
+      query: 'query Hello($s: String!){hello(s: $s)}',
+      variables: '{malformed JSON}',
+    })
+    .expect(400, 'Unexpected token m in JSON at position 1');
+
+  await server.stop();
+});

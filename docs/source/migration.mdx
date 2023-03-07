@@ -466,7 +466,7 @@ class MoviesAPI extends RESTDataSource { // highlight-line
   }
 
   override willSendRequest(path: string, request: AugmentedRequest) {
-    request.headers['authorization'] = this.token;
+    request.headers.authorization = this.token;
   }
 
   async getMovie(id: string): Promise<Movie> {
@@ -1080,6 +1080,24 @@ Whereas this query would be invalid:
 
 (Moreover, Apollo Server 4 responds with a 400 status code if `variables` and `extensions` are provided in a `POST` body with any type other than object, such as array, boolean, or null. Similarly, it responds with a 400 status code if `operationName` is provided in a `POST` body with any type other than string.)
 
+If you'd like to restore the previous behavior, you can `JSON.parse` the `variables` and `extensions` fields after your framework has parsed the request body. In Express that might look like:
+
+```ts
+app.use(json());
+app.use((req, res, next) => {
+  if (typeof req.body?.variables === 'string') {
+    try {
+      req.body.variables = JSON.parse(req.body.variables);
+    } catch (e) {
+      // https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#json-parsing-failure
+      res.status(400).send(e instanceof Error ? e.message : e);
+    }
+  }
+  next();
+});
+app.use(expressMiddleware(server));
+```
+
 
 ## Changed features
 
@@ -1504,6 +1522,10 @@ new ApolloServer({
 });
 ```
 
+### Content-Type response header
+
+In Apollo Server 3, the `Content-Type` response header is `application/json`. Apollo Server 4 includes the encoding via the `charset` parameter: `application/json; charset=utf-8` as recommended by the [GraphQL over HTTP spec](https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#media-types).
+
 ## "Disabled" plugins cannot be combined with their enabled counterpart
 
 Apollo Server has several plugins that are installed by default in certain conditions. To override this behavior, each of these plugins has a "disabled" counterpart that prevents this default installation.
@@ -1617,6 +1639,8 @@ server.addPlugin(makeSecondPlugin(server));
 In Apollo Server 4, `requestDidStart` hooks are called in parallel rather than in series.
 
 Apollo Server 4 more consistently handles errors thrown by multiple plugin hooks.  Each error is wrapped in an "Unexpected error handling request" error and invoked using the new `unexpectedErrorProcessingRequest` plugin hook.
+
+In Apollo Server 3, if a `didResolveOperation` hook threw a `GraphQLError`, the server would return a 400 error by default. In Apollo Server 4, the server will return a 500 by default, but this can be configured by setting [`extensions.http`](./data/errors/#setting-http-status-code-and-headers) on the `GraphQLError` object.
 
 ### Custom `gateway` and `GraphQLDataSource` implementations
 
