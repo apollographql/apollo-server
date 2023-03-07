@@ -16,7 +16,7 @@
     {
       "label": "Shell",
       "type": "shell",
-      "command": "bash",
+      "command": "${SHELL}",
       "args": ["-l"],
       "isBackground": true,
       "presentation": {
