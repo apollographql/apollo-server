@@ -79,7 +79,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=@apollo/server@4.0.0">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
@@ -97,8 +97,10 @@ describe('Landing Page Config HTML', () => {
 
   it('for embedded sandbox with operationId & collectionId provided', () => {
     const config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions = {
-      collectionId: '12345',
-      operationId: 'abcdef',
+      defaultOperation: {
+        collectionId: '12345',
+        operationId: 'abcdef',
+      },
       embed: true,
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
@@ -137,9 +139,7 @@ describe('Landing Page Config HTML', () => {
   });
 
   it('for embedded sandbox with endpointIsEditable, pollForSchemaUpdates, sharedHeaders provided', () => {
-    const config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions & {
-      runtime: string;
-    } = {
+    const config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions = {
       includeCookies: false,
       embed: {
         endpointIsEditable: true,
@@ -148,7 +148,6 @@ describe('Landing Page Config HTML', () => {
           sharedHeaders: { SharedHeaderKey: 'SharedHeaderValue' },
         },
       },
-      runtime: '@apollo/server@4.0.0',
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
@@ -169,7 +168,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=@apollo/server@4.0.0">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;

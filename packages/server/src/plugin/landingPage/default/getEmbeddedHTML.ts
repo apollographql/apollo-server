@@ -62,8 +62,8 @@ export const getEmbeddedExplorerHTML = (
       document: config.document,
       headers: config.headers,
       variables: config.variables,
-      collectionId: config.collectionId,
-      operationId: config.operationId,
+      collectionId: config.defaultOperation?.collectionId,
+      operationId: config.defaultOperation?.operationId,
       displayOptions: {
         ...productionLandingPageConfigOrDefault.displayOptions,
       },
@@ -146,8 +146,8 @@ id="embeddableSandbox"
       variables: config.variables,
       headers: config.headers,
       includeCookies: config.includeCookies,
-      collectionId: config.collectionId,
-      operationId: config.operationId,
+      collectionId: config.defaultOperation?.collectionId,
+      operationId: config.defaultOperation?.operationId,
       ...(typeof config.embed !== 'boolean' &&
       config.embed?.initialState?.pollForSchemaUpdates !== undefined
         ? {

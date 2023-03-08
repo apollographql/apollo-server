@@ -24,14 +24,16 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
   variables?: Record<string, any>;
 
   /**
-   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load. 
+   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
    *
    * You can find these values from a registered graph in Studio by
    * clicking the ... menu next to an operation in the Explorer of that graph and
    * selecting View operation details.
    */
-  collectionId?: string;
-  operationId?: string;
+  defaultOperation?: {
+    collectionId?: string;
+    operationId?: string;
+  };
   /**
    * Users can configure their landing page to link to Studio Explorer with
    * headers loaded in the UI.
@@ -91,7 +93,7 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
 }
 
 type EmbeddableSandboxOptions = {
-  initialState?:{
+  initialState?: {
     /**
      * If true, the embedded Sandbox periodically polls your initialEndpoint for schema updates.
      *
@@ -105,15 +107,15 @@ type EmbeddableSandboxOptions = {
      * The landing page's Sandbox always includes these headers in its introspection queries
      * to your endpoint.
      */
-    sharedHeaders?: Record<string, string>
-  }
+    sharedHeaders?: Record<string, string>;
+  };
   /**
    * By default, the Apollo Server embedded Sandbox has a url input box that is not editable by users.
    *
    * Set `endpointIsEditable` to `true` to enable users of your
    * Apollo Server landing page to change the endpoint url.
    */
-  endpointIsEditable?: boolean
+  endpointIsEditable?: boolean;
 };
 
 type EmbeddableExplorerOptions = {

@@ -66,8 +66,10 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
     const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
       {
         includeCookies: true,
-        collectionId: '12345',
-        operationId: 'abcdef',
+        defaultOperation: {
+          collectionId: '12345',
+          operationId: 'abcdef',
+        },
         embed: true,
         graphRef: 'graph@current',
       };
@@ -90,7 +92,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
            id="embeddableExplorer"
       >
       </div>
-      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=@apollo/server@4.0.0">
+      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var endpointUrl = window.location.href;
