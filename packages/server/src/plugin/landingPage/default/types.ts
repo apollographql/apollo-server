@@ -22,6 +22,16 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * variables loaded in the UI.
    */
   variables?: Record<string, any>;
+
+  /**
+   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load. 
+   *
+   * You can find these values from a registered graph in Studio by
+   * clicking the ... menu next to an operation in the Explorer of that graph and
+   * selecting View operation details.
+   */
+  collectionId?: string;
+  operationId?: string;
   /**
    * Users can configure their landing page to link to Studio Explorer with
    * headers loaded in the UI.
@@ -64,7 +74,7 @@ export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
    * Users can configure their landing page to render an embedded Explorer if
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
-  embed?: true;
+  embed?: true | EmbeddableSandboxOptions;
 }
 
 export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
@@ -79,6 +89,32 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    */
   embed: true | EmbeddableExplorerOptions;
 }
+
+type EmbeddableSandboxOptions = {
+  initialState?:{
+    /**
+     * If true, the embedded Sandbox periodically polls your initialEndpoint for schema updates.
+     *
+     * The default value is true.
+     */
+    pollForSchemaUpdates?: boolean;
+    /**
+     * Headers that are applied by default to every operation executed by the landing page's Sandbox.
+     * Users can disable the application of these headers, but they can't modify their values.
+     *
+     * The landing page's Sandbox always includes these headers in its introspection queries
+     * to your endpoint.
+     */
+    sharedHeaders?: Record<string, string>
+  }
+  /**
+   * By default, the Apollo Server embedded Sandbox has a url input box that is not editable by users.
+   *
+   * Set `endpointIsEditable` to `true` to enable users of your
+   * Apollo Server landing page to change the endpoint url.
+   */
+  endpointIsEditable?: boolean
+};
 
 type EmbeddableExplorerOptions = {
   /**
