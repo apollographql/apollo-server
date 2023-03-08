@@ -2,8 +2,9 @@ import { getEmbeddedSandboxHTML } from '../../../plugin/landingPage/default/getE
 import type { LandingPageConfig } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
 
-const version = '_latest';
+const cdnVersion = '_latest';
 expect.addSnapshotSerializer(require('jest-serializer-html'));
+const apolloServerVersion = '@apollo/server@4.0.0';
 
 describe('Landing Page Config HTML', () => {
   it('for embedded sandbox with document, variables and headers provided', () => {
@@ -20,7 +21,8 @@ describe('Landing Page Config HTML', () => {
       headers: { authorization: 'true' },
       embed: true,
     };
-    expect(getEmbeddedSandboxHTML(version, config)).toMatchInlineSnapshot(`
+    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
+      .toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -38,7 +40,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?referrer=@apollo/server@4.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
@@ -57,7 +59,8 @@ describe('Landing Page Config HTML', () => {
       includeCookies: false,
       embed: true,
     };
-    expect(getEmbeddedSandboxHTML(version, config)).toMatchInlineSnapshot(`
+    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
+      .toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -75,7 +78,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?referrer=@apollo/server@4.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
