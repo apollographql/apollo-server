@@ -24,17 +24,6 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
   variables?: Record<string, any>;
 
   /**
-   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
-   *
-   * You can find these values from a registered graph in Studio by
-   * clicking the ... menu next to an operation in the Explorer of that graph and
-   * selecting View operation details.
-   */
-  defaultOperation?: {
-    collectionId?: string;
-    operationId?: string;
-  };
-  /**
    * Users can configure their landing page to link to Studio Explorer with
    * headers loaded in the UI.
    */
@@ -77,6 +66,17 @@ export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
    * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
    */
   embed?: true | EmbeddableSandboxOptions;
+  /**
+   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
+   *
+   * You can find these values from a registered graph in Studio by
+   * clicking the ... menu next to an operation in the Explorer of that graph and
+   * selecting View operation details.
+   */
+  defaultOperation?: {
+    collectionId?: string;
+    operationId?: string;
+  };
 }
 
 export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
@@ -90,6 +90,17 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    * Users can configure their landing page to render an embedded Explorer.
    */
   embed: true | EmbeddableExplorerOptions;
+  /**
+   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
+   *
+   * You can find these values from a registered graph in Studio by
+   * clicking the ... menu next to an operation in the Explorer of that graph and
+   * selecting View operation details.
+   */
+  defaultOperation?: {
+    collectionId?: string;
+    operationId?: string;
+  };
 }
 
 type EmbeddableSandboxOptions = {
