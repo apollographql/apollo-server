@@ -74,8 +74,8 @@ export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
    * selecting View operation details.
    */
   defaultOperation?: {
-    collectionId?: string;
-    operationId?: string;
+    collectionId: string;
+    operationId: string;
   };
 }
 
@@ -98,8 +98,8 @@ export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
    * selecting View operation details.
    */
   defaultOperation?: {
-    collectionId?: string;
-    operationId?: string;
+    collectionId: string;
+    operationId: string;
   };
 }
 
