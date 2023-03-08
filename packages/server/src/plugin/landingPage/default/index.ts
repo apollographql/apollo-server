@@ -83,6 +83,10 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
 ): ImplicitlyInstallablePlugin<TContext> {
   const version = maybeVersion ?? '_latest';
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
+  const configWithVersion = {
+    ...config,
+    referrer: apolloServerVersion,
+  };
 
   return {
     __internal_installed_implicitly__: false,
@@ -133,11 +137,23 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
         }
       </style>
     ${
-      config.embed
-        ? 'graphRef' in config && config.graphRef
-          ? getEmbeddedExplorerHTML(version, config, apolloServerVersion)
-          : getEmbeddedSandboxHTML(version, config, apolloServerVersion)
-        : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
+      configWithVersion.embed
+        ? 'graphRef' in configWithVersion && configWithVersion.graphRef
+          ? getEmbeddedExplorerHTML(
+              version,
+              configWithVersion,
+              apolloServerVersion,
+            )
+          : getEmbeddedSandboxHTML(
+              version,
+              configWithVersion,
+              apolloServerVersion,
+            )
+        : getNonEmbeddedLandingPageHTML(
+            version,
+            configWithVersion,
+            apolloServerVersion,
+          )
     }
     </div>
   </body>
