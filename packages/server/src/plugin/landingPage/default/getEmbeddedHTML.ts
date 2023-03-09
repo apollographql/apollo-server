@@ -63,6 +63,7 @@ export const getEmbeddedExplorerHTML = (
       },
       persistExplorerState:
         productionLandingPageConfigOrDefault.persistExplorerState,
+      includeCookies: config.includeCookies,
     };
 
   return `
