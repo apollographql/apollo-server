@@ -42,7 +42,7 @@ export const getEmbeddedExplorerHTML = (
 
     endpointUrl: string;
 
-    hideCookieToggle?: boolean; // defaults to 'true'
+    includeCookies?: boolean; // defaults to 'false'
   }
   const productionLandingPageConfigOrDefault = {
     displayOptions: {},
@@ -54,14 +54,15 @@ export const getEmbeddedExplorerHTML = (
       graphRef: config.graphRef,
       target: '#embeddableExplorer',
       initialState: {
-        ...config,
+        document: config.document,
+        headers: config.headers,
+        variables: config.variables,
         displayOptions: {
           ...productionLandingPageConfigOrDefault.displayOptions,
         },
       },
       persistExplorerState:
         productionLandingPageConfigOrDefault.persistExplorerState,
-      hideCookieToggle: false,
     };
 
   return `
