@@ -40,7 +40,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=@apollo/server@4.0.0">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
@@ -79,7 +79,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=@apollo/server@4.0.0">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
