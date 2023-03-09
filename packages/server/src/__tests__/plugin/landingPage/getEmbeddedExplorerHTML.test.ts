@@ -8,30 +8,28 @@ const apolloServerVersion = '@apollo/server@4.0.0';
 
 describe('Embedded Explorer Landing Page Config HTML', () => {
   it('with document, variables, headers and displayOptions provided', () => {
-    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
-      runtime: string;
-    } = {
-      includeCookies: true,
-      document: 'query Test { id }',
-      variables: {
-        option: {
-          a: 'val',
-          b: 1,
-          c: true,
+    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
+      {
+        includeCookies: true,
+        document: 'query Test { id }',
+        variables: {
+          option: {
+            a: 'val',
+            b: 1,
+            c: true,
+          },
         },
-      },
-      headers: { authorization: 'true' },
-      embed: {
-        displayOptions: {
-          showHeadersAndEnvVars: true,
-          docsPanelState: 'open',
-          theme: 'light',
+        headers: { authorization: 'true' },
+        embed: {
+          displayOptions: {
+            showHeadersAndEnvVars: true,
+            docsPanelState: 'open',
+            theme: 'light',
+          },
+          persistExplorerState: true,
         },
-        persistExplorerState: true,
-      },
-      graphRef: 'graph@current',
-      runtime: '@apollo/server@4.0.0',
-    };
+        graphRef: 'graph@current',
+      };
     expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
       <div class="fallback">
@@ -65,14 +63,12 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
   });
 
   it('for embedded explorer with document, variables, headers and displayOptions excluded', () => {
-    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
-      runtime: string;
-    } = {
-      includeCookies: false,
-      embed: true as true,
-      graphRef: 'graph@current',
-      runtime: '@apollo/server@4.0.0',
-    };
+    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
+      {
+        includeCookies: false,
+        embed: true as true,
+        graphRef: 'graph@current',
+      };
     expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
       <div class="fallback">

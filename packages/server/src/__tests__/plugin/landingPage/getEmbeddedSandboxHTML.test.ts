@@ -8,7 +8,7 @@ const apolloServerVersion = '@apollo/server@4.0.0';
 
 describe('Landing Page Config HTML', () => {
   it('for embedded sandbox with document, variables and headers provided', () => {
-    const config: LandingPageConfig & { runtime: string } = {
+    const config: LandingPageConfig = {
       includeCookies: true,
       document: 'query Test { id }',
       variables: {
@@ -20,7 +20,6 @@ describe('Landing Page Config HTML', () => {
       },
       headers: { authorization: 'true' },
       embed: true,
-      runtime: '@apollo/server@4.0.0',
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
@@ -57,10 +56,9 @@ describe('Landing Page Config HTML', () => {
   });
 
   it('for embedded sandbox with document, variables and headers excluded', () => {
-    const config: LandingPageConfig & { runtime: string } = {
+    const config: LandingPageConfig = {
       includeCookies: false,
       embed: true,
-      runtime: '@apollo/server@4.0.0',
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`

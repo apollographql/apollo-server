@@ -22,9 +22,7 @@ function getConfigStringForHtml(config: LandingPageConfig) {
 
 export const getEmbeddedExplorerHTML = (
   explorerCdnVersion: string,
-  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
-    runtime: string;
-  },
+  config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
   apolloServerVersion: string,
 ) => {
   interface EmbeddableExplorerOptions {
@@ -69,7 +67,7 @@ export const getEmbeddedExplorerHTML = (
     persistExplorerState:
       productionLandingPageConfigOrDefault.persistExplorerState,
     includeCookies: config.includeCookies,
-    runtime: config.runtime,
+    runtime: apolloServerVersion,
   };
 
   return `
@@ -102,7 +100,7 @@ id="embeddableExplorer"
 
 export const getEmbeddedSandboxHTML = (
   sandboxCdnVersion: string,
-  config: LandingPageConfig & { runtime: string },
+  config: LandingPageConfig,
   apolloServerVersion: string,
 ) => {
   return `
@@ -132,7 +130,7 @@ id="embeddableSandbox"
       includeCookies: config.includeCookies,
     })},
     hideCookieToggle: false,
-    runtime: '${config.runtime}'
+    runtime: '${apolloServerVersion}'
   });
 </script>
 `;
