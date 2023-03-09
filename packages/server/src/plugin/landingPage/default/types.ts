@@ -30,6 +30,9 @@ type InitialStateForEmbeds =
        */
       collectionId: string;
       operationId: string;
+      document?: never;
+      variables?: never;
+      headers?: never;
     }
   | InitialDocumentVariablesHeaders;
 
