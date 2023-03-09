@@ -42,7 +42,7 @@ export const getEmbeddedExplorerHTML = (
 
     endpointUrl: string;
 
-    hideCookieToggle?: boolean; // defaults to 'true'
+    includeCookies?: boolean; // defaults to 'false'
   }
   const productionLandingPageConfigOrDefault = {
     displayOptions: {},
@@ -54,14 +54,16 @@ export const getEmbeddedExplorerHTML = (
       graphRef: config.graphRef,
       target: '#embeddableExplorer',
       initialState: {
-        ...config,
+        document: config.document,
+        headers: config.headers,
+        variables: config.variables,
         displayOptions: {
           ...productionLandingPageConfigOrDefault.displayOptions,
         },
       },
       persistExplorerState:
         productionLandingPageConfigOrDefault.persistExplorerState,
-      hideCookieToggle: false,
+      includeCookies: config.includeCookies,
     };
 
   return `
@@ -117,10 +119,10 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     initialState: ${getConfigStringForHtml({
-      document: config.document ?? undefined,
-      variables: config.variables ?? undefined,
-      headers: config.headers ?? undefined,
-      includeCookies: config.includeCookies ?? undefined,
+      document: config.document,
+      variables: config.variables,
+      headers: config.headers,
+      includeCookies: config.includeCookies,
     })},
     hideCookieToggle: false,
   });
