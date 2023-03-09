@@ -70,7 +70,7 @@ const getNonEmbeddedLandingPageHTML = (
   <p>The full landing page cannot be loaded; it appears that you might be offline.</p>
 </div>
 <script>window.landingPage = ${encodedConfig};</script>
-<script src="https://apollo-server-landing-page.cdn.apollographql.com/${cdnVersion}/static/js/main.js?referrer=${apolloServerVersion}"></script>`;
+<script src="https://apollo-server-landing-page.cdn.apollographql.com/${cdnVersion}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;
 };
 
 // Helper for the two actual plugin functions.
@@ -85,7 +85,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
   const configWithVersion = {
     ...config,
-    referrer: apolloServerVersion,
+    runtime: apolloServerVersion,
   };
 
   return {

@@ -8,7 +8,7 @@ const apolloServerVersion = '@apollo/server@4.0.0';
 
 describe('Landing Page Config HTML', () => {
   it('for embedded sandbox with document, variables and headers provided', () => {
-    const config: LandingPageConfig = {
+    const config: LandingPageConfig & { runtime: string } = {
       includeCookies: true,
       document: 'query Test { id }',
       variables: {
@@ -20,6 +20,7 @@ describe('Landing Page Config HTML', () => {
       },
       headers: { authorization: 'true' },
       embed: true,
+      runtime: '@apollo/server@4.0.0',
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
@@ -40,7 +41,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?referrer=@apollo/server@4.0.0">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=@apollo/server@4.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
@@ -49,15 +50,17 @@ describe('Landing Page Config HTML', () => {
           initialEndpoint,
           initialState: {"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"includeCookies":true},
           hideCookieToggle: false,
+          runtime: '@apollo/server@4.0.0'
         });
       </script>
     `);
   });
 
   it('for embedded sandbox with document, variables and headers excluded', () => {
-    const config: LandingPageConfig = {
+    const config: LandingPageConfig & { runtime: string } = {
       includeCookies: false,
       embed: true,
+      runtime: '@apollo/server@4.0.0',
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
@@ -78,7 +81,7 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?referrer=@apollo/server@4.0.0">
+      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=@apollo/server@4.0.0">
       </script>
       <script>
         var initialEndpoint = window.location.href;
@@ -87,6 +90,7 @@ describe('Landing Page Config HTML', () => {
           initialEndpoint,
           initialState: {"includeCookies":false},
           hideCookieToggle: false,
+          runtime: '@apollo/server@4.0.0'
         });
       </script>
     `);

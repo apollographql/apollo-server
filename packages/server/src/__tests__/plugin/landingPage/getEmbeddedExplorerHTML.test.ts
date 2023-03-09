@@ -8,28 +8,30 @@ const apolloServerVersion = '@apollo/server@4.0.0';
 
 describe('Embedded Explorer Landing Page Config HTML', () => {
   it('with document, variables, headers and displayOptions provided', () => {
-    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
-      {
-        includeCookies: true,
-        document: 'query Test { id }',
-        variables: {
-          option: {
-            a: 'val',
-            b: 1,
-            c: true,
-          },
+    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
+      runtime: string;
+    } = {
+      includeCookies: true,
+      document: 'query Test { id }',
+      variables: {
+        option: {
+          a: 'val',
+          b: 1,
+          c: true,
         },
-        headers: { authorization: 'true' },
-        embed: {
-          displayOptions: {
-            showHeadersAndEnvVars: true,
-            docsPanelState: 'open',
-            theme: 'light',
-          },
-          persistExplorerState: true,
+      },
+      headers: { authorization: 'true' },
+      embed: {
+        displayOptions: {
+          showHeadersAndEnvVars: true,
+          docsPanelState: 'open',
+          theme: 'light',
         },
-        graphRef: 'graph@current',
-      };
+        persistExplorerState: true,
+      },
+      graphRef: 'graph@current',
+      runtime: '@apollo/server@4.0.0',
+    };
     expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
       <div class="fallback">
@@ -49,11 +51,11 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
            id="embeddableExplorer"
       >
       </div>
-      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?referrer=@apollo/server@4.0.0">
+      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=@apollo/server@4.0.0">
       </script>
       <script>
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"document":"query Test { id }","headers":{"authorization":"true"},"variables":{"option":{"a":"val","b":1,"c":true}},"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"includeCookies":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"document":"query Test { id }","headers":{"authorization":"true"},"variables":{"option":{"a":"val","b":1,"c":true}},"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"includeCookies":true,"runtime":"@apollo/server@4.0.0"};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -63,12 +65,14 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
   });
 
   it('for embedded explorer with document, variables, headers and displayOptions excluded', () => {
-    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
-      {
-        includeCookies: false,
-        embed: true as true,
-        graphRef: 'graph@current',
-      };
+    const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions & {
+      runtime: string;
+    } = {
+      includeCookies: false,
+      embed: true as true,
+      graphRef: 'graph@current',
+      runtime: '@apollo/server@4.0.0',
+    };
     expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
       .toMatchInlineSnapshot(`
       <div class="fallback">
@@ -88,11 +92,11 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
            id="embeddableExplorer"
       >
       </div>
-      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?referrer=@apollo/server@4.0.0">
+      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=@apollo/server@4.0.0">
       </script>
       <script>
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"displayOptions":{}},"persistExplorerState":false,"includeCookies":false};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"displayOptions":{}},"persistExplorerState":false,"includeCookies":false,"runtime":"@apollo/server@4.0.0"};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
