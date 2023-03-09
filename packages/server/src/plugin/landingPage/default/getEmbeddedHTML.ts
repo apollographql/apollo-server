@@ -84,7 +84,9 @@ export const getEmbeddedExplorerHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableExplorer"
 ></div>
-<script src="https://embeddable-explorer.cdn.apollographql.com/${explorerCdnVersion}/embeddable-explorer.umd.production.min.js?runtime=${apolloServerVersion}"></script>
+<script src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
+    explorerCdnVersion,
+  )}/embeddable-explorer.umd.production.min.js?runtime=${apolloServerVersion}"></script>
 <script>
   var endpointUrl = window.location.href;
   var embeddedExplorerConfig = ${getConfigStringForHtml(
@@ -117,7 +119,9 @@ export const getEmbeddedSandboxHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableSandbox"
 ></div>
-<script src="https://embeddable-sandbox.cdn.apollographql.com/${sandboxCdnVersion}/embeddable-sandbox.umd.production.min.js?runtime=${apolloServerVersion}"></script>
+<script src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
+    sandboxCdnVersion,
+  )}/embeddable-sandbox.umd.production.min.js?runtime=${apolloServerVersion}"></script>
 <script>
   var initialEndpoint = window.location.href;
   new window.EmbeddedSandbox({
