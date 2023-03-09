@@ -21,8 +21,9 @@ function getConfigStringForHtml(config: LandingPageConfig) {
 }
 
 export const getEmbeddedExplorerHTML = (
-  version: string,
+  explorerCdnVersion: string,
   config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
+  apolloServerVersion: string,
 ) => {
   interface EmbeddableExplorerOptions {
     graphRef: string;
@@ -49,22 +50,25 @@ export const getEmbeddedExplorerHTML = (
     persistExplorerState: false,
     ...(typeof config.embed === 'boolean' ? {} : config.embed),
   };
-  const embeddedExplorerParams: Omit<EmbeddableExplorerOptions, 'endpointUrl'> =
-    {
-      graphRef: config.graphRef,
-      target: '#embeddableExplorer',
-      initialState: {
-        document: config.document,
-        headers: config.headers,
-        variables: config.variables,
-        displayOptions: {
-          ...productionLandingPageConfigOrDefault.displayOptions,
-        },
+  const embeddedExplorerParams: Omit<
+    EmbeddableExplorerOptions,
+    'endpointUrl'
+  > & { runtime: string } = {
+    graphRef: config.graphRef,
+    target: '#embeddableExplorer',
+    initialState: {
+      document: config.document,
+      headers: config.headers,
+      variables: config.variables,
+      displayOptions: {
+        ...productionLandingPageConfigOrDefault.displayOptions,
       },
-      persistExplorerState:
-        productionLandingPageConfigOrDefault.persistExplorerState,
-      includeCookies: config.includeCookies,
-    };
+    },
+    persistExplorerState:
+      productionLandingPageConfigOrDefault.persistExplorerState,
+    includeCookies: config.includeCookies,
+    runtime: apolloServerVersion,
+  };
 
   return `
 <div class="fallback">
@@ -80,7 +84,11 @@ export const getEmbeddedExplorerHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableExplorer"
 ></div>
-<script src="https://embeddable-explorer.cdn.apollographql.com/${version}/embeddable-explorer.umd.production.min.js"></script>
+<script src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
+    explorerCdnVersion,
+  )}/embeddable-explorer.umd.production.min.js?runtime=${encodeURIComponent(
+    apolloServerVersion,
+  )}"></script>
 <script>
   var endpointUrl = window.location.href;
   var embeddedExplorerConfig = ${getConfigStringForHtml(
@@ -95,8 +103,9 @@ id="embeddableExplorer"
 };
 
 export const getEmbeddedSandboxHTML = (
-  version: string,
+  sandboxCdnVersion: string,
   config: LandingPageConfig,
+  apolloServerVersion: string,
 ) => {
   return `
 <div class="fallback">
@@ -112,7 +121,11 @@ export const getEmbeddedSandboxHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableSandbox"
 ></div>
-<script src="https://embeddable-sandbox.cdn.apollographql.com/${version}/embeddable-sandbox.umd.production.min.js"></script>
+<script src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
+    sandboxCdnVersion,
+  )}/embeddable-sandbox.umd.production.min.js?runtime=${encodeURIComponent(
+    apolloServerVersion,
+  )}"></script>
 <script>
   var initialEndpoint = window.location.href;
   new window.EmbeddedSandbox({
@@ -125,6 +138,7 @@ id="embeddableSandbox"
       includeCookies: config.includeCookies,
     })},
     hideCookieToggle: false,
+    runtime: '${apolloServerVersion}'
   });
 </script>
 `;

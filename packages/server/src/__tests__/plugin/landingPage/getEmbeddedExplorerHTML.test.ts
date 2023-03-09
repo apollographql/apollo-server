@@ -2,8 +2,9 @@ import { getEmbeddedExplorerHTML } from '../../../plugin/landingPage/default/get
 import type { ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
 
-const version = '_latest';
+const cdnVersion = '_latest';
 expect.addSnapshotSerializer(require('jest-serializer-html'));
+const apolloServerVersion = '@apollo/server@4.0.0';
 
 describe('Embedded Explorer Landing Page Config HTML', () => {
   it('with document, variables, headers and displayOptions provided', () => {
@@ -29,7 +30,8 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
         },
         graphRef: 'graph@current',
       };
-    expect(getEmbeddedExplorerHTML(version, config)).toMatchInlineSnapshot(`
+    expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
+      .toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -47,11 +49,11 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
            id="embeddableExplorer"
       >
       </div>
-      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js">
+      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"document":"query Test { id }","headers":{"authorization":"true"},"variables":{"option":{"a":"val","b":1,"c":true}},"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"includeCookies":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"document":"query Test { id }","headers":{"authorization":"true"},"variables":{"option":{"a":"val","b":1,"c":true}},"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"includeCookies":true,"runtime":"@apollo/server@4.0.0"};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -67,7 +69,8 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
         embed: true as true,
         graphRef: 'graph@current',
       };
-    expect(getEmbeddedExplorerHTML(version, config)).toMatchInlineSnapshot(`
+    expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
+      .toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -85,11 +88,11 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
            id="embeddableExplorer"
       >
       </div>
-      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js">
+      <script src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
       </script>
       <script>
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"displayOptions":{}},"persistExplorerState":false,"includeCookies":false};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"displayOptions":{}},"persistExplorerState":false,"includeCookies":false,"runtime":"@apollo/server@4.0.0"};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
