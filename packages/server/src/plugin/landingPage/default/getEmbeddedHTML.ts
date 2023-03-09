@@ -59,7 +59,7 @@ export const getEmbeddedExplorerHTML = (
     graphRef: config.graphRef,
     target: '#embeddableExplorer',
     initialState: {
-      ...('document' in config
+      ...('document' in config || 'headers' in config || 'variables' in config
         ? {
             document: config.document,
             headers: config.headers,
@@ -150,7 +150,7 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     initialState: ${getConfigStringForHtml({
-      ...('document' in config
+      ...('document' in config || 'headers' in config || 'variables' in config
         ? {
             document: config.document,
             variables: config.variables,
