@@ -38,9 +38,9 @@
   },
   "devDependencies": {
     "@apollo/client": "3.7.10",
-    "@apollo/gateway": "2.3.2",
+    "@apollo/gateway": "2.3.3",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
-    "@apollo/subgraph": "2.3.2",
+    "@apollo/subgraph": "2.3.3",
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",
@@ -97,8 +97,8 @@
     "prettier": "2.8.4",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
-    "rimraf": "4.3.1",
-    "rollup": "3.18.0",
+    "rimraf": "4.4.0",
+    "rollup": "3.19.0",
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.0.5",
@@ -110,7 +110,7 @@
     ]
   },
   "volta": {
-    "node": "18.14.2",
-    "npm": "9.6.0"
+    "node": "18.15.0",
+    "npm": "9.6.1"
   }
 }
