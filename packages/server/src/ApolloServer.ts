@@ -11,6 +11,7 @@ import {
   GraphQLSchema,
   ParseOptions,
   print,
+  printSchema,
   TypedQueryDocumentNode,
   ValidationContext,
   ValidationRule,
@@ -22,7 +23,6 @@ import {
 } from '@apollo/utils.keyvaluecache';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
-import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
 import {
@@ -63,6 +63,7 @@ import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
 import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
+import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
@@ -730,7 +731,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         providedDocumentStore === undefined
           ? new InMemoryLRUCache<DocumentNode>()
           : providedDocumentStore,
-      documentStoreKeyPrefix: providedDocumentStore ? `${uuid.v4()}:` : '',
+      documentStoreKeyPrefix: providedDocumentStore
+        ? `${computeCoreSchemaHash(printSchema(schema))}:`
+        : '',
     };
   }
 

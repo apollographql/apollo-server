@@ -4,6 +4,9 @@ import gql from 'graphql-tag';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import { ApolloServer } from '..';
 import { jest, describe, it, expect } from '@jest/globals';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { printSchema } from 'graphql/index';
+import { computeCoreSchemaHash } from '../utils/computeCoreSchemaHash';
 
 const typeDefs = gql`
   type Query {
@@ -81,11 +84,16 @@ describe('ApolloServer documentStore', () => {
     const keys = documentStore.keys();
     expect(keys).toHaveLength(1);
     const theKey = keys[0];
-    const [uuid, hash] = theKey.split(':');
-    expect(typeof uuid).toBe('string');
-    expect(hash).toEqual(operations.simple.hash);
 
-    const result = await documentStore.get(`${uuid}:${hash}`);
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const expectedSchemaHash = computeCoreSchemaHash(printSchema(schema));
+
+    const [schemaHash, documentHash] = theKey.split(':');
+    expect(typeof schemaHash).toBe('string');
+    expect(schemaHash).toEqual(expectedSchemaHash);
+    expect(documentHash).toEqual(operations.simple.hash);
+
+    const result = await documentStore.get(`${schemaHash}:${documentHash}`);
     expect(result).toMatchObject(documentNodeMatcher);
 
     await server.executeOperation(operations.simple.op);
