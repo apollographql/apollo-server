@@ -1,17 +1,4 @@
-export interface ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * By default, the landing page plugin uses the latest version of the landing
-   * page published to Apollo's CDN. If you'd like to pin the current version,
-   * pass the SHA served at
-   * https://apollo-server-landing-page.cdn.apollographql.com/_latest/version.txt
-   * here.
-   */
-  version?: string;
-  /**
-   * Set to false to suppress the footer which explains how to configure the
-   * landing page.
-   */
-  footer?: boolean;
+type InitialDocumentVariablesHeaders = {
   /**
    * Users can configure their landing page to link to Studio Explorer with a
    * document loaded in the UI.
@@ -28,80 +15,92 @@ export interface ApolloServerPluginLandingPageDefaultBaseOptions {
    * headers loaded in the UI.
    */
   headers?: Record<string, string>;
+  collectionId?: never;
+  operationId?: never;
+};
+
+type InitialStateForEmbeds =
+  | {
+      /**
+       * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
+       *
+       * You can find these values from a registered graph in Studio by
+       * clicking the ... menu next to an operation in the Explorer of that graph and
+       * selecting View operation details.
+       */
+      collectionId: string;
+      operationId: string;
+    }
+  | InitialDocumentVariablesHeaders;
+
+export type ApolloServerPluginLandingPageDefaultBaseOptions = {
+  /**
+   * By default, the landing page plugin uses the latest version of the landing
+   * page published to Apollo's CDN. If you'd like to pin the current version,
+   * pass the SHA served at
+   * https://apollo-server-landing-page.cdn.apollographql.com/_latest/version.txt
+   * here.
+   */
+  version?: string;
+  /**
+   * Set to false to suppress the footer which explains how to configure the
+   * landing page.
+   */
+  footer?: boolean;
 
   includeCookies?: boolean;
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
-}
+};
 
-export interface ApolloServerPluginNonEmbeddedLandingPageLocalDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
-   */
-  embed: false;
-}
+export type ApolloServerPluginNonEmbeddedLandingPageLocalDefaultOptions =
+  ApolloServerPluginLandingPageDefaultBaseOptions &
+    InitialDocumentVariablesHeaders & {
+      /**
+       * Users can configure their landing page to render an embedded Explorer if
+       * given a graphRef, or an embedded Sandbox if there is no graphRef provided.
+       */
+      embed: false;
+    };
 
-export interface ApolloServerPluginNonEmbeddedLandingPageProductionDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * If specified, provide a link (with opt-in auto-redirect) to the Studio page
-   * for the given graphRef. (You need to explicitly pass this here rather than
-   * relying on the server's ApolloConfig, because if your server is publicly
-   * accessible you may not want to display the graph ref publicly.)
-   */
-  graphRef?: string;
-  /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
-   */
-  embed?: false;
-}
+export type ApolloServerPluginNonEmbeddedLandingPageProductionDefaultOptions =
+  ApolloServerPluginLandingPageDefaultBaseOptions &
+    InitialDocumentVariablesHeaders & {
+      /**
+       * If specified, provide a link (with opt-in auto-redirect) to the Studio page
+       * for the given graphRef. (You need to explicitly pass this here rather than
+       * relying on the server's ApolloConfig, because if your server is publicly
+       * accessible you may not want to display the graph ref publicly.)
+       */
+      graphRef?: string;
+      /**
+       * Users can configure their landing page to render an embedded Explorer if
+       * given a graphRef, or an embedded Sandbox if there is no graphRef provided.
+       */
+      embed?: false;
+    };
 
-export interface ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * Users can configure their landing page to render an embedded Explorer if
-   * given a graphRef, or an embedded Sandbox if there is not graphRef provided.
-   */
-  embed?: true | EmbeddableSandboxOptions;
-  /**
-   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
-   *
-   * You can find these values from a registered graph in Studio by
-   * clicking the ... menu next to an operation in the Explorer of that graph and
-   * selecting View operation details.
-   */
-  defaultOperation?: {
-    collectionId: string;
-    operationId: string;
-  };
-}
+export type ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions =
+  ApolloServerPluginLandingPageDefaultBaseOptions & {
+    /**
+     * Users can configure their landing page to render an embedded Explorer if
+     * given a graphRef, or an embedded Sandbox if there is no graphRef provided.
+     */
+    embed?: true | EmbeddableSandboxOptions;
+  } & (InitialDocumentVariablesHeaders | InitialStateForEmbeds);
 
-export interface ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions
-  extends ApolloServerPluginLandingPageDefaultBaseOptions {
-  /**
-   * Use this registered's graphs schema to populate the embedded Explorer.
-   * Required if passing `embed: true`
-   */
-  graphRef: string;
-  /**
-   * Users can configure their landing page to render an embedded Explorer.
-   */
-  embed: true | EmbeddableExplorerOptions;
-  /**
-   * The ID of a collection, paired with an operation ID to populate in the Sandbox on load.
-   *
-   * You can find these values from a registered graph in Studio by
-   * clicking the ... menu next to an operation in the Explorer of that graph and
-   * selecting View operation details.
-   */
-  defaultOperation?: {
-    collectionId: string;
-    operationId: string;
-  };
-}
+export type ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
+  ApolloServerPluginLandingPageDefaultBaseOptions & {
+    /**
+     * Use this registered's graphs schema to populate the embedded Explorer.
+     * Required if passing `embed: true`
+     */
+    graphRef: string;
+    /**
+     * Users can configure their landing page to render an embedded Explorer.
+     */
+    embed: true | EmbeddableExplorerOptions;
+  } & InitialStateForEmbeds;
 
 type EmbeddableSandboxOptions = {
   initialState?: {

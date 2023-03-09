@@ -59,11 +59,19 @@ export const getEmbeddedExplorerHTML = (
     graphRef: config.graphRef,
     target: '#embeddableExplorer',
     initialState: {
-      document: config.document,
-      headers: config.headers,
-      variables: config.variables,
-      collectionId: config.defaultOperation?.collectionId,
-      operationId: config.defaultOperation?.operationId,
+      ...('document' in config
+        ? {
+            document: config.document,
+            headers: config.headers,
+            variables: config.variables,
+          }
+        : {}),
+      ...('collectionId' in config
+        ? {
+            collectionId: config.collectionId,
+            operationId: config.operationId,
+          }
+        : {}),
       displayOptions: {
         ...productionLandingPageConfigOrDefault.displayOptions,
       },
@@ -142,12 +150,20 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     initialState: ${getConfigStringForHtml({
-      document: config.document,
-      variables: config.variables,
-      headers: config.headers,
+      ...('document' in config
+        ? {
+            document: config.document,
+            variables: config.variables,
+            headers: config.headers,
+          }
+        : {}),
+      ...('collectionId' in config
+        ? {
+            collectionId: config.collectionId,
+            operationId: config.operationId,
+          }
+        : {}),
       includeCookies: config.includeCookies,
-      collectionId: config.defaultOperation?.collectionId,
-      operationId: config.defaultOperation?.operationId,
       ...(typeof config.embed !== 'boolean' &&
       config.embed?.initialState?.pollForSchemaUpdates !== undefined
         ? {

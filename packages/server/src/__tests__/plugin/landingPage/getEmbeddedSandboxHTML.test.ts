@@ -97,10 +97,8 @@ describe('Landing Page Config HTML', () => {
 
   it('for embedded sandbox with operationId & collectionId provided', () => {
     const config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions = {
-      defaultOperation: {
-        collectionId: '12345',
-        operationId: 'abcdef',
-      },
+      collectionId: '12345',
+      operationId: 'abcdef',
       embed: true,
     };
     expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))

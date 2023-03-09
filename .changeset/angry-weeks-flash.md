@@ -14,18 +14,14 @@ const server = new ApolloServer({
     process.env.NODE_ENV === 'production'
       ? ApolloServerPluginLandingPageProductionDefault({
           graphRef: 'my-graph-id@my-graph-variant',
-          defaultOperation: {
-            collectionId: 'abcdef',
-            operationId: '12345'
-          },
+          collectionId: 'abcdef',
+          operationId: '12345'
           embed: true,
           footer: false,
         })
       : ApolloServerPluginLandingPageLocalDefault({
-          defaultOperation: {
-            collectionId: 'abcdef',
-            operationId: '12345'
-          },
+          collectionId: 'abcdef',
+          operationId: '12345'
           embed: {
             initialState: {
               pollForSchemaUpdates: false,

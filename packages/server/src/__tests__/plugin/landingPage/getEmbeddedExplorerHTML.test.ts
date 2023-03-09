@@ -66,10 +66,8 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
     const config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
       {
         includeCookies: true,
-        defaultOperation: {
-          collectionId: '12345',
-          operationId: 'abcdef',
-        },
+        collectionId: '12345',
+        operationId: 'abcdef',
         embed: true,
         graphRef: 'graph@current',
       };
