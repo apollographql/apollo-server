@@ -1,6 +1,6 @@
 import type {
+  ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions,
   ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
-  LandingPageConfig,
 } from './types';
 
 // This function turns an object into a string and replaces
@@ -12,7 +12,7 @@ import type {
 // `</script>` won't terminate the script block early.
 // (Perhaps we should have done this instead of the triple-encoding
 // of encodeConfig for the main landing page.)
-function getConfigStringForHtml(config: LandingPageConfig) {
+function getConfigStringForHtml(config: object) {
   return JSON.stringify(config)
     .replace('<', '\\u003c')
     .replace('>', '\\u003e')
@@ -33,6 +33,8 @@ export const getEmbeddedExplorerHTML = (
       document?: string;
       variables?: Record<string, any>;
       headers?: Record<string, string>;
+      collectionId?: string;
+      operationId?: string;
       displayOptions: {
         docsPanelState?: 'open' | 'closed'; // default to 'open',
         showHeadersAndEnvVars?: boolean; // default to `false`
@@ -57,9 +59,19 @@ export const getEmbeddedExplorerHTML = (
     graphRef: config.graphRef,
     target: '#embeddableExplorer',
     initialState: {
-      document: config.document,
-      headers: config.headers,
-      variables: config.variables,
+      ...('document' in config || 'headers' in config || 'variables' in config
+        ? {
+            document: config.document,
+            headers: config.headers,
+            variables: config.variables,
+          }
+        : {}),
+      ...('collectionId' in config
+        ? {
+            collectionId: config.collectionId,
+            operationId: config.operationId,
+          }
+        : {}),
       displayOptions: {
         ...productionLandingPageConfigOrDefault.displayOptions,
       },
@@ -104,9 +116,15 @@ id="embeddableExplorer"
 
 export const getEmbeddedSandboxHTML = (
   sandboxCdnVersion: string,
-  config: LandingPageConfig,
+  config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions,
   apolloServerVersion: string,
 ) => {
+  const endpointIsEditable =
+    typeof config.embed === 'boolean'
+      ? false
+      : typeof config.embed?.endpointIsEditable === 'boolean'
+      ? config.embed?.endpointIsEditable
+      : false;
   return `
 <div class="fallback">
   <h1>Welcome to Apollo Server</h1>
@@ -132,12 +150,36 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     initialState: ${getConfigStringForHtml({
-      document: config.document,
-      variables: config.variables,
-      headers: config.headers,
+      ...('document' in config || 'headers' in config || 'variables' in config
+        ? {
+            document: config.document,
+            variables: config.variables,
+            headers: config.headers,
+          }
+        : {}),
+      ...('collectionId' in config
+        ? {
+            collectionId: config.collectionId,
+            operationId: config.operationId,
+          }
+        : {}),
       includeCookies: config.includeCookies,
+      ...(typeof config.embed !== 'boolean' &&
+      config.embed?.initialState?.pollForSchemaUpdates !== undefined
+        ? {
+            pollForSchemaUpdates:
+              config.embed?.initialState?.pollForSchemaUpdates,
+          }
+        : {}),
+      ...(typeof config.embed !== 'boolean' &&
+      config.embed?.initialState?.sharedHeaders !== undefined
+        ? {
+            sharedHeaders: config.embed?.initialState?.sharedHeaders,
+          }
+        : {}),
     })},
     hideCookieToggle: false,
+    endpointIsEditable: ${endpointIsEditable},
     runtime: '${apolloServerVersion}'
   });
 </script>

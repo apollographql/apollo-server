@@ -136,7 +136,9 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
       config.embed
         ? 'graphRef' in config && config.graphRef
           ? getEmbeddedExplorerHTML(version, config, apolloServerVersion)
-          : getEmbeddedSandboxHTML(version, config, apolloServerVersion)
+          : !('graphRef' in config)
+          ? getEmbeddedSandboxHTML(version, config, apolloServerVersion)
+          : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
         : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
     }
     </div>
