@@ -118,10 +118,10 @@ id="embeddableSandbox"
     target: '#embeddableSandbox',
     initialEndpoint,
     initialState: ${getConfigStringForHtml({
-      document: config.document ?? undefined,
-      variables: config.variables ?? undefined,
-      headers: config.headers ?? undefined,
-      includeCookies: config.includeCookies ?? undefined,
+      document: config.document,
+      variables: config.variables,
+      headers: config.headers,
+      includeCookies: config.includeCookies,
     })},
     hideCookieToggle: false,
   });
