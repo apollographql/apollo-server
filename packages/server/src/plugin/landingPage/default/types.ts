@@ -117,6 +117,10 @@ type EmbeddableSandboxOptions = {
      * The landing page's Sandbox always includes these headers in its introspection queries
      * to your endpoint.
      */
+    // TODO(as5): We currently have `headers` at the top level and `embed.initialState.sharedHeaders`
+    // at this level. Shared headers populate introspection headers in Sandbox, while `headers` just
+    // adds headers to your default tab. We should consider changing the behavior such that `headers`
+    // at the base level populates shared headers as well.
     sharedHeaders?: Record<string, string>;
   };
   /**
