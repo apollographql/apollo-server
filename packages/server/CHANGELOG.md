@@ -1,5 +1,59 @@
 # @apollo/server
 
+## 4.5.0
+
+### Minor Changes
+
+- [#7431](https://github.com/apollographql/apollo-server/pull/7431) [`7cc163ac8`](https://github.com/apollographql/apollo-server/commit/7cc163ac88e801324a24ba7d7e11c38796f52bb4) Thanks [@mayakoneval](https://github.com/mayakoneval)! - In the Apollo Server Landing Page Local config, you can now automatically turn off autopolling on your endpoints as well as pass headers used to introspect your schema, embed an operation from a collection, and configure whether the endpoint input box is editable. In the Apollo Server Landing Page Prod config, you can embed an operation from a collection & we fixed a bug introduced in release 4.4.0
+
+  Example of all new config options:
+
+  ```
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [
+      process.env.NODE_ENV === 'production'
+        ? ApolloServerPluginLandingPageProductionDefault({
+            graphRef: 'my-graph-id@my-graph-variant',
+            collectionId: 'abcdef',
+            operationId: '12345'
+            embed: true,
+            footer: false,
+          })
+        : ApolloServerPluginLandingPageLocalDefault({
+            collectionId: 'abcdef',
+            operationId: '12345'
+            embed: {
+              initialState: {
+                pollForSchemaUpdates: false,
+                sharedHeaders: {
+                  "HeaderNeededForIntrospection": "ValueForIntrospection"
+                },
+              },
+              endpointIsEditable: true,
+            },
+            footer: false,
+          }),
+    ],
+  });
+
+  ```
+
+- [#7430](https://github.com/apollographql/apollo-server/pull/7430) [`b694bb1dd`](https://github.com/apollographql/apollo-server/commit/b694bb1dd9880f5acee8917de62cdae4ad647c1f) Thanks [@mayakoneval](https://github.com/mayakoneval)! - We now send your @apollo/server version to the embedded Explorer & Sandbox used in the landing pages for analytics.
+
+### Patch Changes
+
+- [#7432](https://github.com/apollographql/apollo-server/pull/7432) [`8cbc61406`](https://github.com/apollographql/apollo-server/commit/8cbc61406229653454e50ea98f11dbe834e036b5) Thanks [@mayakoneval](https://github.com/mayakoneval)! - Bug fix: TL;DR revert a previous change that stops passing includeCookies from the prod landing page config.
+
+  Who was affected?
+
+  Any Apollo Server instance that passes a `graphRef` to a production landing page with a non-default `includeCookies` value that does not match the `Include cookies` setting on your registered variant on studio.apollographql.com.
+
+  How were they affected?
+
+  From release 4.4.0 to this patch release, folks affected would have seen their Explorer requests being sent with cookies included only if they had set `Include cookies` on their variant. Cookies would not have been included by default.
+
 ## 4.4.1
 
 ### Patch Changes
