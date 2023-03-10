@@ -24,7 +24,7 @@
     "lint": "eslint .",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
-    "spell-check": "cspell lint '**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)",
+    "spell-check": "cspell lint '**' '.changeset/**' --no-progress || (echo 'Add any real words to cspell-dict.txt.'; exit 1)",
     "changeset-publish": "npm run compile && changeset publish",
     "changeset-check": "changeset status --verbose --since=origin/main",
     "changeset-version": "changeset version && npm i"
