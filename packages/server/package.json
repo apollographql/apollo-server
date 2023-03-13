@@ -104,7 +104,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "loglevel": "^1.6.8",
-    "lru-cache": "^7.10.1",
+    "lru-cache": "^8.0.0",
     "negotiator": "^0.6.3",
     "node-abort-controller": "^3.1.1",
     "node-fetch": "^2.6.7",
