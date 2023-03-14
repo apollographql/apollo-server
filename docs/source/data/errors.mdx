@@ -345,7 +345,7 @@ You can edit Apollo Server error details before they're passed to a client or re
 
 The `ApolloServer` constructor accepts a `formatError` hook that is run on each error before it's passed back to the client. You can use this function to log or mask particular errors.
 
-The `formatError` hook receives two arguments: the first is the error formatted as a JSON object (to be sent with the response), and the second is the original error (wrapped in GraphQLError if thrown by a resolver).
+The `formatError` hook receives two arguments: the first is the error formatted as a JSON object (to be sent with the response), and the second is the original error (wrapped in `GraphQLError` if thrown by a resolver).
 
 > The `formatError` function does _not_ modify errors that are sent to Apollo Studio as part of usage reporting. See [For Apollo Studio reporting](#for-apollo-studio-reporting).
 
