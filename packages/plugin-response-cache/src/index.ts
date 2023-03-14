@@ -1,3 +1,2 @@
-import plugin from './ApolloServerPluginResponseCache.js';
-
-export default plugin;
+export { default } from './ApolloServerPluginResponseCache.js';
+export * from './ApolloServerPluginResponseCache.js';
