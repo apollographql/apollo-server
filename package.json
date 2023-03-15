@@ -38,9 +38,9 @@
   },
   "devDependencies": {
     "@apollo/client": "3.7.10",
-    "@apollo/gateway": "2.3.4",
+    "@apollo/gateway": "2.3.5",
     "@apollo/server-plugin-landing-page-graphql-playground": "4.0.0",
-    "@apollo/subgraph": "2.3.4",
+    "@apollo/subgraph": "2.3.5",
     "@apollo/utils.createhash": "2.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.0",
@@ -111,6 +111,6 @@
   },
   "volta": {
     "node": "18.15.0",
-    "npm": "9.6.1"
+    "npm": "9.6.2"
   }
 }
