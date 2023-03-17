@@ -1,25 +1,27 @@
+import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import { isNodeLike } from '@apollo/utils.isnodelike';
-import type { Logger } from '@apollo/utils.logger';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import resolvable, { Resolvable } from '@josephg/resolvable';
 import {
-  assertValidSchema,
-  DocumentNode,
-  GraphQLError,
-  GraphQLFieldResolver,
-  GraphQLFormattedError,
-  GraphQLSchema,
-  ParseOptions,
-  print,
-  TypedQueryDocumentNode,
-  ValidationContext,
-  ValidationRule,
-} from 'graphql';
-import {
-  type KeyValueCache,
   InMemoryLRUCache,
   PrefixingKeyValueCache,
+  type KeyValueCache,
 } from '@apollo/utils.keyvaluecache';
+import type { Logger } from '@apollo/utils.logger';
+import type { WithRequired } from '@apollo/utils.withrequired';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import resolvable, { type Resolvable } from '@josephg/resolvable';
+import {
+  GraphQLError,
+  GraphQLSchema,
+  ValidationContext,
+  assertValidSchema,
+  print,
+  type DocumentNode,
+  type GraphQLFieldResolver,
+  type GraphQLFormattedError,
+  type ParseOptions,
+  type TypedQueryDocumentNode,
+  type ValidationRule,
+} from 'graphql';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import * as uuid from 'uuid';
@@ -34,44 +36,42 @@ import {
   ApolloServerErrorCode,
   ApolloServerValidationErrorCode,
 } from './errors/index.js';
+import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
+  ExecuteOperationOptions,
+  VariableValues,
+} from './externalTypes/graphql.js';
+import type {
+  ApolloConfig,
+  ApolloServerOptions,
   ApolloServerPlugin,
   BaseContext,
+  ContextThunk,
+  DocumentStore,
   GraphQLRequest,
+  GraphQLRequestContext,
   GraphQLResponse,
-  GraphQLServerListener,
   GraphQLServerContext,
+  GraphQLServerListener,
+  HTTPGraphQLHead,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   LandingPage,
-  ApolloConfig,
-  ApolloServerOptions,
-  DocumentStore,
   PersistedQueryOptions,
-  ContextThunk,
-  GraphQLRequestContext,
-  HTTPGraphQLHead,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
+import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
-import { SchemaManager } from './utils/schemaManager.js';
-import { isDefined } from './utils/isDefined.js';
-import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
-import type { WithRequired } from '@apollo/utils.withrequired';
-import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
-import type { GatewayExecutor } from '@apollo/server-gateway-interface';
-import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
 import { HeaderMap } from './utils/HeaderMap.js';
-import type {
-  ExecuteOperationOptions,
-  VariableValues,
-} from './externalTypes/graphql.js';
+import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
+import { isDefined } from './utils/isDefined.js';
+import { SchemaManager } from './utils/schemaManager.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {

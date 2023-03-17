@@ -1,10 +1,10 @@
 import {
-  GraphQLSchema,
-  GraphQLField,
-  getNamedType,
   GraphQLObjectType,
-  GraphQLFieldResolver,
+  GraphQLSchema,
   defaultFieldResolver,
+  getNamedType,
+  type GraphQLField,
+  type GraphQLFieldResolver,
 } from 'graphql';
 import type {
   BaseContext,

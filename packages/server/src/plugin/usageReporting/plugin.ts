@@ -1,9 +1,9 @@
 import { Report, ReportHeader, Trace } from '@apollo/usage-reporting-protobuf';
 import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 import {
-  usageReportingSignature,
   calculateReferencedFieldsByType,
-  ReferencedFieldsByType,
+  usageReportingSignature,
+  type ReferencedFieldsByType,
 } from '@apollo/utils.usagereporting';
 import retry from 'async-retry';
 import { GraphQLSchema, printSchema } from 'graphql';
@@ -21,13 +21,17 @@ import type {
   GraphQLRequestListener,
   GraphQLServerListener,
 } from '../../externalTypes/index.js';
+import { packageVersion } from '../../generated/packageVersion.js';
 import { internalPlugin } from '../../internalPlugin.js';
-import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
+import type { HeaderMap } from '../../utils/HeaderMap.js';
+import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
+import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
+import { TraceTreeBuilder, dateToProtoTimestamp } from '../traceTreeBuilder.js';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
   createOperationDerivedDataCache,
-  OperationDerivedData,
   operationDerivedDataCacheKey,
+  type OperationDerivedData,
 } from './operationDerivedDataCache.js';
 import type {
   ApolloServerPluginUsageReportingOptions,
@@ -35,10 +39,6 @@ import type {
 } from './options.js';
 import { OurReport } from './stats.js';
 import { makeTraceDetails } from './traceDetails.js';
-import { packageVersion } from '../../generated/packageVersion.js';
-import { computeCoreSchemaHash } from '../../utils/computeCoreSchemaHash.js';
-import type { HeaderMap } from '../../utils/HeaderMap.js';
-import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
 
 const reportHeaderDefaults = {
   hostname: os.hostname(),

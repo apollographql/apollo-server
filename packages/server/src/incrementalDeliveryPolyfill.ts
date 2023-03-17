@@ -1,4 +1,9 @@
-import { execute, ExecutionArgs, ExecutionResult, GraphQLError } from 'graphql';
+import {
+  GraphQLError,
+  execute,
+  type ExecutionArgs,
+  type ExecutionResult,
+} from 'graphql';
 
 // This file "polyfills" graphql@17's experimentalExecuteIncrementally (by
 // returning a function that does not understand incremental directives if

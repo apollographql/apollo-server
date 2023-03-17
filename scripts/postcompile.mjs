@@ -14,13 +14,12 @@ import rimraf from 'rimraf';
 import glob from 'glob';
 
 /**
- * @type Promise<void> | undefined
+ * @type Promise<boolean> | undefined
  */
 let rimrafPromise;
 // Remove CJS .d.ts files: we don't need two copies!
 try {
   const matches = await glob(`packages/*/dist/cjs/**/*.d.ts`);
-  console.log(matches);
   rimrafPromise = rimraf(matches);
 } catch (err) {
   process.exit(1);

@@ -1,3 +1,13 @@
+import { Kind, type FormattedExecutionResult } from 'graphql';
+import Negotiator from 'negotiator';
+import {
+  ApolloServer,
+  MEDIA_TYPES,
+  chooseContentTypeForSingleResultResponse,
+  internalExecuteOperation,
+  type ApolloServerInternals,
+  type SchemaDerivedData,
+} from './ApolloServer.js';
 import type {
   BaseContext,
   GraphQLExperimentalFormattedIncrementalResult,
@@ -8,17 +18,7 @@ import type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
 } from './externalTypes/index.js';
-import {
-  ApolloServer,
-  ApolloServerInternals,
-  chooseContentTypeForSingleResultResponse,
-  internalExecuteOperation,
-  MEDIA_TYPES,
-  SchemaDerivedData,
-} from './ApolloServer.js';
-import { FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
-import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';
 
 function fieldIfString(

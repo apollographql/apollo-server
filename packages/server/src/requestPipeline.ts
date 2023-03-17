@@ -1,47 +1,47 @@
 import { createHash } from '@apollo/utils.createhash';
 import {
-  specifiedRules,
-  getOperationAST,
   GraphQLError,
-  validate,
-  parse,
   Kind,
-  ExecutionResult,
+  getOperationAST,
+  parse,
+  specifiedRules,
+  validate,
+  type ExecutionResult,
 } from 'graphql';
 import {
-  symbolExecutionDispatcherWillResolveField,
-  enablePluginsForSchemaResolvers,
-  symbolUserFieldResolver,
-} from './utils/schemaInstrumentation.js';
-import {
-  PersistedQueryNotSupportedError,
-  PersistedQueryNotFoundError,
-  UserInputError,
-  BadRequestError,
-  ValidationError,
-  SyntaxError,
-  OperationResolutionError,
-} from './internalErrorClasses.js';
-import {
   ensureError,
-  normalizeAndFormatErrors,
   ensureGraphQLError,
+  normalizeAndFormatErrors,
 } from './errorNormalize.js';
 import type {
+  BaseContext,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
   GraphQLRequestContext,
+  GraphQLRequestContextDidEncounterErrors,
+  GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextDidResolveSource,
   GraphQLRequestContextExecutionDidStart,
-  GraphQLRequestContextResponseForOperation,
-  GraphQLRequestContextDidResolveOperation,
   GraphQLRequestContextParsingDidStart,
+  GraphQLRequestContextResponseForOperation,
   GraphQLRequestContextValidationDidStart,
   GraphQLRequestContextWillSendResponse,
-  GraphQLRequestContextDidEncounterErrors,
   GraphQLRequestExecutionListener,
-  BaseContext,
   GraphQLResponse,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
 } from './externalTypes/index.js';
+import {
+  BadRequestError,
+  OperationResolutionError,
+  PersistedQueryNotFoundError,
+  PersistedQueryNotSupportedError,
+  SyntaxError,
+  UserInputError,
+  ValidationError,
+} from './internalErrorClasses.js';
+import {
+  enablePluginsForSchemaResolvers,
+  symbolExecutionDispatcherWillResolveField,
+  symbolUserFieldResolver,
+} from './utils/schemaInstrumentation.js';
 
 import {
   invokeDidStartHook,
@@ -51,23 +51,23 @@ import {
 
 import { makeGatewayGraphQLRequestContext } from './utils/makeGatewayGraphQLRequestContext.js';
 
-import { mergeHTTPGraphQLHead, newHTTPGraphQLHead } from './runHttpQuery.js';
 import type {
   ApolloServer,
   ApolloServerInternals,
   SchemaDerivedData,
 } from './ApolloServer.js';
-import { isDefined } from './utils/isDefined.js';
 import type {
   GraphQLRequestContextDidEncounterSubsequentErrors,
   GraphQLRequestContextWillSendSubsequentPayload,
 } from './externalTypes/requestPipeline.js';
 import {
   executeIncrementally,
-  GraphQLExperimentalInitialIncrementalExecutionResult,
-  GraphQLExperimentalSubsequentIncrementalExecutionResult,
+  type GraphQLExperimentalInitialIncrementalExecutionResult,
+  type GraphQLExperimentalSubsequentIncrementalExecutionResult,
 } from './incrementalDeliveryPolyfill.js';
+import { mergeHTTPGraphQLHead, newHTTPGraphQLHead } from './runHttpQuery.js';
 import { HeaderMap } from './utils/HeaderMap.js';
+import { isDefined } from './utils/isDefined.js';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 

@@ -1,22 +1,22 @@
-import type { ApolloServerPlugin } from '../../externalTypes/index.js';
-import {
-  DirectiveNode,
-  getNamedType,
-  GraphQLCompositeType,
-  GraphQLField,
-  isCompositeType,
-  isInterfaceType,
-  isObjectType,
-  responsePathAsArray,
-} from 'graphql';
-import { newCachePolicy } from '../../cachePolicy.js';
-import { internalPlugin } from '../../internalPlugin.js';
-import LRUCache from 'lru-cache';
 import type {
   CacheHint,
   CacheScope,
   GraphQLResolveInfoWithCacheControl,
 } from '@apollo/cache-control-types';
+import {
+  getNamedType,
+  isCompositeType,
+  isInterfaceType,
+  isObjectType,
+  responsePathAsArray,
+  type DirectiveNode,
+  type GraphQLCompositeType,
+  type GraphQLField,
+} from 'graphql';
+import LRUCache from 'lru-cache';
+import { newCachePolicy } from '../../cachePolicy.js';
+import type { ApolloServerPlugin } from '../../externalTypes/index.js';
+import { internalPlugin } from '../../internalPlugin.js';
 
 /**
  * CacheAnnotation represents the contents of a `@cacheControl` directive.
