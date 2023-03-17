@@ -2,7 +2,6 @@
   "compilerOptions": {
     "composite": true,
     "verbatimModuleSyntax": false,
-    "declarationMap": false,
   },
   "files": [],
   "include": [],
