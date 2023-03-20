@@ -153,6 +153,22 @@ An object containing initial HTTP header values to populate in the Explorer on l
 <tr>
 <td>
 
+###### `collectionId` & `operationId`
+
+`string`
+
+</td>
+<td>
+
+The ID of a collection, paired with an operation ID to populate in the Sandbox on load. You can find these values from a registered graph in Studio by clicking the **...** menu next to an operation in the Explorer of that graph and selecting **View operation details**.
+
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `includeCookies`
 
 `boolean`
@@ -173,13 +189,126 @@ If you omit this, the Explorer defaults `includeCookies` to `false`.
 
 ###### `embed`
 
+`boolean | ApolloServerPluginEmbedded`
+`LandingPageLocalConfigOptions`
+</td>
+<td>
+
+If `true` or an options object, the Apollo Server landing page renders an embedded version of [Apollo Sandbox](/graphos/explorer/sandbox/) at its GraphQL endpoint URL. This is the default behavior.
+
+If you set this option to `false`, your server's landing page is a splash page containing a copyable command-line snippet showing how to run operations via `curl` alongside a link to Apollo Sandbox.
+
+</td>
+</tr>
+
+</tbody>
+</table>
+
+### `embed` options
+
+These are the fields you can include in the `embed` option you pass to the `ApolloServerPluginLandingPageLocalDefault`:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `initialState`
+
+`Object`
+
+</td>
+<td>
+
+An object containing additional display options related to the visual state of the embedded Explorer on page load.
+
+For supported subfields, see [`initialState` options](#embedinitialstate-options).
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `endpointIsEditable`
+
+`boolean`
+
+</td>
+<td>
+
+By default, the embedded Sandbox has a URL input box that is editable by users.
+
+Set `endpointIsEditable` to `false` to prevent users of your Apollo Server instance from changing the endpoint URL.
+</td>
+</tr>
+
+
+</tbody>
+</table>
+
+
+### `initialState` options
+
+These are the fields you can include in the `initialState` option you pass to `embed` under `ApolloServerPluginLandingPageLocalDefault`:
+
+<table class="field-table api-ref">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+
+###### `pollForSchemaUpdates`
+
 `boolean`
 </td>
 <td>
 
-If `true`, the Apollo Server landing page renders an embedded version of [Apollo Sandbox](/graphos/explorer/sandbox/) at its GraphQL endpoint URL. This is the default behavior.
+If `true`, the embedded Sandbox periodically polls your `initialEndpoint` for schema updates.
 
-If you set this option to `false`, your server's landing page is a splash page containing a copyable command-line snippet showing how to run operations via `curl` alongside a link to Apollo Sandbox.
+The default value is `true`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `sharedHeaders`
+
+`Record<string, string>`
+
+</td>
+<td>
+
+Headers that are applied by default to every operation executed by the embedded Sandbox. Users can disable the application of these headers, but they can't modify their values.
+
+The embedded Sandbox _always_ includes these headers in its introspection queries to your `initialEndpoint`.
+
+Example:
+
+```jsx
+initialState: {
+  sharedHeaders: {
+    authorization: "Bearer abc123";
+  }
+}
+```
 
 </td>
 </tr>
@@ -319,6 +448,23 @@ You can configure the Explorer embedded on your Apollo Server endpoint with disp
 
 </td>
 </tr>
+
+<tr>
+<td>
+
+###### `collectionId` & `operationId`
+
+`string`
+
+</td>
+<td>
+
+The ID of a collection, paired with an operation ID to populate in the Explorer on load. You can find these values from a registered graph in Studio by clicking the **...** menu next to an operation in the Explorer of that graph and selecting **View operation details**.
+
+
+</td>
+</tr>
+
 
 <tr>
 <td>
