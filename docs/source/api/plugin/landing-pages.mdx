@@ -162,12 +162,6 @@ An object containing initial HTTP header values to populate in the Explorer on l
 
 The ID of a collection, paired with an operation ID to populate in the Sandbox on load. You can find these values from a registered graph in Studio by clicking the **...** menu next to an operation in the Explorer of that graph and selecting **View operation details**.
 
-Example:
-
-```jsx
-collectionId: 'abc1234',
-operationId: 'xyz1234'
-```
 
 </td>
 </tr>
@@ -200,7 +194,7 @@ If you omit this, the Explorer defaults `includeCookies` to `false`.
 </td>
 <td>
 
-If `true` or you provide an options object, the Apollo Server landing page renders an embedded version of [Apollo Sandbox](/graphos/explorer/sandbox/) at its GraphQL endpoint URL. This is the default behavior.
+If `true` or an options object, the Apollo Server landing page renders an embedded version of [Apollo Sandbox](/graphos/explorer/sandbox/) at its GraphQL endpoint URL. This is the default behavior.
 
 If you set this option to `false`, your server's landing page is a splash page containing a copyable command-line snippet showing how to run operations via `curl` alongside a link to Apollo Sandbox.
 
@@ -467,12 +461,6 @@ You can configure the Explorer embedded on your Apollo Server endpoint with disp
 
 The ID of a collection, paired with an operation ID to populate in the Explorer on load. You can find these values from a registered graph in Studio by clicking the **...** menu next to an operation in the Explorer of that graph and selecting **View operation details**.
 
-Example:
-
-```jsx
-collectionId: 'abc1234',
-operationId: 'xyz1234'
-```
 
 </td>
 </tr>
