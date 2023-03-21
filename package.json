@@ -94,7 +94,7 @@
     "lodash.sumby": "4.6.0",
     "nock": "13.3.0",
     "node-fetch": "2.6.9",
-    "prettier": "2.8.5",
+    "prettier": "2.8.6",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
     "rimraf": "4.4.0",
