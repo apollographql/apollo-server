@@ -352,12 +352,16 @@ Apollo Server v4 responds to an invalid `variables` object with a 200 status cod
 
 We recommend mitigating this regression unless you've already modified your application to work around it. To do so, add the `status400WithErrorsAndNoData: true` option to your `ApolloServer` constructor:
 
+<MultiCodeBlock>
+
 ```ts
 new ApolloServer({
   // ...
   status400WithErrorsAndNoData: true,
 })
 ```
+
+</MultiCodeBlock>
 
 This option will no longer be needed (and will be ignored) in Apollo Server v5.
 
