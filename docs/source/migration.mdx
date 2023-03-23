@@ -348,7 +348,7 @@ Once you've updated your imports, you can remove your project's dependency on `a
 
 ### Appropriate 400 status codes
 
-Apollo Server v4 will respond to an invalid `variables` object with a _200_ status code, where v3 would correctly respond with a 400 status code. This regression was introduced in [PR #6502]https://github.com/apollographql/apollo-server/pull/6502) and brought to our attention in [Issue #7462](https://github.com/apollographql/apollo-server/issues/7462).
+Apollo Server v4 will respond to an invalid `variables` object with a _200_ status code, where v3 would correctly respond with a 400 status code. This regression was introduced in [PR #6502](https://github.com/apollographql/apollo-server/pull/6502) and brought to our attention in [Issue #7462](https://github.com/apollographql/apollo-server/issues/7462).
 
 The mitigation for this regression is an opt-in configuration option that we recommend for all users who have not already worked around this regression. Simply add the `status400WithErrorsAndNoData: true` option to your `ApolloServer` constructor like so:
 
