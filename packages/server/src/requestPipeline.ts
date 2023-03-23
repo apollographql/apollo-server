@@ -474,6 +474,18 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       const { formattedErrors, httpFromErrors } = resultErrors
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
+
+      // TODO(AS5) This becomes the default behavior and the
+      // `status400WithErrorsAndNoData` configuration option is removed /
+      // ignored.
+      if (
+        internals.status400WithErrorsAndNoData &&
+        resultErrors?.length &&
+        result.data === undefined
+      ) {
+        httpFromErrors.status = httpFromErrors.status ?? 400;
+      }
+
       mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
 
       if ('singleResult' in fullResult) {

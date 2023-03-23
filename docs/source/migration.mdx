@@ -344,6 +344,25 @@ You can also import each plugin's associated TypeScript types (e.g., `ApolloServ
 
 Once you've updated your imports, you can remove your project's dependency on `apollo-server-core`.
 
+## Known regressions
+
+### Appropriate 400 status codes
+
+Apollo Server v4 will respond to an invalid `variables` object with a _200_ status code, where v3 would correctly respond with a 400 status code. This regression was introduced in [PR #6502]https://github.com/apollographql/apollo-server/pull/6502) and brought to our attention in [Issue #7462](https://github.com/apollographql/apollo-server/issues/7462).
+
+The mitigation for this regression is an opt-in configuration option that we recommend for all users who have not already worked around this regression. Simply add the `status400WithErrorsAndNoData: true` option to your `ApolloServer` constructor like so:
+
+<MultiCodeBlock>
+```ts
+new ApolloServer({
+  // ...
+  status400WithErrorsAndNoData: true,
+})
+```
+</MultiCodeBlock>
+
+This option will no longer be needed (and be ignored) in Apollo Server v5.
+
 ## Bumped dependencies
 
 ### Node.js

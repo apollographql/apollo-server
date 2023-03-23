@@ -23,6 +23,7 @@ const typeDefs = gql`
     hello: String
     error: Boolean
     contextFoo: String
+    needsStringArg(aString: String): String
   }
 `;
 
@@ -377,6 +378,31 @@ describe('ApolloServer executeOperation', () => {
     ]);
     await server.stop();
   });
+
+  // TODO(AS5): expect an update here when default flips
+  it.each([
+    { status400WithErrorsAndNoData: false, expectedStatus: undefined },
+    { status400WithErrorsAndNoData: true, expectedStatus: 400 },
+  ])(
+    'variable coercion errors',
+    async ({ status400WithErrorsAndNoData, expectedStatus }) => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        status400WithErrorsAndNoData,
+      });
+      await server.start();
+
+      const { body, http } = await server.executeOperation({
+        query: 'query NeedsArg($arg: String) { needsStringArg(aString: $arg) }',
+        variables: { arg: 1 },
+      });
+      const result = singleResult(body);
+      expect(result.errors?.[0].extensions?.code).toBe('BAD_USER_INPUT');
+      expect(http.status).toBe(expectedStatus);
+      await server.stop();
+    },
+  );
 
   it('passes its second argument as context object', async () => {
     const server = new ApolloServer({

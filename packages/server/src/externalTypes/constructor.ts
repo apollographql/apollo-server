@@ -102,6 +102,11 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   // parsing the schema.
   parseOptions?: ParseOptions;
 
+  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
+  // flip default behavior.
+  // Default false. This opt-in configuration fixes a regression caused by (FIXME)
+  status400WithErrorsAndNoData?: boolean;
+
   // For testing only.
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }

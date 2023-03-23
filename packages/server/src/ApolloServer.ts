@@ -174,7 +174,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-
+  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
+  // flip default behavior.
+  status400WithErrorsAndNoData?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
@@ -325,6 +327,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? null
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
+      status400WithErrorsAndNoData: config.status400WithErrorsAndNoData ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
     };
