@@ -103,8 +103,12 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   parseOptions?: ParseOptions;
 
   // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
-  // flip default behavior.
-  // Default false. This opt-in configuration fixes a regression caused by (FIXME)
+  // flip default behavior. Default false. This opt-in configuration fixes a
+  // regression introduced in v4. In v3, Apollo Server would correctly respond
+  // to a request with invalid `variables` with a 400 status code. AS4 responds
+  // with a 200 status code by default. We recommend setting this to `true`
+  // unless you've explicitly worked around this regression already (and maybe
+  // consider undoing the workaround).
   status400WithErrorsAndNoData?: boolean;
 
   // For testing only.

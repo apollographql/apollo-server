@@ -327,7 +327,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? null
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
-      status400WithErrorsAndNoData: config.status400WithErrorsAndNoData ?? false,
+      status400WithErrorsAndNoData:
+        config.status400WithErrorsAndNoData ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
     };
