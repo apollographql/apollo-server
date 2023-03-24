@@ -3,6 +3,9 @@ title: "API Reference: Schema reporting plugin"
 api_reference: true
 ---
 
+> ⚠️ Important considerations
+> The schema reporting plugin is a runtime feature for Apollo Server. Reporting schema updates to GraphOS at runtime has a much higher likelyhood for inconsistencies to occur. If possible, Apollo reccomends using [Rover to publish your schema in you CI/CD pipeline](https://www.apollographql.com/docs/graphos/schema/cli-registration) instead of relying on this plugin.
+
 ## Using the plugin
 
 This article documents the options for the `ApolloServerPluginSchemaReporting` plugin, which you can import from `@apollo/server/plugin/schemaReporting`.
