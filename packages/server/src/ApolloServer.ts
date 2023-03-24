@@ -725,8 +725,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       // same DocumentStore for different schemas because that might make us
       // treat invalid operations as valid. If we're using the default
       // DocumentStore, then we just create it from scratch each time we get a
-      // new schema. If we're using a user-provided DocumentStore, then we use a
-      // random prefix each time we get a new schema.
+      // new schema. If we're using a user-provided DocumentStore, then we use
+      // the schema hash as a prefix.
       documentStore:
         providedDocumentStore === undefined
           ? new InMemoryLRUCache<DocumentNode>()
