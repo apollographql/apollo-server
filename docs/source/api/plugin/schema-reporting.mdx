@@ -37,6 +37,9 @@ const server = new ApolloServer({
 
 </MultiCodeBlock>
 
+### Using the plugin with multiple deployment instances
+A single instance of Apollo Server running the plugin will report a schema hash to GraphOS. This hash is an identifier of the schema version, not any usage data of the schema. GraphOS will not reflect a new schema version in the changelog until all Apollo Server instances (whether that is 1 or more) are reporting the same schema hash.
+
 ## Options
 
 <table class="field-table">
