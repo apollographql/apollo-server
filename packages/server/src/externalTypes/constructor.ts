@@ -109,7 +109,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   // with a 200 status code by default. We recommend setting this to `true`
   // unless you've explicitly worked around this regression already (and maybe
   // consider undoing the workaround).
-  status400WithErrorsAndNoData?: boolean;
+  status400ForVariableCoercionErrors?: boolean;
 
   // For testing only.
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;

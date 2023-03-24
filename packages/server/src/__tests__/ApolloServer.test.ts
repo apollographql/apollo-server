@@ -24,6 +24,16 @@ const typeDefs = gql`
     error: Boolean
     contextFoo: String
     needsStringArg(aString: String): String
+    needsCompoundArg(aCompound: CompoundInput): String
+  }
+
+  input CompoundInput {
+    compound: NestedInput!
+  }
+
+  input NestedInput {
+    nested1: String!
+    nested2: String!
   }
 `;
 
@@ -381,15 +391,15 @@ describe('ApolloServer executeOperation', () => {
 
   // TODO(AS5): expect an update here when default flips
   it.each([
-    { status400WithErrorsAndNoData: false, expectedStatus: undefined },
-    { status400WithErrorsAndNoData: true, expectedStatus: 400 },
+    { status400ForVariableCoercionErrors: false, expectedStatus: undefined },
+    { status400ForVariableCoercionErrors: true, expectedStatus: 400 },
   ])(
     'variable coercion errors',
-    async ({ status400WithErrorsAndNoData, expectedStatus }) => {
+    async ({ status400ForVariableCoercionErrors, expectedStatus }) => {
       const server = new ApolloServer({
         typeDefs,
         resolvers,
-        status400WithErrorsAndNoData,
+        status400ForVariableCoercionErrors,
       });
       await server.start();
 
@@ -403,6 +413,36 @@ describe('ApolloServer executeOperation', () => {
       await server.stop();
     },
   );
+
+  // CompoundInput is { compound: { nested1: String!, nested2: String! }! }
+  // absence, null, and non-string values will all cause coercion errors
+  it.each([
+    { arg: { compound: { nested1: 'abc' } } },
+    { arg: { compound: { nested1: 'abc', nested2: null } } },
+    { arg: { compound: { nested1: 'abc', nested2: 123 } } },
+    {},
+    null,
+    undefined,
+  ])('variable coercion errors, additional examples: %s', async (variables) => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      status400ForVariableCoercionErrors: true,
+    });
+    await server.start();
+
+    const { body, http } = await server.executeOperation({
+      query: `#graphql
+        query NeedsArg($arg: CompoundInput!) { needsCompoundArg(aCompound: $arg) }
+      `,
+      // @ts-expect-error for `null` case
+      variables,
+    });
+    const result = singleResult(body);
+    expect(result.errors?.[0].extensions?.code).toBe('BAD_USER_INPUT');
+    expect(http.status).toBe(400);
+    await server.stop();
+  });
 
   it('passes its second argument as context object', async () => {
     const server = new ApolloServer({
