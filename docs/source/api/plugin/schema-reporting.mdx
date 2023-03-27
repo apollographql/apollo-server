@@ -3,16 +3,14 @@ title: "API Reference: Schema reporting plugin"
 api_reference: true
 ---
 
-> ⚠️ Important considerations
-> The schema reporting plugin is a runtime feature for Apollo Server. Reporting schema updates to GraphOS at runtime has a much higher likelyhood for inconsistencies to occur. If possible, Apollo reccomends using [Rover to publish your schema in your CI/CD pipeline](https://www.apollographql.com/docs/graphos/schema/cli-registration) instead of relying on this plugin.
+> Note:
+> **Schema reporting does not currently support graphs that use Apollo Federation.** If you would like to publish your monolith schema in your CI/CD pipeline, or if you are using Federation, you can use the [Rover CLI to publish your schema or subgraph changes](https://www.apollographql.com/docs/graphos/schema/cli-registration).
 
 ## Using the plugin
 
 This article documents the options for the `ApolloServerPluginSchemaReporting` plugin, which you can import from `@apollo/server/plugin/schemaReporting`.
 
 This plugin enables your GraphQL server to register its latest schema with the Apollo schema registry every time it starts up. Full details on schema reporting can be found in [the Apollo Studio docs](/studio/schema/schema-reporting/).
-
-> **Schema reporting does not currently support graphs that use Apollo Federation.** This plugin will not work if your graph is a federated subgraph or a composed federated graph running in a gateway. If you have a federated graph, you will need to register your schema via the CLI. See [Setting up managed federation](/federation/managed-federation/setup/) for more details.
 
 In order to use this plugin, you must configure your server with a graph API key, either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` constructor (e.g., `new ApolloServer({apollo: {key: KEY}})`). This is the same way you configure [usage reporting](./usage-reporting).
 
@@ -38,7 +36,7 @@ const server = new ApolloServer({
 </MultiCodeBlock>
 
 ### Using the plugin with multiple deployment instances
-A single instance of Apollo Server running the plugin will report a schema hash to GraphOS. This hash is an identifier of the schema version, not any usage data of the schema. GraphOS will not reflect a new schema version in the changelog until all Apollo Server instances (whether that is 1 or more) are reporting the same schema hash.
+A single instance of Apollo Server running the plugin will report the current schema hash to GraphOS in a hearbeat fashion. This hash is an identifier of the schema version, not any usage data of the schema. GraphOS will not reflect a new schema version in the changelog until all Apollo Server instances (whether that is 1 or more) are reporting the same schema hash.
 
 ## Options
 
