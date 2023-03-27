@@ -1,5 +1,5 @@
 import {
-  GraphQLSchema,
+  type GraphQLSchema,
   isObjectType,
   isScalarType,
   isNonNullType,

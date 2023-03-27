@@ -9,14 +9,14 @@ import type {
   HTTPGraphQLResponse,
 } from './externalTypes/index.js';
 import {
-  ApolloServer,
-  ApolloServerInternals,
+  type ApolloServer,
+  type ApolloServerInternals,
   chooseContentTypeForSingleResultResponse,
   internalExecuteOperation,
   MEDIA_TYPES,
-  SchemaDerivedData,
+  type SchemaDerivedData,
 } from './ApolloServer.js';
-import { FormattedExecutionResult, Kind } from 'graphql';
+import { type FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';

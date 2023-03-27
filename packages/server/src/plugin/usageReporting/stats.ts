@@ -14,7 +14,7 @@ import {
 } from '@apollo/usage-reporting-protobuf';
 import type { ReferencedFieldsByType } from '@apollo/utils.usagereporting';
 import { DurationHistogram } from './durationHistogram.js';
-import { iterateOverTrace, ResponseNamePath } from './iterateOverTrace.js';
+import { iterateOverTrace, type ResponseNamePath } from './iterateOverTrace.js';
 
 // protobuf.js exports both a class and an interface (starting with I) for each
 // message type. The class is what it produces when it decodes the message; the

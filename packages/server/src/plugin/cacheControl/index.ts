@@ -1,9 +1,9 @@
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import {
-  DirectiveNode,
+  type DirectiveNode,
   getNamedType,
-  GraphQLCompositeType,
-  GraphQLField,
+  type GraphQLCompositeType,
+  type GraphQLField,
   isCompositeType,
   isInterfaceType,
   isObjectType,
