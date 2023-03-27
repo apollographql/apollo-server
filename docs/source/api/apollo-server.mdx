@@ -475,6 +475,23 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `status400ForVariableCoercionErrors`
+
+`boolean`
+
+</td>
+<td>
+
+**Set this option to `true`.** It mitigates a regression introduced in Apollo Server v4 where the server returns a 200 status code (instead of 400) when a client query provides invalid variables. [Learn more.](../migration/#known-regressions)
+
+Apollo Server v5 will _always_ behave as if this option is `true` (and will ignore any provided value).
+
+</td>
+</tr>
+
 </tbody>
 </table>
 

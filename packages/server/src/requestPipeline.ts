@@ -474,6 +474,19 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       const { formattedErrors, httpFromErrors } = resultErrors
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
+
+      // TODO(AS5) This becomes the default behavior and the
+      // `status400ForVariableCoercionErrors` configuration option is removed /
+      // ignored.
+      if (
+        internals.status400ForVariableCoercionErrors &&
+        resultErrors?.length &&
+        result.data === undefined &&
+        !httpFromErrors.status
+      ) {
+        httpFromErrors.status = 400;
+      }
+
       mergeHTTPGraphQLHead(requestContext.response.http, httpFromErrors);
 
       if ('singleResult' in fullResult) {
