@@ -45,7 +45,7 @@ directive @withDeprecatedArgs(
 
 type MyType {
   # ARGUMENT_DEFINITION (alternate example on a field's args)
-  fieldWithDeprecatedArgs(name: String! @deprecated): String
+  fieldWithDeprecatedArgs(name: String @deprecated): String
   # FIELD_DEFINITION
   deprecatedField: String @deprecated
 }
