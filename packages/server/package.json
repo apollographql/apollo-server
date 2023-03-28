@@ -114,19 +114,19 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=14.16.0"
+    "node": ">=16.19.1"
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
     "@apollo/server-gateway-interface": "^1.1.1",
     "@apollo/usage-reporting-protobuf": "^4.1.1",
-    "@apollo/utils.createhash": "^2.0.0",
-    "@apollo/utils.fetcher": "^2.0.0",
-    "@apollo/utils.isnodelike": "^2.0.0",
-    "@apollo/utils.keyvaluecache": "^2.1.0",
-    "@apollo/utils.logger": "^2.0.0",
-    "@apollo/utils.usagereporting": "^2.1.0",
-    "@apollo/utils.withrequired": "^2.0.0",
+    "@apollo/utils.createhash": "^3.0.0",
+    "@apollo/utils.fetcher": "^3.0.0",
+    "@apollo/utils.isnodelike": "^3.0.0",
+    "@apollo/utils.keyvaluecache": "^3.1.0",
+    "@apollo/utils.logger": "^3.0.0",
+    "@apollo/utils.usagereporting": "^3.1.0",
+    "@apollo/utils.withrequired": "^3.0.0",
     "@graphql-tools/schema": "^9.0.0",
     "@josephg/resolvable": "^1.0.0",
     "@types/express-serve-static-core": "^4.17.30",

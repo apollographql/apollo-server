@@ -34,14 +34,14 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=14.16.0",
-    "npm": ">=8.5.0"
+    "node": ">=16.19.1",
+    "npm": ">=9.6.2"
   },
   "devDependencies": {
     "@apollo/client": "3.7.17",
     "@apollo/gateway": "2.5.1",
     "@apollo/subgraph": "2.5.1",
-    "@apollo/utils.createhash": "2.0.1",
+    "@apollo/utils.createhash": "3.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",
     "@graphql-codegen/cli": "3.3.1",
@@ -60,7 +60,7 @@
     "@types/lodash.sumby": "4.6.7",
     "@types/lodash.xorby": "4.7.7",
     "@types/negotiator": "0.6.1",
-    "@types/node": "14.18.54",
+    "@types/node": "16.18.21",
     "@types/node-fetch": "2.6.4",
     "@types/qs-middleware": "1.0.1",
     "@types/retry": "0.12.2",
