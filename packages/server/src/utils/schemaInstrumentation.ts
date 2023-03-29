@@ -1,9 +1,11 @@
-import type {
-  GraphQLSchema,
-  GraphQLField,
-  GraphQLFieldResolver,
+import {
+  type GraphQLSchema,
+  type GraphQLField,
+  getNamedType,
+  GraphQLObjectType,
+  type GraphQLFieldResolver,
+  defaultFieldResolver,
 } from 'graphql';
-import { getNamedType, GraphQLObjectType, defaultFieldResolver } from 'graphql';
 import type {
   BaseContext,
   GraphQLRequestExecutionListener,
