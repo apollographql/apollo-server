@@ -2,8 +2,8 @@
 
 import {
   GraphQLError,
-  GraphQLErrorExtensions,
-  GraphQLFormattedError,
+  type GraphQLErrorExtensions,
+  type GraphQLFormattedError,
 } from 'graphql';
 import { ApolloServerErrorCode } from './errors/index.js';
 import type { HTTPGraphQLHead } from './externalTypes/http.js';

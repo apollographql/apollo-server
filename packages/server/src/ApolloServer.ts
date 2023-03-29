@@ -1,20 +1,20 @@
 import { isNodeLike } from '@apollo/utils.isnodelike';
 import type { Logger } from '@apollo/utils.logger';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import resolvable, { Resolvable } from '@josephg/resolvable';
+import resolvable, { type Resolvable } from '@josephg/resolvable';
 import {
   assertValidSchema,
-  DocumentNode,
+  type DocumentNode,
   GraphQLError,
-  GraphQLFieldResolver,
-  GraphQLFormattedError,
-  GraphQLSchema,
-  ParseOptions,
+  type GraphQLFieldResolver,
+  type GraphQLFormattedError,
+  type GraphQLSchema,
+  type ParseOptions,
   print,
   printSchema,
-  TypedQueryDocumentNode,
-  ValidationContext,
-  ValidationRule,
+  type TypedQueryDocumentNode,
+  type ValidationContext,
+  type ValidationRule,
 } from 'graphql';
 import {
   type KeyValueCache,
@@ -53,7 +53,7 @@ import type {
   HTTPGraphQLHead,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
+import { type InternalPluginId, pluginIsInternal } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
@@ -175,7 +175,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-
+  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
+  // flip default behavior.
+  status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }
 
@@ -326,6 +328,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? null
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
+      status400ForVariableCoercionErrors:
+        config.status400ForVariableCoercionErrors ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
     };

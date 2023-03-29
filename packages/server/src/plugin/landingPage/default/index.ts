@@ -12,6 +12,7 @@ import {
   getEmbeddedExplorerHTML,
   getEmbeddedSandboxHTML,
 } from './getEmbeddedHTML.js';
+import { packageVersion } from '../../../generated/packageVersion.js';
 
 export type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
@@ -57,8 +58,9 @@ function encodeConfig(config: LandingPageConfig): string {
 }
 
 const getNonEmbeddedLandingPageHTML = (
-  version: string,
+  cdnVersion: string,
   config: LandingPageConfig,
+  apolloServerVersion: string,
 ) => {
   const encodedConfig = encodeConfig(config);
 
@@ -68,7 +70,7 @@ const getNonEmbeddedLandingPageHTML = (
   <p>The full landing page cannot be loaded; it appears that you might be offline.</p>
 </div>
 <script>window.landingPage = ${encodedConfig};</script>
-<script src="https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js"></script>`;
+<script src="https://apollo-server-landing-page.cdn.apollographql.com/${cdnVersion}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;
 };
 
 // Helper for the two actual plugin functions.
@@ -80,6 +82,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   },
 ): ImplicitlyInstallablePlugin<TContext> {
   const version = maybeVersion ?? '_latest';
+  const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
   return {
     __internal_installed_implicitly__: false,
@@ -132,9 +135,11 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     ${
       config.embed
         ? 'graphRef' in config && config.graphRef
-          ? getEmbeddedExplorerHTML(version, config)
-          : getEmbeddedSandboxHTML(version, config)
-        : getNonEmbeddedLandingPageHTML(version, config)
+          ? getEmbeddedExplorerHTML(version, config, apolloServerVersion)
+          : !('graphRef' in config)
+          ? getEmbeddedSandboxHTML(version, config, apolloServerVersion)
+          : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
+        : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
     }
     </div>
   </body>

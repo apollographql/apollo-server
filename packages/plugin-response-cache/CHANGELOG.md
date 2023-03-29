@@ -1,5 +1,11 @@
 # @apollo/server-plugin-response-cache
 
+## 4.1.1
+
+### Patch Changes
+
+- [#7439](https://github.com/apollographql/apollo-server/pull/7439) [`4668f4594`](https://github.com/apollographql/apollo-server/commit/4668f4594d2a3775a3b52fae4e896ac8c607792a) Thanks [@Igloczek](https://github.com/Igloczek)! - Export types from response cache plugin
+
 ## 4.1.0
 
 ### Minor Changes

@@ -1,9 +1,9 @@
 import {
-  GraphQLSchema,
-  GraphQLField,
+  type GraphQLSchema,
+  type GraphQLField,
   getNamedType,
   GraphQLObjectType,
-  GraphQLFieldResolver,
+  type GraphQLFieldResolver,
   defaultFieldResolver,
 } from 'graphql';
 import type {

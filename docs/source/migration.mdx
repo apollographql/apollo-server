@@ -344,6 +344,29 @@ You can also import each plugin's associated TypeScript types (e.g., `ApolloServ
 
 Once you've updated your imports, you can remove your project's dependency on `apollo-server-core`.
 
+## Known regressions
+
+### Appropriate 400 status codes
+
+Apollo Server v4 responds to an invalid `variables` object with a 200 status code, whereas v3 responds appropriately with a 400 status code. This regression was introduced in [PR #6502](https://github.com/apollographql/apollo-server/pull/6502) and brought to our attention in [Issue #7462](https://github.com/apollographql/apollo-server/issues/7462).
+
+Specifically, this regression affects cases where _input variable coercion_ fails. Variables of an incorrect type (i.e. `String` instead of `Int`) or unexpectedly `null` are examples that fail variable coercion. Additionally, missing or incorrect fields on input objects as well as custom scalars that throw during validation will also fail variable coercion. For additional specifics on variable coercion, see the "Input Coercion" sections in the [GraphQL spec](https://spec.graphql.org/June2018/#sec-Scalars).
+
+We recommend mitigating this regression unless you've already modified your application to work around it. To do so, add the `status400ForVariableCoercionErrors: true` option to your `ApolloServer` constructor:
+
+<MultiCodeBlock>
+
+```ts
+new ApolloServer({
+  // ...
+  status400ForVariableCoercionErrors: true,
+})
+```
+
+</MultiCodeBlock>
+
+This option will no longer be needed (and will be ignored) in Apollo Server v5.
+
 ## Bumped dependencies
 
 ### Node.js

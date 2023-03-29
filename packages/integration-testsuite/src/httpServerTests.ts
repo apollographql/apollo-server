@@ -7,7 +7,7 @@ import { createHash } from '@apollo/utils.createhash';
 import resolvable, { type Resolvable } from '@josephg/resolvable';
 import {
   BREAK,
-  DocumentNode,
+  type DocumentNode,
   getIntrospectionQuery,
   getOperationAST,
   GraphQLError,
@@ -17,10 +17,13 @@ import {
   GraphQLScalarType,
   GraphQLSchema,
   GraphQLString,
-  ValidationContext,
+  type ValidationContext,
 } from 'graphql';
 import gql from 'graphql-tag';
-import { InMemoryLRUCache, KeyValueCache } from '@apollo/utils.keyvaluecache';
+import {
+  InMemoryLRUCache,
+  type KeyValueCache,
+} from '@apollo/utils.keyvaluecache';
 import superagent, { type HTTPError } from 'superagent';
 import request from 'supertest';
 import type {

@@ -1,4 +1,4 @@
-import { GraphQLError, GraphQLErrorOptions } from 'graphql';
+import { GraphQLError, type GraphQLErrorOptions } from 'graphql';
 import { ApolloServerErrorCode } from './errors/index.js';
 import { newHTTPGraphQLHead } from './runHttpQuery.js';
 import { HeaderMap } from './utils/HeaderMap.js';

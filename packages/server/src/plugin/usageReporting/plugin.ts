@@ -3,10 +3,10 @@ import type { Fetcher, FetcherResponse } from '@apollo/utils.fetcher';
 import {
   usageReportingSignature,
   calculateReferencedFieldsByType,
-  ReferencedFieldsByType,
+  type ReferencedFieldsByType,
 } from '@apollo/utils.usagereporting';
 import retry from 'async-retry';
-import { GraphQLSchema, printSchema } from 'graphql';
+import { type GraphQLSchema, printSchema } from 'graphql';
 import type LRUCache from 'lru-cache';
 import { AbortController } from 'node-abort-controller';
 import fetch from 'node-fetch';
@@ -26,7 +26,7 @@ import { dateToProtoTimestamp, TraceTreeBuilder } from '../traceTreeBuilder.js';
 import { defaultSendOperationsAsTrace } from './defaultSendOperationsAsTrace.js';
 import {
   createOperationDerivedDataCache,
-  OperationDerivedData,
+  type OperationDerivedData,
   operationDerivedDataCacheKey,
 } from './operationDerivedDataCache.js';
 import type {

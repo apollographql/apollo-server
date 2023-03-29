@@ -57,6 +57,11 @@
       matchPackageNames: ["@types/node"],
       allowedVersions: "14.x"
     },
+    // lru-cache@8 drops support for v16. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["lru-cache"],
+      allowedVersions: "7.x"
+    },
     // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
     // ESM and we're not going to go ESM-only for a while. So let's stay on v2.
     // (Perhaps we could swap to undici instead if this pin gets to be a

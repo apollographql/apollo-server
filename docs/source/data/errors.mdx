@@ -5,6 +5,8 @@ description: Making errors actionable on the client and server
 
 import TopLevelAwait from "../shared/top-level-await.mdx"
 
+> Apollo Server v4 introduced a regression where providing invalid variables yields a 200 status code instead of 400. To mitigate this regression, provide the `status400ForVariableCoercionErrors: true` option to your `ApolloServer` constructor. For more information, see the [migration guide](../migration/#known-regressions).
+
 <!-- cSpell:ignore typenam -->
 
 Whenever Apollo Server encounters errors while processing a GraphQL operation, its response to the client includes an `errors` array containing each error that occurred. Each error in the array has an `extensions` field that provides additional useful information, including an error `code` and (while in development mode) a `stacktrace`.
@@ -345,7 +347,7 @@ You can edit Apollo Server error details before they're passed to a client or re
 
 The `ApolloServer` constructor accepts a `formatError` hook that is run on each error before it's passed back to the client. You can use this function to log or mask particular errors.
 
-The `formatError` hook receives two arguments: the first is the error formatted as a JSON object (to be sent with the response), and the second is the original error.
+The `formatError` hook receives two arguments: the first is the error formatted as a JSON object (to be sent with the response), and the second is the original error (wrapped in `GraphQLError` if thrown by a resolver).
 
 > The `formatError` function does _not_ modify errors that are sent to Apollo Studio as part of usage reporting. See [For Apollo Studio reporting](#for-apollo-studio-reporting).
 

@@ -1,4 +1,4 @@
-import fetch, { RequestInit, Response } from 'node-fetch';
+import fetch, { type RequestInit, type Response } from 'node-fetch';
 
 export interface ApolloFetch {
   (operation: GraphQLRequest): Promise<FetchResult>;

@@ -49,7 +49,7 @@ const server = new ApolloServer({
 <tr class="required">
 <td>
 
-##### `typeDefs`
+###### `typeDefs`
 
 `string`, `DocumentNode`, or `Array<DocumentNode>`
 
@@ -68,7 +68,7 @@ For an example, see [Define your GraphQL schema](../getting-started/#step-3-defi
 <tr class="required">
 <td>
 
-##### `resolvers`
+###### `resolvers`
 
 `Object` or `Array`
 
@@ -87,7 +87,7 @@ For details, see [Resolvers](../data/resolvers/).
 <tr>
 <td>
 
-##### `schema`
+###### `schema`
 
 `Object`
 
@@ -109,7 +109,7 @@ This field is helpful if:
 <tr>
 <td>
 
-##### `gateway`
+###### `gateway`
 
 `Object`
 
@@ -133,7 +133,7 @@ You can use this field to integrate your server with [Apollo Gateway](/federatio
 <tr>
 <td>
 
-##### `introspection`
+###### `introspection`
 
 `boolean`
 
@@ -151,7 +151,7 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
-##### `fieldResolver`
+###### `fieldResolver`
 
 `GraphQLFieldResolver`
 
@@ -167,7 +167,7 @@ A custom resolver that will replace Apollo Server's [default field resolvers](..
 <tr>
 <td>
 
-##### `rootValue`
+###### `rootValue`
 
 `Any` or `Function`
 
@@ -184,7 +184,7 @@ Providing a function is useful if you want to use a different root value dependi
 <tr>
 <td>
 
-##### `validationRules`
+###### `validationRules`
 
 `Array<Function>`
 
@@ -199,7 +199,7 @@ An array containing custom functions to use as additional [validation rules](htt
 <tr>
 <td>
 
-##### `documentStore`
+###### `documentStore`
 
 `KeyValueCache<DocumentNode>` or `null`
 
@@ -247,7 +247,7 @@ Pass `null` to disable this cache entirely.
 <tr>
 <td>
 
-##### `persistedQueries`
+###### `persistedQueries`
 
 `Object` or `false`
 
@@ -263,7 +263,7 @@ If you're using [automated persisted queries (APQ)](../performance/apq/), you ca
 <tr>
 <td>
 
-##### `csrfPrevention`
+###### `csrfPrevention`
 
 `boolean` or `Object`
 
@@ -284,7 +284,7 @@ You can disable this recommended security feature by passing `false` to `csrfPre
 <tr>
 <td>
 
-##### `formatError`
+###### `formatError`
 
 `Function`
 
@@ -293,7 +293,7 @@ You can disable this recommended security feature by passing `false` to `csrfPre
 
 Provide this function to transform the structure of error objects before they're sent to a client.
 
-The `formatError` hook receives two arguments: the first is a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) (to be spent with the response), and the second is the original error. This function should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) object.
+The `formatError` hook receives two arguments: the first is a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) (to be spent with the response), and the second is the original error [(wrapped in GraphQLError if thrown by a resolver)](../data/errors/#for-client-responses). This function should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) object.
 
 </td>
 </tr>
@@ -301,7 +301,7 @@ The `formatError` hook receives two arguments: the first is a [`GraphQLFormatted
 <tr>
 <td>
 
-##### `apollo`
+###### `apollo`
 
 `Object`
 
@@ -321,7 +321,7 @@ An object containing configuration options for connecting Apollo Server to [Apol
 <tr>
 <td>
 
-##### `allowBatchedHttpRequests`
+###### `allowBatchedHttpRequests`
 
 `boolean`
 
@@ -344,7 +344,7 @@ Controls whether to allow [Batching Queries](../workflow/requests/#batching) in 
 <tr>
 <td>
 
-##### `cache`
+###### `cache`
 
 `KeyValueCache`
 
@@ -363,7 +363,7 @@ To learn more about configuring Apollo Server's cache, see [Configuring cache ba
 <tr>
 <td>
 
-##### `plugins`
+###### `plugins`
 
 `Array`
 
@@ -382,7 +382,7 @@ Apollo Server comes with several plugins that it installs automatically in their
 <tr>
 <td>
 
-##### `stopOnTerminationSignals`
+###### `stopOnTerminationSignals`
 
 `boolean`
 
@@ -411,7 +411,7 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 <tr>
 <td style="max-width: 200px;">
 
-##### `includeStacktraceInErrorResponses`
+###### `includeStacktraceInErrorResponses`
 
 `boolean`
 
@@ -429,7 +429,7 @@ Defaults to `true` unless the `NODE_ENV` environment variable is `production` or
 <tr>
 <td>
 
-##### `logger`
+###### `logger`
 
 [`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
 
@@ -448,7 +448,7 @@ This logger is automatically added to the `GraphQLRequestContext` object that's 
 <tr>
 <td>
 
-##### `parseOptions`
+###### `parseOptions`
 
 `Object`
 
@@ -463,7 +463,7 @@ An object that specifies how your server parses GraphQL operations. [See `graphq
 <tr>
 <td>
 
-##### `nodeEnv`
+###### `nodeEnv`
 
 `string`
 
@@ -471,6 +471,23 @@ An object that specifies how your server parses GraphQL operations. [See `graphq
 <td>
 
 If this is set to any string value, use that value instead of the environment variable `NODE_ENV` for the features whose defaults depend on `NODE_ENV` (such as [`introspection`](#introspection)). Note that passing the empty string here is equivalent to running with the `NODE_ENV` environment variable unset. This is primarily meant for testing the effects of the `NODE_ENV` environment variable.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `status400ForVariableCoercionErrors`
+
+`boolean`
+
+</td>
+<td>
+
+**Set this option to `true`.** It mitigates a regression introduced in Apollo Server v4 where the server returns a 200 status code (instead of 400) when a client query provides invalid variables. [Learn more.](../migration/#known-regressions)
+
+Apollo Server v5 will _always_ behave as if this option is `true` (and will ignore any provided value).
 
 </td>
 </tr>
@@ -613,7 +630,7 @@ Below are the available fields for the first argument of `executeOperation`:
 <tr class="required">
 <td>
 
-##### `query`
+###### `query`
 
 `string` or `DocumentNode`
 
@@ -629,7 +646,7 @@ Below are the available fields for the first argument of `executeOperation`:
 <tr>
 <td>
 
-##### `variables`
+###### `variables`
 
 `object`
 
@@ -642,7 +659,7 @@ An object containing any GraphQL variables to use as argument values for the exe
 <tr>
 <td>
 
-##### `operationName`
+###### `operationName`
 
 `string`
 
@@ -657,7 +674,7 @@ If `query` contains more than one operation definition, you must provide this op
 <tr>
 <td>
 
-##### `extensions`
+###### `extensions`
 
 `object`
 
@@ -672,7 +689,7 @@ The `extensions` object is usually used to pass request metadata within your ser
 <tr>
 <td>
 
-##### `http`
+###### `http`
 
 `HTTPGraphQLRequest`
 
