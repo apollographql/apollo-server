@@ -102,7 +102,7 @@
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.0.5",
-    "typescript": "4.9.5"
+    "typescript": "5.0.2"
   },
   "jest": {
     "projects": [

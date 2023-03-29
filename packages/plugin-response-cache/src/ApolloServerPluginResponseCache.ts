@@ -1,15 +1,15 @@
 import type { CacheHint } from '@apollo/cache-control-types';
 import {
-  ApolloServerPlugin,
-  BaseContext,
-  GraphQLRequestContext,
-  GraphQLRequestListener,
-  GraphQLResponse,
+  type ApolloServerPlugin,
+  type BaseContext,
+  type GraphQLRequestContext,
+  type GraphQLRequestListener,
+  type GraphQLResponse,
   HeaderMap,
 } from '@apollo/server';
 import { createHash } from '@apollo/utils.createhash';
 import {
-  KeyValueCache,
+  type KeyValueCache,
   PrefixingKeyValueCache,
 } from '@apollo/utils.keyvaluecache';
 

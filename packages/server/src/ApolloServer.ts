@@ -1,19 +1,19 @@
 import { isNodeLike } from '@apollo/utils.isnodelike';
 import type { Logger } from '@apollo/utils.logger';
 import { makeExecutableSchema } from '@graphql-tools/schema';
-import resolvable, { Resolvable } from '@josephg/resolvable';
+import resolvable, { type Resolvable } from '@josephg/resolvable';
 import {
   assertValidSchema,
-  DocumentNode,
+  type DocumentNode,
   GraphQLError,
-  GraphQLFieldResolver,
-  GraphQLFormattedError,
-  GraphQLSchema,
-  ParseOptions,
+  type GraphQLFieldResolver,
+  type GraphQLFormattedError,
+  type GraphQLSchema,
+  type ParseOptions,
   print,
-  TypedQueryDocumentNode,
-  ValidationContext,
-  ValidationRule,
+  type TypedQueryDocumentNode,
+  type ValidationContext,
+  type ValidationRule,
 } from 'graphql';
 import {
   type KeyValueCache,
@@ -53,7 +53,7 @@ import type {
   HTTPGraphQLHead,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import { InternalPluginId, pluginIsInternal } from './internalPlugin.js';
+import { type InternalPluginId, pluginIsInternal } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,

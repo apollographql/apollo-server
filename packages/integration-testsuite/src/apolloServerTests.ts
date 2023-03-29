@@ -11,11 +11,11 @@ import {
   GraphQLObjectType,
   GraphQLString,
   GraphQLError,
-  ValidationContext,
-  DocumentNode,
+  type ValidationContext,
+  type DocumentNode,
   printSchema,
-  FieldNode,
-  GraphQLFormattedError,
+  type FieldNode,
+  type GraphQLFormattedError,
   GraphQLScalarType,
 } from 'graphql';
 
@@ -26,21 +26,21 @@ import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries'
 
 import {
   createApolloFetch,
-  ApolloFetch,
-  ParsedResponse,
+  type ApolloFetch,
+  type ParsedResponse,
 } from './apolloFetch.js';
 import {
-  ApolloServerOptions,
+  type ApolloServerOptions,
   ApolloServer,
-  BaseContext,
-  ApolloServerPlugin,
+  type BaseContext,
+  type ApolloServerPlugin,
   HeaderMap,
 } from '@apollo/server';
 import fetch, { type Headers } from 'node-fetch';
 
-import resolvable, { Resolvable } from '@josephg/resolvable';
+import resolvable, { type Resolvable } from '@josephg/resolvable';
 import type { AddressInfo } from 'net';
-import request, { Response } from 'supertest';
+import request, { type Response } from 'supertest';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import type {
   CreateServerForIntegrationTests,
@@ -49,7 +49,7 @@ import type {
 } from '.';
 import gql from 'graphql-tag';
 import {
-  ApolloServerPluginUsageReportingOptions,
+  type ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUsageReporting,
 } from '@apollo/server/plugin/usageReporting';
 import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace';

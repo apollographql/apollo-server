@@ -6,7 +6,7 @@ import {
   validate,
   parse,
   Kind,
-  ExecutionResult,
+  type ExecutionResult,
 } from 'graphql';
 import {
   symbolExecutionDispatcherWillResolveField,
@@ -64,8 +64,8 @@ import type {
 } from './externalTypes/requestPipeline.js';
 import {
   executeIncrementally,
-  GraphQLExperimentalInitialIncrementalExecutionResult,
-  GraphQLExperimentalSubsequentIncrementalExecutionResult,
+  type GraphQLExperimentalInitialIncrementalExecutionResult,
+  type GraphQLExperimentalSubsequentIncrementalExecutionResult,
 } from './incrementalDeliveryPolyfill.js';
 import { HeaderMap } from './utils/HeaderMap.js';
 

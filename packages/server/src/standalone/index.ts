@@ -2,7 +2,7 @@ import type { WithRequired } from '@apollo/utils.withrequired';
 import bodyParser from 'body-parser'; // note that importing 'json' directly doesn't work in ESM
 import cors from 'cors';
 import express from 'express';
-import http, { IncomingMessage, ServerResponse } from 'http';
+import http, { type IncomingMessage, type ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer.js';
 import { expressMiddleware } from '../express4/index.js';
