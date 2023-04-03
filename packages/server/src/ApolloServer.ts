@@ -11,6 +11,7 @@ import {
   type GraphQLSchema,
   type ParseOptions,
   print,
+  printSchema,
   type TypedQueryDocumentNode,
   type ValidationContext,
   type ValidationRule,
@@ -22,7 +23,6 @@ import {
 } from '@apollo/utils.keyvaluecache';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
-import * as uuid from 'uuid';
 import { newCachePolicy } from './cachePolicy.js';
 import { determineApolloConfig } from './determineApolloConfig.js';
 import {
@@ -63,6 +63,7 @@ import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
 import { SchemaManager } from './utils/schemaManager.js';
 import { isDefined } from './utils/isDefined.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
+import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type { GatewayExecutor } from '@apollo/server-gateway-interface';
@@ -728,13 +729,15 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       // same DocumentStore for different schemas because that might make us
       // treat invalid operations as valid. If we're using the default
       // DocumentStore, then we just create it from scratch each time we get a
-      // new schema. If we're using a user-provided DocumentStore, then we use a
-      // random prefix each time we get a new schema.
+      // new schema. If we're using a user-provided DocumentStore, then we use
+      // the schema hash as a prefix.
       documentStore:
         providedDocumentStore === undefined
           ? new InMemoryLRUCache<DocumentNode>()
           : providedDocumentStore,
-      documentStoreKeyPrefix: providedDocumentStore ? `${uuid.v4()}:` : '',
+      documentStoreKeyPrefix: providedDocumentStore
+        ? `${computeCoreSchemaHash(printSchema(schema))}:`
+        : '',
     };
   }
 
