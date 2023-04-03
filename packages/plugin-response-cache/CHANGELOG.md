@@ -1,5 +1,11 @@
 # @apollo/server-plugin-response-cache
 
+## 4.1.2
+
+### Patch Changes
+
+- [#7454](https://github.com/apollographql/apollo-server/pull/7454) [`f6e3ae021`](https://github.com/apollographql/apollo-server/commit/f6e3ae021417c3b54200f8d3fcf4366dc3518998) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Start building packages with TS 5.x, which should have no effect for users
+
 ## 4.1.1
 
 ### Patch Changes
