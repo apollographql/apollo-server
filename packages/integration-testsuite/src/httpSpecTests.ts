@@ -81,6 +81,7 @@ export function defineIntegrationTestSuiteHttpSpecTests(
           'F5AF',
           '572B',
           'FDE2',
+          '7B9B', // SHOULD use a status code of 200 on variable coercion failure when accepting application/json
         ];
 
         if (
