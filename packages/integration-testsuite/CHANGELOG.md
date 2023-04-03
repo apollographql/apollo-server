@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.6.0
+
+### Patch Changes
+
+- [#7454](https://github.com/apollographql/apollo-server/pull/7454) [`f6e3ae021`](https://github.com/apollographql/apollo-server/commit/f6e3ae021417c3b54200f8d3fcf4366dc3518998) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Start building packages with TS 5.x, which should have no effect for users
+
+- Updated dependencies [[`1e808146a`](https://github.com/apollographql/apollo-server/commit/1e808146a8043245d9c68969fa73e085d5b1ccbd), [`f6e3ae021`](https://github.com/apollographql/apollo-server/commit/f6e3ae021417c3b54200f8d3fcf4366dc3518998), [`e0db95b96`](https://github.com/apollographql/apollo-server/commit/e0db95b960eb975ebd11f90ead21a589bd3972c8)]:
+  - @apollo/server@4.6.0
+
 ## 4.5.0
 
 ### Patch Changes
