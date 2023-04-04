@@ -710,17 +710,15 @@ describe('content-type negotiation', () => {
     });
     assert(body.kind === 'complete');
     const result = JSON.parse(body.string);
-    expect(result).toMatchInlineSnapshot(`
-      {
-        "errors": [
-          {
-            "extensions": {
-              "code": "BAD_REQUEST",
-            },
-            "message": "An 'accept' header was provided for this request which does not accept application/json; charset=utf-8 or application/graphql-response+json; charset=utf-8. If you'd like to use a custom content-type and bypass content-type negotiation altogether, set the \`content-type\` response header in a plugin.",
+    expect(result.errors).toMatchInlineSnapshot(`
+      [
+        {
+          "extensions": {
+            "code": "BAD_REQUEST",
           },
-        ],
-      }
+          "message": "An 'accept' header was provided for this request which does not accept application/json; charset=utf-8 or application/graphql-response+json; charset=utf-8. If you'd like to use a custom content-type and bypass content-type negotiation altogether, set the \`content-type\` response header in a plugin.",
+        },
+      ]
     `);
     await server.stop();
   });
@@ -753,7 +751,7 @@ describe('content-type negotiation', () => {
     });
     assert(body.kind === 'complete');
     const result = JSON.parse(body.string);
-    expect(result.error).toBeUndefined();
+    expect(result.errors).toBeUndefined();
     expect(result.data?.hello).toBe('world');
     await server.stop();
   });
