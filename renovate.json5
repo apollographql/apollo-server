@@ -7,7 +7,6 @@
     "group:jestPlusTSJest",
     "group:jestPlusTypes",
   ],
-  "schedule": null,
   // Override this value set in apollo-open-source back to the default.
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
