@@ -1,22 +1,22 @@
-import { ApolloServer, HeaderMap } from '..';
-import type { ApolloServerOptions } from '..';
+import type { GatewayInterface } from '@apollo/server-gateway-interface';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { describe, expect, it, jest } from '@jest/globals';
+import assert from 'assert';
 import {
   FormattedExecutionResult,
   GraphQLError,
   GraphQLSchema,
-  parse,
   TypedQueryDocumentNode,
+  parse,
 } from 'graphql';
+import gql from 'graphql-tag';
+import type { ApolloServerOptions } from '..';
+import { ApolloServer, HeaderMap } from '..';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
+import type { GraphQLResponseBody } from '../externalTypes/graphql';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import { mockLogger } from './mockLogger.js';
-import gql from 'graphql-tag';
-import type { GatewayInterface } from '@apollo/server-gateway-interface';
-import { jest, describe, it, expect } from '@jest/globals';
-import type { GraphQLResponseBody } from '../externalTypes/graphql';
-import assert from 'assert';
 
 const typeDefs = gql`
   type Query {
@@ -686,4 +686,75 @@ it('TypedQueryDocumentNode', async () => {
     // variables at all when some are required, though it would be nice to fix
     // that.
   }
+});
+
+describe('content-type negotiation', () => {
+  it('responds with a BadRequest error with custom `accept` header', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+    await server.start();
+
+    const { body } = await server.executeHTTPGraphQLRequest({
+      httpGraphQLRequest: {
+        body: { query: '{ hello }' },
+        headers: new HeaderMap([
+          ['accept', 'application/json;v=1'],
+          ['content-type', 'application/json'],
+        ]),
+        method: 'POST',
+        search: '',
+      },
+      context: async () => ({ foo: 'bla' }),
+    });
+    assert(body.kind === 'complete');
+    const result = JSON.parse(body.string);
+    expect(result).toMatchInlineSnapshot(`
+      {
+        "errors": [
+          {
+            "extensions": {
+              "code": "BAD_REQUEST",
+            },
+            "message": "An 'accept' header was provided for this request which does not accept application/json; charset=utf-8 or application/graphql-response+json; charset=utf-8. If you'd like to use a custom content-type and bypass content-type negotiation altogether, set the \`content-type\` response header in a plugin.",
+          },
+        ],
+      }
+    `);
+    await server.stop();
+  });
+
+  it('permits a custom `accept` header when the `content-type` response header is set', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      plugins: [
+        {
+          async requestDidStart({ response }) {
+            response.http?.headers.set('content-type', 'application/json;v=1');
+          },
+        },
+      ],
+    });
+    await server.start();
+
+    const { body } = await server.executeHTTPGraphQLRequest({
+      httpGraphQLRequest: {
+        body: { query: '{ hello }' },
+        headers: new HeaderMap([
+          ['accept', 'application/json;v=1'],
+          ['content-type', 'application/json'],
+        ]),
+        method: 'POST',
+        search: '',
+      },
+      context: async () => ({ foo: 'bla' }),
+    });
+    assert(body.kind === 'complete');
+    const result = JSON.parse(body.string);
+    expect(result.error).toBeUndefined();
+    expect(result.data?.hello).toBe('world');
+    await server.stop();
+  });
 });

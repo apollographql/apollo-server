@@ -248,7 +248,9 @@ export async function runHttpQuery<TContext extends BaseContext>({
       if (contentType === null) {
         throw new BadRequestError(
           `An 'accept' header was provided for this request which does not accept ` +
-            `${MEDIA_TYPES.APPLICATION_JSON} or ${MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON}`,
+            `${MEDIA_TYPES.APPLICATION_JSON} or ${MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON}. ` +
+            `If you'd like to use a custom content-type and bypass content-type ` +
+            `negotiation altogether, set the \`content-type\` response header in a plugin.`,
           // Use 406 Not Accepted
           { extensions: { http: { status: 406 } } },
         );
