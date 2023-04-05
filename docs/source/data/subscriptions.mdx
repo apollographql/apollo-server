@@ -419,9 +419,9 @@ After you start up the server in CodeSandbox, follow the instructions in the bro
 
 When [initializing context](../data/context) for a query or mutation, you usually extract HTTP headers and other request metadata from the `req` object provided to the `context` function.
 
-**For subscriptions,** you can extract information from a client's request by adding [options](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md) to the first argument passed to the `useServer` function.
+**For subscriptions,** you can extract information from a client's request by adding [options](https://the-guild.dev/graphql/ws/docs/interfaces/server.ServerOptions) to the first argument passed to the `useServer` function.
 
-For example, you can provide a [`context` property](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.ServerOptions.md#context) to add values to your GraphQL operation [`contextValue`](./context#the-contextvalue-object):
+For example, you can provide a [`context` property](https://the-guild.dev/graphql/ws/docs/interfaces/server.ServerOptions#context) to add values to your GraphQL operation [`contextValue`](./context#the-contextvalue-object):
 
 ```ts
 // ...
@@ -440,7 +440,7 @@ useServer(
 );
 ```
 
-Notice that the first parameter passed to the `context` function above is `ctx`. The [`ctx object`](https://github.com/enisdenjo/graphql-ws/blob/master/docs/interfaces/server.Context.md) represents the context of your _subscription server_, not the _GraphQL operation `contextValue`_ that's passed to your resolvers.
+Notice that the first parameter passed to the `context` function above is `ctx`. The [`ctx object`](https://the-guild.dev/graphql/ws/docs/interfaces/server.Context) represents the context of your _subscription server_, not the _GraphQL operation `contextValue`_ that's passed to your resolvers.
 
 You can access the parameters of a client's `subscription` request to your WebSocket server via the `ctx.connectionParams` property.
 
@@ -502,7 +502,7 @@ useServer(
 );
 ```
 
-For more information and examples of using `onConnect` and `onDisconnect`, see the [`graphql-ws` documentation](https://github.com/enisdenjo/graphql-ws#ws-auth-handling).
+For more examples of using `onConnect` and `onDisconnect`, see the [`graphql-ws` recipes documentation](https://the-guild.dev/graphql/ws/recipes).
 
 ### Example: Authentication with Apollo Client
 
