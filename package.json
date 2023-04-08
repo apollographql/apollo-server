@@ -79,7 +79,7 @@
     "compression": "1.7.4",
     "cors": "2.8.5",
     "cspell": "6.31.1",
-    "eslint": "8.37.0",
+    "eslint": "8.38.0",
     "eslint-plugin-import": "2.27.5",
     "express": "4.18.2",
     "glob": "9.3.4",
@@ -102,7 +102,7 @@
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.1.0",
-    "typescript": "5.0.3"
+    "typescript": "5.0.4"
   },
   "jest": {
     "projects": [
@@ -111,6 +111,6 @@
   },
   "volta": {
     "node": "18.15.0",
-    "npm": "9.6.3"
+    "npm": "9.6.4"
   }
 }
