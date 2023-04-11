@@ -3,7 +3,7 @@ title: "API Reference: Usage reporting plugin"
 api_reference: true
 ---
 
-Apollo Server's built-in usage reporting plugin gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [Apollo Studio](/studio/), as described in [Metrics and logging](../../monitoring/metrics/).
+Apollo Server's built-in usage reporting plugin gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [GraphOS](/graphos/), as described in [Metrics and logging](../../monitoring/metrics/).
 
 This plugin is designed to be used in an Apollo Gateway or in a monolithic server; it is not designed to be used from a subgraph. In a supergraph running Apollo Federation, the Apollo Gateway or Apollo Router will send usage reports to Apollo's cloud. Subgraphs don't need to also send usage reports to Apollo's cloud; instead, they send it to the Router via [inline traces](./inline-trace/) and the Router combines execution information across all subgraphs and sends summarized reports to the cloud.
 

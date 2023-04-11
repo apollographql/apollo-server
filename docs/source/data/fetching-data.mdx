@@ -84,7 +84,7 @@ export class ReservationsDataSource {
 
 If you want to add batching, deduplication, or caching to your data source class, we recommend using the [DataLoader package](https://github.com/graphql/dataloader). Using a package like DataLoader is particularly helpful for solving the [infamous N+1 query problem](https://shopify.engineering/solving-the-n-1-problem-for-graphql-through-batching).
 
-DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request ([much like one of `RESTDataSource`'s caching layers](./fetching-rest#get-requests-and-responses)). It also combines loads during a single event loop tick into a batched request that fetches multiple objects at once.
+DataLoader provides a memoization cache, which avoids loading the same object multiple times during a single GraphQL request ([much like one of `RESTDataSource`'s caching layers](./fetching-rest#get-and-head-requests-and-responses)). It also combines loads during a single event loop tick into a batched request that fetches multiple objects at once.
 
 DataLoader instances are per-request, so if you use a DataLoader in your data source, ensure you **create a new instance of that class with every request** :
 
