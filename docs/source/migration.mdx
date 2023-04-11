@@ -1003,7 +1003,7 @@ For `ValidationError`, use `ApolloServerErrorCode.GRAPHQL_VALIDATION_FAILED`. Fo
 ### `__resolveObject`
 
 Apollo Server 4 removes the dependency on `@apollographql/apollo-tooling`, additionally removing the `__resolveObject` pseudo-resolver. The `__resolveObject` function was an undocumented predecessor to
-the [`__resolveReference`](/federation/api/apollo-subgraph/#__resolvereference) method. While we believe `__resolveObject` is a useful feature, it would work better if implemented directly in `graphql-js` rather than in Apollo Server.
+the [`__resolveReference`](./using-federation/api/apollo-subgraph/#__resolvereference) method. While we believe `__resolveObject` is a useful feature, it would work better if implemented directly in `graphql-js` rather than in Apollo Server.
 
 ### `requestAgent` option to `ApolloServerPluginUsageReporting`
 

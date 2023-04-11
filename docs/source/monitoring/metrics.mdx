@@ -9,13 +9,13 @@ Apollo Server integrates seamlessly with [Apollo GraphOS](/graphos/) to help you
 
 ## Sending metrics to GraphOS
 
-[Apollo GraphOS](/graphos/) provides an integrated hub for all of your GraphQL performance data, which you can view in Apollo Studio. Studio [aggregates and displays information](/graphos/metrics/usage-reporting/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](/graphos/notifications/notification-setup/#slack) and [Datadog](/graphos/metrics/datadog-integration/) integrations.
+[Apollo GraphOS](/graphos/) provides an integrated hub for all of your GraphQL performance data, which you can view in Apollo Studio. Studio [aggregates and displays information](/graphos/metrics/) for your schema, queries, requests, and errors. You can also configure alerts that support [Slack](/graphos/metrics/notifications/notification-setup/#slack) and [Datadog](/graphos/metrics/datadog-integration/) integrations.
 
 ### Connecting to GraphOS
 
 To connect Apollo Server to GraphOS, first [obtain a graph API key](/graphos/api-keys#graph-api-keys). To provide this key to Apollo Server, assign it to the `APOLLO_KEY` environment variable in your server's environment.
 
-Then associate your server instance with a particular graph ID and [graph variant](/graphos/graphs/overview/#variants) by setting the `APOLLO_GRAPH_REF` environment variable.
+Then associate your server instance with a particular graph ID and [graph variant](/graphos/graphs/#variants) by setting the `APOLLO_GRAPH_REF` environment variable.
 
 You can set environment variable values on the command line as seen below, or with the [`dotenv` npm package](https://www.npmjs.com/package/dotenv) (or similar).
 
