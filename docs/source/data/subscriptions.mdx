@@ -451,7 +451,7 @@ Below is an example of the common use case of extracting an authentication token
 const getDynamicContext = async (ctx, msg, args) => {
   // ctx is the graphql-ws Context where connectionParams live
  if (ctx.connectionParams.authentication) {
-    const currentUser = await findUser(connectionParams.authentication);
+    const currentUser = await findUser(ctx.connectionParams.authentication);
     return { currentUser };
   }
   // Otherwise let our resolvers know we don't have a current user
