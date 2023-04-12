@@ -181,7 +181,7 @@ type EmbeddableExplorerOptions = {
    *
    * The default value is false.
    */
-  persistExplorerState: boolean;
+  persistExplorerState?: boolean;
 };
 
 export type ApolloServerPluginLandingPageLocalDefaultOptions =
