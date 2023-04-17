@@ -46,10 +46,13 @@ export const getEmbeddedExplorerHTML = (
     endpointUrl: string;
 
     includeCookies?: boolean; // defaults to 'false'
+
+    runTelemetry?: boolean;
   }
-  const productionLandingPageConfigOrDefault = {
+  const productionLandingPageEmbedConfigOrDefault = {
     displayOptions: {},
     persistExplorerState: false,
+    runTelemetry: true,
     ...(typeof config.embed === 'boolean' ? {} : config.embed),
   };
   const embeddedExplorerParams: Omit<
@@ -73,13 +76,14 @@ export const getEmbeddedExplorerHTML = (
           }
         : {}),
       displayOptions: {
-        ...productionLandingPageConfigOrDefault.displayOptions,
+        ...productionLandingPageEmbedConfigOrDefault.displayOptions,
       },
     },
     persistExplorerState:
-      productionLandingPageConfigOrDefault.persistExplorerState,
+      productionLandingPageEmbedConfigOrDefault.persistExplorerState,
     includeCookies: config.includeCookies,
     runtime: apolloServerVersion,
+    runTelemetry: productionLandingPageEmbedConfigOrDefault.runTelemetry,
   };
 
   return `
@@ -119,12 +123,36 @@ export const getEmbeddedSandboxHTML = (
   config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions,
   apolloServerVersion: string,
 ) => {
-  const endpointIsEditable =
-    typeof config.embed === 'boolean'
-      ? false
-      : typeof config.embed?.endpointIsEditable === 'boolean'
-      ? config.embed?.endpointIsEditable
-      : false;
+  const localDevelopmentEmbedConfigOrDefault = {
+    runTelemetry: true,
+    endpointIsEditable: false,
+    initialState: {},
+    ...(typeof config.embed === 'boolean' ? {} : config.embed ?? {}),
+  };
+  const embeddedSandboxConfig = {
+    target: '#embeddableSandbox',
+    initialState: {
+      ...('document' in config || 'headers' in config || 'variables' in config
+        ? {
+            document: config.document,
+            variables: config.variables,
+            headers: config.headers,
+          }
+        : {}),
+      ...('collectionId' in config
+        ? {
+            collectionId: config.collectionId,
+            operationId: config.operationId,
+          }
+        : {}),
+      includeCookies: config.includeCookies,
+      ...localDevelopmentEmbedConfigOrDefault.initialState,
+    },
+    hideCookieToggle: false,
+    endpointIsEditable: localDevelopmentEmbedConfigOrDefault.endpointIsEditable,
+    runtime: apolloServerVersion,
+    runTelemetry: localDevelopmentEmbedConfigOrDefault.runTelemetry,
+  };
   return `
 <div class="fallback">
   <h1>Welcome to Apollo Server</h1>
@@ -146,42 +174,13 @@ id="embeddableSandbox"
   )}"></script>
 <script>
   var initialEndpoint = window.location.href;
-  new window.EmbeddedSandbox({
-    target: '#embeddableSandbox',
-    initialEndpoint,
-    initialState: ${getConfigStringForHtml({
-      ...('document' in config || 'headers' in config || 'variables' in config
-        ? {
-            document: config.document,
-            variables: config.variables,
-            headers: config.headers,
-          }
-        : {}),
-      ...('collectionId' in config
-        ? {
-            collectionId: config.collectionId,
-            operationId: config.operationId,
-          }
-        : {}),
-      includeCookies: config.includeCookies,
-      ...(typeof config.embed !== 'boolean' &&
-      config.embed?.initialState?.pollForSchemaUpdates !== undefined
-        ? {
-            pollForSchemaUpdates:
-              config.embed?.initialState?.pollForSchemaUpdates,
-          }
-        : {}),
-      ...(typeof config.embed !== 'boolean' &&
-      config.embed?.initialState?.sharedHeaders !== undefined
-        ? {
-            sharedHeaders: config.embed?.initialState?.sharedHeaders,
-          }
-        : {}),
-    })},
-    hideCookieToggle: false,
-    endpointIsEditable: ${endpointIsEditable},
-    runtime: '${apolloServerVersion}'
-  });
+  var embeddedSandboxConfig = ${getConfigStringForHtml(embeddedSandboxConfig)};
+  new window.EmbeddedSandbox(
+    {
+      ...embeddedSandboxConfig,
+      initialEndpoint,
+    }
+  );
 </script>
 `;
 };

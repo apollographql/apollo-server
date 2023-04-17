@@ -44,14 +44,13 @@ describe('Landing Page Config HTML', () => {
       </script>
       <script>
         var initialEndpoint = window.location.href;
-        new window.EmbeddedSandbox({
-          target: '#embeddableSandbox',
-          initialEndpoint,
-          initialState: {"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"includeCookies":true},
-          hideCookieToggle: false,
-          endpointIsEditable: false,
-          runtime: '@apollo/server@4.0.0'
-        });
+        var embeddedSandboxConfig = {"target":"#embeddableSandbox","initialState":{"document":"query Test { id }","variables":{"option":{"a":"val","b":1,"c":true}},"headers":{"authorization":"true"},"includeCookies":true},"hideCookieToggle":false,"endpointIsEditable":false,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        new window.EmbeddedSandbox(
+          {
+            ...embeddedSandboxConfig,
+            initialEndpoint,
+          }
+        );
       </script>
     `);
   });
@@ -85,14 +84,13 @@ describe('Landing Page Config HTML', () => {
       </script>
       <script>
         var initialEndpoint = window.location.href;
-        new window.EmbeddedSandbox({
-          target: '#embeddableSandbox',
-          initialEndpoint,
-          initialState: {"headers":{"authorization":"true"},"includeCookies":true},
-          hideCookieToggle: false,
-          endpointIsEditable: false,
-          runtime: '@apollo/server@4.0.0'
-        });
+        var embeddedSandboxConfig = {"target":"#embeddableSandbox","initialState":{"headers":{"authorization":"true"},"includeCookies":true},"hideCookieToggle":false,"endpointIsEditable":false,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        new window.EmbeddedSandbox(
+          {
+            ...embeddedSandboxConfig,
+            initialEndpoint,
+          }
+        );
       </script>
     `);
   });
@@ -124,14 +122,13 @@ describe('Landing Page Config HTML', () => {
       </script>
       <script>
         var initialEndpoint = window.location.href;
-        new window.EmbeddedSandbox({
-          target: '#embeddableSandbox',
-          initialEndpoint,
-          initialState: {},
-          hideCookieToggle: false,
-          endpointIsEditable: false,
-          runtime: '@apollo/server@4.0.0'
-        });
+        var embeddedSandboxConfig = {"target":"#embeddableSandbox","initialState":{},"hideCookieToggle":false,"endpointIsEditable":false,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        new window.EmbeddedSandbox(
+          {
+            ...embeddedSandboxConfig,
+            initialEndpoint,
+          }
+        );
       </script>
     `);
   });
@@ -165,14 +162,13 @@ describe('Landing Page Config HTML', () => {
       </script>
       <script>
         var initialEndpoint = window.location.href;
-        new window.EmbeddedSandbox({
-          target: '#embeddableSandbox',
-          initialEndpoint,
-          initialState: {"collectionId":"12345","operationId":"abcdef"},
-          hideCookieToggle: false,
-          endpointIsEditable: false,
-          runtime: '@apollo/server@4.0.0'
-        });
+        var embeddedSandboxConfig = {"target":"#embeddableSandbox","initialState":{"collectionId":"12345","operationId":"abcdef"},"hideCookieToggle":false,"endpointIsEditable":false,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        new window.EmbeddedSandbox(
+          {
+            ...embeddedSandboxConfig,
+            initialEndpoint,
+          }
+        );
       </script>
     `);
   });
@@ -211,14 +207,13 @@ describe('Landing Page Config HTML', () => {
       </script>
       <script>
         var initialEndpoint = window.location.href;
-        new window.EmbeddedSandbox({
-          target: '#embeddableSandbox',
-          initialEndpoint,
-          initialState: {"includeCookies":false,"pollForSchemaUpdates":false,"sharedHeaders":{"SharedHeaderKey":"SharedHeaderValue"}},
-          hideCookieToggle: false,
-          endpointIsEditable: true,
-          runtime: '@apollo/server@4.0.0'
-        });
+        var embeddedSandboxConfig = {"target":"#embeddableSandbox","initialState":{"includeCookies":false,"pollForSchemaUpdates":false,"sharedHeaders":{"SharedHeaderKey":"SharedHeaderValue"}},"hideCookieToggle":false,"endpointIsEditable":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        new window.EmbeddedSandbox(
+          {
+            ...embeddedSandboxConfig,
+            initialEndpoint,
+          }
+        );
       </script>
     `);
   });

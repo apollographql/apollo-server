@@ -52,6 +52,7 @@ export type ApolloServerPluginLandingPageDefaultBaseOptions = {
   footer?: boolean;
 
   includeCookies?: boolean;
+
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 };
@@ -106,6 +107,10 @@ export type ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
   } & InitialStateForEmbeds;
 
 type EmbeddableSandboxOptions = {
+  /**
+   * Set to false to disable running telemetry in Apollo Studio from the landing pages.
+   */
+  runTelemetry?: boolean;
   initialState?: {
     /**
      * If true, the embedded Sandbox periodically polls your initialEndpoint for schema updates.
@@ -136,6 +141,10 @@ type EmbeddableSandboxOptions = {
 };
 
 type EmbeddableExplorerOptions = {
+  /**
+   * Set to false to disable running telemetry in Apollo Studio from the landing pages.
+   */
+  runTelemetry?: boolean;
   /**
    * Display options can be configured for the embedded Explorer.
    */
@@ -172,7 +181,7 @@ type EmbeddableExplorerOptions = {
    *
    * The default value is false.
    */
-  persistExplorerState: boolean;
+  persistExplorerState?: boolean;
 };
 
 export type ApolloServerPluginLandingPageLocalDefaultOptions =
