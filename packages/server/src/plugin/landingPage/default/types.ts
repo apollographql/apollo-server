@@ -108,7 +108,7 @@ export type ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions =
 
 type EmbeddableSandboxOptions = {
   /**
-   * Set the false to disable running telemetry in Apollo Studio from the landing pages.
+   * Set to false to disable running telemetry in Apollo Studio from the landing pages.
    */
   runTelemetry?: boolean;
   initialState?: {
@@ -142,7 +142,7 @@ type EmbeddableSandboxOptions = {
 
 type EmbeddableExplorerOptions = {
   /**
-   * Set the false to disable running telemetry in Apollo Studio from the landing pages.
+   * Set to false to disable running telemetry in Apollo Studio from the landing pages.
    */
   runTelemetry?: boolean;
   /**
