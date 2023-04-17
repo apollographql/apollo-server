@@ -1,0 +1,49 @@
+# This file exists primarily to influence scheduled scans that Apollo runs of all repos in Apollo-managed orgs. 
+# This is an Apollo-Internal link, but more information about these scans is available here:
+# https://apollographql.atlassian.net/wiki/spaces/SecOps/pages/81330213/Everything+Static+Application+Security+Testing#Scheduled-Scans.1
+# 
+# Apollo is using Gitleaks (https://github.com/gitleaks/gitleaks) to run these scans.
+# However, this file is not something that Gitleaks natively consumes. This file is an
+# Apollo-convention. Prior to scanning a repo, Apollo merges
+# our standard Gitleaks configuration (which is largely just the Gitleaks-default config) with
+# this file if it exists in a repo. The combined config is then used to scan a repo.
+# 
+# We did this because the natively-supported allowlisting functionality in Gitleaks didn't do everything we wanted
+# or wasn't as robust as we needed. For example, one of the allowlisting options offered by Gitleaks depends on the line number
+# on which a false positive secret exists to allowlist it. (https://github.com/gitleaks/gitleaks#gitleaksignore).
+# This creates a fairly fragile allowlisting mechanism. This file allows us to leverage the full capabilities of the Gitleaks rule syntax
+# to create allowlisting functionality.
+
+
+[[ rules ]]
+    id = "high-entropy-base64"
+    [ rules.allowlist ]
+        commits = [
+            # Allowlist https://github.com/apollographql/apollo-server/blob/48aa02fe3bd6bad0a61ef122acef5fda38920df1/docs/source/getting-started.md?plain=1#L175
+            # This is a blob of data from StackEdit
+            "48aa02fe3bd6bad0a61ef122acef5fda38920df1",
+            # Allowlist https://github.com/apollographql/apollo-server/blob/213acbba32829c83f99f12d81ed9e88f3fe1c8cb/docs/_config.yml#L36
+            # This is a segment key that Apollo SecOps was unable to utilize with Segment
+            "213acbba32829c83f99f12d81ed9e88f3fe1c8cb",
+            
+        ]
+
+[[ rules ]]
+    id = "generic-api-key"
+    [ rules.allowlist ]
+        commits = [
+            # Allowlist https://github.com/apollographql/apollo-server/blob/89da132450677ae69aef156ade4c3a11e3885a33/test/testApolloServer.js#L56
+            # Code comments indicate the value being identified is not a secret
+            "89da132450677ae69aef156ade4c3a11e3885a33",
+            
+        ]
+
+[[ rules ]]
+    id = "private-key"
+    [ rules.allowlist ]
+        commits = [
+            # Allowlist https://github.com/apollographql/apollo-server/blob/aadbeb647485207b408f620a10d8c385ce4ee25f/packages/apollo-server/src/__tests__/stoppable/fixture.key#L1
+            # Based on file path, the private key is part of a test and not actually in-use
+            "aadbeb647485207b408f620a10d8c385ce4ee25f",
+            
+        ]
