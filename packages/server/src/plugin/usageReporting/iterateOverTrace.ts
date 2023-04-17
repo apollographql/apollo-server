@@ -126,7 +126,7 @@ class ChildCollectingPathsResponseNamePath implements ResponseNamePath {
     readonly prev: CollectingPathsResponseNamePath,
   ) {}
   toArray() {
-    const out = [];
+    const out: string[] = [];
     let curr: CollectingPathsResponseNamePath = this;
     while (curr instanceof ChildCollectingPathsResponseNamePath) {
       out.push(curr.responseName);
