@@ -479,11 +479,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
-      // TODO(AS5) This becomes the default behavior and the
-      // `status400ForVariableCoercionErrors` configuration option is removed /
-      // ignored.
       if (
-        internals.status400ForVariableCoercionErrors &&
         resultErrors?.length &&
         result.data === undefined &&
         !httpFromErrors.status

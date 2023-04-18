@@ -425,18 +425,27 @@ describe('ApolloServer executeOperation', () => {
     await server.stop();
   });
 
-  // TODO(AS5): expect an update here when default flips
+  // `status400ForVariableCoercionErrors` has no effect in v5
+  // TODO(AS6): remove this
   it.each([
-    { status400ForVariableCoercionErrors: false, expectedStatus: undefined },
+    { status400ForVariableCoercionErrors: false, expectedStatus: 400 },
     { status400ForVariableCoercionErrors: true, expectedStatus: 400 },
   ])(
     'variable coercion errors',
     async ({ status400ForVariableCoercionErrors, expectedStatus }) => {
+      const logger = mockLogger();
       const server = new ApolloServer({
         typeDefs,
         resolvers,
+        logger,
+        // @ts-expect-error this is no longer valid config in AS5
         status400ForVariableCoercionErrors,
       });
+
+      expect(logger.warn).toBeCalledWith(
+        'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5.',
+      );
+
       await server.start();
 
       const { body, http } = await server.executeOperation({
@@ -463,7 +472,6 @@ describe('ApolloServer executeOperation', () => {
     const server = new ApolloServer({
       typeDefs,
       resolvers,
-      status400ForVariableCoercionErrors: true,
     });
     await server.start();
 

@@ -176,9 +176,6 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
-  // flip default behavior.
-  status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
   stringifyResult: (value: FormattedExecutionResult) => string;
 }
@@ -330,12 +327,22 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? null
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
-      status400ForVariableCoercionErrors:
-        config.status400ForVariableCoercionErrors ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
       stringifyResult: config.stringifyResult ?? prettyJSONStringify,
     };
+
+    this.warnAgainstLegacyConfigOptions(config);
+  }
+
+  private warnAgainstLegacyConfigOptions(
+    config: ApolloServerOptions<TContext>,
+  ) {
+    if ('status400ForVariableCoercionErrors' in config) {
+      this.logger.warn(
+        'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5.',
+      );
+    }
   }
 
   // Awaiting a call to `start` ensures that a schema has been loaded and that
