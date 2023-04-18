@@ -1,6 +1,6 @@
 {
   "title": "Apollo Server",
-  "version": "v4",
+  "version": "v5",
   "algoliaFilters": [
     "docset:apollo-server",
     ["docset:apollo-client", "docset:federation"]
@@ -8,8 +8,8 @@
   "sidebar": {
     "Introduction": "/",
     "Get started": "/getting-started",
-    "New in v4": {
-      "Migrating to Apollo Server 4": "/migration",
+    "New in v5": {
+      "Migrating to Apollo Server 5": "/migration",
       "Previous versions": "/previous-versions",
       "Changelog": "https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md"
     },

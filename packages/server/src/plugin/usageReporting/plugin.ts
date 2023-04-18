@@ -53,10 +53,6 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     null,
   ),
 ): ApolloServerPlugin<TContext> {
-  // Note: We'd like to change the default to false in Apollo Server 4, so that
-  // the default usage reporting experience doesn't include *anything* that
-  // could potentially be PII (like error messages) --- just operations and
-  // numbers.
   const fieldLevelInstrumentationOption = options.fieldLevelInstrumentation;
   const fieldLevelInstrumentation =
     typeof fieldLevelInstrumentationOption === 'number'

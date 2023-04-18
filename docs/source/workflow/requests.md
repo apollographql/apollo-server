@@ -50,7 +50,7 @@ curl --request POST \
 
 ### Batching
 
-By default, Apollo Server 4 [doesn't support batching HTTP requests](../api/apollo-server#allowbatchedhttprequests). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
+By default, Apollo Server [doesn't support batching HTTP requests](../api/apollo-server#allowbatchedhttprequests). To enable HTTP batching, you must explicitly pass `allowBatchedHttpRequests: true` to the `ApolloServer` constructor.
 
 If you have enabled HTTP batching, you can send a batch of queries in a single `POST` request by providing a JSON-encoded array of query objects, like so:
 
@@ -60,7 +60,7 @@ If you have enabled HTTP batching, you can send a batch of queries in a single `
     "query": "query { testString }"
   },
   {
-    "query": "query AnotherQuery{ test(who: \"you\" ) }"
+    "query": "query AnotherQuery { test(who: \"you\" ) }"
   }
 ]
 ```
@@ -82,7 +82,7 @@ curl --request GET \
   https://rover.apollo.dev/quickstart/products/graphql?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D
 ```
 
-Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header. However, if you have Apollo Server 4's default [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature enabled, `GET` requests that don't contain a `Content-Type` header must contain one of the following:
+Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header. However, if you have Apollo Server's default [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature enabled, `GET` requests that don't contain a `Content-Type` header must contain one of the following:
 
 - A non-empty `X-Apollo-Operation-Name` header
 - A non-empty `Apollo-Require-Preflight` header
@@ -91,7 +91,7 @@ For more details, see [the CSRF prevention documentation](../security/cors#preve
 
 ## Incremental delivery (experimental)
 
-Incremental delivery is a [Stage 2: Draft Proposal](https://github.com/graphql/graphql-spec/pull/742) to the GraphQL specification which adds `@defer` and `@stream` executable directives. These directives allow clients to specify that parts of an operation can be sent after an initial response, so that slower fields do not delay all other fields. As of September 2022, the `graphql` library (also known as `graphql-js`) upon which Apollo Server is built implements incremental delivery only in the unreleased major version 17. If a pre-release of `graphql@17` is installed in your server, Apollo Server 4 can execute these incremental delivery directives and provide streaming [`multipart/mixed`](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md) responses.
+Incremental delivery is a [Stage 2: Draft Proposal](https://github.com/graphql/graphql-spec/pull/742) to the GraphQL specification which adds `@defer` and `@stream` executable directives. These directives allow clients to specify that parts of an operation can be sent after an initial response, so that slower fields do not delay all other fields. As of September 2022, the `graphql` library (also known as `graphql-js`) upon which Apollo Server is built implements incremental delivery only in the unreleased major version 17. If a pre-release of `graphql@17` is installed in your server, Apollo Server can execute these incremental delivery directives and provide streaming [`multipart/mixed`](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md) responses.
 
 Support for incremental delivery in graphql version 17 is [opt-in](https://github.com/robrichard/defer-stream-wg/discussions/12), meaning the directives are not defined by default. In order to use `@defer` or `@stream`, you must provide the appropriate definition(s) in your SDL. The definitions below can be pasted into your schema as-is:
 

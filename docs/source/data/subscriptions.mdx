@@ -7,7 +7,7 @@ description: Persistent GraphQL read operations
 
 **Apollo Server does not provide built-in support for subscriptions.** You can enable support for subscriptions as [described below](#enabling-subscriptions).
 
-This article uses the `graphql-ws` library to add support for subscriptions to Apollo Server 4. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is not actively maintained. For more information about the differences between the two libraries, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+This article uses the `graphql-ws` library to add support for subscriptions to Apollo Server. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is not actively maintained. For more information about the differences between the two libraries, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
 
 </blockquote>
 
@@ -44,7 +44,7 @@ subscription PostFeed {
 
 ## Enabling subscriptions
 
-> Subscriptions are **not** supported by Apollo Server 4's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](../api/express-middleware) (or any other Apollo Server integration package that supports subscriptions).
+> Subscriptions are **not** supported by Apollo Server's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](../api/express-middleware) (or any other Apollo Server integration package that supports subscriptions).
 >
 > The following steps assume you've already swapped to [`expressMiddleware`](../api/express-middleware).
 
@@ -398,6 +398,7 @@ Use `withFilter` to make sure clients get exactly the subscription updates they 
 
 An example server is available on [GitHub](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/subscriptions-graphql-ws/src/index.ts) and CodeSandbox:
 
+FIXME: upgrade repo
 <a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/subscriptions-graphql-ws?fontsize=14&hidenavigation=1&initialpath=%2Fgraphql&theme=dark">
   <img
     alt="Edit server-subscriptions-as4"

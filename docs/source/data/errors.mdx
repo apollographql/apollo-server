@@ -435,7 +435,7 @@ new ApolloServer({
 
 ### For Apollo Studio reporting
 
-> **New in Apollo Server 4:** error details are [_not_ included in traces by default](../migration#usage-reporting-and-inline-trace-plugins-mask-errors-by-default). Instead, `<masked>` replaces each error's message, and the `maskedBy` error extension replaces all other extensions. The `maskedBy` extension includes the name of the plugin that performed the masking (`ApolloServerPluginUsageReporting` or `ApolloServerPluginInlineTrace`).
+> 📣 **New since Apollo Server 4:** error details are [_not_ included in traces by default](../migration#usage-reporting-and-inline-trace-plugins-mask-errors-by-default). Instead, `<masked>` replaces each error's message, and the `maskedBy` error extension replaces all other extensions. The `maskedBy` extension includes the name of the plugin that performed the masking (`ApolloServerPluginUsageReporting` or `ApolloServerPluginInlineTrace`).
 
 You can use Apollo Studio to analyze your server's error rates. By default, the operations sent to Studio as detailed traces _don't_ contain error details.
 
