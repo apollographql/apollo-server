@@ -1,9 +1,3 @@
-# The v4 docs were beta for a while, and non-default, but now that they are
-# default, the v4 docs don't exist anymore. So redirect them to the default!
-
-/v4 /docs/apollo-server
-/v4/* /docs/apollo-server/:splat
-
 # Updating URLs for v3
 
 /testing/graphql-playground/ /docs/apollo-server/testing/build-run-queries/#graphql-playground
