@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=16.19.1"
+    "node": ">=16.14.0"
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
