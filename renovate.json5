@@ -56,7 +56,12 @@
       matchPackageNames: ["@types/node"],
       allowedVersions: "14.x"
     },
-    // lru-cache@8 drops support for v16. We can take this when we drop node v14 support.
+    // lru-cache@8 drops support for node v16. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["lru-cache"],
+      allowedVersions: "7.x"
+    },
+    // @apollo/utils@3 drop support for node v16. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["lru-cache"],
       allowedVersions: "7.x"
@@ -66,7 +71,7 @@
     // (Perhaps we could swap to undici instead if this pin gets to be a
     // problem.)
     {
-      "matchPackageNames": ["node-fetch", "@types/node-fetch"],
+      "matchPackagePatterns": ["^@apollo/utils"],
       "allowedVersions": "2.x"
     },
     {
