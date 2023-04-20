@@ -1,5 +1,36 @@
 # @apollo/server
 
+## 4.7.0
+
+### Minor Changes
+
+- [#7504](https://github.com/apollographql/apollo-server/pull/7504) [`22a5be934`](https://github.com/apollographql/apollo-server/commit/22a5be9347bbdb6aef4c158f9c81d310308d02d4) Thanks [@mayakoneval](https://github.com/mayakoneval)! - In the Apollo Server Landing Page Local config, you can now opt out of the telemetry that Apollo Studio runs in the
+  embedded Sandbox & Explorer landing pages. This telemetry includes Google Analytics for event tracking and
+  Sentry for error tracking.
+
+  Example of the new config option:
+
+  ```
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    plugins: [
+      process.env.NODE_ENV === 'production'
+        ? ApolloServerPluginLandingPageProductionDefault({
+            graphRef: 'my-graph-id@my-graph-variant',
+            embed: {
+              runTelemetry: false
+            },
+          })
+        : ApolloServerPluginLandingPageLocalDefault({
+            embed: {
+              runTelemetry: false
+            },
+          }),
+    ],
+  });
+  ```
+
 ## 4.6.0
 
 ### Minor Changes

@@ -1,5 +1,16 @@
 # @apollo/server-integration-testsuite
 
+## 4.7.0
+
+### Patch Changes
+
+- [#7509](https://github.com/apollographql/apollo-server/pull/7509) [`5c20aa02e`](https://github.com/apollographql/apollo-server/commit/5c20aa02ebee6eaa39255e9db995fae0dd3fe0a0) Thanks [@renovate](https://github.com/apps/renovate)! - Update `graphql-http` dependency
+
+- [#7475](https://github.com/apollographql/apollo-server/pull/7475) [`b9ac2d6b2`](https://github.com/apollographql/apollo-server/commit/b9ac2d6b2ea19f7f838fa62b339dac2d3fefff62) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- Updated dependencies [[`22a5be934`](https://github.com/apollographql/apollo-server/commit/22a5be9347bbdb6aef4c158f9c81d310308d02d4)]:
+  - @apollo/server@4.7.0
+
 ## 4.6.0
 
 ### Patch Changes
