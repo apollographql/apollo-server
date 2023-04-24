@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@apollo/utils.createhash": "^2.0.0",
-    "@apollo/utils.keyvaluecache": "^2.1.0"
+    "@apollo/utils.keyvaluecache": "^3.0.0"
   },
   "peerDependencies": {
     "@apollo/server": "^4.0.1",
