@@ -63,7 +63,7 @@
     },
     // @apollo/utils@3 drop support for node v16. We can take this when we drop node v14 support.
     {
-      matchPackageNames: ["lru-cache"],
+      matchPackageNames: ["^@apollo/utils"],
       allowedVersions: "7.x"
     },
     // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
@@ -71,7 +71,7 @@
     // (Perhaps we could swap to undici instead if this pin gets to be a
     // problem.)
     {
-      "matchPackagePatterns": ["^@apollo/utils"],
+      "matchPackagePatterns": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
     {
