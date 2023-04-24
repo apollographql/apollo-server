@@ -39,7 +39,7 @@
     "graphql-http": "1.18.0",
     "graphql-tag": "^2.12.6",
     "loglevel": "^1.8.0",
-    "node-fetch": "^2.6.7",
+    "node-fetch": "^3.0.0",
     "supertest": "^6.2.3"
   },
   "peerDependencies": {

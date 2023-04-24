@@ -93,7 +93,7 @@
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
     "nock": "13.3.0",
-    "node-fetch": "2.6.9",
+    "node-fetch": "3.3.1",
     "prettier": "2.8.8",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
