@@ -176,6 +176,8 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
+  // TODO(AS6): remove this option.
+  status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
   stringifyResult: (value: FormattedExecutionResult) => string;
 }
@@ -327,23 +329,30 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? null
           : config.csrfPrevention.requestHeaders ??
             recommendedCsrfPreventionRequestHeaders,
+      status400ForVariableCoercionErrors:
+        config.status400ForVariableCoercionErrors ?? true,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
       stringifyResult: config.stringifyResult ?? prettyJSONStringify,
     };
 
-    this.warnAgainstLegacyConfigOptions(config);
+    this.warnAgainstDeprecatedConfigOptions(config);
   }
 
-  private warnAgainstLegacyConfigOptions(
+  private warnAgainstDeprecatedConfigOptions(
     config: ApolloServerOptions<TContext>,
   ) {
-    // TODO(AS6): this is a helpful v4 -> v5 migration message, we can remove it
-    // in the next major
+    // TODO(AS6): this option goes away altogether. We should either update or remove this warning.
     if ('status400ForVariableCoercionErrors' in config) {
-      this.logger.warn(
-        'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5.',
-      );
+      if (config.status400ForVariableCoercionErrors === true) {
+        this.logger.warn(
+          'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5. You can safely remove this option from your configuration.',
+        );
+      } else {
+        this.logger.warn(
+          'The `status400ForVariableCoercionErrors: false` configuration option is deprecated and will be removed in Apollo Server v6. Apollo recommends removing any dependency on this behavior.',
+        );
+      }
     }
   }
 

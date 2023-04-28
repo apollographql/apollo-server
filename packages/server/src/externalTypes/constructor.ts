@@ -103,6 +103,16 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   // parsing the schema.
   parseOptions?: ParseOptions;
 
+  // TODO(AS6): remove this option. Configuration to `true` is default behavior
+  // and configuration to `false` is deprecated. If you depend on `false`
+  // behavior, we recommend migrating away from that at your earliest
+  // convenience since it won't be supported in the next major version.
+  /**
+   * @deprecated `true` is now the default behavior in AS5. `false` will not be
+   * supported in AS6 since this option will be removed.
+   */
+  status400ForVariableCoercionErrors?: boolean;
+
   // For testing only.
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
 }

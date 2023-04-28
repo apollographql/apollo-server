@@ -1,6 +1,6 @@
 # `@apollo/server`
 
-> This `@apollo/server` package is as of Apollo Server 4. Previous major versions of Apollo Server used a set of package names starting with `apollo-server`, such as `apollo-server`, `apollo-server-express`, `apollo-server-core`, etc.
+> This `@apollo/server` package is new since Apollo Server 4. Previous major versions of Apollo Server used a set of package names starting with `apollo-server`, such as `apollo-server`, `apollo-server-express`, `apollo-server-core`, etc.
 
 [![npm version](https://badge.fury.io/js/%40apollo%2Fserver.svg)](https://badge.fury.io/js/%40apollo%2Fserver)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)

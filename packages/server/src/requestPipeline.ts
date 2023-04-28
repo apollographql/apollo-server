@@ -479,7 +479,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
+      // TODO(AS6): remove `status400ForVariableCoercionErrors`
       if (
+        internals.status400ForVariableCoercionErrors &&
         resultErrors?.length &&
         result.data === undefined &&
         !httpFromErrors.status

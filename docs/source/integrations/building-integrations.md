@@ -7,7 +7,7 @@ description: ""
 > building a new integration, we recommend seeing if there's
 > [an integration for your framework of choice](./integration-index) that suits your needs.
 
-One of the driving forces behind Apollo Server 4 (now v5) was the creation of a stable,
+One of the driving forces behind Apollo Server 4 (and unchanged in v5) was the creation of a stable,
 well-defined API for processing HTTP requests and responses. Apollo Server's
 API enables external collaborators, like you, to build integrations with Apollo
 Server in their web framework of choice.

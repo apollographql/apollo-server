@@ -475,6 +475,23 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `status400ForVariableCoercionErrors`
+
+`boolean`
+
+</td>
+<td>
+
+> Note: Apollo Server v5 defaults this option to `true`. This option is deprecated in v5 and will be ignored in a future major version.
+
+**Apollo Server v4 users should set this option to `true`.** It mitigates a regression introduced in Apollo Server v4 where the server returns a 200 status code (instead of 400) when a client query provides invalid variables. [Learn more.](../migration/#known-regressions)
+
+</td>
+</tr>
+
 </tbody>
 </table>
 
@@ -593,7 +610,7 @@ const response = await server.executeOperation({
 
 The `response` object returned from `executeOperation` is a `GraphQLResponse`, which has `body` and `http` fields.
 
-Apollo Server supports incremental delivery directives such as `@defer` and `@stream` (when combined with an appropriate version of `graphql-js`), and so the structure of `response.body` can represent either a single result or multiple results. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized.)
+Apollo Server 4 supports incremental delivery directives such as `@defer` and `@stream` (when combined with an appropriate version of `graphql-js`), and so the structure of `response.body` can represent either a single result or multiple results. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized.)
 
 The `http` field contains an optional numeric `status` code and a `headers` map specifying any HTTP status code and headers that should be set.
 
