@@ -24,6 +24,7 @@ export const getEmbeddedExplorerHTML = (
   explorerCdnVersion: string,
   config: ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions,
   apolloServerVersion: string,
+  nonce: string,
 ) => {
   interface EmbeddableExplorerOptions {
     graphRef: string;
@@ -96,12 +97,12 @@ export const getEmbeddedExplorerHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableExplorer"
 ></div>
-<script src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
+<script nonce="${nonce}" src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
     explorerCdnVersion,
   )}/embeddable-explorer.umd.production.min.js?runtime=${encodeURIComponent(
     apolloServerVersion,
   )}"></script>
-<script>
+<script nonce="${nonce}">
   var endpointUrl = window.location.href;
   var embeddedExplorerConfig = ${getConfigStringForHtml(
     embeddedExplorerParams,
@@ -118,6 +119,7 @@ export const getEmbeddedSandboxHTML = (
   sandboxCdnVersion: string,
   config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions,
   apolloServerVersion: string,
+  nonce: string,
 ) => {
   const endpointIsEditable =
     typeof config.embed === 'boolean'
@@ -139,12 +141,12 @@ export const getEmbeddedSandboxHTML = (
 style="width: 100vw; height: 100vh; position: absolute; top: 0;"
 id="embeddableSandbox"
 ></div>
-<script src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
+<script nonce="${nonce}" src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
     sandboxCdnVersion,
   )}/embeddable-sandbox.umd.production.min.js?runtime=${encodeURIComponent(
     apolloServerVersion,
   )}"></script>
-<script>
+<script nonce="${nonce}">
   var initialEndpoint = window.location.href;
   new window.EmbeddedSandbox({
     target: '#embeddableSandbox',
