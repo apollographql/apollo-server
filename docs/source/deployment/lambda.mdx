@@ -444,16 +444,20 @@ const server = new ApolloServer<MyContext>({
 });
 
 // This final export is important!
-export const graphqlHandler = startServerAndCreateLambdaHandler(server, {
-  // highlight-start
-  context: async ({ event, context }) => {
-    return {
-      lambdaEvent: event,
-      lambdaContext: context,
-    };
-  },
-  // highlight-end
-});
+export const graphqlHandler = startServerAndCreateLambdaHandler(
+  server,
+  handlers.createAPIGatewayProxyEventV2RequestHandler(),
+  {
+    // highlight-start
+    context: async ({ event, context }) => {
+      return {
+        lambdaEvent: event,
+        lambdaContext: context,
+      };
+    },
+    // highlight-end
+  }
+);
 ```
 
 </MultiCodeBlock>
