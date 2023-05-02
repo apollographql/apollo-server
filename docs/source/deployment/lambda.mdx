@@ -449,14 +449,15 @@ export const graphqlHandler = startServerAndCreateLambdaHandler(
   handlers.createAPIGatewayProxyEventV2RequestHandler(),
   // highlight-start
   {
-  context: async ({ event, context }) => {
-    return {
-      lambdaEvent: event,
-      lambdaContext: context,
-    };
-  },
-  // highlight-end
-});
+    context: async ({ event, context }) => {
+      return {
+        lambdaEvent: event,
+        lambdaContext: context,
+      };
+    },
+    // highlight-end
+  }
+);
 ```
 
 </MultiCodeBlock>
