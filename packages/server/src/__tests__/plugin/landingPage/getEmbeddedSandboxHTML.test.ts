@@ -21,8 +21,9 @@ describe('Landing Page Config HTML', () => {
       headers: { authorization: 'true' },
       embed: true,
     };
-    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
-      .toMatchInlineSnapshot(`
+    expect(
+      getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion, 'nonce'),
+    ).toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -40,9 +41,11 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
+      <script nonce="nonce"
+              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+      >
       </script>
-      <script>
+      <script nonce="nonce">
         var initialEndpoint = window.location.href;
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
@@ -62,8 +65,9 @@ describe('Landing Page Config HTML', () => {
       headers: { authorization: 'true' },
       embed: true,
     };
-    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
-      .toMatchInlineSnapshot(`
+    expect(
+      getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion, 'nonce'),
+    ).toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -81,9 +85,11 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
+      <script nonce="nonce"
+              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+      >
       </script>
-      <script>
+      <script nonce="nonce">
         var initialEndpoint = window.location.href;
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
@@ -101,8 +107,9 @@ describe('Landing Page Config HTML', () => {
     const config: ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions = {
       embed: true,
     };
-    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
-      .toMatchInlineSnapshot(`
+    expect(
+      getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion, 'nonce'),
+    ).toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -120,9 +127,11 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
+      <script nonce="nonce"
+              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+      >
       </script>
-      <script>
+      <script nonce="nonce">
         var initialEndpoint = window.location.href;
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
@@ -142,8 +151,9 @@ describe('Landing Page Config HTML', () => {
       operationId: 'abcdef',
       embed: true,
     };
-    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
-      .toMatchInlineSnapshot(`
+    expect(
+      getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion, 'nonce'),
+    ).toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -161,9 +171,11 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
+      <script nonce="nonce"
+              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+      >
       </script>
-      <script>
+      <script nonce="nonce">
         var initialEndpoint = window.location.href;
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
@@ -188,8 +200,9 @@ describe('Landing Page Config HTML', () => {
         },
       },
     };
-    expect(getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion))
-      .toMatchInlineSnapshot(`
+    expect(
+      getEmbeddedSandboxHTML(cdnVersion, config, apolloServerVersion, 'nonce'),
+    ).toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
@@ -207,9 +220,11 @@ describe('Landing Page Config HTML', () => {
            id="embeddableSandbox"
       >
       </div>
-      <script src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0">
+      <script nonce="nonce"
+              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+      >
       </script>
-      <script>
+      <script nonce="nonce">
         var initialEndpoint = window.location.href;
         new window.EmbeddedSandbox({
           target: '#embeddableSandbox',
