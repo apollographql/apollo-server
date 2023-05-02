@@ -204,7 +204,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
         },
         graphRef: 'graph@current',
       };
-    expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion))
+    expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion, 'nonce'))
       .toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
