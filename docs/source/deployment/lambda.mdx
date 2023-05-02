@@ -447,8 +447,8 @@ const server = new ApolloServer<MyContext>({
 export const graphqlHandler = startServerAndCreateLambdaHandler(
   server,
   handlers.createAPIGatewayProxyEventV2RequestHandler(),
-  // highlight-start
   {
+    // highlight-start
     context: async ({ event, context }) => {
       return {
         lambdaEvent: event,
