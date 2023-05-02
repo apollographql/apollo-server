@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.7.1
+
+### Patch Changes
+
+- [#7539](https://github.com/apollographql/apollo-server/pull/7539) [`5d3c45be9`](https://github.com/apollographql/apollo-server/commit/5d3c45be9d871ac1ccc2e5cce70fcd60591f39a4) Thanks [@mayakoneval](https://github.com/mayakoneval)! - 🐛 Bug Fix for Apollo Server Landing Pages on Safari. A Content Security Policy was added to our landing page html so that Safari can run the inline scripts we use to call the Embedded Sandbox & Explorer.
+
 ## 4.7.0
 
 ### Minor Changes
