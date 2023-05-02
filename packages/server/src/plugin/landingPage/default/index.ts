@@ -101,7 +101,9 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-${nonce}' https://apollo-server-landing-page.cdn.apollographql.com/${version}/static/js/main.js https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-${nonce}' https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
+            version,
+          )}/static/js/main.js https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
             version,
           )}/embeddable-sandbox.umd.production.min.js https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
             version,
