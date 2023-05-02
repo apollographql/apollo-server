@@ -13,6 +13,8 @@ import {
   getEmbeddedSandboxHTML,
 } from './getEmbeddedHTML.js';
 import { packageVersion } from '../../../generated/packageVersion.js';
+import { createHash } from '@apollo/utils.createhash';
+import { v4 as uuidv4 } from 'uuid';
 
 export type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
@@ -61,6 +63,7 @@ const getNonEmbeddedLandingPageHTML = (
   cdnVersion: string,
   config: LandingPageConfig,
   apolloServerVersion: string,
+  nonce: string,
 ) => {
   const encodedConfig = encodeConfig(config);
 
@@ -70,7 +73,9 @@ const getNonEmbeddedLandingPageHTML = (
   <p>The full landing page cannot be loaded; it appears that you might be offline.</p>
 </div>
 <script>window.landingPage = ${encodedConfig};</script>
-<script src="https://apollo-server-landing-page.cdn.apollographql.com/${cdnVersion}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;
+<script nonce="${nonce}" src="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
+    cdnVersion,
+  )}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;
 };
 
 // Helper for the two actual plugin functions.
@@ -84,6 +89,8 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   const version = maybeVersion ?? '_latest';
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
+  const nonce = createHash('sha256').update(uuidv4()).digest('hex');
+
   return {
     __internal_installed_implicitly__: false,
     async serverWillStart() {
@@ -94,9 +101,18 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
 <html lang="en">
   <head>
     <meta charset="utf-8" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-${nonce}' https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
+            version,
+          )}/static/js/main.js https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
+            version,
+          )}/embeddable-sandbox.umd.production.min.js https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
+            version,
+          )}/embeddable-explorer.umd.production.min.js" />
     <link
       rel="icon"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${version}/assets/favicon.png"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
+        version,
+      )}/assets/favicon.png"
     />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -108,11 +124,15 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     <meta name="description" content="Apollo server landing page" />
     <link
       rel="apple-touch-icon"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${version}/assets/favicon.png"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
+        version,
+      )}/assets/favicon.png"
     />
     <link
       rel="manifest"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${version}/manifest.json"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
+        version,
+      )}/manifest.json"
     />
     <title>Apollo Server</title>
   </head>
@@ -135,11 +155,21 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     ${
       config.embed
         ? 'graphRef' in config && config.graphRef
-          ? getEmbeddedExplorerHTML(version, config, apolloServerVersion)
+          ? getEmbeddedExplorerHTML(version, config, apolloServerVersion, nonce)
           : !('graphRef' in config)
-          ? getEmbeddedSandboxHTML(version, config, apolloServerVersion)
-          : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
-        : getNonEmbeddedLandingPageHTML(version, config, apolloServerVersion)
+          ? getEmbeddedSandboxHTML(version, config, apolloServerVersion, nonce)
+          : getNonEmbeddedLandingPageHTML(
+              version,
+              config,
+              apolloServerVersion,
+              nonce,
+            )
+        : getNonEmbeddedLandingPageHTML(
+            version,
+            config,
+            apolloServerVersion,
+            nonce,
+          )
     }
     </div>
   </body>
