@@ -204,8 +204,9 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
         },
         graphRef: 'graph@current',
       };
-    expect(getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion, 'nonce'))
-      .toMatchInlineSnapshot(`
+    expect(
+      getEmbeddedExplorerHTML(cdnVersion, config, apolloServerVersion, 'nonce'),
+    ).toMatchInlineSnapshot(`
       <div class="fallback">
         <h1>
           Welcome to Apollo Server
