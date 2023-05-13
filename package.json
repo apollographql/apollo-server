@@ -49,7 +49,7 @@
     "@graphql-tools/mock": "8.7.20",
     "@graphql-tools/schema": "9.0.19",
     "@josephg/resolvable": "1.0.1",
-    "@rollup/plugin-commonjs": "24.1.0",
+    "@rollup/plugin-commonjs": "25.0.0",
     "@types/async-retry": "1.4.5",
     "@types/body-parser": "1.19.2",
     "@types/compression": "1.7.2",
