@@ -54,7 +54,8 @@
     },
     "Deployment": {
       "Lambda": "/deployment/lambda",
-      "Heroku": "/deployment/heroku"
+      "Heroku": "/deployment/heroku",
+      "Flightcontrol":"/deployment/flightcontrol"
     },
     "Monitoring": {
       "Metrics and logging": "/monitoring/metrics",
