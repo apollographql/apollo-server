@@ -320,6 +320,13 @@ async function* writeMultipartBody(
   initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
   subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>,
 ): AsyncGenerator<string> {
+  // The multipart boundary is "-" therefore if a resolver returns a string
+  // containing "---" it will be parsed as a chunk boundary. We can replace this
+  // substring with an escape sequence to avoid the issue.
+  const jsonWithEscapedBoundary = (payload: unknown) =>
+    // nb: Could be replaced with `replaceAll` after node v14.x is dropped
+    JSON.stringify(payload).replace(/---/g, '--\\u002d');
+
   // Note: we assume in this function that every result other than the last has
   // hasNext=true and the last has hasNext=false. That is, we choose which kind
   // of delimiter to place at the end of each block based on the contents of the
@@ -328,12 +335,12 @@ async function* writeMultipartBody(
   // can parse it immediately) but we may not know whether a general async
   // iterator is finished until we do async work.
 
-  yield `\r\n---\r\ncontent-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
+  yield `\r\n---\r\ncontent-type: application/json; charset=utf-8\r\n\r\n${jsonWithEscapedBoundary(
     orderInitialIncrementalExecutionResultFields(initialResult),
   )}\r\n---${initialResult.hasNext ? '' : '--'}\r\n`;
 
   for await (const result of subsequentResults) {
-    yield `content-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
+    yield `content-type: application/json; charset=utf-8\r\n\r\n${jsonWithEscapedBoundary(
       orderSubsequentIncrementalExecutionResultFields(result),
     )}\r\n---${result.hasNext ? '' : '--'}\r\n`;
   }
