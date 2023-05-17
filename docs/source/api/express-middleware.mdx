@@ -17,7 +17,7 @@ The `expressMiddleware` function expects you to set up HTTP body parsing and COR
 
 > See [Configuring CORS](../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project.
 
-The `expressMiddleware` function accepts two arguments. The first **required** argument is an instance of `ApolloServer` that has been `start`ed:
+The `expressMiddleware` function accepts two arguments. The first **required** argument is an instance of `ApolloServer` that has been started by calling its `start` method:
 
 <MultiCodeBlock>
 
@@ -34,7 +34,7 @@ const server = new ApolloServer<MyContext>({
   typeDefs,
   resolvers,
 });
-// Note you must call `server.start()` on the `ApolloServer`
+// Note you must call `start()` on the `ApolloServer`
 // instance before passing the instance to `expressMiddleware`
 await server.start();
 
