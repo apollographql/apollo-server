@@ -3,20 +3,18 @@ title: GraphQL Playground
 description: Visually explore Apollo Server
 ---
 
-> ⚠️ **Apollo Server 2's GraphQL playground feature is officially end-of-life as of 31 December 2022 and will no longer receive updates of any kind.**
->
->[Learn more about this deprecation and end-of-life.](/apollo-server/previous-versions#apollo-server-2)
-
 import { Link } from 'gatsby';
 
-<ExpansionPanel title="📣 The Apollo Studio Explorer now supports local development">
+<blockquote>
 
-**Apollo Sandbox** is a special instance of the Apollo Studio Explorer that you can use for local development without an Apollo account.
+#### 📣 Query your server with Apollo Sandbox
 
-<p>
+**Apollo Sandbox** provides a special instance of our Explorer IDE that you can use for local development without an Apollo account.
+
+<p style={{"margin-top": "15px", "margin-bottom": "15px"}}>
   <Button
     size="lg"
-    color="indigo"
+    colorScheme="indigo"
     as={Link}
     to="https://studio.apollographql.com/sandbox/"
     isExternal
@@ -25,9 +23,17 @@ import { Link } from 'gatsby';
   </Button>
 </p>
 
-Sandbox automatically attempts to connect to a GraphQL server running at `http://localhost:4000`. You can use the box at the top of the page to change this URL to any local or remote GraphQL endpoint that's accessible by your browser.
+Sandbox automatically attempts to connect to a GraphQL server running at `http://localhost:4000`. Use the box in the top-left to change this URL to any local or remote GraphQL endpoint that's reachable by your browser.
 
-</ExpansionPanel>
+[Learn more about Sandbox.](/graphos/explorer/sandbox)
+
+</blockquote>
+
+## About GraphQL Playground
+
+> ⚠️ **Apollo Server 2's GraphQL playground feature is officially end-of-life as of 31 December 2022 and will no longer receive updates of any kind.**
+>
+>[Learn more about this deprecation and end-of-life.](/apollo-server/previous-versions#apollo-server-2)
 
 [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) is a graphical, interactive, in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/) and based on [GraphiQL](https://github.com/graphql/graphiql).
 
