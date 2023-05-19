@@ -112,7 +112,7 @@ console.log(`🚀  Server ready at ${url}`);
 Apollo Server calls [the `context` initialization](./context/#the-context-function) function for _every incoming operation_. This means:
 
 - For every operation, `context` returns an _object_ containing new instances of your `RESTDataSource` subclasses (in this case, `MoviesAPI` and `PersonalizationAPI`).
-- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation**. [More details on why below.](#get-requests-and-responses)
+- The **`context` function should create a new instance of each `RESTDataSource` subclass for each operation**. [More details on why below.](#get-and-head-requests-and-responses)
 
 Your resolvers can then access your data sources from the shared `contextValue` object and use them to fetch data:
 
