@@ -12475,4 +12475,4 @@ export type SchemaReportMutationVariables = Exact<{
 }>;
 
 
-export type SchemaReportMutation = { __typename?: 'Mutation', reportSchema?: { __typename: 'ReportSchemaError', message: string, code: ReportSchemaErrorCode } | { __typename: 'ReportSchemaResponse', inSeconds: number, withCoreSchema: boolean } | null | undefined };
+export type SchemaReportMutation = { __typename?: 'Mutation', reportSchema?: { __typename: 'ReportSchemaError', message: string, code: ReportSchemaErrorCode } | { __typename: 'ReportSchemaResponse', inSeconds: number, withCoreSchema: boolean } | null };
