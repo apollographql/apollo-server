@@ -21,6 +21,7 @@
     "coverage": "npm test -- --coverage",
     "coverage:upload": "codecov",
     "codegen": "graphql-codegen",
+    "codegen-check": "npm run codegen -- --check || (echo 'Run `npm run codegen` to update generated types'; exit 1)",
     "lint": "eslint .",
     "prettier-check": "prettier --check .",
     "prettier-fix": "prettier --write .",
