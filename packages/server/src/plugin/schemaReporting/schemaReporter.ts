@@ -10,19 +10,22 @@ import type {
 import type { Fetcher } from '@apollo/utils.fetcher';
 import { packageVersion } from '../../generated/packageVersion.js';
 
-export const schemaReportGql = `mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
-  reportSchema(report: $report, coreSchema: $coreSchema) {
-    __typename
-    ... on ReportSchemaError {
-      message
-      code
-    }
-    ... on ReportSchemaResponse {
-      inSeconds
-      withCoreSchema
+// Magic GraphQL comment allows codegen to find the query
+// prettier-ignore
+export const schemaReportGql = /* GraphQL */ `#graphql
+  mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
+    reportSchema(report: $report, coreSchema: $coreSchema) {
+      __typename
+      ... on ReportSchemaError {
+        message
+        code
+      }
+      ... on ReportSchemaResponse {
+        inSeconds
+        withCoreSchema
+      }
     }
   }
-}
 `;
 
 // This class is meant to be a thin shim around the gql mutations.

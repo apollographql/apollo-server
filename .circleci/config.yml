@@ -107,6 +107,13 @@ jobs:
       - setup-node
       - run: npm run spell-check
 
+  Codegen check:
+    docker:
+    - image: cimg/base:stable
+    steps:
+      - setup-node
+      - run: npm run codegen-check
+
   # We make CI fail if any file contains FIX and ME right next to each other.
   # This means that when working on a big PR, you can throw in notes that you
   # are forced to come back to before merging the PR.  Note that we don't block
@@ -140,6 +147,7 @@ workflows:
       - Prettier
       - ESLint
       - Spell check
+      - Codegen check
       - Smoke test built package
       - Full incremental delivery tests with graphql-js 17 canary
       - Changesets
