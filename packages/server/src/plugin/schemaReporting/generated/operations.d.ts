@@ -58,13 +58,9 @@ export type Account = {
   /** @deprecated Use `currentPlan`. */
   currentPlanV2: BillingPlanV2;
   currentSubscription?: Maybe<BillingSubscription>;
-  /** @deprecated Use `currentSubscription`. */
-  currentSubscriptionV2?: Maybe<BillingSubscriptionV2>;
   eligibleForUsageBasedPlan: Scalars['Boolean'];
   expiredTrialDismissedAt?: Maybe<Scalars['Timestamp']>;
   expiredTrialSubscription?: Maybe<BillingSubscription>;
-  /** @deprecated Use `expiredTrialSubscription`. */
-  expiredTrialSubscriptionV2?: Maybe<BillingSubscriptionV2>;
   graphIDAvailable: Scalars['Boolean'];
   /** Graphs belonging to this organization. */
   graphs: Array<Service>;
@@ -124,8 +120,6 @@ export type Account = {
   stats: AccountStatsWindow;
   statsWindow?: Maybe<AccountStatsWindow>;
   subscriptions: Array<BillingSubscription>;
-  /** @deprecated Use `subscriptions`. */
-  subscriptionsV2: Array<BillingSubscriptionV2>;
   /** Gets a ticket for this org, by id */
   ticket?: Maybe<ZendeskTicket>;
   /** List of Zendesk tickets submitted for this org */
@@ -924,8 +918,6 @@ export type AccountMutation = {
   seats?: Maybe<Seats>;
   /** Apollo admins only: set the billing plan to an arbitrary plan effective immediately terminating any current paid plan. */
   setPlan?: Maybe<Scalars['Void']>;
-  /** Start a new team subscription with the given billing period. */
-  startTeamSubscription?: Maybe<Account>;
   /** This is called by the form shown to users after they cancel their team subscription. */
   submitTeamCancellationFeedback?: Maybe<Scalars['Void']>;
   /** Apollo admins only: Terminate the ongoing subscription in the account as soon as possible, without refunds. */
@@ -1019,11 +1011,6 @@ export type AccountMutationRevokeStaticInvitationArgs = {
 
 export type AccountMutationSetPlanArgs = {
   id: Scalars['ID'];
-};
-
-
-export type AccountMutationStartTeamSubscriptionArgs = {
-  billingPeriod: BillingPeriod;
 };
 
 
@@ -2040,6 +2027,7 @@ export type BillingPlan = {
   name: Scalars['String'];
   notifications: Scalars['Boolean'];
   operationRegistry: Scalars['Boolean'];
+  persistedQueries: Scalars['Boolean'];
   /** The price of every seat */
   pricePerSeatInUsdCents?: Maybe<Scalars['Int']>;
   /** The price of subscribing to this plan with a quantity of 1 (currently always the case) */
@@ -2082,6 +2070,7 @@ export type BillingPlanCapabilities = {
   metrics: Scalars['Boolean'];
   notifications: Scalars['Boolean'];
   operationRegistry: Scalars['Boolean'];
+  persistedQueries: Scalars['Boolean'];
   ranges: Array<Scalars['String']>;
   schemaValidation: Scalars['Boolean'];
   traces: Scalars['Boolean'];
@@ -2166,6 +2155,7 @@ export type BillingPlanV2 = {
   name: Scalars['String'];
   notifications: Scalars['Boolean'];
   operationRegistry: Scalars['Boolean'];
+  persistedQueries: Scalars['Boolean'];
   /** The price of every seat */
   pricePerSeatInUsdCents?: Maybe<Scalars['Int']>;
   /** The price of subscribing to this plan with a quantity of 1 (currently always the case) */
@@ -2217,45 +2207,6 @@ export type BillingSubscriptionAddon = {
   id: Scalars['ID'];
   pricePerUnitInUsdCents: Scalars['Int'];
   quantity: Scalars['Int'];
-};
-
-export type BillingSubscriptionAddonV2 = {
-  __typename?: 'BillingSubscriptionAddonV2';
-  id: Scalars['ID'];
-  pricePerUnitInUsdCents: Scalars['Int'];
-  quantity: Scalars['Int'];
-};
-
-export type BillingSubscriptionV2 = {
-  __typename?: 'BillingSubscriptionV2';
-  activatedAt: Scalars['Timestamp'];
-  addons: Array<BillingSubscriptionAddonV2>;
-  autoRenew: Scalars['Boolean'];
-  canceledAt?: Maybe<Scalars['Timestamp']>;
-  /** Draft invoice for this subscription */
-  currentDraftInvoice?: Maybe<DraftInvoice>;
-  currentPeriodEndsAt: Scalars['Timestamp'];
-  currentPeriodStartedAt: Scalars['Timestamp'];
-  expiresAt?: Maybe<Scalars['Timestamp']>;
-  /** Renewal grace time for updating seat count */
-  graceTimeForNextRenewal?: Maybe<Scalars['Timestamp']>;
-  maxSelfHostedRequestsPerMonth?: Maybe<Scalars['Int']>;
-  maxServerlessRequestsPerMonth?: Maybe<Scalars['Int']>;
-  plan: BillingPlanV2;
-  /** The price of every seat */
-  pricePerSeatInUsdCents?: Maybe<Scalars['Int']>;
-  /** The price of every unit in the subscription (hence multiplied by quantity to get to the basePriceInUsdCents) */
-  pricePerUnitInUsdCents: Scalars['Int'];
-  quantity: Scalars['Int'];
-  /** Total price of the subscription when it next renews, including add-ons (such as seats) */
-  renewalTotalPriceInUsdCents: Scalars['Long'];
-  state: SubscriptionStateV2;
-  /**
-   * When this subscription's trial period expires (if it is a trial). Not the same as the
-   * subscription's Recurly expiration).
-   */
-  trialExpiresAt?: Maybe<Scalars['Timestamp']>;
-  uuid: Scalars['ID'];
 };
 
 export type BillingTier = {
@@ -4552,6 +4503,351 @@ export type FilterConfigInput = {
   include: Array<Scalars['String']>;
 };
 
+/** Experimental, this will likely be replaced by a nested diff. */
+export type FlatDiff = {
+  __typename?: 'FlatDiff';
+  diff: Array<FlatDiffItem>;
+  id: Scalars['ID'];
+  summary: FlatDiffSummary;
+};
+
+export type FlatDiffAddArgument = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddArgument';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddDirective = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddDirective';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddDirectiveUsage = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddDirectiveUsage';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddEnum = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddEnum';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddEnumValue = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddEnumValue';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddField = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddField';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddImplementation = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddImplementation';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddInput = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddInput';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddInterface = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddInterface';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddObject = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddObject';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddScalar = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddScalar';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddSchemaDefinition = FlatDiffItem & {
+  __typename?: 'FlatDiffAddSchemaDefinition';
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddSchemaDirectiveUsage = FlatDiffItem & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddSchemaDirectiveUsage';
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddSchemaRootOperation = FlatDiffItem & FlatDiffItemRootType & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddSchemaRootOperation';
+  rootType: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddUnion = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffAddUnion';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffAddUnionMember = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddUnionMember';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffAddValidLocation = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffAddValidLocation';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffChangeArgumentDefault = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemNullableValue & {
+  __typename?: 'FlatDiffChangeArgumentDefault';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value?: Maybe<Scalars['String']>;
+};
+
+export type FlatDiffChangeDescription = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemNullableValue & {
+  __typename?: 'FlatDiffChangeDescription';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value?: Maybe<Scalars['String']>;
+};
+
+export type FlatDiffChangeDirectiveRepeatable = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffChangeDirectiveRepeatable';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['Boolean'];
+};
+
+export type FlatDiffChangeInputFieldDefault = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemNullableValue & {
+  __typename?: 'FlatDiffChangeInputFieldDefault';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value?: Maybe<Scalars['String']>;
+};
+
+export type FlatDiffChangeSchemaDescription = FlatDiffItem & FlatDiffItemNullableValue & {
+  __typename?: 'FlatDiffChangeSchemaDescription';
+  type: FlatDiffType;
+  value?: Maybe<Scalars['String']>;
+};
+
+export type FlatDiffItem = {
+  type: FlatDiffType;
+};
+
+export type FlatDiffItemCoordinate = {
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffItemNullableValue = {
+  type: FlatDiffType;
+  value?: Maybe<Scalars['String']>;
+};
+
+export type FlatDiffItemRootType = {
+  rootType: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffItemValue = {
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveArgument = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveArgument';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveDirective = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveDirective';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveDirectiveUsage = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveDirectiveUsage';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveEnum = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveEnum';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveEnumValue = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveEnumValue';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveField = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveField';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveImplementation = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveImplementation';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveInput = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveInput';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveInterface = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveInterface';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveObject = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveObject';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveScalar = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveScalar';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveSchemaDefinition = FlatDiffItem & {
+  __typename?: 'FlatDiffRemoveSchemaDefinition';
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveSchemaDirectiveUsage = FlatDiffItem & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveSchemaDirectiveUsage';
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveSchemaRootOperation = FlatDiffItem & FlatDiffItemRootType & {
+  __typename?: 'FlatDiffRemoveSchemaRootOperation';
+  rootType: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveUnion = FlatDiffItem & FlatDiffItemCoordinate & {
+  __typename?: 'FlatDiffRemoveUnion';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+};
+
+export type FlatDiffRemoveUnionMember = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveUnionMember';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffRemoveValidLocation = FlatDiffItem & FlatDiffItemCoordinate & FlatDiffItemValue & {
+  __typename?: 'FlatDiffRemoveValidLocation';
+  coordinate: Scalars['String'];
+  type: FlatDiffType;
+  value: Scalars['String'];
+};
+
+export type FlatDiffResult = FlatDiff | NotFoundError | SchemaValidationError;
+
+export type FlatDiffSummary = {
+  __typename?: 'FlatDiffSummary';
+  directive: FlatDiffTypeSummary;
+  enum: FlatDiffTypeSummary;
+  input: FlatDiffTypeSummary;
+  interface: FlatDiffTypeSummary;
+  object: FlatDiffTypeSummary;
+  scalar: FlatDiffTypeSummary;
+  schema: FlatDiffTypeSummary;
+  union: FlatDiffTypeSummary;
+};
+
+export enum FlatDiffType {
+  AddArgument = 'ADD_ARGUMENT',
+  AddDirective = 'ADD_DIRECTIVE',
+  AddDirectiveUsage = 'ADD_DIRECTIVE_USAGE',
+  AddEnum = 'ADD_ENUM',
+  AddEnumValue = 'ADD_ENUM_VALUE',
+  AddField = 'ADD_FIELD',
+  AddImplementation = 'ADD_IMPLEMENTATION',
+  AddInput = 'ADD_INPUT',
+  AddInterface = 'ADD_INTERFACE',
+  AddObject = 'ADD_OBJECT',
+  AddScalar = 'ADD_SCALAR',
+  AddSchemaDefinition = 'ADD_SCHEMA_DEFINITION',
+  AddSchemaDirectiveUsage = 'ADD_SCHEMA_DIRECTIVE_USAGE',
+  AddSchemaRootOperation = 'ADD_SCHEMA_ROOT_OPERATION',
+  AddUnion = 'ADD_UNION',
+  AddUnionMember = 'ADD_UNION_MEMBER',
+  AddValidLocation = 'ADD_VALID_LOCATION',
+  ChangeArgumentDefault = 'CHANGE_ARGUMENT_DEFAULT',
+  ChangeDescription = 'CHANGE_DESCRIPTION',
+  ChangeInputFieldDefault = 'CHANGE_INPUT_FIELD_DEFAULT',
+  ChangeRepeatable = 'CHANGE_REPEATABLE',
+  ChangeSchemaDescription = 'CHANGE_SCHEMA_DESCRIPTION',
+  RemoveArgument = 'REMOVE_ARGUMENT',
+  RemoveDirective = 'REMOVE_DIRECTIVE',
+  RemoveDirectiveUsage = 'REMOVE_DIRECTIVE_USAGE',
+  RemoveEnum = 'REMOVE_ENUM',
+  RemoveEnumValue = 'REMOVE_ENUM_VALUE',
+  RemoveField = 'REMOVE_FIELD',
+  RemoveImplementation = 'REMOVE_IMPLEMENTATION',
+  RemoveInput = 'REMOVE_INPUT',
+  RemoveInterface = 'REMOVE_INTERFACE',
+  RemoveObject = 'REMOVE_OBJECT',
+  RemoveScalar = 'REMOVE_SCALAR',
+  RemoveSchemaDefinition = 'REMOVE_SCHEMA_DEFINITION',
+  RemoveSchemaDirectiveUsage = 'REMOVE_SCHEMA_DIRECTIVE_USAGE',
+  RemoveSchemaRootOperation = 'REMOVE_SCHEMA_ROOT_OPERATION',
+  RemoveUnion = 'REMOVE_UNION',
+  RemoveUnionMember = 'REMOVE_UNION_MEMBER',
+  RemoveValidLocation = 'REMOVE_VALID_LOCATION'
+}
+
+export type FlatDiffTypeSummary = {
+  __typename?: 'FlatDiffTypeSummary';
+  add: Scalars['Int'];
+  change: Scalars['Int'];
+  remove: Scalars['Int'];
+  typeCount: Scalars['Int'];
+};
+
 /** Error connecting to Fly */
 export type FlyClientError = {
   __typename?: 'FlyClientError';
@@ -4587,7 +4883,7 @@ export type FlyRouterMutation = {
 
 export type GqlBillingPlanFromGrpc = {
   __typename?: 'GQLBillingPlanFromGrpc';
-  dbPlan?: Maybe<BillingPlanV2>;
+  dbPlan?: Maybe<BillingPlan>;
   matchesDbPlan?: Maybe<Scalars['Boolean']>;
   rawProtoJson?: Maybe<Scalars['String']>;
 };
@@ -4603,7 +4899,7 @@ export type GitContext = {
   remoteUrl?: Maybe<Scalars['String']>;
 };
 
-/** Input type to provide when specifying the Git context for a run of schema checks. */
+/** This is stored with a schema when it is uploaded */
 export type GitContextInput = {
   /** The Git repository branch used in the check. */
   branch?: InputMaybe<Scalars['String']>;
@@ -4796,7 +5092,7 @@ export type GraphVariant = {
   launch?: Maybe<Launch>;
   launchHistory: Array<Launch>;
   links?: Maybe<Array<LinkInfo>>;
-  lintResultById: LintResult;
+  lintResultById?: Maybe<LintResult>;
   /** The variant's name (e.g., `staging`). */
   name: Scalars['String'];
   /** A list of the saved [operation collections](https://www.apollographql.com/docs/studio/explorer/operation-collections/) associated with this variant. */
@@ -4813,6 +5109,7 @@ export type GraphVariant = {
   passTagDirectiveToApiSchema: Scalars['Boolean'];
   /** Which permissions the current user has for interacting with this variant */
   permissions: GraphVariantPermissions;
+  /** The Persisted Query List linked to this variant, if any. */
   persistedQueryList?: Maybe<PersistedQueryList>;
   /** Generate a federated operation plan for a given operation */
   plan?: Maybe<QueryPlan>;
@@ -5685,20 +5982,6 @@ export enum InvoiceStateV2 {
   Void = 'VOID'
 }
 
-export type InvoiceV2 = {
-  __typename?: 'InvoiceV2';
-  closedAt?: Maybe<Scalars['Timestamp']>;
-  collectionMethod?: Maybe<Scalars['String']>;
-  createdAt: Scalars['Timestamp'];
-  id: Scalars['ID'];
-  invoiceNumber: Scalars['Int'];
-  invoiceNumberV2: Scalars['String'];
-  state: InvoiceStateV2;
-  totalInCents: Scalars['Int'];
-  updatedAt: Scalars['Timestamp'];
-  uuid: Scalars['ID'];
-};
-
 /** Represents the complete process of making a set of updates to a deployed graph variant. */
 export type Launch = {
   __typename?: 'Launch';
@@ -5730,6 +6013,7 @@ export type Launch = {
   latestSequenceStep?: Maybe<LaunchSequenceStep>;
   /** Cloud Router order for this launch ID */
   order: OrderOrError;
+  proposalSummary?: Maybe<Scalars['String']>;
   /** A specific publication of a graph variant pertaining to this launch. */
   publication?: Maybe<SchemaTag>;
   /** A list of results from the completed launch. The items included in this list vary depending on whether the launch succeeded, failed, or was superseded. */
@@ -5765,15 +6049,6 @@ export type LaunchSequenceBuildStep = {
   startedAt?: Maybe<Scalars['Timestamp']>;
 };
 
-/** The timing details for the checks step of a launch. */
-export type LaunchSequenceCheckStep = {
-  __typename?: 'LaunchSequenceCheckStep';
-  /** The timestamp when the step completed. */
-  completedAt?: Maybe<Scalars['Timestamp']>;
-  /** The timestamp when the step started. */
-  startedAt?: Maybe<Scalars['Timestamp']>;
-};
-
 /** The timing details for the completion step of a launch. */
 export type LaunchSequenceCompletedStep = {
   __typename?: 'LaunchSequenceCompletedStep';
@@ -5798,7 +6073,7 @@ export type LaunchSequencePublishStep = {
 };
 
 /** Represents the various steps that occur in sequence during a single launch. */
-export type LaunchSequenceStep = LaunchSequenceBuildStep | LaunchSequenceCheckStep | LaunchSequenceCompletedStep | LaunchSequenceInitiatedStep | LaunchSequencePublishStep | LaunchSequenceSupersededStep;
+export type LaunchSequenceStep = LaunchSequenceBuildStep | LaunchSequenceCompletedStep | LaunchSequenceInitiatedStep | LaunchSequencePublishStep | LaunchSequenceSupersededStep;
 
 /** The timing details for the superseded step of a launch. This step occurs only if the launch is superseded by another launch. */
 export type LaunchSequenceSupersededStep = {
@@ -5842,7 +6117,9 @@ export type LintCheckTask = CheckWorkflowTask & {
   createdAt: Scalars['Timestamp'];
   graphID: Scalars['ID'];
   id: Scalars['ID'];
-  results: LintResult;
+  result?: Maybe<LintResult>;
+  /** @deprecated Use LintCheckTask.result instead. */
+  results?: Maybe<LintResult>;
   status: CheckWorkflowTaskStatus;
   targetURL?: Maybe<Scalars['String']>;
   workflow: CheckWorkflow;
@@ -5941,7 +6218,7 @@ export type LinterRuleLevelConfigurationChangesInput = {
   rule: LintRule;
 };
 
-export type ListNotFoundError = {
+export type ListNotFoundError = Error & {
   __typename?: 'ListNotFoundError';
   listId: Scalars['ID'];
   message: Scalars['String'];
@@ -6101,6 +6378,7 @@ export type Mutation = {
   trackRouterUsage?: Maybe<Scalars['Void']>;
   /** Rover session tracking. Reserved to https://rover.apollo.dev/telemetry (https://github.com/apollographql/orbiter). */
   trackRoverSession?: Maybe<Scalars['Void']>;
+  transferOdysseyProgress: Scalars['Boolean'];
   /** Unsubscribe a given email from all emails */
   unsubscribeFromAll?: Maybe<EmailPreferences>;
   /**
@@ -6333,6 +6611,13 @@ export type MutationTrackRoverSessionArgs = {
   remoteUrlHash?: InputMaybe<Scalars['SHA256']>;
   sessionId: Scalars['ID'];
   version: Scalars['String'];
+};
+
+
+/** GraphQL mutations */
+export type MutationTransferOdysseyProgressArgs = {
+  from: Scalars['ID'];
+  to: Scalars['ID'];
 };
 
 
@@ -7311,7 +7596,7 @@ export type PersistedQueriesPublishOperationCounts = {
   identical: Scalars['Int'];
   /** The number of operations removed from the list by this publish. */
   removed: Scalars['Int'];
-  /** The number of operations in this operation list that were not mentioned by this publish. */
+  /** The number of operations in this list that were not mentioned by this publish. */
   unaffected: Scalars['Int'];
   /** The number of operations whose metadata or body were changed by this publish. */
   updated: Scalars['Int'];
@@ -7339,24 +7624,31 @@ export type PersistedQueryEdge = {
   node: PersistedQuery;
 };
 
+/** Operations to be published to the Persisted Query List. */
 export type PersistedQueryInput = {
+  /** The GraphQL document for this operation, including all necessary fragment definitions. */
   body: Scalars['GraphQLDocument'];
+  /** An opaque identifier for this operation. This should map uniquely to an operation body; editing the body should generally result in a new ID. Apollo's tools generally use the lowercase hex SHA256 of the operation body. */
   id: Scalars['ID'];
+  /** A name for the operation. Typically this is the name of the actual GraphQL operation in the body. This does not need to be unique within a Persisted Query List; as a client project evolves and its operations change, multiple operations with the same name (but different body and id) can be published. */
   name: Scalars['String'];
+  /** The operation's type. */
   type: OperationType;
 };
 
 /** TODO */
 export type PersistedQueryList = {
   __typename?: 'PersistedQueryList';
-  builds?: Maybe<PersistedQueryListBuildConnection>;
+  builds: PersistedQueryListBuildConnection;
   createdAt: Scalars['Timestamp'];
   createdBy?: Maybe<User>;
   currentBuild: PersistedQueryListBuild;
   description: Scalars['String'];
   graph: Service;
+  /** The immutable ID for this Persisted Query List. */
   id: Scalars['ID'];
   lastUpdatedAt: Scalars['Timestamp'];
+  /** All variants linked to this Persisted Query List, if any. */
   linkedVariants: Array<GraphVariant>;
   name: Scalars['String'];
   operation?: Maybe<PersistedQuery>;
@@ -7387,13 +7679,14 @@ export type PersistedQueryListOperationsArgs = {
   last?: InputMaybe<Scalars['Int']>;
 };
 
-/** Information about a particular revision of the list, as produced by a particular publish */
+/** Information about a particular revision of the list, as produced by a particular publish. */
 export type PersistedQueryListBuild = {
   __typename?: 'PersistedQueryListBuild';
   list: PersistedQueryList;
   /** The chunks that made up this build. We do not commit to keeping the full contents of older revisions indefinitely, so this may be null for suitably old revisions. */
   manifestChunks?: Maybe<Array<PersistedQueryListManifestChunk>>;
   publish?: Maybe<PersistedQueriesPublish>;
+  /** The revision of this Persisted Query List. Revision 0 is the initial empty list; each publish increments the revision by 1. */
   revision: Scalars['Int'];
   /** The total number of operations in the list after this build. Compare to PersistedQueriesPublish.operationCounts. */
   totalOperationsInList: Scalars['Int'];
@@ -7422,6 +7715,7 @@ export type PersistedQueryListMutation = {
   __typename?: 'PersistedQueryListMutation';
   delete: DeletePersistedQueryListResultOrError;
   id: Scalars['ID'];
+  /** Updates this Persisted Query List by publishing a set of operations and removing other operations. Operations not mentioned remain in the list unchanged. */
   publishOperations: PublishOperationsResultOrError;
   updateMetadata: UpdatePersistedQueryListMetadataResultOrError;
 };
@@ -7470,6 +7764,8 @@ export type PromoteSchemaResponseOrError = PromoteSchemaError | PromoteSchemaRes
 
 export type Proposal = {
   __typename?: 'Proposal';
+  /** The variant this Proposal is under the hood. */
+  backingVariant: GraphVariant;
   createdAt: Scalars['Timestamp'];
   /**
    * null if user is deleted, or if user removed from org
@@ -7478,6 +7774,7 @@ export type Proposal = {
   createdBy?: Maybe<Identity>;
   displayName: Scalars['String'];
   id: Scalars['ID'];
+  /** The variant this Proposal was cloned/sourced from. */
   sourceVariant: GraphVariant;
   status: ProposalStatus;
   updatedAt: Scalars['Timestamp'];
@@ -7486,9 +7783,16 @@ export type Proposal = {
 
 export type ProposalMutation = {
   __typename?: 'ProposalMutation';
+  /** Publish to a subgraph. This will write the summary to proposals, and call registry's publishSubgraph. If composition is successful, this will update running routers. */
+  publishSubgraph: PublishProposalSubgraphResult;
   updateDisplayName: UpdateProposalResult;
   updateStatus: UpdateProposalResult;
   updateUpdatedByInfo: UpdateProposalResult;
+};
+
+
+export type ProposalMutationPublishSubgraphArgs = {
+  input: PublishProposalSubgraphInput;
 };
 
 
@@ -7581,12 +7885,28 @@ export type Protobuf = {
   text: Scalars['String'];
 };
 
+/** The result of a successful call to PersistedQueryListMutation.publishOperations. */
 export type PublishOperationsResult = {
   __typename?: 'PublishOperationsResult';
+  /** The build created by this publish operation. */
   build: PersistedQueryListBuild;
+  /** Returns `true` if no changes were made by this publish (and no new revision was created). Otherwise, returns `false`. */
+  unchanged: Scalars['Boolean'];
 };
 
+/** The interface returned by PersistedQueryListMutation.publishOperations. */
 export type PublishOperationsResultOrError = PermissionError | PublishOperationsResult;
+
+export type PublishProposalSubgraphInput = {
+  activePartialSchema: PartialSchemaInput;
+  gitContext?: InputMaybe<GitContextInput>;
+  revision: Scalars['String'];
+  subgraphName: Scalars['String'];
+  summary: Scalars['String'];
+  url?: InputMaybe<Scalars['String']>;
+};
+
+export type PublishProposalSubgraphResult = NotFoundError | PermissionError | Proposal | ValidationError;
 
 export type PushMarketoLeadInput = {
   /** Clearbit enriched LinkedIn URL */
@@ -8765,6 +9085,20 @@ export type SchemaTagSlackNotificationBodyArgs = {
   graphDisplayName: Scalars['String'];
 };
 
+/** An error that occurs when an invalid schema is passed in as user input */
+export type SchemaValidationError = Error & {
+  __typename?: 'SchemaValidationError';
+  issues: Array<SchemaValidationIssue>;
+  /** The error's details. */
+  message: Scalars['String'];
+};
+
+/** An error that occurs when an invalid schema is passed in as user input */
+export type SchemaValidationIssue = {
+  __typename?: 'SchemaValidationIssue';
+  message: Scalars['String'];
+};
+
 /** How many seats of the given types does an organization have (regardless of plan type)? */
 export type Seats = {
   __typename?: 'Seats';
@@ -8885,6 +9219,7 @@ export type Service = Identity & {
    * @deprecated Use doc instead
    */
   document?: Maybe<Scalars['GraphQLDocument']>;
+  flatDiff: FlatDiffResult;
   /** The capabilities that are supported for this graph */
   graphCapabilities: GraphCapabilities;
   graphType: GraphType;
@@ -9091,6 +9426,17 @@ export type ServiceDocArgs = {
  */
 export type ServiceDocumentArgs = {
   hash?: InputMaybe<Scalars['SHA256']>;
+};
+
+
+/**
+ * A graph in Apollo Studio represents a graph in your organization.
+ * Each graph has one or more variants, which correspond to the different environments where that graph runs (such as staging and production).
+ * Each variant has its own GraphQL schema, which means schemas can differ between environments.
+ */
+export type ServiceFlatDiffArgs = {
+  newSdlHash: Scalars['String'];
+  oldSdlHash: Scalars['String'];
 };
 
 
@@ -9870,6 +10216,7 @@ export type ServiceMutation = {
   newKey: GraphApiKey;
   /** Adds an override to the given users permission for this graph */
   overrideUserPermission?: Maybe<Service>;
+  /** Provides access to mutation fields for modifying a Persisted Query List with the provided ID. */
   persistedQueryList: PersistedQueryListMutation;
   /** Promote the schema with the given SHA-256 hash to active for the given variant/tag. */
   promoteSchema: PromoteSchemaResponseOrError;
@@ -12299,12 +12646,12 @@ export type ValidationResult = {
   type: ValidationErrorType;
 };
 
-export type VariantAlreadyLinkedError = {
+export type VariantAlreadyLinkedError = Error & {
   __typename?: 'VariantAlreadyLinkedError';
   message: Scalars['String'];
 };
 
-export type VariantAlreadyUnlinkedError = {
+export type VariantAlreadyUnlinkedError = Error & {
   __typename?: 'VariantAlreadyUnlinkedError';
   message: Scalars['String'];
 };
