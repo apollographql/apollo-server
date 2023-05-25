@@ -9,7 +9,6 @@ dist/
 
 # Don't format generated files!
 **/generated/**
-packages/server/src/plugin/schemaReporting/schemaReporter.ts
 
 .volta
 _redirects

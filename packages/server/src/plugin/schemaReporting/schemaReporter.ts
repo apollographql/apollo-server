@@ -11,6 +11,7 @@ import type { Fetcher } from '@apollo/utils.fetcher';
 import { packageVersion } from '../../generated/packageVersion.js';
 
 // Magic GraphQL comment allows codegen to find the query
+// prettier-ignore
 export const schemaReportGql = /* GraphQL */ `#graphql
   mutation SchemaReport($report: SchemaReport!, $coreSchema: String) {
     reportSchema(report: $report, coreSchema: $coreSchema) {
