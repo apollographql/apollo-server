@@ -57,7 +57,6 @@ import {
   ApolloServerPluginUsageReportingDisabled,
 } from '@apollo/server/plugin/disabled';
 import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
-import { ApolloServerPluginLandingPageGraphQLPlayground } from '@apollo/server-plugin-landing-page-graphql-playground';
 import {
   jest,
   describe,
@@ -2775,24 +2774,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
           200,
           /embeddable-sandbox.cdn.apollographql.com\/abcdef\/embeddable-sandbox.umd.production.min.js/s,
         );
-      });
-
-      // We can remove this test after the initial AS4 release once we stop supporting
-      // the playground package.
-      it('can install playground with specific version', async () => {
-        url = (
-          await createServer({
-            typeDefs: 'type Query {x: ID}',
-            plugins: [
-              ApolloServerPluginLandingPageGraphQLPlayground({
-                version: '9.8.7',
-              }),
-            ],
-          })
-        ).url;
-        await get()
-          .expect(/Playground/)
-          .expect(/react@9\.8\.7/);
       });
 
       it('can be disabled', async () => {
