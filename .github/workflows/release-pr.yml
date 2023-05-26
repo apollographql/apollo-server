@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - trevor/update-deprecate-playground-plugin
 
 jobs:
   release:
