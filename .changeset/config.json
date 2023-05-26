@@ -5,7 +5,6 @@
     { "repo": "apollographql/apollo-server" }
   ],
   "commit": false,
-  "fixed": [["@apollo/server", "@apollo/server-integration-testsuite"]],
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
