@@ -1,5 +1,11 @@
 # @apollo/server-plugin-landing-page-graphql-playground
 
+## 4.0.1
+
+### Patch Changes
+
+- [#7584](https://github.com/apollographql/apollo-server/pull/7584) [`f4c3cd9b6`](https://github.com/apollographql/apollo-server/commit/f4c3cd9b6cb8fa39c2327c438a426ca7b072a487) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Officially deprecate Playground plugin via README update
+
 ## 4.0.0
 
 One-time release of `@apollo/server-plugin-landing-page-graphql-playground` with support for Apollo Server 4. The version of this plugin designed for Apollo Server 2 and 3 was part of `apollo-server-core`.
