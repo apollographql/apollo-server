@@ -1,6 +1,6 @@
 # GraphQL Playground plugin
 
-> ⚠️ Note: this package will be completely unsupported when Apollo Server v4 is officially released. This package exists for migration purposes only. We do not intend to resolve security issues or other bugs with this package if they arise, so please migrate away from this to Apollo Server's default Explorer as soon as possible. ⚠️
+> ⚠️ Note: this package is unsupported. This package exists for v4 migration purposes only. We do not intend to resolve security issues or other bugs with this package if they arise, so please migrate away from this to Apollo Server's default Explorer as soon as possible. ⚠️
 
 This is a plugin for Apollo Server 4 that makes your GraphQL server serve the [GraphQL Playground IDE](https://github.com/graphql/graphql-playground) as a landing page.
 
