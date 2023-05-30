@@ -61,7 +61,7 @@ export function normalizeAndFormatErrors(
     const extensions: GraphQLErrorExtensions = {
       ...graphqlError.extensions,
       code:
-        graphqlError.extensions.code ??
+        graphqlError.extensions?.code ??
         ApolloServerErrorCode.INTERNAL_SERVER_ERROR,
     };
 
