@@ -29,7 +29,7 @@ describe('Errors', () => {
       // stacktrace should exist
       expect(error.extensions?.stacktrace).toBeDefined();
     });
-    it('error without extension gives INTERAL_SERVER_ERROR code', () => {
+    it('error without extension gives INTERNAL_SERVER_ERROR code', () => {
       const [error] = normalizeAndFormatErrors(
         [
           new Error(),
