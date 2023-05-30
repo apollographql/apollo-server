@@ -30,9 +30,13 @@ describe('Errors', () => {
       expect(error.extensions?.stacktrace).toBeDefined();
     });
     it('error without extension gives INTERNAL_SERVER_ERROR code', () => {
-      const [error] = normalizeAndFormatErrors([new Error()], {
+      const myBrokenGraphqlError = new GraphQLError('broken');
+      //@ts-ignore
+      delete myBrokenGraphqlError.extensions;
+      const [error] = normalizeAndFormatErrors([myBrokenGraphqlError], {
         includeStacktraceInErrorResponses: true,
       }).formattedErrors;
+      expect(error.message).toEqual('broken');
       expect(error.extensions?.code).toEqual('INTERNAL_SERVER_ERROR');
     });
     it('hides stacktrace by default', () => {
