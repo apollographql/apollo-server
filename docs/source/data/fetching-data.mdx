@@ -105,10 +105,10 @@ class ProductsDataSource {
     // Dataloader expects you to return a list with the results ordered just like the list in the arguments were
     // Since the database might return the results in a different order the following code sorts the results accordingly
     const productIdToProductMap = productList.reduce((mapping, product) => {
-        mapping[product.id] = product
-        return mapping
+        mapping[product.id] = product;
+        return mapping;
     }, {});
-    return ids.map((id) => (productIdToProductMap[id]))
+    return ids.map((id) => productIdToProductMap[id]);
   });
 
   async getProductFor(id) {
