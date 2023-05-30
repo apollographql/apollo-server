@@ -6,7 +6,7 @@
   "devDependencies": {
     "@rollup/plugin-commonjs": "25.0.0",
     "@rollup/plugin-json": "6.0.0",
-    "@rollup/plugin-node-resolve": "15.0.2",
+    "@rollup/plugin-node-resolve": "15.1.0",
     "@types/make-fetch-happen": "10.0.1",
     "rollup": "3.23.0"
   },
