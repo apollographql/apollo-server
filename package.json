@@ -98,7 +98,7 @@
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
     "rimraf": "5.0.1",
-    "rollup": "3.23.0",
+    "rollup": "3.23.1",
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.1.0",
