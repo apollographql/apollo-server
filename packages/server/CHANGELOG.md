@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.7.2
+
+### Patch Changes
+
+- [#7599](https://github.com/apollographql/apollo-server/pull/7599) [`c3f04d050`](https://github.com/apollographql/apollo-server/commit/c3f04d050d24585bc0e285b51e8798b0cc5d1a34) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update `@apollo/utils.usagereporting` dependency. Previously, installing `@apollo/gateway` and `@apollo/server` could result in duplicate / differently versioned installs of `@apollo/usage-reporting-protobuf`. This is because the `@apollo/server-gateway-interface` package was updated to use the latest protobuf, but the `@apollo/utils.usagereporting` package was not. After this change, users should always end up with a single install of the protobuf package when installing both `@apollo/server` and `@apollo/gateway` latest versions.
+
 ## 4.7.1
 
 ### Patch Changes
