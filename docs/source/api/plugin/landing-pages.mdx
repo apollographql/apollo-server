@@ -448,8 +448,7 @@ An object containing initial HTTP header values to populate in the Explorer on l
 
 ###### `embed`
 
-`boolean | ApolloServerPluginEmbedded`
-`LandingPageProductionConfigOptions`
+`boolean | EmbeddableSandboxOptions`
 </td>
 <td>
 
@@ -460,6 +459,19 @@ To embed the Apollo Sandbox, you must _also_ provide Apollo Server with the **gr
 The default value is `false`, in which case the landing page displays a basic `curl` command.
 
 You can configure the Explorer embedded on your Apollo Server endpoint with display and functional options. For supported options, see [`embed` options](#embed-options).
+
+</td>
+</tr>
+<tr>
+<td>
+
+###### `precomputedNonce`
+
+`string`
+</td>
+<td>
+
+The landing page renders with a randomly generated nonce for security purposes. If you'd like to provide your own nonce, you can do so here. This is useful for Cloudflare Workers which can't perform random number generation on startup.
 
 </td>
 </tr>

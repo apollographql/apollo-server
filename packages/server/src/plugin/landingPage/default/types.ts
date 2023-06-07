@@ -53,6 +53,13 @@ export type ApolloServerPluginLandingPageDefaultBaseOptions = {
 
   includeCookies?: boolean;
 
+  /**
+   * If specified, the landing page will use the provided nonce rather than
+   * compute its own. This is useful for Cloudflare Workers, which do not allow
+   * number generation on startup.
+   */
+  precomputedNonce?: string;
+
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 };
