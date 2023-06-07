@@ -1,5 +1,26 @@
 # @apollo/server
 
+## 4.7.3
+
+### Patch Changes
+
+- [#7601](https://github.com/apollographql/apollo-server/pull/7601) [`75b668d9e`](https://github.com/apollographql/apollo-server/commit/75b668d9ed576cbbdeaacdb4adfff051f430c21d) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Provide a new configuration option for landing page plugins `precomputedNonce` which allows users to provide a nonce and avoid calling into `uuid` functions on startup. This is useful for Cloudflare Workers where random number generation is not available on startup (only during requests). Unless you are using Cloudflare Workers, you can ignore this change.
+
+  The example below assumes you've provided a `PRECOMPUTED_NONCE` variable in your `wrangler.toml` file.
+
+  Example usage:
+
+  ```ts
+  const server = new ApolloServer({
+    // ...
+    plugins: [
+      ApolloServerPluginLandingPageLocalDefault({
+        precomputedNonce: PRECOMPUTED_NONCE,
+      }),
+    ],
+  });
+  ```
+
 ## 4.7.2
 
 ### Patch Changes
