@@ -89,7 +89,9 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   const version = maybeVersion ?? '_latest';
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
-  const nonce = createHash('sha256').update(uuidv4()).digest('hex');
+  const nonce =
+    config.precomputedNonce ??
+    createHash('sha256').update(uuidv4()).digest('hex');
 
   return {
     __internal_installed_implicitly__: false,

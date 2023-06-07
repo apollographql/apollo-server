@@ -53,6 +53,8 @@ export type ApolloServerPluginLandingPageDefaultBaseOptions = {
 
   includeCookies?: boolean;
 
+  precomputedNonce?: string;
+
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 };
