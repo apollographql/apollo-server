@@ -52,7 +52,7 @@ class MoviesAPI extends RESTDataSource {
   async getMostViewedMovies(limit = '10'): Promise<Movie[]> {
     const data = await this.get('movies', {
       params: {
-        per_page: limit,
+        per_page: limit.toString(), // all params entries should be strings,
         order_by: 'most_viewed',
       },
     });
