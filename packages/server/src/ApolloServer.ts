@@ -1016,11 +1016,24 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         runningServerState.landingPage &&
         this.prefersHTML(httpGraphQLRequest)
       ) {
+        let renderedHtml;
+        if (typeof runningServerState.landingPage.html === 'string') {
+          renderedHtml = runningServerState.landingPage.html;
+        } else {
+          try {
+            renderedHtml = await runningServerState.landingPage.html();
+          } catch (maybeError: unknown) {
+            const error = ensureError(maybeError);
+            this.logger.error(`Landing page \`html\` function threw: ${error}`);
+            return this.errorResponse(error, httpGraphQLRequest);
+          }
+        }
+
         return {
           headers: new HeaderMap([['content-type', 'text/html']]),
           body: {
             kind: 'complete',
-            string: runningServerState.landingPage.html,
+            string: renderedHtml,
           },
         };
       }

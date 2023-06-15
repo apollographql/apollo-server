@@ -41,14 +41,21 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
           Apollo Explorer cannot be loaded; it appears that you might be offline.
         </p>
       </div>
-      <style>
+      <style nonce="nonce">
         iframe {
           background-color: white;
+          height: 100%;
+          width: 100%;
+          border: none;
+        }
+        #embeddableExplorer {
+          width: 100vw;
+          height: 100vh;
+          position: absolute;
+          top: 0;
         }
       </style>
-      <div style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-           id="embeddableExplorer"
-      >
+      <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
               src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
@@ -56,7 +63,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script nonce="nonce">
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"document":"query Test { id }","headers":{"authorization":"true"},"variables":{"option":{"a":"val","b":1,"c":true}},"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"document":"query Test { id }","headers":{"authorization":"true"},"variables":{"option":{"a":"val","b":1,"c":true}},"displayOptions":{"showHeadersAndEnvVars":true,"docsPanelState":"open","theme":"light"}},"persistExplorerState":true,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true,"allowDynamicStyles":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -84,14 +91,21 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
           Apollo Explorer cannot be loaded; it appears that you might be offline.
         </p>
       </div>
-      <style>
+      <style nonce="nonce">
         iframe {
           background-color: white;
+          height: 100%;
+          width: 100%;
+          border: none;
+        }
+        #embeddableExplorer {
+          width: 100vw;
+          height: 100vh;
+          position: absolute;
+          top: 0;
         }
       </style>
-      <div style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-           id="embeddableExplorer"
-      >
+      <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
               src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
@@ -99,7 +113,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script nonce="nonce">
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"headers":{"authorization":"true"},"displayOptions":{}},"persistExplorerState":false,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"headers":{"authorization":"true"},"displayOptions":{}},"persistExplorerState":false,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true,"allowDynamicStyles":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -128,14 +142,21 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
           Apollo Explorer cannot be loaded; it appears that you might be offline.
         </p>
       </div>
-      <style>
+      <style nonce="nonce">
         iframe {
           background-color: white;
+          height: 100%;
+          width: 100%;
+          border: none;
+        }
+        #embeddableExplorer {
+          width: 100vw;
+          height: 100vh;
+          position: absolute;
+          top: 0;
         }
       </style>
-      <div style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-           id="embeddableExplorer"
-      >
+      <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
               src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
@@ -143,7 +164,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script nonce="nonce">
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"collectionId":"12345","operationId":"abcdef","displayOptions":{}},"persistExplorerState":false,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"collectionId":"12345","operationId":"abcdef","displayOptions":{}},"persistExplorerState":false,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":true,"allowDynamicStyles":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -170,14 +191,21 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
           Apollo Explorer cannot be loaded; it appears that you might be offline.
         </p>
       </div>
-      <style>
+      <style nonce="nonce">
         iframe {
           background-color: white;
+          height: 100%;
+          width: 100%;
+          border: none;
+        }
+        #embeddableExplorer {
+          width: 100vw;
+          height: 100vh;
+          position: absolute;
+          top: 0;
         }
       </style>
-      <div style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-           id="embeddableExplorer"
-      >
+      <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
               src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
@@ -185,7 +213,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script nonce="nonce">
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"displayOptions":{}},"persistExplorerState":false,"includeCookies":false,"runtime":"@apollo/server@4.0.0","runTelemetry":true};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"displayOptions":{}},"persistExplorerState":false,"includeCookies":false,"runtime":"@apollo/server@4.0.0","runTelemetry":true,"allowDynamicStyles":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,
@@ -215,14 +243,21 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
           Apollo Explorer cannot be loaded; it appears that you might be offline.
         </p>
       </div>
-      <style>
+      <style nonce="nonce">
         iframe {
           background-color: white;
+          height: 100%;
+          width: 100%;
+          border: none;
+        }
+        #embeddableExplorer {
+          width: 100vw;
+          height: 100vh;
+          position: absolute;
+          top: 0;
         }
       </style>
-      <div style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-           id="embeddableExplorer"
-      >
+      <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
               src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
@@ -230,7 +265,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       </script>
       <script nonce="nonce">
         var endpointUrl = window.location.href;
-        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"headers":{"authorization":"true"},"displayOptions":{}},"persistExplorerState":false,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":false};
+        var embeddedExplorerConfig = {"graphRef":"graph@current","target":"#embeddableExplorer","initialState":{"headers":{"authorization":"true"},"displayOptions":{}},"persistExplorerState":false,"includeCookies":true,"runtime":"@apollo/server@4.0.0","runTelemetry":false,"allowDynamicStyles":false};
         new window.EmbeddedExplorer({
           ...embeddedExplorerConfig,
           endpointUrl,

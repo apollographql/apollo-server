@@ -89,32 +89,52 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   const version = maybeVersion ?? '_latest';
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
-  const nonce =
-    config.precomputedNonce ??
-    createHash('sha256').update(uuidv4()).digest('hex');
+  const scriptSafeList = [
+    'https://apollo-server-landing-page.cdn.apollographql.com',
+    'https://embeddable-sandbox.cdn.apollographql.com',
+    'https://embeddable-explorer.cdn.apollographql.com',
+  ].join(' ');
+  const styleSafeList = [
+    'https://apollo-server-landing-page.cdn.apollographql.com',
+    'https://embeddable-sandbox.cdn.apollographql.com',
+    'https://embeddable-explorer.cdn.apollographql.com',
+    'https://fonts.googleapis.com',
+  ].join(' ');
+  const iframeSafeList = [
+    'https://explorer.embed.apollographql.com',
+    'https://sandbox.embed.apollographql.com',
+    'https://embed.apollo.local:3000',
+  ].join(' ');
 
   return {
     __internal_installed_implicitly__: false,
-    async serverWillStart() {
+    async serverWillStart(server) {
+      if (config.precomputedNonce) {
+        server.logger.warn(
+          "The `precomputedNonce` landing page configuration option is deprecated. Removing this option is strictly an improvement to Apollo Server's landing page Content Security Policy (CSP) implementation for preventing XSS attacks.",
+        );
+      }
       return {
         async renderLandingPage() {
-          const html = `
+          const encodedVersion = encodeURIComponent(version);
+          async function html() {
+            const nonce =
+              config.precomputedNonce ??
+              createHash('sha256').update(uuidv4()).digest('hex');
+            const scriptCsp = `script-src 'self' 'nonce-${nonce}' ${scriptSafeList}`;
+            const styleCsp = `style-src 'nonce-${nonce}' ${styleSafeList}`;
+            const imageCsp = `img-src https://apollo-server-landing-page.cdn.apollographql.com`;
+            const manifestCsp = `manifest-src https://apollo-server-landing-page.cdn.apollographql.com`;
+            const frameCsp = `frame-src ${iframeSafeList}`;
+            return `
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'nonce-${nonce}' https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
-            version,
-          )}/static/js/main.js https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
-            version,
-          )}/embeddable-sandbox.umd.production.min.js https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
-            version,
-          )}/embeddable-explorer.umd.production.min.js" />
+    <meta http-equiv="Content-Security-Policy" content="${scriptCsp}; ${styleCsp}; ${imageCsp}; ${manifestCsp}; ${frameCsp}" />
     <link
       rel="icon"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
-        version,
-      )}/assets/favicon.png"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedVersion}/assets/favicon.png"
     />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -126,22 +146,23 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     <meta name="description" content="Apollo server landing page" />
     <link
       rel="apple-touch-icon"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
-        version,
-      )}/assets/favicon.png"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedVersion}/assets/favicon.png"
     />
     <link
       rel="manifest"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
-        version,
-      )}/manifest.json"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedVersion}/manifest.json"
     />
     <title>Apollo Server</title>
   </head>
-  <body style="margin: 0; overflow-x: hidden; overflow-y: hidden">
+  <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
     <div id="react-root">
-      <style>
+      <style nonce=${nonce}>
+        body {
+          margin: 0;
+          overflow-x: hidden;
+          overflow-y: hidden;
+        }
         .fallback {
           opacity: 0;
           animation: fadeIn 1s 1s;
@@ -177,6 +198,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   </body>
 </html>
           `;
+          }
           return { html };
         },
       };

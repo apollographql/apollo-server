@@ -149,7 +149,7 @@ const server = new ApolloServer({
 
 </MultiCodeBlock>
 
-The handler should return an object with a string `html` field. The value of that field is served as HTML for any requests with `accept: text/html` headers.
+The handler should return an object with a string `html` property. The value of that property is served as HTML for any requests with `accept: text/html` headers. The `html` property can also be an `async` function that returns a string. This function is called for each landing page request.
 
 For more landing page options, see [Changing the landing page](../workflow/build-run-queries/#changing-the-landing-page).
 
@@ -166,7 +166,11 @@ const server = new ApolloServer({
       async serverWillStart() {
         return {
           async renderLandingPage() {
-            return { html: `<html><body>Welcome to your server!</body></html>` };
+            return {
+              async html() {
+                return `<html><body>Welcome to your server!</body></html>`;
+              },
+            };
           },
         };
       },
@@ -354,7 +358,7 @@ This event is _not_ associated with your GraphQL server's _resolvers_. When this
 
 > If the operation is anonymous (i.e., the operation is `query { ... }` instead of `query NamedQuery { ... }`), then `operationName` is `null`.
 
-If a `didResolveOperation` hook throws a [`GraphQLError`](../data/errors#custom-errors), that error is serialized and returned to the client with an HTTP status code of 500 unless [it specifies a different status code](../data/errors#setting-http-status-code-and-headers). 
+If a `didResolveOperation` hook throws a [`GraphQLError`](../data/errors#custom-errors), that error is serialized and returned to the client with an HTTP status code of 500 unless [it specifies a different status code](../data/errors#setting-http-status-code-and-headers).
 
 The `didResolveOperation` hook is a great spot to perform extra validation because it has access to the parsed and validated operation and the request-specific context (i.e., `contextValue`). Multiple plugins can run the `didResolveOperation` in parallel, but if more than one plugin throws, the client only receives a single error.
 

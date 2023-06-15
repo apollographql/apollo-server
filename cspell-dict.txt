@@ -89,6 +89,7 @@ Hofmann
 hrtime
 htmls
 httpcache
+iframes
 IHTTP
 importability
 instanceof

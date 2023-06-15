@@ -113,7 +113,7 @@ export interface GraphQLServerListener {
 
 // The page served to clients with `accept: text/html` headers.
 export interface LandingPage {
-  html: string;
+  html: string | (() => Promise<string>);
 }
 
 export type GraphQLRequestListenerParsingDidEnd = (

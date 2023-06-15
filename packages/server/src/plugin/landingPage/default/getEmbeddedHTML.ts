@@ -49,6 +49,8 @@ export const getEmbeddedExplorerHTML = (
     includeCookies?: boolean; // defaults to 'false'
 
     runTelemetry?: boolean;
+
+    allowDynamicStyles?: boolean; // defaults to 'true'
   }
   const productionLandingPageEmbedConfigOrDefault = {
     displayOptions: {},
@@ -85,6 +87,7 @@ export const getEmbeddedExplorerHTML = (
     includeCookies: config.includeCookies,
     runtime: apolloServerVersion,
     runTelemetry: productionLandingPageEmbedConfigOrDefault.runTelemetry,
+    allowDynamicStyles: false, // disabled for CSP - we add the iframe styles ourselves instead
   };
 
   return `
@@ -92,15 +95,21 @@ export const getEmbeddedExplorerHTML = (
   <h1>Welcome to Apollo Server</h1>
   <p>Apollo Explorer cannot be loaded; it appears that you might be offline.</p>
 </div>
-<style>
+<style nonce=${nonce}>
   iframe {
     background-color: white;
+    height: 100%;
+    width: 100%;
+    border: none;
+  }
+  #embeddableExplorer {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
   }
 </style>
-<div
-style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-id="embeddableExplorer"
-></div>
+<div id="embeddableExplorer"></div>
 <script nonce="${nonce}" src="https://embeddable-explorer.cdn.apollographql.com/${encodeURIComponent(
     explorerCdnVersion,
   )}/embeddable-explorer.umd.production.min.js?runtime=${encodeURIComponent(
@@ -154,21 +163,28 @@ export const getEmbeddedSandboxHTML = (
     endpointIsEditable: localDevelopmentEmbedConfigOrDefault.endpointIsEditable,
     runtime: apolloServerVersion,
     runTelemetry: localDevelopmentEmbedConfigOrDefault.runTelemetry,
+    allowDynamicStyles: false, // disabled for CSP - we add the iframe styles ourselves instead
   };
   return `
 <div class="fallback">
   <h1>Welcome to Apollo Server</h1>
   <p>Apollo Sandbox cannot be loaded; it appears that you might be offline.</p>
 </div>
-<style>
+<style nonce=${nonce}>
   iframe {
     background-color: white;
+    height: 100%;
+    width: 100%;
+    border: none;
+  }
+  #embeddableSandbox {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
   }
 </style>
-<div
-style="width: 100vw; height: 100vh; position: absolute; top: 0;"
-id="embeddableSandbox"
-></div>
+<div id="embeddableSandbox"></div>
 <script nonce="${nonce}" src="https://embeddable-sandbox.cdn.apollographql.com/${encodeURIComponent(
     sandboxCdnVersion,
   )}/embeddable-sandbox.umd.production.min.js?runtime=${encodeURIComponent(

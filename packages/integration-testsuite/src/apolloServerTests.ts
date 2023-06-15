@@ -2881,7 +2881,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
       }
 
       function makeServerConfig(
-        htmls: string[],
+        htmls: (string | (() => Promise<string>))[],
       ): ApolloServerOptions<BaseContext> {
         return {
           typeDefs: 'type Query {x: ID}',
@@ -2964,6 +2964,30 @@ export function defineIntegrationTestSuiteApolloServerTests(
         });
         it('needs the header', async () => {
           await getWithoutAcceptHeader().expect(serveNoLandingPage);
+        });
+      });
+
+      describe('async `html` function', () => {
+        it('returns a string', async () => {
+          url = (await createServer(makeServerConfig([async () => 'BAZ']))).url;
+          await get().expect(200, 'BAZ');
+        });
+        it('throws', async () => {
+          const logger = mockLogger();
+          url = (
+            await createServer({
+              ...makeServerConfig([
+                async () => {
+                  throw new Error('Landing page failed to render!');
+                },
+              ]),
+              logger,
+            })
+          ).url;
+          await get().expect(500);
+          expect(logger.error).toHaveBeenCalledWith(
+            'Landing page `html` function threw: Error: Landing page failed to render!',
+          );
         });
       });
 
