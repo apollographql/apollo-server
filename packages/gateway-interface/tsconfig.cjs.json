@@ -2,6 +2,6 @@
   "extends": ".",
   "compilerOptions": {
     "module": "commonjs",
-    "outDir": "./dist/cjs",
+    "outDir": "./dist/cjs"
   },
 }

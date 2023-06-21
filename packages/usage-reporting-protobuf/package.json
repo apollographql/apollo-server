@@ -5,19 +5,24 @@
   "type": "module",
   "exports": {
     ".": {
-      "import": "./generated/protobuf.mjs",
-      "require": "./generated/protobuf.cjs",
-      "types": "./generated/protobuf.d.ts"
+      "import": "./generated/esm/protobuf.js",
+      "require": "./generated/cjs/protobuf.js",
+      "types": {
+        "require": "./generated/cjs/protobuf.d.ts",
+        "default": "./generated/esm/protobuf.d.ts"
+      }
     }
   },
-  "main": "generated/protobuf.cjs",
-  "module": "generated/protobuf.mjs",
-  "types": "generated/protobuf.d.ts",
+  "main": "generated/cjs/protobuf.js",
+  "module": "generated/esm/protobuf.js",
+  "types": "generated/esm/protobuf.d.ts",
   "scripts": {
-    "generate": "rm -rf generated && mkdir generated && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
-    "pbjs-cjs": "apollo-pbjs --target static-module --out generated/protobuf.cjs --wrap commonjs --force-number --no-from-object src/reports.proto",
-    "pbjs-esm": "apollo-pbjs --target static-module --out generated/protobuf.mjs --es6 --force-number --no-from-object src/reports.proto",
-    "pbts": "mv generated/protobuf.{c,}js && apollo-pbts -o generated/protobuf.d.ts generated/protobuf.js && mv generated/protobuf.{,c}js",
+    "generate": "rm -rf generated && mkdir generated && mkdir generated/esm && mkdir generated/cjs && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
+    "pbjs-cjs": "apollo-pbjs --target static-module --out generated/cjs/protobuf.cjs --wrap commonjs --force-number --no-from-object src/reports.proto",
+    "pbjs-esm": "apollo-pbjs --target static-module --out generated/esm/protobuf.mjs --es6 --force-number --no-from-object src/reports.proto",
+    "pbts-cjs": "mv generated/cjs/protobuf.{c,}js && apollo-pbts -o generated/cjs/protobuf.d.ts generated/cjs/protobuf.js && echo {\"module\": \"commonjs\"} > generated/cjs/package.json",
+    "pbts-esm": "mv generated/esm/protobuf.{m,}js && apollo-pbts -o generated/esm/protobuf.d.ts generated/esm/protobuf.js",
+    "pbts": "npm run pbts-cjs && npm run pbts-esm",
     "update-proto": "curl -sSfo src/reports.proto https://usage-reporting.api.apollographql.com/proto/reports.proto"
   },
   "repository": {
