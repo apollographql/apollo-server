@@ -12,7 +12,12 @@ import path from 'path';
 import { writeFileSync } from 'fs';
 
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
-for (const dir of ['cache-control-types', 'gateway-interface', 'plugin-response-cache', 'server']) {
+for (const dir of [
+  'cache-control-types',
+  'gateway-interface',
+  'plugin-response-cache',
+  'server',
+]) {
   writeFileSync(
     path.join('packages', dir, 'dist', 'esm', 'package.json'),
     JSON.stringify({ type: 'module' }),
