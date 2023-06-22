@@ -3,17 +3,14 @@
   "version": "1.1.0",
   "description": "Interface used to connect Apollo Gateway to Apollo Server",
   "type": "module",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
+  "main": "",
   "types": "dist/esm/index.d.ts",
   "exports": {
     ".": {
       "types": {
         "require": "./dist/cjs/index.d.ts",
         "default": "./dist/esm/index.d.ts"
-      },
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      }
     }
   },
   "repository": {
