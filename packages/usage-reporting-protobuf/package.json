@@ -17,7 +17,7 @@
   "module": "generated/esm/protobuf.js",
   "types": "generated/esm/protobuf.d.ts",
   "scripts": {
-    "generate": "rm -rf generated && mkdir generated && mkdir generated/esm && mkdir generated/cjs && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
+    "generate": "rm -rf generated && mkdir -p generated/{esm,cjs} && npm run pbjs-cjs && npm run pbjs-esm && npm run pbts",
     "pbjs-cjs": "apollo-pbjs --target static-module --out generated/cjs/protobuf.cjs --wrap commonjs --force-number --no-from-object src/reports.proto",
     "pbjs-esm": "apollo-pbjs --target static-module --out generated/esm/protobuf.mjs --es6 --force-number --no-from-object src/reports.proto",
     "pbts-cjs": "mv generated/cjs/protobuf.{c,}js && apollo-pbts -o generated/cjs/protobuf.d.ts generated/cjs/protobuf.js && echo {\"type\":\"commonjs\"} > generated/cjs/package.json",
