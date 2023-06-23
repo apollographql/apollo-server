@@ -196,6 +196,11 @@ function isAsyncIterable<T>(value: any): value is AsyncIterable<T> {
   return value && typeof value[Symbol.asyncIterator] === 'function';
 }
 
+interface SubscriptionObject {
+  cancelled: boolean;
+  startConsumingSubscription: () => Promise<void>;
+  completeSubscription: () => Promise<void>;
+}
 // This class manages the state of subscriptions, heartbeat intervals, and
 // router requests. It keeps track of in flight requests so we can await them
 // during server cleanup.
@@ -203,22 +208,19 @@ class SubscriptionManager {
   private heartbeatIntervalMs: number;
   private logger?: ReturnType<typeof prefixedLogger>;
   private requestsInFlight: Set<Promise<any>> = new Set();
-  private heartbeatByCallbackUrl: Map<
+  // A map of information about subscriptions for a given callback url. For each
+  // url, this tracks its single heartbeat interval (with relevant heartbeat
+  // request info) and active subscriptions.
+  private subscriptionInfoByCallbackUrl: Map<
     string,
     {
-      id: string;
-      verifier: string;
-      interval: NodeJS.Timeout;
-      queue: Promise<void>[];
-    }
-  > = new Map();
-  private subscriptionIdsByCallbackUrl: Map<string, Set<string>> = new Map();
-  private activeSubscriptions: Map<
-    string,
-    {
-      cancelled: boolean;
-      startConsumingSubscription: () => Promise<void>;
-      completeSubscription: () => Promise<void>;
+      heartbeat?: {
+        id: string;
+        verifier: string;
+        interval: NodeJS.Timeout;
+        queue: Promise<void>[];
+      };
+      subscriptionsById: Map<string, SubscriptionObject>;
     }
   > = new Map();
 
@@ -284,16 +286,14 @@ class SubscriptionManager {
     id: string;
     verifier: string;
   }) {
-    // FIXME: possibly can consolidate these maps.
-
-    // Add subscription id to set of IDs for this callback url
-    if (!this.subscriptionIdsByCallbackUrl.has(callbackUrl)) {
-      this.subscriptionIdsByCallbackUrl.set(callbackUrl, new Set());
+    if (!this.subscriptionInfoByCallbackUrl.has(callbackUrl)) {
+      this.subscriptionInfoByCallbackUrl.set(callbackUrl, {
+        subscriptionsById: new Map(),
+      });
     }
-    this.subscriptionIdsByCallbackUrl.get(callbackUrl)!.add(id);
 
     // Skip interval creation if one already exists for this url
-    if (this.heartbeatByCallbackUrl.has(callbackUrl)) {
+    if (this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat) {
       this.logger?.debug(
         `Heartbeat interval already exists for ${callbackUrl}, reusing existing interval`,
         id,
@@ -320,7 +320,8 @@ class SubscriptionManager {
       const heartbeatPromise = new Promise<void>((r) => {
         resolveHeartbeatPromise = r;
       });
-      const existingHeartbeat = this.heartbeatByCallbackUrl.get(callbackUrl);
+      const existingHeartbeat =
+        this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat;
       if (!existingHeartbeat) {
         // FIXME: we can bail cleanly and log probably
         throw new Error(
@@ -337,7 +338,9 @@ class SubscriptionManager {
       // Send the heartbeat request
       try {
         const ids = Array.from(
-          this.subscriptionIdsByCallbackUrl.get(callbackUrl)!,
+          this.subscriptionInfoByCallbackUrl
+            .get(callbackUrl)
+            ?.subscriptionsById.keys() ?? [],
         );
         this.logger?.debug(
           `Sending \`heartbeat\` request to ${callbackUrl} for IDs: [${ids.join(
@@ -373,18 +376,12 @@ class SubscriptionManager {
               ',',
             )}]`,
           );
-          const heartbeat = this.heartbeatByCallbackUrl.get(callbackUrl);
           // Some of the IDs are invalid, so we need to update the id and
           // verifier for future heartbeat requests (both provided by the router
           // in the response body)
-          if (heartbeat) {
-            heartbeat.id = body.id;
-            heartbeat.verifier = body.verifier;
-          } else {
-            throw new Error(
-              `Programming error: Heartbeat interval unexpectedly missing for ${callbackUrl}`,
-            );
-          }
+          existingHeartbeat.id = body.id;
+          existingHeartbeat.verifier = body.verifier;
+
           this.terminateSubscriptions(body.invalid_ids, callbackUrl);
         } else if (result.status === 404) {
           // all ids we sent are invalid
@@ -395,9 +392,11 @@ class SubscriptionManager {
           this.terminateSubscriptions(ids, callbackUrl);
         }
       } catch (e) {
-        const heartbeat = this.heartbeatByCallbackUrl.get(callbackUrl);
         // FIXME: handle this error
-        this.logger?.error(`Heartbeat request failed: ${e}`, heartbeat?.id);
+        this.logger?.error(
+          `Heartbeat request failed: ${e}`,
+          existingHeartbeat.id,
+        );
         throw e;
       } finally {
         if (heartbeatRequest) {
@@ -410,12 +409,14 @@ class SubscriptionManager {
     }, this.heartbeatIntervalMs);
 
     // Add the heartbeat interval to the map of intervals
-    this.heartbeatByCallbackUrl.set(callbackUrl, {
+    const subscriptionInfo =
+      this.subscriptionInfoByCallbackUrl.get(callbackUrl)!;
+    subscriptionInfo.heartbeat = {
       interval: heartbeatInterval,
       id,
       verifier,
       queue: [],
-    });
+    };
   }
 
   // Cancels and cleans up the subscriptions for given IDs and callback url. If
@@ -424,24 +425,29 @@ class SubscriptionManager {
   // the router.
   private terminateSubscriptions(ids: string[], callbackUrl: string) {
     this.logger?.debug(`Terminating subscriptions for IDs: [${ids.join(',')}]`);
-    const subscriptionIds = this.subscriptionIdsByCallbackUrl.get(callbackUrl);
+    const subscriptionInfo =
+      this.subscriptionInfoByCallbackUrl.get(callbackUrl);
+    if (!subscriptionInfo) {
+      this.logger?.error(
+        `No subscriptions found for ${callbackUrl}, skipping termination`,
+      );
+      return;
+    }
+    const { subscriptionsById, heartbeat } = subscriptionInfo;
     for (const id of ids) {
-      subscriptionIds?.delete(id);
-      // if the list is empty now we can clean up everything for this callback url
-      if (subscriptionIds?.size === 0) {
-        this.logger?.debug(
-          `Terminating heartbeat interval, no more subscriptions for ${callbackUrl}`,
-        );
-        this.subscriptionIdsByCallbackUrl.delete(callbackUrl);
-        const heartbeat = this.heartbeatByCallbackUrl.get(callbackUrl);
-        if (heartbeat) clearInterval(heartbeat.interval);
-        this.heartbeatByCallbackUrl.delete(callbackUrl);
-      }
-      const subscription = this.activeSubscriptions.get(id);
+      const subscription = subscriptionsById.get(id);
       if (subscription) {
         subscription.cancelled = true;
       }
-      this.activeSubscriptions.delete(id);
+      subscriptionsById.delete(id);
+      // if the list is empty now we can clean up everything for this callback url
+      if (subscriptionsById?.size === 0) {
+        this.logger?.debug(
+          `Terminating heartbeat interval, no more subscriptions for ${callbackUrl}`,
+        );
+        if (heartbeat) clearInterval(heartbeat.interval);
+        this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
+      }
     }
   }
 
@@ -473,7 +479,7 @@ class SubscriptionManager {
           // will be cancelled during the heartbeat request. This does mean that
           // all updates "wait" while there's an active heartbeat in flight.
           const existingHeartbeat =
-            self.heartbeatByCallbackUrl.get(callbackUrl);
+            self.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat;
           if (existingHeartbeat && existingHeartbeat.queue.length > 0) {
             await existingHeartbeat.queue[existingHeartbeat.queue.length - 1];
           }
@@ -545,7 +551,14 @@ class SubscriptionManager {
     };
 
     subscriptionObject.startConsumingSubscription();
-    this.activeSubscriptions.set(id, subscriptionObject);
+    const subscriptionInfo =
+      this.subscriptionInfoByCallbackUrl.get(callbackUrl);
+    if (!subscriptionInfo) {
+      this.logger?.error(
+        `No existing heartbeat found for ${callbackUrl}, skipping subscription`,
+      );
+    }
+    subscriptionInfo?.subscriptionsById.set(id, subscriptionObject);
   }
 
   // Sends the `complete` request to the router.
@@ -590,20 +603,30 @@ class SubscriptionManager {
     }
   }
 
+  collectAllSubscriptions() {
+    return Array.from(this.subscriptionInfoByCallbackUrl.values()).reduce(
+      (subscriptions, { subscriptionsById }) => {
+        subscriptions.push(...Array.from(subscriptionsById.values()));
+        return subscriptions;
+      },
+      [] as SubscriptionObject[],
+    );
+  }
+
   async cleanup() {
     // Wait for our inflight heartbeats to finish - they might handle cancelling
     // some subscriptions
     await Promise.all(
-      Array.from(this.heartbeatByCallbackUrl.values()).map(
-        async (heartbeat) => {
-          clearInterval(heartbeat.interval);
-          await heartbeat.queue[heartbeat.queue.length - 1];
+      Array.from(this.subscriptionInfoByCallbackUrl.values()).map(
+        async ({ heartbeat }) => {
+          clearInterval(heartbeat?.interval);
+          await heartbeat?.queue[heartbeat.queue.length - 1];
         },
       ),
     );
     // Cancel / complete any still-active subscriptions
     await Promise.all(
-      [...this.activeSubscriptions.values()]
+      this.collectAllSubscriptions()
         .filter((s) => !s.cancelled)
         .map((s) => s.completeSubscription()),
     );
