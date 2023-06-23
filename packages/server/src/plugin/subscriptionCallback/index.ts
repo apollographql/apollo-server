@@ -540,8 +540,12 @@ class SubscriptionManager {
           });
           self.requestsInFlight.add(completeRequestPromise);
           await completeRequestPromise;
-        } catch {
-          // FIXME: handle this error?
+        } catch (e) {
+          // This is just the `complete` request. If something fails here, we
+          // can still proceed as usual and cleanup the subscription. The router
+          // should just terminate the subscription on its end when it doesn't
+          // receive a heartbeat for it.
+          self.logger?.error(`\`complete\` request failed: ${e}`, id);
         } finally {
           self.requestsInFlight.delete(completeRequestPromise!);
           // clean up the subscription (and heartbeat if necessary)
