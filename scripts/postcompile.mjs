@@ -11,19 +11,21 @@
 import path from 'path';
 import { writeFileSync } from 'fs';
 
+const packages = [
+  { dir: 'cache-control-types' },
+  { dir: 'gateway-interface' },
+  { dir: 'plugin-response-cache' },
+  { dir: 'server' },
+  { dir: 'usage-reporting-protobuf', outDir: 'generated' },
+];
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
-for (const dir of [
-  'cache-control-types',
-  'gateway-interface',
-  'plugin-response-cache',
-  'server',
-]) {
+for (const { dir, outDir = 'dist' } of packages) {
   writeFileSync(
-    path.join('packages', dir, 'dist', 'esm', 'package.json'),
+    path.join('packages', dir, outDir, 'esm', 'package.json'),
     JSON.stringify({ type: 'module' }),
   );
   writeFileSync(
-    path.join('packages', dir, 'dist', 'cjs', 'package.json'),
+    path.join('packages', dir, outDir, 'cjs', 'package.json'),
     JSON.stringify({ type: 'commonjs' }),
   );
 }

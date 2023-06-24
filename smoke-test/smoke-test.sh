@@ -33,9 +33,10 @@ pushd nodenext
 popd
 
 # Ensure basic TypeScript builds work.
-npx tsc --build tsconfig.{esm,cjs,cjs-nodenext}.json
+npx tsc --build tsconfig.{esm,cjs,cjs-nodenext,cjs-node16}.json
 node generated/tsc/smoke-test.cjs
 node generated/tsc/variants/nodenext/smoke-test.cjs
+node generated/tsc/variants/node16/smoke-test.cjs
 node generated/tsc/smoke-test.mjs
 
 # Ensure that we at least type-check against a variety of versions of Apollo
