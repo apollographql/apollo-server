@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-integration-testsuite",
-  "version": "4.7.4",
+  "version": "4.7.5",
   "description": "Test suite for Apollo Server integrations",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -26,12 +26,12 @@
     "node": ">=14.16.0"
   },
   "dependencies": {
-    "@apollo/cache-control-types": "^1.0.2",
+    "@apollo/cache-control-types": "^1.0.3",
     "@apollo/client": "^3.6.9",
-    "@apollo/server": "4.7.4",
+    "@apollo/server": "4.7.5",
     "@apollo/utils.keyvaluecache": "^2.1.0",
     "@apollo/utils.createhash": "^2.0.0",
-    "@apollo/usage-reporting-protobuf": "^4.1.0",
+    "@apollo/usage-reporting-protobuf": "^4.1.1",
     "@josephg/resolvable": "^1.0.1",
     "body-parser": "^1.20.0",
     "express": "^4.18.1",

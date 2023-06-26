@@ -1,5 +1,16 @@
 # @apollo/server-plugin-response-cache
 
+## 4.1.3
+
+### Patch Changes
+
+- [#7614](https://github.com/apollographql/apollo-server/pull/7614) [`4fadf3ddc`](https://github.com/apollographql/apollo-server/commit/4fadf3ddc9611e050dd0f08d51252ed9b0c0d9e1) Thanks [@Cellule](https://github.com/Cellule)! - Publish TypeScript typings for CommonJS modules output.
+
+  This allows TypeScript projects that use CommonJS modules with
+  `moduleResolution: "node16"` or
+  `moduleResolution: "nodeNext"`
+  to correctly resolves the typings of apollo's packages as CommonJS instead of ESM.
+
 ## 4.1.2
 
 ### Patch Changes

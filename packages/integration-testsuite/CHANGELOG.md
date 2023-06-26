@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.7.5
+
+### Patch Changes
+
+- Updated dependencies [[`4fadf3ddc`](https://github.com/apollographql/apollo-server/commit/4fadf3ddc9611e050dd0f08d51252ed9b0c0d9e1)]:
+  - @apollo/cache-control-types@1.0.3
+  - @apollo/server@4.7.5
+  - @apollo/usage-reporting-protobuf@4.1.1
+
 ## 4.7.4
 
 ### Patch Changes
