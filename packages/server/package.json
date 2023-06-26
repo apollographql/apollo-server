@@ -8,57 +8,90 @@
   "types": "dist/esm/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/index.d.ts",
+        "default": "./dist/esm/index.d.ts"
+      },
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
     "./errors": {
-      "types": "./dist/esm/errors/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/errors/index.d.ts",
+        "default": "./dist/esm/errors/index.d.ts"
+      },
       "import": "./dist/esm/errors/index.js",
       "require": "./dist/cjs/errors/index.js"
     },
     "./express4": {
-      "types": "./dist/esm/express4/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/express4/index.d.ts",
+        "default": "./dist/esm/express4/index.d.ts"
+      },
       "import": "./dist/esm/express4/index.js",
       "require": "./dist/cjs/express4/index.js"
     },
     "./standalone": {
-      "types": "./dist/esm/standalone/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/standalone/index.d.ts",
+        "default": "./dist/esm/standalone/index.d.ts"
+      },
       "import": "./dist/esm/standalone/index.js",
       "require": "./dist/cjs/standalone/index.js"
     },
     "./plugin/cacheControl": {
-      "types": "./dist/esm/plugin/cacheControl/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/cacheControl/index.d.ts",
+        "default": "./dist/esm/plugin/cacheControl/index.d.ts"
+      },
       "import": "./dist/esm/plugin/cacheControl/index.js",
       "require": "./dist/cjs/plugin/cacheControl/index.js"
     },
     "./plugin/disabled": {
-      "types": "./dist/esm/plugin/disabled/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/disabled/index.d.ts",
+        "default": "./dist/esm/plugin/disabled/index.d.ts"
+      },
       "import": "./dist/esm/plugin/disabled/index.js",
       "require": "./dist/cjs/plugin/disabled/index.js"
     },
     "./plugin/drainHttpServer": {
-      "types": "./dist/esm/plugin/drainHttpServer/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/drainHttpServer/index.d.ts",
+        "default": "./dist/esm/plugin/drainHttpServer/index.d.ts"
+      },
       "import": "./dist/esm/plugin/drainHttpServer/index.js",
       "require": "./dist/cjs/plugin/drainHttpServer/index.js"
     },
     "./plugin/inlineTrace": {
-      "types": "./dist/esm/plugin/inlineTrace/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/inlineTrace/index.d.ts",
+        "default": "./dist/esm/plugin/inlineTrace/index.d.ts"
+      },
       "import": "./dist/esm/plugin/inlineTrace/index.js",
       "require": "./dist/cjs/plugin/inlineTrace/index.js"
     },
     "./plugin/landingPage/default": {
-      "types": "./dist/esm/plugin/landingPage/default/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/landingPage/default/index.d.ts",
+        "default": "./dist/esm/plugin/landingPage/default/index.d.ts"
+      },
       "import": "./dist/esm/plugin/landingPage/default/index.js",
       "require": "./dist/cjs/plugin/landingPage/default/index.js"
     },
     "./plugin/schemaReporting": {
-      "types": "./dist/esm/plugin/schemaReporting/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/schemaReporting/index.d.ts",
+        "default": "./dist/esm/plugin/schemaReporting/index.d.ts"
+      },
       "import": "./dist/esm/plugin/schemaReporting/index.js",
       "require": "./dist/cjs/plugin/schemaReporting/index.js"
     },
     "./plugin/usageReporting": {
-      "types": "./dist/esm/plugin/usageReporting/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/usageReporting/index.d.ts",
+        "default": "./dist/esm/plugin/usageReporting/index.d.ts"
+      },
       "import": "./dist/esm/plugin/usageReporting/index.js",
       "require": "./dist/cjs/plugin/usageReporting/index.js"
     }

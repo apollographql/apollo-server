@@ -10,31 +10,22 @@
 
 import path from 'path';
 import { writeFileSync } from 'fs';
-import { rimraf } from 'rimraf';
-import { glob } from 'glob';
 
-/**
- * @type Promise<boolean> | undefined
- */
-let rimrafPromise;
-// Remove CJS .d.ts files: we don't need two copies!
-try {
-  const matches = await glob(`packages/*/dist/cjs/**/*.d.ts`);
-  rimrafPromise = rimraf(matches);
-} catch (err) {
-  process.exit(1);
-}
-
+const packages = [
+  { dir: 'cache-control-types' },
+  { dir: 'gateway-interface' },
+  { dir: 'plugin-response-cache' },
+  { dir: 'server' },
+  { dir: 'usage-reporting-protobuf', outDir: 'generated' },
+];
 // Tell Node what kinds of files the ".js" files in these subdirectories are.
-for (const dir of ['cache-control-types', 'plugin-response-cache', 'server']) {
+for (const { dir, outDir = 'dist' } of packages) {
   writeFileSync(
-    path.join('packages', dir, 'dist', 'esm', 'package.json'),
+    path.join('packages', dir, outDir, 'esm', 'package.json'),
     JSON.stringify({ type: 'module' }),
   );
   writeFileSync(
-    path.join('packages', dir, 'dist', 'cjs', 'package.json'),
+    path.join('packages', dir, outDir, 'cjs', 'package.json'),
     JSON.stringify({ type: 'commonjs' }),
   );
 }
-
-await rimrafPromise;

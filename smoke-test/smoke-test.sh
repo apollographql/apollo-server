@@ -28,13 +28,15 @@ grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle.mjs
 # tsconfig using moduleResolution: nodenext. Let's run it before the others
 # since this is the "pickiest" of the tests.
 pushd nodenext
-  tsc --build .
+  npx tsc --build .
   node ./dist/smoke-test.js
 popd
 
 # Ensure basic TypeScript builds work.
-tsc --build tsconfig.{esm,cjs}.json
+npx tsc --build tsconfig.{esm,cjs,cjs-nodenext,cjs-node16}.json
 node generated/tsc/smoke-test.cjs
+node generated/tsc/variants/nodenext/smoke-test.cjs
+node generated/tsc/variants/node16/smoke-test.cjs
 node generated/tsc/smoke-test.mjs
 
 # Ensure that we at least type-check against a variety of versions of Apollo
@@ -67,7 +69,7 @@ if [[ -z "${INCREMENTAL_DELIVERY_TESTS_ENABLED:-}" ]]; then
   pushd gateway-compatibility
     for version in 0.50.1 0.51.0 0.x 2.0.0 2.0.5 2.x; do
       npm i --no-save --legacy-peer-deps --no-engine-strict "@apollo/gateway@$version"
-      tsc --build tsconfig.json
+      npx tsc --build tsconfig.json
     done
   popd
 fi

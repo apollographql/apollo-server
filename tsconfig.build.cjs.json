@@ -6,6 +6,7 @@
   "include": [],
   "references": [
     { "path": "./packages/cache-control-types/tsconfig.cjs.json" },
+    { "path": "./packages/gateway-interface/tsconfig.cjs.json" },
     { "path": "./packages/integration-testsuite/tsconfig.cjs.json" },
     { "path": "./packages/plugin-response-cache/tsconfig.cjs.json" },
     { "path": "./packages/server/tsconfig.cjs.json" },

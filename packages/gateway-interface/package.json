@@ -4,7 +4,15 @@
   "description": "Interface used to connect Apollo Gateway to Apollo Server",
   "type": "module",
   "main": "",
-  "types": "dist/index.d.ts",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": {
+        "require": "./dist/cjs/index.d.ts",
+        "default": "./dist/esm/index.d.ts"
+      }
+    }
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/apollographql/apollo-server",
