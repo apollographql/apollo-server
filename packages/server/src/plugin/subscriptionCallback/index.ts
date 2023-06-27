@@ -296,6 +296,8 @@ class SubscriptionManager {
       `Starting new heartbeat interval for ${callbackUrl}`,
       id,
     );
+
+    let consecutiveHeartbeatFailureCount = 0;
     const heartbeatInterval = setInterval(async () => {
       let heartbeatRequest: Promise<Response> | undefined;
 
@@ -313,10 +315,14 @@ class SubscriptionManager {
       const existingHeartbeat =
         this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat;
       if (!existingHeartbeat) {
-        // FIXME: we can bail cleanly and log probably
-        throw new Error(
-          `Programming error: Heartbeat interval unexpectedly missing for ${callbackUrl}`,
+        // This is unexpected - if the interval is still running we should have
+        // an entry in the map for it. But if we do end up here, there's no
+        // reason to let the interval continue to run.
+        clearInterval(heartbeatInterval);
+        this.logger?.error(
+          `Programming error: Heartbeat interval unexpectedly missing for ${callbackUrl}. This is probably a bug in Apollo Server.`,
         );
+        return;
       }
       const { queue } = existingHeartbeat;
       queue.push(heartbeatPromise);
@@ -354,6 +360,7 @@ class SubscriptionManager {
         // The heartbeat response might contain updates for us to act upon, so we
         // need to await it
         const result = await heartbeatRequest;
+        consecutiveHeartbeatFailureCount = 0;
 
         this.logger?.debug(
           `Heartbeat request successful for IDs: [${ids.join(',')}]`,
@@ -382,12 +389,30 @@ class SubscriptionManager {
           this.terminateSubscriptions(ids, callbackUrl);
         }
       } catch (e) {
-        // FIXME: handle this error
+        // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed: ${e}`,
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${e}`,
           existingHeartbeat.id,
         );
-        throw e;
+
+        if (consecutiveHeartbeatFailureCount >= 5) {
+          this.logger?.error(
+            `Heartbeat request failed ${consecutiveHeartbeatFailureCount} times, terminating subscriptions and heartbeat interval: ${e}`,
+            existingHeartbeat.id,
+          );
+          // If we've failed 5 times in a row, we should terminate all
+          // subscriptions for this callback url. This will also handle
+          // cleaning up the heartbeat interval.
+          this.terminateSubscriptions(
+            Array.from(
+              this.subscriptionInfoByCallbackUrl
+                .get(callbackUrl)
+                ?.subscriptionsById.keys() ?? [],
+            ),
+            callbackUrl,
+          );
+        }
+        return;
       } finally {
         if (heartbeatRequest) {
           this.requestsInFlight.delete(heartbeatRequest);
