@@ -3,7 +3,6 @@ import { GraphQLError, subscribe, type ExecutionResult } from 'graphql';
 import fetch, { type Response } from 'node-fetch';
 import { ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
-import { internalPlugin } from '../../internalPlugin.js';
 import { HeaderMap } from '../../utils/HeaderMap.js';
 
 export interface ApolloServerPluginSubscriptionCallbackOptions {
@@ -19,12 +18,16 @@ export function ApolloServerPluginSubscriptionCallback(
     ? prefixedLogger(options.logger, 'SubscriptionCallback')
     : undefined;
 
-  return internalPlugin({
-    __internal_plugin_id__: 'SubscriptionCallback',
-    __is_disabled_plugin__: false,
+  return {
     async requestDidStart({ request }) {
+      const subscriptionExtension = request?.extensions?.subscription;
       // If it's not a callback subscription, ignore the request.
-      if (!request?.extensions?.subscription) return;
+      if (!subscriptionExtension) return;
+      const {
+        callback_url: callbackUrl,
+        subscription_id: id,
+        verifier,
+      } = subscriptionExtension;
 
       return {
         // Implementing `responseForOperation` is the only hook that allows us
@@ -34,11 +37,8 @@ export function ApolloServerPluginSubscriptionCallback(
         // will be done in `willSendResponse`. The router expects the initial
         // response to be a 200, with the `subscription-protocol` header set to
         // `callback`.
-        async responseForOperation({ request }) {
-          logger?.debug(
-            'Received new subscription request',
-            request.extensions!.subscription.subscription_id,
-          );
+        async responseForOperation() {
+          logger?.debug('Received new subscription request', id);
 
           return {
             http: {
@@ -64,16 +64,8 @@ export function ApolloServerPluginSubscriptionCallback(
           operationName,
           response,
         }) {
-          const {
-            callback_url: callbackUrl,
-            subscription_id: id,
-            verifier,
-          } = request.extensions!.subscription;
           try {
-            logger?.debug(
-              'Sending `check` request to router',
-              request.extensions!.subscription.subscription_id,
-            );
+            logger?.debug('Sending `check` request to router', id);
             // Before responding to the original request, we need to complete a
             // roundtrip `check` request to the router, so we `await` this
             // request.
@@ -82,10 +74,7 @@ export function ApolloServerPluginSubscriptionCallback(
               id,
               verifier,
             });
-            logger?.debug(
-              '`check` request successful',
-              request.extensions!.subscription.subscription_id,
-            );
+            logger?.debug('`check` request successful', id);
           } catch (e) {
             const graphqlError = ensureGraphQLError(e);
             logger?.error(
@@ -125,15 +114,16 @@ export function ApolloServerPluginSubscriptionCallback(
             );
             subscriptionManager.completeRequest({
               errors: [graphqlError],
-              callbackUrl: request?.extensions?.subscription?.callback_url,
-              id: request.extensions?.subscription?.subscription_id,
-              verifier: request.extensions?.subscription?.verifier,
+              callbackUrl,
+              id,
+              verifier,
             });
+            return;
           }
 
           // In the case of errors, send a `complete` request to the router with
           // the errors.
-          if ('errors' in subscription!) {
+          if ('errors' in subscription) {
             logger?.error(
               `graphql-js subscription unsuccessful: [\n\t${subscription.errors
                 ?.map((e) => e.message)
@@ -144,31 +134,31 @@ export function ApolloServerPluginSubscriptionCallback(
             try {
               subscriptionManager.completeRequest({
                 errors: subscription.errors,
-                callbackUrl: request?.extensions?.subscription?.callback_url,
-                id: request.extensions?.subscription?.subscription_id,
-                verifier: request.extensions?.subscription?.verifier,
+                callbackUrl,
+                id,
+                verifier,
               });
             } catch (e) {
               // TODO: not sure how to best handle a failed "completion with
               // errors" request outside of retrying.
               logger?.error(`\`complete\` request failed: ${e}`, id);
             }
-          } else if (isAsyncIterable(subscription!)) {
+          } else if (isAsyncIterable(subscription)) {
             // We have a real subscription - now we can kick off the heartbeat
             // interval and consume the AsyncIterable on the `subscription`
             // object.
             logger?.debug('graphql-js subscription successful', id);
             subscriptionManager.initHeartbeat({
-              callbackUrl: request?.extensions?.subscription?.callback_url,
-              id: request.extensions?.subscription?.subscription_id,
-              verifier: request.extensions?.subscription?.verifier,
+              callbackUrl,
+              id,
+              verifier,
             });
 
             subscriptionManager.startConsumingSubscription({
               subscription,
-              callbackUrl: request?.extensions?.subscription?.callback_url,
-              id: request.extensions?.subscription?.subscription_id,
-              verifier: request.extensions?.subscription?.verifier,
+              callbackUrl,
+              id,
+              verifier,
             });
           }
 
@@ -189,7 +179,7 @@ export function ApolloServerPluginSubscriptionCallback(
         },
       };
     },
-  });
+  };
 }
 
 function isAsyncIterable<T>(value: any): value is AsyncIterable<T> {
