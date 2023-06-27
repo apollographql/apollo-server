@@ -902,6 +902,85 @@ describe('SubscriptionCallbackPlugin', () => {
         ]
       `);
     });
+
+    it('handles failed heartbeats', async () => {
+      const server = await startSubscriptionServer({ logger });
+
+      // Mock the initial check response from the router.
+      mockRouterCheckResponse();
+
+      // Start the subscription; this triggers the initial check request and
+      // starts the heartbeat interval. This simulates an incoming subscription
+      // request from the router.
+      const result = await server.executeOperation({
+        query: `#graphql
+          subscription {
+            count
+          }
+        `,
+        extensions: {
+          subscription: {
+            callback_url: 'http://mock-router-url.com',
+            subscription_id: '1234-cats',
+            verifier: 'my-verifier-token',
+          },
+        },
+      });
+
+      expect(result.http.status).toEqual(200);
+      expect(result.http.headers.get('subscription-protocol')).toEqual(
+        'callback',
+      );
+
+      // 5 failures is the limit before the heartbeat is cancelled. We expect to
+      // see 5 errors and then a final error indicating the heartbeat was
+      // cancelled in the log snapshot below.
+      for (let i = 0; i < 5; i++) {
+        // mock heartbeat response failure
+        nock('http://mock-router-url.com')
+          .matchHeader('content-type', 'application/json')
+          .post('/', {
+            kind: 'subscription',
+            action: 'heartbeat',
+            id: '1234-cats',
+            verifier: 'my-verifier-token',
+            ids: ['1234-cats'],
+          })
+          .replyWithError('network request error');
+        // trigger heartbeat
+        jest.advanceTimersByTime(5000);
+      }
+
+      await server.stop();
+
+      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+        [
+          "SubscriptionCallback[1234-cats]: Received new subscription request",
+          "SubscriptionCallback[1234-cats]: Sending \`check\` request to router",
+          "SubscriptionCallback[1234-cats]: \`check\` request successful",
+          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+          "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+          "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (1 consecutive): FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (2 consecutive): FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (3 consecutive): FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (4 consecutive): FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Terminating subscriptions for IDs: [1234-cats]",
+          "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        ]
+      `);
+    });
   });
 });
 
