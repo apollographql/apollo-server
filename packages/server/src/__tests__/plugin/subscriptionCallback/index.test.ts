@@ -766,7 +766,7 @@ describe('SubscriptionCallbackPlugin', () => {
 
       // Mock the failed check response from the router.
       mockRouterCheckResponse({
-        statusCode: 400,
+        statusCode: 500,
         responseBody: 'Invalid subscription ID provided',
       });
 
@@ -794,7 +794,7 @@ describe('SubscriptionCallbackPlugin', () => {
         context: async () => ({}),
       });
 
-      expect(result.status).toEqual(400);
+      expect(result.status).toEqual(500);
       assert(result.body.kind === 'complete');
       expect(JSON.parse(result.body.string)).toEqual({
         errors: [

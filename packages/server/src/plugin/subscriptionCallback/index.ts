@@ -85,7 +85,7 @@ export function ApolloServerPluginSubscriptionCallback(
             // request with a >=400 status code.
             if (response.body.kind === 'single') {
               response.body.singleResult.errors = [graphqlError];
-              response.http.status = 400;
+              response.http.status = 500;
             }
             return;
           }
