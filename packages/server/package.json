@@ -88,7 +88,10 @@
       "require": "./dist/cjs/plugin/schemaReporting/index.js"
     },
     "./plugin/subscriptionCallback": {
-      "types": "./dist/esm/plugin/subscriptionCallback/index.d.ts",
+      "types": {
+        "require": "./dist/cjs/plugin/subscriptionCallback/index.d.ts",
+        "default": "./dist/esm/plugin/subscriptionCallback/index.d.ts"
+      },
       "import": "./dist/esm/plugin/subscriptionCallback/index.js",
       "require": "./dist/cjs/plugin/subscriptionCallback/index.js"
     },
