@@ -260,9 +260,11 @@ export async function runHttpQuery<TContext extends BaseContext>({
       ...graphQLResponse.http,
       body: {
         kind: 'complete',
-        string: prettyJSONStringify(
-          orderExecutionResultFields(graphQLResponse.body.singleResult),
-        ),
+        string: internals.stringifyResult ?
+          internals.stringifyResult(graphQLResponse.body.singleResult) :
+          prettyJSONStringify(
+            orderExecutionResultFields(graphQLResponse.body.singleResult),
+          ),
       },
     };
   }
