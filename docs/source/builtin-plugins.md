@@ -13,7 +13,7 @@ You can also [create custom plugins](./integrations/plugins/).
 | Name | Description | Location |
 |------|---------|-------------|
 | [Usage reporting](./api/plugin/usage-reporting/) | Gathers helpful operation usage data and reports it to [GraphOS](/graphos/) for visualization, alerting, and more. |`@apollo/server/plugin/usageReporting` |
-| [Schema reporting](./api/plugin/schema-reporting/) | Automatically reports the server's schema to [Apollo Studio](/studio/) on startup to enable schema history and up-to-date metrics. | `@apollo/server/plugin/schemaReporting` |
+| [Schema reporting](./api/plugin/schema-reporting/) | Automatically reports the server's schema to [GraphOS](/graphos/) on startup to enable schema history and up-to-date metrics. | `@apollo/server/plugin/schemaReporting` |
 | [Inline trace](./api/plugin/inline-trace/) | Used primarily by [federated subgraphs](https://www.apollographql.com/docs/federation/) to include operation trace data in responses to the gateway. | `@apollo/server/plugin/inlineTrace` |
 | [Cache control](./api/plugin/cache-control/) | Calculates caching behavior for operation responses. | `@apollo/server/plugin/cacheControl` |
 | [Landing page (multiple)](./api/plugin/landing-pages) | Handle displaying a default or custom landing page at Apollo Server's base URL. | `@apollo/server/plugin/landingPage/default` |
