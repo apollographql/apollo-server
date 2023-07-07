@@ -22,7 +22,7 @@ your server project's `node_modules` directory:
 
 Every GraphQL server (including Apollo Server) uses a schema to define the structure of data that clients can query. In this example, we'll create a schema for the example in the prerequisite tutorial:
 
-Create a `schema.graphql` file and paste in the sceham:
+Create a `schema.graphql` file and paste in the schema:
 
 ```graphql
 type Query {
@@ -31,14 +31,16 @@ type Query {
 }
 
 type Mutation {
-  createRecord(name: String!, position: String, level: Int): Record
+  createRecord(name: String!, position: String, level: String): Record
+  deleteRecord(id: ID!): Boolean
+  updateRecord(id: ID! name: String, position: String, level: String): Record
 }
 
 type Record {
   id: ID
   name: String
   position: String
-  level: Int
+  level: String
 }
 ```
 
@@ -54,25 +56,51 @@ Create a new `resolvers.ts` file and connect the resolvers to your MongoDB conne
 import db from "./db/conn.ts";
 
 const resolvers = {
+  Record: {
+    id: (parent) => parent.id ?? parent._id,
+  },
   Query: {
     async record(_, { id }, context) {
       let collection = await db.collection("records");
-      let query = {_id: new ObjectId(req.params.id)};
+      let query = { _id: new ObjectId(id) };
 
       return await collection.findOne(query);
     },
-    async records(_,__,context) {
+    async records(_, __, context) {
       let collection = await db.collection("records");
-      return await collection.find({}).toArray();
-    }
+      const records = await collection.find({}).toArray();
+      return records;
+    },
   },
   Mutation: {
     async createRecord(_, { name, position, level }, context) {
       let collection = await db.collection("records");
-      return await collection.insertOne({ name, position, level });
-    }
-  }
-}
+      const insert = await collection.insertOne({ name, position, level });
+      if (insert.acknowledged)
+        return { name, position, level, id: insert.insertedId };
+      return null;
+    },
+    async updateRecord(_, args, context) {
+      const id = new ObjectId(args.id);
+      let query = { _id: new ObjectId(id) };
+      let collection = await db.collection("records");
+      const update = await collection.updateOne(
+        query,
+        { $set: { ...args } }
+      );
+
+      if (update.acknowledged)
+        return await collection.findOne(query);
+
+      return null;
+    },
+    async deleteRecord(_, { id }, context) {
+      let collection = await db.collection("records");
+      const dbDelete = await collection.deleteOne({ _id: new ObjectId(id) });
+      return dbDelete.acknowledged && dbDelete.deletedCount == 1 ? true : false;
+    },
+  },
+};
 
 export default resolvers;
 ```
@@ -96,6 +124,7 @@ import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
 import resolvers from "./resolvers.mjs";
+import { readFileSync } from "fs";
 //highlight-end
 
 const PORT = process.env.PORT || 5050;
@@ -110,9 +139,9 @@ const typeDefs = gql(
       encoding: "utf-8",
     })
   );
-const schema = buildSubgraphSchema({ typeDefs, resolvers });
+
 const server = new ApolloServer({
-    schema,
+    schema: buildSubgraphSchema({ typeDefs, resolvers }),
 });
 // Note you must call `start()` on the `ApolloServer`
 // instance before passing the instance to `expressMiddleware`

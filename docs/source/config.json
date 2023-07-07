@@ -60,6 +60,9 @@
       "Metrics and logging": "/monitoring/metrics",
       "Health checks": "/monitoring/health-checks"
     },
+    "Tutorials": {
+      "MERN Stack": "/tutorials/mern"
+    },
     "API Reference": {
       "ApolloServer": "/api/apollo-server",
       "startStandaloneServer": "/api/standalone",
