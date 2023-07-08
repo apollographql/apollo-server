@@ -38,9 +38,9 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.7.16",
-    "@apollo/gateway": "2.4.8",
-    "@apollo/subgraph": "2.4.8",
+    "@apollo/client": "3.7.17",
+    "@apollo/gateway": "2.4.9",
+    "@apollo/subgraph": "2.4.9",
     "@apollo/utils.createhash": "2.0.1",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",
@@ -70,8 +70,8 @@
     "@types/type-is": "1.6.3",
     "@types/uuid": "9.0.2",
     "@types/whatwg-mimetype": "3.0.0",
-    "@typescript-eslint/eslint-plugin": "5.60.1",
-    "@typescript-eslint/parser": "5.60.1",
+    "@typescript-eslint/eslint-plugin": "5.61.0",
+    "@typescript-eslint/parser": "5.61.0",
     "@vendia/serverless-express": "4.10.4",
     "awaiting": "3.0.0",
     "body-parser": "1.20.2",
@@ -84,10 +84,10 @@
     "express": "4.18.2",
     "graphql": "16.7.1",
     "graphql-tag": "2.12.6",
-    "jest": "29.5.0",
-    "jest-config": "29.5.0",
+    "jest": "29.6.1",
+    "jest-config": "29.6.1",
     "jest-junit": "16.0.0",
-    "jest-mock": "29.5.0",
+    "jest-mock": "29.6.1",
     "jest-mock-random": "1.1.1",
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
@@ -96,7 +96,7 @@
     "prettier": "2.8.8",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
-    "rollup": "3.26.0",
+    "rollup": "3.26.2",
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.1.1",
@@ -109,6 +109,6 @@
   },
   "volta": {
     "node": "18.16.1",
-    "npm": "9.7.2"
+    "npm": "9.8.0"
   }
 }
