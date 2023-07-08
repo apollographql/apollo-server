@@ -2067,7 +2067,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           schema,
           stringifyResult: (value: FormattedExecutionResult) => {
             let result = JSON.stringify(value, null, 1); // stringify, with line-breaks and indents
-            result = result.replace("it works", "stringifyResults works!"); // remove all but the first space for each line
+            result = result.replace('it works', 'stringifyResults works!'); // replace text with something custom
             return result;
           },
         });
