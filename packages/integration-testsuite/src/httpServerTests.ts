@@ -305,7 +305,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     }
     afterEach(stopServer);
 
-    describe.only('graphqlHTTP', () => {
+    describe('graphqlHTTP', () => {
       it('rejects the request if the method is not POST or GET', async () => {
         const app = await createApp();
         const req = request(app)
@@ -2062,7 +2062,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
-      it.only('uses stringifyResult parameter', async () => {
+      it('uses stringifyResult parameter', async () => {
         // function stringifyResultTestFn (value: FormattedExecutionResult): string {
         //   return `Prefixing the results: ${JSON.stringify(value.data)}`
         // }
