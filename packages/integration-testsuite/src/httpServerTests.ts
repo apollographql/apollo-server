@@ -2062,7 +2062,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
-      it('uses stringifyResult parameter', async () => {g
+      it('uses stringifyResult parameter', async () => {
         const app = await createApp({
           schema,
           stringifyResult: (value: FormattedExecutionResult) => {
