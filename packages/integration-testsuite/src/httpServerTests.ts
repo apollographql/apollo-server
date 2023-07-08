@@ -2063,10 +2063,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
       });
 
       it('uses stringifyResult parameter', async () => {
-        // function stringifyResultTestFn (value: FormattedExecutionResult): string {
-        //   return `Prefixing the results: ${JSON.stringify(value.data)}`
-        // }
-
         const app = await createApp({
           schema,
           stringifyResult: (value: FormattedExecutionResult) => {
