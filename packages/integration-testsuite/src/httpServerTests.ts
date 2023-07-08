@@ -18,6 +18,7 @@ import {
   GraphQLSchema,
   GraphQLString,
   type ValidationContext,
+  FormattedExecutionResult,
 } from 'graphql';
 import gql from 'graphql-tag';
 import {
@@ -304,7 +305,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
     }
     afterEach(stopServer);
 
-    describe('graphqlHTTP', () => {
+    describe.only('graphqlHTTP', () => {
       it('rejects the request if the method is not POST or GET', async () => {
         const app = await createApp();
         const req = request(app)
@@ -2058,6 +2059,35 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(res.body.errors[0].message).toEqual(expected);
+        });
+      });
+
+      it.only('uses stringifyResult parameter', async () => {
+        // function stringifyResultTestFn (value: FormattedExecutionResult): string {
+        //   return `Prefixing the results: ${JSON.stringify(value.data)}`
+        // }
+
+        const app = await createApp({
+          schema,
+          stringifyResult: (value: FormattedExecutionResult) => {
+            let result = JSON.stringify(value, null, 1); // stringify, with line-breaks and indents
+            result = result.replace("it works", "stringifyResults works!"); // remove all but the first space for each line
+            return result;
+          },
+        });
+        const expected = {
+          testString: 'stringifyResults works!',
+        };
+        const query = {
+          query: 'query test{ testString }',
+        };
+        const req = request(app)
+          .get('/')
+          .set('apollo-require-preflight', 't')
+          .query(query);
+        return req.then((res) => {
+          expect(res.status).toEqual(200);
+          expect(res.body.data).toEqual(expected);
         });
       });
     });
