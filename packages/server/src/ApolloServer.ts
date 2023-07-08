@@ -15,7 +15,7 @@ import {
   type TypedQueryDocumentNode,
   type ValidationContext,
   type ValidationRule,
-  FormattedExecutionResult,
+  type FormattedExecutionResult,
 } from 'graphql';
 import {
   type KeyValueCache,

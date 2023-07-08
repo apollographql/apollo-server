@@ -18,7 +18,7 @@ import {
   GraphQLSchema,
   GraphQLString,
   type ValidationContext,
-  FormattedExecutionResult,
+  type FormattedExecutionResult,
 } from 'graphql';
 import gql from 'graphql-tag';
 import {
@@ -2062,7 +2062,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         });
       });
 
-      it('uses stringifyResult parameter', async () => {
+      it('uses stringifyResult parameter', async () => {g
         const app = await createApp({
           schema,
           stringifyResult: (value: FormattedExecutionResult) => {
