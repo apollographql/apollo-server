@@ -142,7 +142,7 @@ describe('ApolloServer construction', () => {
     takesConfig({ modules: [] });
   });
   describe('with configuration options', () => {
-    it('test', async () => {
+    it('stringifyResult', async () => {
       const server = new ApolloServer({
         typeDefs,
         resolvers,
@@ -174,9 +174,6 @@ describe('ApolloServer construction', () => {
                 }
       }"
       `);
-      // const result = singleResult(body);
-      // expect(result.errors).toBeUndefined();
-      // expect(result.data?.hello).toBe('world');
       await server.stop();
     });
   });
