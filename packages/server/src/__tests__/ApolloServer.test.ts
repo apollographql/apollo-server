@@ -143,35 +143,37 @@ describe('ApolloServer construction', () => {
   });
   describe('with configuration options', () => {
     it('test', async () => {
-        const server = new ApolloServer({
-          typeDefs,
-          resolvers,
-          stringifyResult: (value: FormattedExecutionResult) => {
-            let result = JSON.stringify(value, null, 10000)
-            result = result.replace('world', 'stringifyResults works!'); // replace text with something custom
-            return result;
-          },
-        });
-
-        await server.start();
-
-        const request = {
-          httpGraphQLRequest: {
-            method: 'POST',
-            headers: new HeaderMap([['content-type', 'application-json']]),
-            body: { query: '{ hello }' },
-            search: '',
-          },
-          context: async () => ({}),
-        };
-
-        const { body } = await server.executeHTTPGraphQLRequest(request);
-        expect(JSON.stringify(body)).toMatchInlineSnapshot(`"{\"kind\":\"complete\",\"string\":\"{\\n          \\\"data\\\": {\\n                    \\\"hello\\\": \\\"stringifyResults works!\\\"\\n          }\\n}\"}"`);
-        // const result = singleResult(body);
-        // expect(result.errors).toBeUndefined();
-        // expect(result.data?.hello).toBe('world');
-        await server.stop();
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: (value: FormattedExecutionResult) => {
+          let result = JSON.stringify(value, null, 10000);
+          result = result.replace('world', 'stringifyResults works!'); // replace text with something custom
+          return result;
+        },
       });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ hello }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      const { body } = await server.executeHTTPGraphQLRequest(request);
+      expect(JSON.stringify(body)).toMatchInlineSnapshot(
+        `"{\"kind\":\"complete\",\"string\":\"{\\n          \\\"data\\\": {\\n                    \\\"hello\\\": \\\"stringifyResults works!\\\"\\n          }\\n}\"}"`,
+      );
+      // const result = singleResult(body);
+      // expect(result.errors).toBeUndefined();
+      // expect(result.data?.hello).toBe('world');
+      await server.stop();
+    });
   });
 });
 

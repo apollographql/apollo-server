@@ -2066,7 +2066,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         const app = await createApp({
           schema,
           stringifyResult: (value: FormattedExecutionResult) => {
-            let result = JSON.stringify(value, null, 10000)
+            let result = JSON.stringify(value, null, 10000);
             result = result.replace('it works', 'stringifyResults works!'); // replace text with something custom
             return result;
           },
@@ -2085,7 +2085,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.text).toMatchSnapshot(`"{\n          "data": {\n                    "testString": "stringifyResults works!"\n          }\n}"`);
+          expect(res.text).toMatchSnapshot(
+            `"{\n          "data": {\n                    "testString": "stringifyResults works!"\n          }\n}"`,
+          );
         });
       });
     });
