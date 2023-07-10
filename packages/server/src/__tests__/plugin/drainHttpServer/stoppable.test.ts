@@ -113,7 +113,7 @@ Object.keys(schemes).forEach((schemeName) => {
         const err = await a.failure(
           request(`${schemeName}://localhost:${p}`).agent(scheme.agent()),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
         expect(closed).toBe(1);
       });
 
@@ -135,7 +135,7 @@ Object.keys(schemes).forEach((schemeName) => {
             scheme.agent({ keepAlive: true }),
           ),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
         expect(closed).toBe(0);
       });
     });
@@ -159,7 +159,7 @@ Object.keys(schemes).forEach((schemeName) => {
         const err = await a.failure(
           request(`${schemeName}://localhost:${p}`).agent(scheme.agent()),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
 
         expect(closed).toBe(1);
         expect(gracefully).toBe(true);
@@ -185,7 +185,7 @@ Object.keys(schemes).forEach((schemeName) => {
             scheme.agent({ keepAlive: true }),
           ),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
 
         expect(closed).toBe(1);
         expect(gracefully).toBe(true);
