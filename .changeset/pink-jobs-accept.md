@@ -11,7 +11,7 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   stringifyResult: (value: FormattedExecutionResult) => {
-    return JSON.stringify(value, null, 2);;
+    return JSON.stringify(value, null, 2);
   },
 });
 ```
