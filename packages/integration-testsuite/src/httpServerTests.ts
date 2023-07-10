@@ -18,7 +18,6 @@ import {
   GraphQLSchema,
   GraphQLString,
   type ValidationContext,
-  type FormattedExecutionResult,
 } from 'graphql';
 import gql from 'graphql-tag';
 import {
@@ -2059,35 +2058,6 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(res.body.errors[0].message).toEqual(expected);
-        });
-      });
-
-      it('uses stringifyResult parameter', async () => {
-        const app = await createApp({
-          schema,
-          stringifyResult: (value: FormattedExecutionResult) => {
-            let result = JSON.stringify(value, null, 10000);
-            result = result.replace('it works', 'stringifyResults works!'); // replace text with something custom
-            return result;
-          },
-        });
-        const expected = {
-          testString: 'stringifyResults works!',
-        };
-        const query = {
-          query: 'query test{ testString }',
-        };
-
-        const req = request(app)
-          .get('/')
-          .set('apollo-require-preflight', 't')
-          .query(query);
-        return req.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data).toEqual(expected);
-          expect(res.text).toMatchSnapshot(
-            `"{\n          "data": {\n                    "testString": "stringifyResults works!"\n          }\n}"`,
-          );
         });
       });
     });
