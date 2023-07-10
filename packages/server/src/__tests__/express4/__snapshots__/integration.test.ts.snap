@@ -11,15 +11,3 @@ exports[`integration tests httpServerTests.ts graphqlHTTP uses stringifyResult p
           }
 }"
 `;
-
-exports[`integration tests httpServerTests.ts graphqlHTTP uses stringifyResult parameter: {
-          "data": {
-                    "testString": "stringifyResults works!"
-          }
-} 1`] = `
-"{
-          "data": {
-                    "testString": "stringifyResults works!"
-          }
-}"
-`;
