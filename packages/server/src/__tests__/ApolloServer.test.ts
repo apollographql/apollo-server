@@ -166,9 +166,14 @@ describe('ApolloServer construction', () => {
       };
 
       const { body } = await server.executeHTTPGraphQLRequest(request);
-      expect(JSON.stringify(body)).toMatchInlineSnapshot(
-        `"{\"kind\":\"complete\",\"string\":\"{\\n          \\\"data\\\": {\\n                    \\\"hello\\\": \\\"stringifyResults works!\\\"\\n          }\\n}\"}"`,
-      );
+      assert(body.kind === 'complete');
+      expect(body.string).toMatchInlineSnapshot(`
+      "{
+                "data": {
+                          "hello": "stringifyResults works!"
+                }
+      }"
+      `);
       // const result = singleResult(body);
       // expect(result.errors).toBeUndefined();
       // expect(result.data?.hello).toBe('world');
