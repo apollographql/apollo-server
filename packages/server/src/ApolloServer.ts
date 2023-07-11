@@ -334,7 +334,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         config.status400ForVariableCoercionErrors ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
-      stringifyResult: config.stringifyResult,
+      stringifyResult: config.stringifyResult ?? prettyJSONStringify
     };
   }
 

@@ -261,7 +261,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
       body: {
         kind: 'complete',
         string: internals.stringifyResult
-          ? internals.stringifyResult(graphQLResponse.body.singleResult)
+          ? internals.stringifyResult(orderExecutionResultFields(graphQLResponse.body.singleResult))
           : prettyJSONStringify(
               orderExecutionResultFields(graphQLResponse.body.singleResult),
             ),
