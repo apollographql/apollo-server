@@ -8,6 +8,7 @@ import type { Logger } from '@apollo/utils.logger';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
   DocumentNode,
+  FormattedExecutionResult,
   GraphQLFieldResolver,
   GraphQLFormattedError,
   GraphQLSchema,
@@ -88,7 +89,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   includeStacktraceInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;
-
+  stringifyResult?: (value: FormattedExecutionResult) => string;
   introspection?: boolean;
   plugins?: ApolloServerPlugin<TContext>[];
   persistedQueries?: PersistedQueryOptions | false;
