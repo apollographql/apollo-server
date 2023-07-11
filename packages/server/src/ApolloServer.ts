@@ -180,7 +180,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   // flip default behavior.
   status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
-  stringifyResult?: (value: FormattedExecutionResult) => string;
+  stringifyResult: (value: FormattedExecutionResult) => string;
 }
 
 function defaultLogger(): Logger {
@@ -334,7 +334,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         config.status400ForVariableCoercionErrors ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
-      stringifyResult: config.stringifyResult ?? prettyJSONStringify
+      stringifyResult: config.stringifyResult ?? prettyJSONStringify,
     };
   }
 
