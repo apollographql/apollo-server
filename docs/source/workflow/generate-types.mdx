@@ -50,6 +50,12 @@ import { readFileSync } from 'fs';
 // if the server is executed using `npm run`.
 const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
 
+interface MyContext {
+  dataSources: {
+    books: Book[];
+  };
+}
+
 const server = new ApolloServer<MyContext>({
   typeDefs,
   resolvers,
