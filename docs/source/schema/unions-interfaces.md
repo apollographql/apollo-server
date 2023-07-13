@@ -260,7 +260,6 @@ Here's a valid result for the above query:
 }
 ```
 
-
 ### Resolving an interface
 
 > Before reading this section, [learn about resolvers](../data/resolvers/).
