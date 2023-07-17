@@ -1,9 +1,7 @@
 {
   "extends": [
     "apollo-open-source",
-    "group:graphqlcodegeneratorMonorepo",
-    "group:graphql-toolsMonorepo",
-    "group:jestMonorepo",
+    "group:monorepos",
     "group:jestPlusTSJest",
     "group:jestPlusTypes",
   ],
