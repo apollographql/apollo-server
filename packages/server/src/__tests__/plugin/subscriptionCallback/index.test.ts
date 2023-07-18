@@ -797,6 +797,7 @@ describe('SubscriptionCallbackPlugin', () => {
       expect(result.status).toEqual(500);
       assert(result.body.kind === 'complete');
       expect(JSON.parse(result.body.string)).toEqual({
+        data: null,
         errors: [
           {
             message: 'Failed to initialize subscription',

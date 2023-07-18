@@ -47,7 +47,9 @@ export function ApolloServerPluginSubscriptionCallback(
             },
             body: {
               kind: 'single',
-              singleResult: {},
+              singleResult: {
+                data: null,
+              },
             },
           };
         },
