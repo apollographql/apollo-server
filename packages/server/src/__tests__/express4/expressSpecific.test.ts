@@ -193,7 +193,7 @@ it('supporting doubly-encoded variables example from migration guide', async () 
       query: 'query Hello($s: String!){hello(s: $s)}',
       variables: '{malformed JSON}',
     })
-    .expect(400, 'Unexpected token m in JSON at position 1');
+    .expect(400, /in JSON at position 1/);
 
   await server.stop();
 });
