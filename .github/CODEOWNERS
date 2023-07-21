@@ -1,4 +1,1 @@
-# The renovate-approve bot is allowed to merge its own PRs.  As it's not
-# a regular GitHub user (but rather, an app!), its username is indicated
-# as such, using the `app/` prefix. https://github.com/apps/renovate-approve
-/docs/ app/renovate-approve @stephenbarlow @glasser
+/docs/ @apollographql/docs @glasser @trevor-scheer
