@@ -136,6 +136,10 @@ Object.keys(schemes).forEach((schemeName) => {
         );
         expect(err.code).toMatch(/ECONNREFUSED/);
 
+        // Node 19 (http) and 20.4+ (https) more aggressively close idle
+        // connections. `Stopper` is no longer needed for the purpose of closing
+        // idle connections in these versions. However, `Stopper` _is_ still
+        // needed to gracefully finish in-flight requests.
         const isNode20 = !!process.version.match(/^v20\./);
         expect(closed).toBe(isNode20 ? 1 : 0);
       });
