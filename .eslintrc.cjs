@@ -11,6 +11,7 @@ module.exports = {
       files: ['**/*.ts'],
       excludedFiles: '**/__tests__/**/*.ts',
       rules: {
+        // Dissallow importing a node module without it being specified in package.json
         "import/no-extraneous-dependencies": "error",
         'import/extensions': ['error', 'ignorePackages'],
         '@typescript-eslint/consistent-type-imports': [
