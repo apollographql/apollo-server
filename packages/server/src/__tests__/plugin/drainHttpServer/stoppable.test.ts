@@ -32,6 +32,7 @@ const a: any = require('awaiting');
 const request: any = require('requisition');
 import fs from 'fs';
 import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
+import child from 'child_process';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
@@ -135,9 +136,7 @@ Object.keys(schemes).forEach((schemeName) => {
           ),
         );
         expect(err.code).toMatch(/ECONNREFUSED/);
-
-        const isNode20 = !!process.version.match(/^v20\./);
-        expect(closed).toBe(isNode20 ? 1 : 0);
+        expect(closed).toBe(0);
       });
     });
 
@@ -302,21 +301,12 @@ Object.keys(schemes).forEach((schemeName) => {
 
     if (schemeName === 'http') {
       it('with in-flights finishing before grace period ends', async () => {
-        let stopper: Stopper;
-        const killServerBarrier = resolvable();
-        const server = http.createServer(async (_, res) => {
-          res.writeHead(200);
-          res.write('hello');
-
-          await killServerBarrier;
-          res.end('world');
-          await stopper.stop();
-        });
-        stopper = new Stopper(server);
-        server.listen(0);
-        const p = port(server);
-
-        const res = await request(`${schemeName}://localhost:${p}/`).agent(
+        const file = path.join(__dirname, 'stoppable', 'server.js');
+        const server = child.spawn('node', [file]);
+        const [data] = await a.event(server.stdout, 'data');
+        const port = +data.toString();
+        expect(typeof port).toBe('number');
+        const res = await request(`${schemeName}://localhost:${port}/`).agent(
           scheme.agent({ keepAlive: true }),
         );
         let gotBody = false;
@@ -330,13 +320,13 @@ Object.keys(schemes).forEach((schemeName) => {
         expect(gotBody).toBe(false);
 
         // Tell the server that its request should finish.
-        killServerBarrier.resolve();
+        server.kill('SIGUSR1');
 
         const body = await bodyPromise;
         expect(gotBody).toBe(true);
         expect(body).toBe('helloworld');
 
-        // Wait for server to close.
+        // Wait for subprocess to go away.
         await a.event(server, 'close');
       });
     }
