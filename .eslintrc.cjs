@@ -11,6 +11,7 @@ module.exports = {
       files: ['**/*.ts'],
       excludedFiles: '**/__tests__/**/*.ts',
       rules: {
+        "import/no-extraneous-dependencies": "error",
         'import/extensions': ['error', 'ignorePackages'],
         '@typescript-eslint/consistent-type-imports': [
           'error',
