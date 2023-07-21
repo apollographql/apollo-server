@@ -98,7 +98,6 @@
     "requisition": "1.7.0",
     "rollup": "3.26.3",
     "supertest": "6.3.3",
-    "superagent": "8.0.7",
     "test-listen": "1.1.0",
     "ts-jest": "29.1.1",
     "typescript": "5.1.6"
