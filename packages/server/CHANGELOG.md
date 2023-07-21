@@ -1,5 +1,23 @@
 # @apollo/server
 
+## 4.8.0
+
+### Minor Changes
+
+- [#7634](https://github.com/apollographql/apollo-server/pull/7634) [`f8a8ea08f`](https://github.com/apollographql/apollo-server/commit/f8a8ea08fed4090115b1a025e57bdb0f2deb82fc) Thanks [@dfperry5](https://github.com/dfperry5)! - Updating the ApolloServer constructor to take in a stringifyResult function that will allow a consumer to pass in a function that formats the result of an http query.
+
+  Usage:
+
+  ```ts
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    stringifyResult: (value: FormattedExecutionResult) => {
+      return JSON.stringify(value, null, 2);
+    },
+  });
+  ```
+
 ## 4.7.5
 
 ### Patch Changes
