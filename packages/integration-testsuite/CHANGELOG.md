@@ -1,5 +1,16 @@
 # @apollo/server-integration-testsuite
 
+## 4.8.0
+
+### Patch Changes
+
+- [#7649](https://github.com/apollographql/apollo-server/pull/7649) [`d33acdfdd`](https://github.com/apollographql/apollo-server/commit/d33acdfddd525c2cb1d5d5810a98e02fb917ac9f) Thanks [@mastrzyz](https://github.com/mastrzyz)! - Add missing `supertest` dependency
+
+- [#7632](https://github.com/apollographql/apollo-server/pull/7632) [`64f8177ab`](https://github.com/apollographql/apollo-server/commit/64f8177abca46865c155ff2fc8ed0194ad8d0c83) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- Updated dependencies [[`f8a8ea08f`](https://github.com/apollographql/apollo-server/commit/f8a8ea08fed4090115b1a025e57bdb0f2deb82fc)]:
+  - @apollo/server@4.8.0
+
 ## 4.7.5
 
 ### Patch Changes
