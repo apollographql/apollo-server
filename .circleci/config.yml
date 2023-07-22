@@ -132,7 +132,6 @@ jobs:
         command: "! git grep FIXM\x45"
 
 workflows:
-  version: 2
   Build:
     jobs:
       - NodeJS:
@@ -143,6 +142,7 @@ workflows:
                 - "14"
                 - "16"
                 - "18"
+                - "20"
       - "Check for FIXM\x45"
       - Prettier
       - ESLint
