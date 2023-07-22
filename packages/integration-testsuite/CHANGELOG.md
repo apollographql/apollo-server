@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.8.1
+
+### Patch Changes
+
+- [#7636](https://github.com/apollographql/apollo-server/pull/7636) [`42fc65cb2`](https://github.com/apollographql/apollo-server/commit/42fc65cb282a8d5b8bf853775a8eedc421d33524) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update test suite for compatibility with Node v20
+
+- Updated dependencies [[`42fc65cb2`](https://github.com/apollographql/apollo-server/commit/42fc65cb282a8d5b8bf853775a8eedc421d33524)]:
+  - @apollo/server@4.8.1
+
 ## 4.8.0
 
 ### Patch Changes
