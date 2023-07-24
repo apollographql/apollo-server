@@ -365,7 +365,7 @@ class SubscriptionManager {
         consecutiveHeartbeatFailureCount = 0;
 
         this.logger?.debug(
-          `Heartbeat request successful for IDs: [${ids.join(',')}]`,
+          `Heartbeat received response for IDs: [${ids.join(',')}]`,
         );
 
         if (result.status === 400) {
