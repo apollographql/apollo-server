@@ -1,8 +1,6 @@
 import { ApolloServer, HeaderMap } from '@apollo/server';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
 import { describe, expect, test } from '@jest/globals';
 import assert from 'assert';
-import { mockLogger } from '../../mockLogger';
 
 describe('ApolloServerPluginLandingPageDefault', () => {
   test(`nonce isn't reused between requests`, async () => {
