@@ -314,9 +314,10 @@ class SubscriptionManager {
       const heartbeatPromise = new Promise<void>((r) => {
         resolveHeartbeatPromise = r;
       });
-      const existingHeartbeat =
-        this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat;
-      if (!existingHeartbeat) {
+      const existingSubscriptionInfo =
+        this.subscriptionInfoByCallbackUrl.get(callbackUrl);
+
+      if (!existingSubscriptionInfo?.heartbeat) {
         // This is unexpected - if the interval is still running we should have
         // an entry in the map for it. But if we do end up here, there's no
         // reason to let the interval continue to run.
@@ -326,6 +327,7 @@ class SubscriptionManager {
         );
         return;
       }
+      const existingHeartbeat = existingSubscriptionInfo.heartbeat;
       const { queue } = existingHeartbeat;
       queue.push(heartbeatPromise);
       if (queue.length > 1) {
@@ -336,9 +338,7 @@ class SubscriptionManager {
       // Send the heartbeat request
       try {
         const ids = Array.from(
-          this.subscriptionInfoByCallbackUrl
-            .get(callbackUrl)
-            ?.subscriptionsById.keys() ?? [],
+          existingSubscriptionInfo.subscriptionsById.keys() ?? [],
         );
         this.logger?.debug(
           `Sending \`heartbeat\` request to ${callbackUrl} for IDs: [${ids.join(
@@ -351,8 +351,8 @@ class SubscriptionManager {
           body: JSON.stringify({
             kind: 'subscription',
             action: 'heartbeat',
-            id: existingHeartbeat?.id ?? id,
-            verifier: existingHeartbeat?.verifier ?? verifier,
+            id: existingHeartbeat.id ?? id,
+            verifier: existingHeartbeat.verifier ?? verifier,
             ids,
           }),
           headers: { 'Content-Type': 'application/json' },
