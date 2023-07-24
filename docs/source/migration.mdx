@@ -30,6 +30,12 @@ This configuration option was introduced in Apollo Server v4.6.0 as a mitigation
 
 Apollo Server v5 defaults this to `true`. Leaving this option set to `true` will have no effect; you will simply receive a warning on startup informing you that it can be removed. If you wish to preserve the regressed v4 behavior, you can this option to `false`. We recommend removing dependency on this behavior, as this option is now deprecated and will be removed in a future major version.
 
+## Removed options
+
+### `precomputedNonce`
+
+This configuration option was introduced for the landing page plugins in Apollo Server v4.7.3. This option was intended specifically for Cloudflare Workers since crypto functions are disabled during startup. This was not a safe approach since nonces shouldn't be reused. In a following patch (v4.7.4), this option was deprecated with a runtime warning and nonces are now always computed on a per-request basis. This option has been removed in Apollo Server v5.
+
 # Apollo Server 4
 
 Apollo Server 4 focused on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. To learn more about the inspiration behind this release, see the [Apollo Server Roadmap](https://github.com/apollographql/apollo-server/blob/24a841bc68d/ROADMAP.md).

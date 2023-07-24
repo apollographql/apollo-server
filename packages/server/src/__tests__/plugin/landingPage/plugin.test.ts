@@ -38,27 +38,4 @@ describe('ApolloServerPluginLandingPageDefault', () => {
     expect(nonce1).not.toEqual(nonce2);
     await server.stop();
   });
-
-  test(`warns when using precomputedNonce`, async () => {
-    const logger = mockLogger();
-    const server = new ApolloServer({
-      typeDefs: `#graphql
-        type Query {
-          hello: String!
-        }
-      `,
-      plugins: [
-        ApolloServerPluginLandingPageLocalDefault({
-          precomputedNonce: 'abc123',
-        }),
-      ],
-      logger,
-    });
-    await server.start();
-
-    expect(logger.warn).toHaveBeenCalledWith(
-      "The `precomputedNonce` landing page configuration option is deprecated. Removing this option is strictly an improvement to Apollo Server's landing page Content Security Policy (CSP) implementation for preventing XSS attacks.",
-    );
-    await server.stop();
-  });
 });
