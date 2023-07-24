@@ -54,15 +54,30 @@
       matchPackageNames: ["@types/node"],
       allowedVersions: "14.x"
     },
-    // lru-cache@8 drops support for node v16. We can take this when we drop node v14 support.
+    // lru-cache@8 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["lru-cache"],
       allowedVersions: "7.x"
     },
-    // @apollo/utils@3 drop support for node v16. We can take this when we drop node v14 support.
+    // @apollo/utils@3 drop support for node v14. We can take this when we drop node v14 support.
     {
       matchPackagePatterns: ["^@apollo/utils"],
       allowedVersions: "2.x"
+    },
+    // @graphql-codegen@4 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackagePatterns: ["^@graphql-codegen"],
+      allowedVersions: "3.x"
+    },
+    // @graphql-tools/mock@8 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["^@graphql-tools/mock"],
+      allowedVersions: "8.x"
+    },
+    // @graphql-tools/schema@9 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["^@graphql-tools/schema"],
+      allowedVersions: "9.x"
     },
     // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
     // ESM and we're not going to go ESM-only for a while. So let's stay on v2.
