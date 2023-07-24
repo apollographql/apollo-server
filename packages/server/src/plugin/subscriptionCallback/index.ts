@@ -7,6 +7,7 @@ import { HeaderMap } from '../../utils/HeaderMap.js';
 
 export interface ApolloServerPluginSubscriptionCallbackOptions {
   heartbeatIntervalMs?: number;
+  maxConsecutiveHeartbeatFailures?: number;
   logger?: Logger;
 }
 
@@ -198,6 +199,7 @@ interface SubscriptionObject {
 // during server cleanup.
 class SubscriptionManager {
   private heartbeatIntervalMs: number;
+  private maxConsecutiveHeartbeatFailures: number;
   private logger?: ReturnType<typeof prefixedLogger>;
   private requestsInFlight: Set<Promise<any>> = new Set();
   // A map of information about subscriptions for a given callback url. For each
@@ -218,9 +220,12 @@ class SubscriptionManager {
 
   constructor(opts: {
     heartbeatIntervalMs?: number;
+    maxConsecutiveHeartbeatFailures?: number;
     logger?: ReturnType<typeof prefixedLogger>;
   }) {
     this.heartbeatIntervalMs = opts.heartbeatIntervalMs ?? 5000;
+    this.maxConsecutiveHeartbeatFailures =
+      opts.maxConsecutiveHeartbeatFailures ?? 5;
     this.logger = opts.logger
       ? prefixedLogger(opts.logger, 'SubscriptionManager')
       : undefined;
@@ -395,9 +400,7 @@ class SubscriptionManager {
         } else {
           // We'll catch this below and log it with the expectation that we'll
           // retry this request some number of times before giving up
-          throw new Error(
-            `Unexpected status code: ${result.status}`,
-          );
+          throw new Error(`Unexpected status code: ${result.status}`);
         }
 
         // If we make it here, there wasn't some transient error with the
@@ -410,7 +413,10 @@ class SubscriptionManager {
           existingHeartbeat.id,
         );
 
-        if (consecutiveHeartbeatFailureCount >= 5) {
+        if (
+          consecutiveHeartbeatFailureCount >=
+          this.maxConsecutiveHeartbeatFailures
+        ) {
           this.logger?.error(
             `Heartbeat request failed ${consecutiveHeartbeatFailureCount} times, terminating subscriptions and heartbeat interval: ${e}`,
             existingHeartbeat.id,
