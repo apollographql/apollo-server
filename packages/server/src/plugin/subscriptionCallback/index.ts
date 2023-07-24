@@ -362,13 +362,16 @@ class SubscriptionManager {
         // The heartbeat response might contain updates for us to act upon, so we
         // need to await it
         const result = await heartbeatRequest;
-        consecutiveHeartbeatFailureCount = 0;
 
         this.logger?.debug(
           `Heartbeat received response for IDs: [${ids.join(',')}]`,
         );
 
-        if (result.status === 400) {
+        if (result.ok) {
+          this.logger?.debug(
+            `Heartbeat request successful, IDs: [${ids.join(',')}]`,
+          );
+        } else if (result.status === 400) {
           const body = await result.json();
           this.logger?.debug(
             `Heartbeat request received invalid IDs: [${body.invalid_ids.join(
@@ -389,7 +392,17 @@ class SubscriptionManager {
           );
           // This will also handle cleaning up the heartbeat interval
           this.terminateSubscriptions(ids, callbackUrl);
+        } else {
+          // We'll catch this below and log it with the expectation that we'll
+          // retry this request some number of times before giving up
+          throw new Error(
+            `Unexpected status code: ${result.status}`,
+          );
         }
+
+        // If we make it here, there wasn't some transient error with the
+        // request and it had an expected status code (2xx, 400, 404).
+        consecutiveHeartbeatFailureCount = 0;
       } catch (e) {
         // The heartbeat request failed.
         this.logger?.error(

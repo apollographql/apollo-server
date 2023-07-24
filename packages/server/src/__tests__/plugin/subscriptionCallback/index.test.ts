@@ -146,6 +146,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionCallback[1234-cats]: Responding to original subscription request",
         "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
         "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+        "SubscriptionManager: Heartbeat request successful, IDs: [1234-cats]",
         "TESTING: Triggering first update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router with subscription update",
         "TESTING: Triggering second update",
@@ -285,7 +286,9 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
         "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url-2.com for IDs: [5678-dogs]",
         "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+        "SubscriptionManager: Heartbeat request successful, IDs: [1234-cats]",
         "SubscriptionManager: Heartbeat received response for IDs: [5678-dogs]",
+        "SubscriptionManager: Heartbeat request successful, IDs: [5678-dogs]",
         "TESTING: Triggering first update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router with subscription update",
         "SubscriptionManager[5678-dogs]: Sending \`next\` request to router with subscription update",
@@ -487,6 +490,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionCallback[5678-dogs]: Responding to original subscription request",
         "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats,5678-dogs]",
         "SubscriptionManager: Heartbeat received response for IDs: [1234-cats,5678-dogs]",
+        "SubscriptionManager: Heartbeat request successful, IDs: [1234-cats,5678-dogs]",
         "TESTING: Triggering first update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router with subscription update",
         "SubscriptionManager[5678-dogs]: Sending \`next\` request to router with subscription update",
@@ -503,6 +507,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Terminating subscriptions for IDs: [5678-dogs]",
         "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
         "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+        "SubscriptionManager: Heartbeat request successful, IDs: [1234-cats]",
         "TESTING: Triggering third update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router with subscription update",
         "SubscriptionManager[5678-dogs]: Subscription already cancelled, ignoring current and future payloads",
@@ -667,6 +672,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionCallback[5678-dogs]: Responding to original subscription request",
         "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats,5678-dogs]",
         "SubscriptionManager: Heartbeat received response for IDs: [1234-cats,5678-dogs]",
+        "SubscriptionManager: Heartbeat request successful, IDs: [1234-cats,5678-dogs]",
         "TESTING: Triggering first update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router with subscription update",
         "SubscriptionManager[5678-dogs]: Sending \`next\` request to router with subscription update",
@@ -976,6 +982,90 @@ describe('SubscriptionCallbackPlugin', () => {
           "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
           "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
           "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: FetchError: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Terminating subscriptions for IDs: [1234-cats]",
+          "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        ]
+      `);
+    });
+
+    it('handles failed heartbeats with unexpected status codes', async () => {
+      const server = await startSubscriptionServer({ logger });
+
+      // Mock the initial check response from the router.
+      mockRouterCheckResponse();
+
+      // Start the subscription; this triggers the initial check request and
+      // starts the heartbeat interval. This simulates an incoming subscription
+      // request from the router.
+      const result = await server.executeOperation({
+        query: `#graphql
+          subscription {
+            count
+          }
+        `,
+        extensions: {
+          subscription: {
+            callback_url: 'http://mock-router-url.com',
+            subscription_id: '1234-cats',
+            verifier: 'my-verifier-token',
+          },
+        },
+      });
+
+      expect(result.http.status).toEqual(200);
+      expect(result.http.headers.get('subscription-protocol')).toEqual(
+        'callback',
+      );
+
+      // 5 failures is the limit before the heartbeat is cancelled. We expect to
+      // see 5 errors and then a final error indicating the heartbeat was
+      // cancelled in the log snapshot below.
+      for (let i = 0; i < 5; i++) {
+        // mock heartbeat response failure
+        nock('http://mock-router-url.com')
+          .matchHeader('content-type', 'application/json')
+          .post('/', {
+            kind: 'subscription',
+            action: 'heartbeat',
+            id: '1234-cats',
+            verifier: 'my-verifier-token',
+            ids: ['1234-cats'],
+          })
+          .reply(500);
+        // trigger heartbeat
+        jest.advanceTimersByTime(5000);
+      }
+
+      await server.stop();
+
+      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+        [
+          "SubscriptionCallback[1234-cats]: Received new subscription request",
+          "SubscriptionCallback[1234-cats]: Sending \`check\` request to router",
+          "SubscriptionCallback[1234-cats]: \`check\` request successful",
+          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+          "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+          "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+          "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (1 consecutive): Error: Unexpected status code: 500",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (2 consecutive): Error: Unexpected status code: 500",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (3 consecutive): Error: Unexpected status code: 500",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (4 consecutive): Error: Unexpected status code: 500",
+          "SubscriptionManager: Sending \`heartbeat\` request to http://mock-router-url.com for IDs: [1234-cats]",
+          "SubscriptionManager: Heartbeat received response for IDs: [1234-cats]",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): Error: Unexpected status code: 500",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: Error: Unexpected status code: 500",
           "SubscriptionManager: Terminating subscriptions for IDs: [1234-cats]",
           "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
           "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
