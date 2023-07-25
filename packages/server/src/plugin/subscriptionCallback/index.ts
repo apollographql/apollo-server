@@ -510,15 +510,6 @@ class SubscriptionManager {
       async startConsumingSubscription() {
         self.logger?.debug(`Listening to graphql-js subscription`, id);
         for await (const payload of subscription) {
-          // If there's an existing heartbeat request in flight, wait for it to
-          // finish before sending an update. It's possible this subscription
-          // will be cancelled during the heartbeat request. This does mean that
-          // all updates "wait" while there's an active heartbeat in flight.
-          const existingHeartbeat =
-            self.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat;
-          if (existingHeartbeat && existingHeartbeat.queue.length > 0) {
-            await existingHeartbeat.queue[existingHeartbeat.queue.length - 1];
-          }
           if (this.cancelled) {
             self.logger?.debug(
               `Subscription already cancelled, ignoring current and future payloads`,
