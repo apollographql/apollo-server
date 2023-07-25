@@ -225,7 +225,12 @@ class SubscriptionManager {
     this.heartbeatIntervalMs = options.heartbeatIntervalMs ?? 5000;
     this.maxConsecutiveHeartbeatFailures =
       options.maxConsecutiveHeartbeatFailures ?? 5;
-    this.retryConfig = options.retry;
+    this.retryConfig = {
+      retries: 5,
+      minTimeout: 100,
+      maxTimeout: 1000,
+      ...options.retry,
+    };
     this.logger = options.logger
       ? prefixedLogger(options.logger, 'SubscriptionManager')
       : undefined;

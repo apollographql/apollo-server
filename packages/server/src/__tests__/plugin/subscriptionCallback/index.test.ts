@@ -1110,8 +1110,10 @@ describe('SubscriptionCallbackPlugin', () => {
       jest.advanceTimersByTime(5000);
       await firstHeartbeat;
 
-      // Next we'll trigger some subscription events. In advance, we'll mock the 2
-      // router responses.
+      // Next we'll trigger some subscription events. In advance, we'll mock the
+      // router responses. These responses will fail the first 3 times and
+      // succeed on the 4th. The retry logic is expected to handle this
+      // gracefully.
       const updates = Promise.all([
         mockRouterNextResponse({ payload: { count: 1 }, responseCode: 500 }),
         mockRouterNextResponse({ payload: { count: 1 }, responseCode: 500 }),
@@ -1141,6 +1143,7 @@ describe('SubscriptionCallbackPlugin', () => {
           }
         `,
       });
+
       await updates;
 
       // When we shutdown the server, we'll stop listening for subscription
@@ -1303,10 +1306,8 @@ async function startSubscriptionServer(
       ApolloServerPluginSubscriptionCallback({
         // set some reasonable testing defaults
         retry: {
-          retries: 5,
-          factor: 1,
-          maxTimeout: 100,
-          minTimeout: 100,
+          maxTimeout: 50,
+          minTimeout: 10,
         },
         ...(opts?.logger ? { logger: opts.logger } : undefined),
       }),
