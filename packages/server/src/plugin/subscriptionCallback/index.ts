@@ -678,7 +678,7 @@ class SubscriptionManager {
   async cleanup() {
     // Wait for our inflight heartbeats to finish - they might handle cancelling
     // some subscriptions
-    await Promise.all(
+    await Promise.allSettled(
       Array.from(this.subscriptionInfoByCallbackUrl.values()).map(
         async ({ heartbeat }) => {
           clearInterval(heartbeat?.interval);
@@ -687,13 +687,13 @@ class SubscriptionManager {
       ),
     );
     // Cancel / complete any still-active subscriptions
-    await Promise.all(
+    await Promise.allSettled(
       this.collectAllSubscriptions()
         .filter((s) => !s.cancelled)
         .map((s) => s.completeSubscription()),
     );
     // Wait for any remaining requests to finish
-    await Promise.all(this.requestsInFlight.values());
+    await Promise.allSettled(this.requestsInFlight.values());
   }
 }
 
