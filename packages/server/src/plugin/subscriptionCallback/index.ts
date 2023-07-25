@@ -1,5 +1,5 @@
 import type { Logger } from '@apollo/utils.logger';
-import { GraphQLError, subscribe, type ExecutionResult } from 'graphql';
+import { type GraphQLError, subscribe, type ExecutionResult } from 'graphql';
 import fetch, { type Response } from 'node-fetch';
 import { ensureError, ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
@@ -37,16 +37,14 @@ export function ApolloServerPluginSubscriptionCallback(
         // to bypass normal execution by returning our own response. We don't
         // want Apollo Server to actually handle this subscription request, we
         // want to handle everything ourselves. The actual subscription handling
-        // will be done in `willSendResponse`. The router expects the initial
-        // response to be a 200, with the `subscription-protocol` header set to
-        // `callback`.
+        // will be done in `willSendResponse`.
         async responseForOperation() {
           logger?.debug('Received new subscription request', id);
 
           return {
             http: {
               status: 200,
-              headers: new HeaderMap([['subscription-protocol', 'callback']]),
+              headers: new HeaderMap(),
             },
             body: {
               kind: 'single',
@@ -70,7 +68,6 @@ export function ApolloServerPluginSubscriptionCallback(
           response,
         }) {
           try {
-            logger?.debug('Sending `check` request to router', id);
             // Before responding to the original request, we need to complete a
             // roundtrip `check` request to the router, so we `await` this
             // request.
@@ -79,7 +76,6 @@ export function ApolloServerPluginSubscriptionCallback(
               id,
               verifier,
             });
-            logger?.debug('`check` request successful', id);
           } catch (e) {
             const graphqlError = ensureGraphQLError(e);
             logger?.error(
@@ -236,9 +232,95 @@ class SubscriptionManager {
       : undefined;
   }
 
+  async retryFetch({
+    url,
+    action,
+    id,
+    verifier,
+    payload,
+    errors,
+  }: {
+    url: string;
+    action: 'check' | 'next' | 'complete';
+    id: string;
+    verifier: string;
+    payload?: ExecutionResult;
+    errors?: readonly GraphQLError[];
+  }) {
+    let response: Promise<Response> | undefined;
+    try {
+      const maybeWithErrors = errors?.length ? ` with errors` : '';
+      this.logger?.debug(
+        `Sending \`${action}\` request to router` + maybeWithErrors,
+        id,
+      );
+      return retry(
+        async (bail) => {
+          response = fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              kind: 'subscription',
+              action,
+              id,
+              verifier,
+              ...(payload && { payload }),
+              ...(errors?.length && { errors }),
+            }),
+          });
+          this.requestsInFlight.add(response);
+          const result = await response;
+
+          if (!result.ok) {
+            if (result.status >= 500) {
+              // Throwing here triggers a retry, which seems reasonable for 5xx
+              // (i.e. an internal server error).
+              throw new Error(
+                `\`${action}\` request failed with unexpected status code: ${result.status}`,
+              );
+            } else {
+              // For 4xx, we don't want to retry. These errors carry a semantic
+              // meaning (terminate), so we bail. This will reject the promise and
+              // should be handled by the caller. Specifically, 404 from the
+              // router means terminate, but the protocol says that in other error
+              // cases the subscription should be terminated due to an unexpected
+              // error.
+              if (result.status === 404) {
+                this.logger?.debug(
+                  `\`${action}\` request received 404, terminating subscription`,
+                  id,
+                );
+              } else {
+                const errMsg = `\`${action}\` request failed with unexpected status code: ${result.status}, terminating subscription`;
+                this.logger?.debug(errMsg, id);
+                bail(new Error(errMsg));
+              }
+              this.terminateSubscriptions([id], url);
+              return result;
+            }
+          }
+          this.logger?.debug(`\`${action}\` request successful`, id);
+          return result;
+        },
+        {
+          ...this.retryConfig,
+          onRetry: (e, attempt) => {
+            this.requestsInFlight.delete(response!);
+            this.logger?.warn(
+              `Retrying \`${action}\` request (attempt ${attempt}) due to error: ${e.message}`,
+              id,
+            );
+            this.retryConfig?.onRetry?.(e, attempt);
+          },
+        },
+      );
+    } finally {
+      this.requestsInFlight.delete(response!);
+    }
+  }
+
   // Implements sending the `check` request to the router. Fetch errors are
-  // thrown and expected to be handled by the caller. Additionally throws if the
-  // router doesn't respond with a 204.
+  // thrown and expected to be handled by the caller.
   async checkRequest({
     callbackUrl,
     id,
@@ -248,31 +330,12 @@ class SubscriptionManager {
     id: string;
     verifier: string;
   }) {
-    let checkResponse: Promise<Response>;
-    try {
-      checkResponse = fetch(callbackUrl, {
-        method: 'POST',
-        body: JSON.stringify({
-          kind: 'subscription',
-          action: 'check',
-          id,
-          verifier,
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      this.requestsInFlight.add(checkResponse);
-      await checkResponse;
-    } finally {
-      this.requestsInFlight.delete(checkResponse!);
-    }
-
-    if ((await checkResponse).status !== 204) {
-      throw new GraphQLError('Failed to initialize subscription', {
-        extensions: {
-          code: 'SUBSCRIPTION_INIT_FAILED',
-        },
-      });
-    }
+    return this.retryFetch({
+      url: callbackUrl,
+      action: 'check',
+      id,
+      verifier,
+    });
   }
 
   // Kicks off an interval that sends `heartbeat` requests to the router. If an
@@ -529,59 +592,21 @@ class SubscriptionManager {
             return;
           }
 
-          let updateRequest: Promise<Response> | undefined;
           try {
-            self.logger?.debug(
-              'Sending `next` request to router with subscription update',
+            await self.retryFetch({
+              url: callbackUrl,
+              action: 'next',
               id,
-            );
-            await retry(
-              async () => {
-                updateRequest = fetch(callbackUrl, {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    kind: 'subscription',
-                    action: 'next',
-                    id,
-                    verifier,
-                    payload,
-                  }),
-                  headers: { 'Content-Type': 'application/json' },
-                });
-                self.requestsInFlight.add(updateRequest);
-                const result = await updateRequest;
-                if (!result.ok) {
-                  throw new Error(
-                    `\`next\` request failed with unexpected status code: ${result.status}`,
-                  );
-                }
-                self.logger?.debug('`next` request successful', id);
-              },
-              {
-                ...self.retryConfig,
-                onRetry(e, attempt) {
-                  self.requestsInFlight.delete(updateRequest!);
-                  self.logger?.warn(
-                    `Retrying \`next\` request (attempt ${attempt}) due to error: ${e.message}`,
-                    id,
-                  );
-                  self.retryConfig?.onRetry?.(e, attempt);
-                },
-              },
-            );
+              verifier,
+              payload,
+            });
           } catch (e) {
             const originalError = ensureError(e);
-            const graphqlError = new GraphQLError(
-              `\`next\` request failed, terminating subscription`,
-              { originalError },
-            );
             self.logger?.error(
-              `\`next\` request failed, terminating subscription: ${e}`,
+              `\`next\` request failed, terminating subscription: ${originalError.message}`,
               id,
             );
-            await this.completeSubscription([graphqlError]);
-          } finally {
-            self.requestsInFlight.delete(updateRequest!);
+            self.terminateSubscriptions([id], callbackUrl);
           }
         }
         // The subscription ended without errors, send the `complete` request to
@@ -593,25 +618,23 @@ class SubscriptionManager {
         if (this.cancelled) return;
         this.cancelled = true;
 
-        let completeRequestPromise: Promise<void>;
         try {
-          completeRequestPromise = self.completeRequest({
+          await self.completeRequest({
             callbackUrl,
             id,
             verifier,
             ...(errors && { errors }),
           });
-          self.requestsInFlight.add(completeRequestPromise);
-          await completeRequestPromise;
         } catch (e) {
-          // This is just the `complete` request. If something fails here, we
-          // can still proceed as usual and cleanup the subscription. The router
-          // should just terminate the subscription on its end when it doesn't
-          // receive a heartbeat for it.
-          self.logger?.error(`\`complete\` request failed: ${e}`, id);
+          const error = ensureError(e);
+          // This is just the `complete` request. If we fail to get this message
+          // to the router, it should just invalidate the subscription after the
+          // next heartbeat fails.
+          self.logger?.error(
+            `\`complete\` request failed: ${error.message}`,
+            id,
+          );
         } finally {
-          self.requestsInFlight.delete(completeRequestPromise!);
-          // clean up the subscription (and heartbeat if necessary)
           self.terminateSubscriptions([id], callbackUrl);
         }
       },
@@ -640,34 +663,13 @@ class SubscriptionManager {
     id: string;
     verifier: string;
   }) {
-    let completeRequest: Promise<Response> | undefined;
-    try {
-      const maybeWithErrors = errors?.length ? ` with errors` : '';
-      this.logger?.debug(
-        'Sending `complete` request to router' + maybeWithErrors,
-        id,
-      );
-      const completeRequest = fetch(callbackUrl, {
-        method: 'POST',
-        body: JSON.stringify({
-          kind: 'subscription',
-          action: 'complete',
-          id,
-          verifier,
-          ...(errors && { errors }),
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-      this.requestsInFlight.add(completeRequest);
-      await completeRequest;
-      this.logger?.debug('`complete` request successful', id);
-    } catch (e) {
-      this.logger?.error(`\`complete\` request failed: ${e}`, id);
-      // TODO: handle this error
-      throw e;
-    } finally {
-      this.requestsInFlight.delete(completeRequest!);
-    }
+    return this.retryFetch({
+      url: callbackUrl,
+      action: 'complete',
+      id,
+      verifier,
+      errors,
+    });
   }
 
   collectAllSubscriptions() {
