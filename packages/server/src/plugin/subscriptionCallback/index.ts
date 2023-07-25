@@ -313,7 +313,7 @@ class SubscriptionManager {
     const heartbeatInterval = setInterval(async () => {
       let heartbeatRequest: Promise<Response> | undefined;
 
-      // FIXME: since we're on an interval, it's possible a heartbeat goes out
+      // XXX since we're on an interval, it's possible a heartbeat goes out
       // before the previous heartbeat has finished. It seems reasonable to
       // queue them and await the previous heartbeat if there is one. It might
       // also be reasonable to just bail / skip this heartbeat if there's
