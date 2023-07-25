@@ -1,14 +1,16 @@
 import type { Logger } from '@apollo/utils.logger';
 import { GraphQLError, subscribe, type ExecutionResult } from 'graphql';
 import fetch, { type Response } from 'node-fetch';
-import { ensureGraphQLError } from '../../errorNormalize.js';
+import { ensureError, ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import { HeaderMap } from '../../utils/HeaderMap.js';
+import retry from 'async-retry';
 
 export interface ApolloServerPluginSubscriptionCallbackOptions {
   heartbeatIntervalMs?: number;
   maxConsecutiveHeartbeatFailures?: number;
   logger?: Logger;
+  retry?: retry.Options;
 }
 
 export function ApolloServerPluginSubscriptionCallback(
@@ -201,6 +203,7 @@ class SubscriptionManager {
   private heartbeatIntervalMs: number;
   private maxConsecutiveHeartbeatFailures: number;
   private logger?: ReturnType<typeof prefixedLogger>;
+  private retryConfig?: retry.Options;
   private requestsInFlight: Set<Promise<any>> = new Set();
   // A map of information about subscriptions for a given callback url. For each
   // url, this tracks its single heartbeat interval (with relevant heartbeat
@@ -218,16 +221,13 @@ class SubscriptionManager {
     }
   > = new Map();
 
-  constructor(opts: {
-    heartbeatIntervalMs?: number;
-    maxConsecutiveHeartbeatFailures?: number;
-    logger?: ReturnType<typeof prefixedLogger>;
-  }) {
-    this.heartbeatIntervalMs = opts.heartbeatIntervalMs ?? 5000;
+  constructor(options: ApolloServerPluginSubscriptionCallbackOptions) {
+    this.heartbeatIntervalMs = options.heartbeatIntervalMs ?? 5000;
     this.maxConsecutiveHeartbeatFailures =
-      opts.maxConsecutiveHeartbeatFailures ?? 5;
-    this.logger = opts.logger
-      ? prefixedLogger(opts.logger, 'SubscriptionManager')
+      options.maxConsecutiveHeartbeatFailures ?? 5;
+    this.retryConfig = options.retry;
+    this.logger = options.logger
+      ? prefixedLogger(options.logger, 'SubscriptionManager')
       : undefined;
   }
 
@@ -407,9 +407,12 @@ class SubscriptionManager {
         // request and it had an expected status code (2xx, 400, 404).
         consecutiveHeartbeatFailureCount = 0;
       } catch (e) {
+        const err = ensureError(e);
         // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${e}`,
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${
+            err.message
+          }`,
           existingHeartbeat.id,
         );
 
@@ -418,7 +421,7 @@ class SubscriptionManager {
           this.maxConsecutiveHeartbeatFailures
         ) {
           this.logger?.error(
-            `Heartbeat request failed ${consecutiveHeartbeatFailureCount} times, terminating subscriptions and heartbeat interval: ${e}`,
+            `Heartbeat request failed ${consecutiveHeartbeatFailureCount} times, terminating subscriptions and heartbeat interval: ${err.message}`,
             existingHeartbeat.id,
           );
           // If we've failed 5 times in a row, we should terminate all
@@ -527,24 +530,51 @@ class SubscriptionManager {
               'Sending `next` request to router with subscription update',
               id,
             );
-            updateRequest = fetch(callbackUrl, {
-              method: 'POST',
-              body: JSON.stringify({
-                kind: 'subscription',
-                action: 'next',
-                id,
-                verifier,
-                payload,
-              }),
-              headers: { 'Content-Type': 'application/json' },
-            });
-            self.requestsInFlight.add(updateRequest);
-            await updateRequest;
-            self.logger?.debug('`next` request successful', id);
+            await retry(
+              async () => {
+                updateRequest = fetch(callbackUrl, {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    kind: 'subscription',
+                    action: 'next',
+                    id,
+                    verifier,
+                    payload,
+                  }),
+                  headers: { 'Content-Type': 'application/json' },
+                });
+                self.requestsInFlight.add(updateRequest);
+                const result = await updateRequest;
+                if (!result.ok) {
+                  throw new Error(
+                    `\`next\` request failed with unexpected status code: ${result.status}`,
+                  );
+                }
+                self.logger?.debug('`next` request successful', id);
+              },
+              {
+                ...self.retryConfig,
+                onRetry(e, attempt) {
+                  self.requestsInFlight.delete(updateRequest!);
+                  self.logger?.warn(
+                    `Retrying \`next\` request (attempt ${attempt}) due to error: ${e.message}`,
+                    id,
+                  );
+                  self.retryConfig?.onRetry?.(e, attempt);
+                },
+              },
+            );
           } catch (e) {
-            self.logger?.error(`\`next\` request failed: ${e}`, id);
-            // TODO: handle this error (terminate subscription / retry?)
-            throw e;
+            const originalError = ensureError(e);
+            const graphqlError = new GraphQLError(
+              `\`next\` request failed, terminating subscription`,
+              { originalError },
+            );
+            self.logger?.error(
+              `\`next\` request failed, terminating subscription: ${e}`,
+              id,
+            );
+            await this.completeSubscription([graphqlError]);
           } finally {
             self.requestsInFlight.delete(updateRequest!);
           }
@@ -554,7 +584,7 @@ class SubscriptionManager {
         self.logger?.debug(`Subscription completed without errors`, id);
         await this.completeSubscription();
       },
-      async completeSubscription() {
+      async completeSubscription(errors?: readonly GraphQLError[]) {
         if (this.cancelled) return;
         this.cancelled = true;
 
@@ -564,6 +594,7 @@ class SubscriptionManager {
             callbackUrl,
             id,
             verifier,
+            ...(errors && { errors }),
           });
           self.requestsInFlight.add(completeRequestPromise);
           await completeRequestPromise;
