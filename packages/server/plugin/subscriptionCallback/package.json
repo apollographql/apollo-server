@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/subscriptionCallback",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/subscriptionCallback/index.js",
+  "module": "../../dist/esm/plugin/subscriptionCallback/index.js",
+  "types": "../../dist/esm/plugin/subscriptionCallback/index.d.ts",
+  "sideEffects": false
+}
