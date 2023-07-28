@@ -1,5 +1,4 @@
 import type http from 'http';
-import { AbortController } from 'node-abort-controller';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import { Stopper } from './stoppable.js';
 
@@ -32,24 +31,9 @@ export function ApolloServerPluginDrainHttpServer(
     async serverWillStart() {
       return {
         async drainServer() {
-          // FIXME: with Node 18 can we resolve this?
-          // Note: we don't use `AbortSignal.timeout()` here because our
-          // polyfill doesn't support it (and even once we drop Node v14
-          // support, if we don't require at least Node v16.14 then the built-in
-          // version won't support it either).
-          const hardDestroyAbortController = new AbortController();
           const stopGracePeriodMillis = options.stopGracePeriodMillis ?? 10_000;
-          let timeout: NodeJS.Timeout | undefined;
-          if (stopGracePeriodMillis < Infinity) {
-            timeout = setTimeout(
-              () => hardDestroyAbortController.abort(),
-              stopGracePeriodMillis,
-            );
-          }
-          await stopper.stop(hardDestroyAbortController.signal);
-          if (timeout) {
-            clearTimeout(timeout);
-          }
+          const signal = AbortSignal.timeout(stopGracePeriodMillis);
+          await stopper.stop(signal);
         },
       };
     },

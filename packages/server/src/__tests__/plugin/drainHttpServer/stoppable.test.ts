@@ -35,7 +35,6 @@ import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
-import { AbortController } from 'node-abort-controller';
 import resolvable, { Resolvable } from '@josephg/resolvable';
 
 function port(s: http.Server) {

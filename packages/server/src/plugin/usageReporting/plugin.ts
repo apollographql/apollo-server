@@ -8,7 +8,6 @@ import {
 import retry from 'async-retry';
 import { type GraphQLSchema, printSchema } from 'graphql';
 import type LRUCache from 'lru-cache';
-import { AbortController } from 'node-abort-controller';
 import fetch from 'node-fetch';
 import os from 'os';
 import { gzip } from 'zlib';
@@ -313,34 +312,22 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
-            // FIXME: resolve this with Node 18
-            // Note that once we require Node v16 we can use its global
-            // AbortController instead of the one from `node-abort-controller`.
-            const controller = new AbortController();
-            const abortTimeout = setTimeout(() => {
-              controller.abort();
-            }, options.requestTimeoutMs ?? 30_000);
-            let curResponse;
-            try {
-              curResponse = await fetcher(
-                (options.endpointUrl ||
-                  'https://usage-reporting.api.apollographql.com') +
-                  '/api/ingress/traces',
-                {
-                  method: 'POST',
-                  headers: {
-                    'user-agent': 'ApolloServerPluginUsageReporting',
-                    'x-api-key': key,
-                    'content-encoding': 'gzip',
-                    accept: 'application/json',
-                  },
-                  body: compressed,
-                  signal: controller.signal,
+            const curResponse = await fetcher(
+              (options.endpointUrl ||
+                'https://usage-reporting.api.apollographql.com') +
+                '/api/ingress/traces',
+              {
+                method: 'POST',
+                headers: {
+                  'user-agent': 'ApolloServerPluginUsageReporting',
+                  'x-api-key': key,
+                  'content-encoding': 'gzip',
+                  accept: 'application/json',
                 },
-              );
-            } finally {
-              clearTimeout(abortTimeout);
-            }
+                body: compressed,
+                signal: AbortSignal.timeout(options.requestTimeoutMs ?? 30_000),
+              },
+            );
 
             if (curResponse.status >= 500 && curResponse.status < 600) {
               throw new Error(
