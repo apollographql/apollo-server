@@ -73,7 +73,8 @@
         "Inline trace": "/api/plugin/inline-trace",
         "Drain HTTP server": "/api/plugin/drain-http-server",
         "Cache control": "/api/plugin/cache-control",
-        "Landing pages": "/api/plugin/landing-pages"
+        "Landing pages": "/api/plugin/landing-pages",
+        "Federated subscriptions": "/api/plugin/subscription-callback"
       },
       "Custom": {
         "Creating plugins": "/integrations/plugins",
