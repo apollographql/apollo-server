@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=16.14.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@apollo/utils.createhash": "^3.0.0",

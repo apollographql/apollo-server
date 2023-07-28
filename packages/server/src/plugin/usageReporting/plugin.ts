@@ -313,6 +313,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
+            // FIXME: resolve this with Node 18
             // Note that once we require Node v16 we can use its global
             // AbortController instead of the one from `node-abort-controller`.
             const controller = new AbortController();

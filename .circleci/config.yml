@@ -139,7 +139,6 @@ workflows:
           matrix:
             parameters:
               node-version:
-                - "16"
                 - "18"
                 - "20"
       - "Check for FIXM\x45"

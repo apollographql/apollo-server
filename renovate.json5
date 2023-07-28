@@ -48,11 +48,11 @@
       matchPaths: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
-    // We need to support Node v16, so we don't allow ourselves to use type definitions
-    // that would let us write >v16-specific code.
+    // We need to support Node v18, so we don't allow ourselves to use type definitions
+    // that would let us write >v18-specific code.
     {
       matchPackageNames: ["@types/node"],
-      allowedVersions: "16.x"
+      allowedVersions: "18.x"
     },
     // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
     // ESM and we're not going to go ESM-only for a while. So let's stay on v2.

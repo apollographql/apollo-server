@@ -32,6 +32,7 @@ export function ApolloServerPluginDrainHttpServer(
     async serverWillStart() {
       return {
         async drainServer() {
+          // FIXME: with Node 18 can we resolve this?
           // Note: we don't use `AbortSignal.timeout()` here because our
           // polyfill doesn't support it (and even once we drop Node v14
           // support, if we don't require at least Node v16.14 then the built-in

@@ -14,13 +14,11 @@ While Apollo Server v4 came with numerous breaking changes, the Apollo Server te
 
 ### Node.js
 
-Apollo Server 5 supports Node.js 16.14.0 and later. (Apollo Server 4 supports Node.js 14.16.0.) This includes all LTS and Current major versions at the time of release.
+Apollo Server 5 supports Node.js 18.0.0 and later. (Apollo Server 4 supports Node.js 14.16.0.) This includes all LTS and Current major versions at the time of release.
 
 If you're using Node.js 14, upgrade your runtime before upgrading to Apollo Server 5.
 
-(Apollo Server 5 specifically requires v16.14.0 instead of v16.0.0, because that is the minimum version of Node.js 16 supported by the transitive [`lru-cache` dependency](https://github.com/isaacs/node-lru-cache/commit/c237c1d64ebc2142da4f8324adb3ef300b0428bd), which makes use of `AbortController`.)
-
-If upgrading to Node.js 16 is not possible, you can upgrade to or continue to use Apollo Server 4 without issue.
+If upgrading to Node.js 18 is not possible, you can upgrade to or continue to use Apollo Server 4 without issue.
 
 ## Default behavior change
 
