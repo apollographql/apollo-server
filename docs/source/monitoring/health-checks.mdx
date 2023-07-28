@@ -3,7 +3,7 @@ title: Health checks
 description: Determining the health status of Apollo Server
 ---
 
-> **Apollo Server 4 no longer [supports built-in health checks](../migration/#health-checks)**. Instead, we recommend performing [GraphQL-level health checks](#graphql-level-health-checks) to ensure your server successfully serves traffic _and_ performs GraphQL operations. 
+> **Apollo Server no longer [supports built-in health checks](../migration/#health-checks)**. Instead, we recommend performing [GraphQL-level health checks](#graphql-level-health-checks) to ensure your server successfully serves traffic _and_ performs GraphQL operations.
 
 Load balancers often use health checks to determine if a server is available and ready to serve traffic.
 
@@ -21,7 +21,7 @@ Note that this health check will run an actual GraphQL operation. If your server
 
 > Sending an `apollo-require-preflight: true` header alongside your health check ensures that Apollo Server's [CSRF prevention](../security/cors/#preventing-cross-site-request-forgery-csrf) feature won't block it.
 
-If you want to create a health check for your HTTP server that is _unrelated_ to the health of the GraphQL execution engine (i.e., such as [Apollo Server 3's health check feature](/apollo-server/v3/monitoring/health-checks)), you can add a `GET` handler that always succeeds to your web framework. 
+If you want to create a health check for your HTTP server that is _unrelated_ to the health of the GraphQL execution engine (i.e., such as [Apollo Server 3's health check feature](/apollo-server/v3/monitoring/health-checks)), you can add a `GET` handler that always succeeds to your web framework.
 
 Below is an example of an HTTP server health check with [`expressMiddleware`](../api/express-middleware/):
 

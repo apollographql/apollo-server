@@ -6,6 +6,7 @@
     "outDir": "generated/tsc/variants/nodenext",
     "module": "commonjs",
     "moduleResolution": "nodenext",
+    "target": "ES2015",
     "esModuleInterop": true,
     "strict": true,
   },

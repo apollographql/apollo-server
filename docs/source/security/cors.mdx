@@ -3,7 +3,7 @@ title: Configuring CORS
 description: Control access to your server's resources
 ---
 
-> 📣 By default, Apollo Server 4 ships with a feature that protects users from CSRF and XS-Search attacks. This feature requires that any client sending operations via `GET` or multipart upload requests _must_ include a special header (such as `Apollo-Require-Preflight`) in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
+> 📣 By default, Apollo Server ships with a feature that protects users from CSRF and XS-Search attacks. This feature requires that any client sending operations via `GET` or multipart upload requests _must_ include a special header (such as `Apollo-Require-Preflight`) in that request. For more information, see [Preventing Cross-Site Request Forgery (CSRF)](#preventing-cross-site-request-forgery-csrf).
 
 [Cross-Origin Resource Sharing](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) (CORS) is an HTTP-header-based protocol that enables a server to dictate which origins can access its resources. Put another way, your server can specify which websites can tell a user's browser to talk to your server, and precisely which types of HTTP requests are allowed.
 
@@ -86,7 +86,7 @@ If you create a public API or an API to embed in websites you don't control your
 If your application doesn't fit into any of the above categories, [`startStandaloneServer`](../api/standalone)'s CORS behavior should suit your use case. You can always choose to swap to another Apollo Server integration later to [customize your CORS configuration](#configuring-cors-options-for-apollo-server).
 
 ## Configuring CORS options for Apollo Server
-> 📣 **New in Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#body-parser-and-cors).
+> 📣 **New since Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#body-parser-and-cors).
 
 Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standalone)) serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
 
@@ -137,7 +137,7 @@ console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 
 > Invoking the `cors` function with no arguments sets your server's `Access-Control-Allow-Origin` HTTP header to the wildcard value (`*`), allowing scripts on any origin to make requests. So, your server would have the same CORS behavior as `startStandaloneServer`.
 
-Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`. 
+Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`.
 
 > If you want to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE, you should include `https://studio.apollographql.com` in your list of valid origins. However, if you plan to embed the [Explorer](https://www.apollographql.com/docs/studio/explorer/embed-explorer/) or use [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox), you *don't* need to specify Studio's URL in your CORS origins because requests will go through the page embedding Studio.
 
@@ -183,7 +183,7 @@ For examples of sending cookies and authorization headers from Apollo Client, se
 
 ## Preventing Cross-Site Request Forgery (CSRF)
 
-> By default, Apollo Server 4 ships with a feature protecting from CSRF and XS-Search attacks. If you want to disable this recommended security feature, pass `csrfPrevention: false` to the `ApolloServer` constructor.
+> By default, Apollo Server ships with a feature protecting from CSRF and XS-Search attacks. If you want to disable this recommended security feature, pass `csrfPrevention: false` to the `ApolloServer` constructor.
 
 Your server's CORS policy enables you to control which websites can talk to your server. In most cases, the browser checks your server's CORS policy by sending a [preflight request](https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request) before sending the actual operation. This is a separate HTTP request. Unlike most HTTP requests (which use the `GET` or `POST` method), this request uses a method called `OPTIONS`. The browser sends an `Origin` header, along with some other headers that start with `Access-Control-`. These headers describe the kind of request that the potentially untrusted JavaScript wants to make. Your server returns a response with `Access-Control-*` headers describing its policies (as described above), and the browser uses that response to decide whether it's OK to send the real request. Processing the `OPTIONS` preflight request never actually executes GraphQL operations.
 
@@ -199,7 +199,7 @@ The most important rule for whether or not a request is ["simple"](https://devel
 
 However, Apollo Server also handles [`GET` requests](../workflow/requests#get-requests). `GET` requests do not require a `Content-Type` header, so they can potentially be simple requests. So how can we ensure that we only execute `GET` requests that are _not_ simple requests? If we require the request to include an HTTP header that is never set automatically by the browser, then that is sufficient: requests that set HTTP headers other than the handful defined in the spec must be preflighted.
 
-By default, Apollo Server 4 has a CSRF prevention feature enabled. This means your server only executes GraphQL operations if at least one of the following conditions is true:
+By default, Apollo Server 4+ has a CSRF prevention feature enabled. This means your server only executes GraphQL operations if at least one of the following conditions is true:
 
 - The incoming request includes a `Content-Type` header that specifies a type other than `text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data`. Notably, a `Content-Type` of `application/json` (including any suffix like `application/json; charset=utf-8`) is sufficient. This means that all `POST` requests (which must use `Content-Type: application/json`) will be executed. Additionally, all versions of [Apollo Client Web](/react/api/link/apollo-link-http) that support `GET` requests do include `Content-Type: application/json` headers, so any request from Apollo Client Web (`POST` or `GET`) will be executed.
 - There is a non-empty `X-Apollo-Operation-Name` header. This header is sent with all operations (`POST` or `GET`) by [Apollo iOS](/ios) (v0.13.0+) and [Apollo Kotlin](/kotlin) (all versions, including its former name "Apollo Android"), so any request from Apollo iOS or Apollo Kotlin will be executed.

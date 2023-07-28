@@ -4,7 +4,7 @@ import type { FormattedExecutionResult, GraphQLFormattedError } from 'graphql';
 // from `graphql-js` once graphql 17 is released. It is possible that these
 // types will change slightly before the final v17 is released, in which case
 // the relevant parts of our API may change incompatibly in a minor version of
-// AS4; this should not affect any users who aren't explicitly installing
+// AS5; this should not affect any users who aren't explicitly installing
 // pre-releases of graphql 17.
 
 interface ObjMap<T> {

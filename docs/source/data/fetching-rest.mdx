@@ -248,7 +248,7 @@ class MoviesAPI extends RESTDataSource {
 
 ### Specifying cache TTL
 
-> 📣 **New in Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](../migration/#datasources).
+> 📣 **New since Apollo Server 4**: Apollo Server no longer automatically provides its cache to data sources. [See here for more details](../migration/#datasources).
 
 The `RESTDataSource` class can cache results from the REST API it fetches from **if either of the following is true**:
 
@@ -405,7 +405,7 @@ this.get('/movies/1', { signal: AbortSignal.timeout(myTimeoutMilliseconds) });
 
 ## Intercepting fetches
 
-> **New in Apollo Server 4**: Apollo Server 4 now uses the [`@apollo/utils.fetcher`](../migration#apolloutilsfetcher-replaces-apollo-server-env) interface under the hood for fetching. This interface lets you choose your own implementation of the Fetch API. To ensure compatibility with all Fetch implementations, the request provided to hooks like `willSendRequest` is a plain JS object rather than a `Request` object with methods.
+> **New since Apollo Server 4**: Apollo Server now uses the [`@apollo/utils.fetcher`](../migration#apolloutilsfetcher-replaces-apollo-server-env) interface under the hood for fetching. This interface lets you choose your own implementation of the Fetch API. To ensure compatibility with all Fetch implementations, the request provided to hooks like `willSendRequest` is a plain JS object rather than a `Request` object with methods.
 
 `RESTDataSource` includes a `willSendRequest` method that you can override to modify outgoing requests before they're sent. For example, you can use this method to add headers or query parameters. This method is most commonly used for authorization or other concerns that apply to all sent requests.
 

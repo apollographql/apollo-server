@@ -53,17 +53,6 @@ export type ApolloServerPluginLandingPageDefaultBaseOptions = {
 
   includeCookies?: boolean;
 
-  /**
-   * @deprecated This was originally introduced to support Cloudflare Workers
-   * based on a misunderstanding of CSP nonces. A different, more complete
-   * solution has since been implemented which removes the need for this option
-   * altogether. Specifying this option degrades the security of your
-   * application since it reuses the same nonce for every request, whereas
-   * Apollo Server generates a new one for every request by default.
-   * TODO(AS5): Remove this option.
-   */
-  precomputedNonce?: string;
-
   // For Apollo use only.
   __internal_apolloStudioEnv__?: 'staging' | 'prod';
 };

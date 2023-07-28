@@ -34,20 +34,20 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=14.16.0",
-    "npm": ">=8.5.0"
+    "node": ">=18",
+    "npm": ">=8.19.2"
   },
   "devDependencies": {
     "@apollo/client": "3.7.17",
     "@apollo/gateway": "2.5.1",
     "@apollo/subgraph": "2.5.1",
-    "@apollo/utils.createhash": "2.0.1",
+    "@apollo/utils.createhash": "3.0.0",
     "@changesets/changelog-github": "0.4.8",
     "@changesets/cli": "2.26.2",
-    "@graphql-codegen/cli": "3.3.1",
-    "@graphql-codegen/typescript-operations": "3.0.4",
-    "@graphql-tools/mock": "8.7.20",
-    "@graphql-tools/schema": "9.0.19",
+    "@graphql-codegen/cli": "4.0.1",
+    "@graphql-codegen/typescript-operations": "4.0.1",
+    "@graphql-tools/mock": "9.0.0",
+    "@graphql-tools/schema": "10.0.0",
     "@josephg/resolvable": "1.0.1",
     "@rollup/plugin-commonjs": "25.0.3",
     "@types/async-retry": "1.4.5",
@@ -60,7 +60,7 @@
     "@types/lodash.sumby": "4.6.7",
     "@types/lodash.xorby": "4.7.7",
     "@types/negotiator": "0.6.1",
-    "@types/node": "14.18.54",
+    "@types/node": "18.17.1",
     "@types/node-fetch": "2.6.4",
     "@types/qs-middleware": "1.0.1",
     "@types/retry": "0.12.2",
