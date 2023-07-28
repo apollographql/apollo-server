@@ -35,7 +35,7 @@
   ],
   "engines": {
     "node": ">=18",
-    "npm": ">=9"
+    "npm": ">=8.19.2"
   },
   "devDependencies": {
     "@apollo/client": "3.7.17",
