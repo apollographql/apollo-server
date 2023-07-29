@@ -12,6 +12,9 @@ import { HeaderMap } from '../utils/HeaderMap.js';
 export interface ExpressContextFunctionArgument {
   req: express.Request;
   res: express.Response;
+  options?: {
+    observeHeadersSent?: boolean;
+  }
 }
 
 export interface ExpressMiddlewareOptions<TContext extends BaseContext> {
@@ -38,12 +41,20 @@ export function expressMiddleware<TContext extends BaseContext>(
   const defaultContext: ContextFunction<
     [ExpressContextFunctionArgument],
     any
-  > = async () => ({});
+  > = async () => ({
+    options: {
+      observeHeadersSent: false
+    }
+  });
 
   const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
     options?.context ?? defaultContext;
 
-  return (req, res, next) => {
+  return (req, res, next, options) => {
+
+    if (!!options?.observeHeadersSent && res.headersSent)
+      return;
+
     if (!req.body) {
       // The json body-parser *always* sets req.body to {} if it's unset (even
       // if the Content-Type doesn't match), so if it isn't set, you probably
@@ -83,6 +94,10 @@ export function expressMiddleware<TContext extends BaseContext>(
         context: () => context({ req, res }),
       })
       .then(async (httpGraphQLResponse) => {
+
+        if (!!options?.observeHeadersSent && res.headersSent)
+          return;
+
         for (const [key, value] of httpGraphQLResponse.headers) {
           res.setHeader(key, value);
         }
