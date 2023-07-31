@@ -79,10 +79,15 @@
       matchPackageNames: ["^@graphql-tools/schema"],
       allowedVersions: "9.x"
     },
-    // make-fetch-happen drops support for node v14. We can take this when we drop node v14 support.
+    // make-fetch-happen@12 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["^make-fetch-happen"],
       allowedVersions: "11.x"
+    },
+    // @typescript-eslint@6 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["^@typescript-eslint"],
+      allowedVersions: "5.x"
     },
     // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
     // ESM and we're not going to go ESM-only for a while. So let's stay on v2.
