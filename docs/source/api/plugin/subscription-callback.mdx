@@ -12,7 +12,7 @@ minVersion: 4.9.0
 
 This article documents the options for the `ApolloServerPluginSubscriptionCallback` plugin, which you can import from `@apollo/server/plugin/subscriptionCallback`.
 
-This plugin enables your GraphQL Server to respond to subscription operations using the subscription callback protocol. This protocol is used by Apollo Router to execute subscription operations and receive updates at a URL specified by the router.
+This plugin enables your GraphQL server to respond to [subscription operations](/apollo-server/data/subscriptions/) using the [subscription callback protocol](https://www.apollographql.com/docs/router/executing-operations/subscription-callback-protocol/#initialization).  Apollo Router uses this protocol to execute subscription operations and receive updates at a URL specified by the router.
 
 This feature can only be enabled by providing an `ApolloServerPluginSubscriptionCallback` instance to your `ApolloServer` constructor:
 
