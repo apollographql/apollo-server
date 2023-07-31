@@ -58,7 +58,7 @@ The subscription plugin implementation inherently bypasses Apollo Server's reque
 </td>
 <td>
 
-Optionally configure the heartbeat interval (provided in milliseconds). The default is 5 seconds, which is the interval that Apollo Router expects. Lengthening this interval will cause Apollo Router to invalidate existing subscriptions frequently and is not recommended. You might want to shorten this interval if you have latency issues between your GraphQL Server and Apollo Router.
+Optionally configure the heartbeat interval in milliseconds. The default is 5 seconds, which is the interval that Apollo Router expects. Lengthening this interval may cause Apollo Router to invalidate existing subscriptions frequently and is not recommended. You may want to shorten this interval if you have latency issues between your GraphQL Server and Apollo Router.
 
 </td>
 </tr>
