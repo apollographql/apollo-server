@@ -18,6 +18,7 @@ You can also [create custom plugins](./integrations/plugins/).
 | [Cache control](./api/plugin/cache-control/) | Calculates caching behavior for operation responses. | `@apollo/server/plugin/cacheControl` |
 | [Landing page (multiple)](./api/plugin/landing-pages) | Handle displaying a default or custom landing page at Apollo Server's base URL. | `@apollo/server/plugin/landingPage/default` |
 | [Draining an HTTP server](./api/plugin/drain-http-server) | Used to ensure your Node.js servers gracefully shut down. | `@apollo/server/plugin/drainHttpServer`|
+| [Enable federated subscriptions](./api/plugin/subscription-callback) | Enables your server to handle federated subscription requests from Apollo Router via the callback protocol. | `@apollo/server/plugin/subscriptionCallback`|
 
 ## Installing plugins
 
