@@ -131,5 +131,9 @@
     "projects": [
       "<rootDir>/packages/*/jest.config.js"
     ]
+  },
+  "volta": {
+    "node": "18.17.0",
+    "npm": "9.8.1"
   }
 }
