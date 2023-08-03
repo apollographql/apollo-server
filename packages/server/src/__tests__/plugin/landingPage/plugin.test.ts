@@ -1,5 +1,8 @@
 import { ApolloServer, HeaderMap } from '@apollo/server';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  ApolloServerPluginLandingPageProductionDefault,
+} from '@apollo/server/plugin/landingPage/default';
 import { describe, expect, test } from '@jest/globals';
 import assert from 'assert';
 import { mockLogger } from '../../mockLogger';
@@ -60,5 +63,17 @@ describe('ApolloServerPluginLandingPageDefault', () => {
       "The `precomputedNonce` landing page configuration option is deprecated. Removing this option is strictly an improvement to Apollo Server's landing page Content Security Policy (CSP) implementation for preventing XSS attacks.",
     );
     await server.stop();
+  });
+
+  test(`nonce exists in non-embedded landing page`, async () => {
+    const plugin = ApolloServerPluginLandingPageProductionDefault({
+      embed: false,
+    });
+
+    // @ts-ignore not passing things to `serverWillStart`
+    const { renderLandingPage } = await plugin.serverWillStart?.({});
+    const landingPageHtml = await (await renderLandingPage?.()).html();
+
+    expect(landingPageHtml).toMatch(/<script nonce=".*">window\.landingPage/);
   });
 });
