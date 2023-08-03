@@ -2,7 +2,7 @@ import { UnboundedCache } from '../utils/UnboundedCache';
 
 describe('UnboundedCache', () => {
   beforeAll(() => {
-    jest.useFakeTimers();
+    jest.useFakeTimers({ doNotFake: ['performance'] });
   });
   afterAll(() => {
     jest.useRealTimers();
