@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.9.1
+
+### Patch Changes
+
+- [#7672](https://github.com/apollographql/apollo-server/pull/7672) [`ebfde0007`](https://github.com/apollographql/apollo-server/commit/ebfde0007c647d9fb73e3aa24b968def3e307084) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add missing `nonce` on `script` tag for non-embedded landing page
+
 ## 4.9.0
 
 ### Minor Changes
