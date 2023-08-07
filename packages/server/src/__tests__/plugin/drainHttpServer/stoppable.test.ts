@@ -32,7 +32,6 @@ const a: any = require('awaiting');
 const request: any = require('requisition');
 import fs from 'fs';
 import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
-import child from 'child_process';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
@@ -113,7 +112,7 @@ Object.keys(schemes).forEach((schemeName) => {
         const err = await a.failure(
           request(`${schemeName}://localhost:${p}`).agent(scheme.agent()),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
         expect(closed).toBe(1);
       });
 
@@ -135,9 +134,54 @@ Object.keys(schemes).forEach((schemeName) => {
             scheme.agent({ keepAlive: true }),
           ),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
-        expect(closed).toBe(0);
+        expect(err.code).toMatch(/ECONNREFUSED/);
+
+        // Node 19 (http) and 20.4+ (https) more aggressively close idle
+        // connections. `Stopper` is no longer needed for the purpose of closing
+        // idle connections in these versions. However, `Stopper` _is_ still
+        // useful for gracefully finishing in-flight requests within the timeout
+        // (and aborting requests beyond the timeout).
+        const isNode20 = !!process.version.match(/^v20\./);
+        expect(closed).toBe(isNode20 ? 1 : 0);
       });
+
+      // This test specifically added for Node 20 fails for Node 14. Just going
+      // to skip it since we're dropping Node 14 soon anyway.
+      const node14 = !!process.version.match(/^v14\./);
+      (node14 ? it.skip : it)(
+        'with unfinished requests',
+        async () => {
+          const server = scheme.server(async (_req, res) => {
+            res.writeHead(200);
+            res.write('hi'); // note lack of end()!
+          });
+          // The server will prevent itself from closing while the connection
+          // remains open (default no timeout). This will close the connection
+          // after 100ms so the test can finish.
+          server.setTimeout(100);
+
+          server.listen(0);
+          const p = port(server);
+
+          const response = await request(
+            `${schemeName}://localhost:${p}`,
+          ).agent(scheme.agent({ keepAlive: true }));
+          // ensure we got the headers, etc.
+          expect(response.status).toBe(200);
+
+          server.close();
+          await a.event(server, 'close');
+
+          try {
+            await response.text();
+          } catch (e: any) {
+            expect(e.code).toMatch(/ECONNRESET/);
+          }
+          // ensure the expectation in the catch block is reached (+ the one above)
+          expect.assertions(2);
+        },
+        35000,
+      );
     });
 
     describe('Stopper', function () {
@@ -159,7 +203,7 @@ Object.keys(schemes).forEach((schemeName) => {
         const err = await a.failure(
           request(`${schemeName}://localhost:${p}`).agent(scheme.agent()),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
 
         expect(closed).toBe(1);
         expect(gracefully).toBe(true);
@@ -185,7 +229,7 @@ Object.keys(schemes).forEach((schemeName) => {
             scheme.agent({ keepAlive: true }),
           ),
         );
-        expect(err.message).toMatch(/ECONNREFUSED/);
+        expect(err.code).toMatch(/ECONNREFUSED/);
 
         expect(closed).toBe(1);
         expect(gracefully).toBe(true);
@@ -301,12 +345,21 @@ Object.keys(schemes).forEach((schemeName) => {
 
     if (schemeName === 'http') {
       it('with in-flights finishing before grace period ends', async () => {
-        const file = path.join(__dirname, 'stoppable', 'server.js');
-        const server = child.spawn('node', [file]);
-        const [data] = await a.event(server.stdout, 'data');
-        const port = +data.toString();
-        expect(typeof port).toBe('number');
-        const res = await request(`${schemeName}://localhost:${port}/`).agent(
+        let stopper: Stopper;
+        const killServerBarrier = resolvable();
+        const server = http.createServer(async (_, res) => {
+          res.writeHead(200);
+          res.write('hello');
+
+          await killServerBarrier;
+          res.end('world');
+          await stopper.stop();
+        });
+        stopper = new Stopper(server);
+        server.listen(0);
+        const p = port(server);
+
+        const res = await request(`${schemeName}://localhost:${p}/`).agent(
           scheme.agent({ keepAlive: true }),
         );
         let gotBody = false;
@@ -320,13 +373,13 @@ Object.keys(schemes).forEach((schemeName) => {
         expect(gotBody).toBe(false);
 
         // Tell the server that its request should finish.
-        server.kill('SIGUSR1');
+        killServerBarrier.resolve();
 
         const body = await bodyPromise;
         expect(gotBody).toBe(true);
         expect(body).toBe('helloworld');
 
-        // Wait for subprocess to go away.
+        // Wait for server to close.
         await a.event(server, 'close');
       });
     }

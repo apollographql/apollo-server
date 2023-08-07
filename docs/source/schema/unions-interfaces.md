@@ -70,7 +70,7 @@ query GetSearchResults {
 
 > [What is the `__typename` field?](./schema/#the-__typename-field)
 
-This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`).
+This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Result`'s `title` (if it's a `Book`) or its `name` (if it's an `Author`). The web client can be informed about this polymorphic relationship by [passing the possibleTypes option](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 Here's a valid result for the above query:
 
@@ -91,7 +91,6 @@ Here's a valid result for the above query:
 }
 ```
 
-For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 ### Resolving a union
 
@@ -234,7 +233,7 @@ query GetBooks {
 
 > [What is the `__typename` field?](./schema/#the-__typename-field)
 
-This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`).
+This query uses [inline fragments](https://graphql.org/learn/queries/#inline-fragments) to fetch a `Book`'s `courses` (if it's a `Textbook`) or its `colors` (if it's a `ColoringBook`). The web client can be informed about this polymorphic relationship by [passing the possibleTypes option](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 Here's a valid result for the above query:
 
@@ -260,8 +259,6 @@ Here's a valid result for the above query:
   }
 }
 ```
-
-For more information, see [Using fragments with unions and interfaces](https://www.apollographql.com/docs/react/data/fragments/#using-fragments-with-unions-and-interfaces).
 
 ### Resolving an interface
 

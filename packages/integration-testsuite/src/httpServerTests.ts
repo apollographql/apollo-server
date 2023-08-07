@@ -382,7 +382,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
         return req.then((res) => {
           expect(res.status).toEqual(400);
           expect(
-            ['Unexpected token f', 'Bad Request', 'Invalid JSON'].some(
+            ['in JSON at position 1', 'Bad Request', 'Invalid JSON'].some(
               (substring) => (res.error as HTTPError).text.includes(substring),
             ),
           ).toBe(true);

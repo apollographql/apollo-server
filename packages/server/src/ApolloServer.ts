@@ -15,6 +15,7 @@ import {
   type TypedQueryDocumentNode,
   type ValidationContext,
   type ValidationRule,
+  type FormattedExecutionResult,
 } from 'graphql';
 import {
   type KeyValueCache,
@@ -179,6 +180,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   // flip default behavior.
   status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+  stringifyResult: (value: FormattedExecutionResult) => string;
 }
 
 function defaultLogger(): Logger {
@@ -332,6 +334,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         config.status400ForVariableCoercionErrors ?? false,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
+      stringifyResult: config.stringifyResult ?? prettyJSONStringify,
     };
   }
 
@@ -499,8 +502,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
       try {
         await Promise.all(
-          this.internals.plugins.map(async (plugin) =>
-            plugin.startupDidFail?.({ error }),
+          this.internals.plugins.map(
+            async (plugin) => plugin.startupDidFail?.({ error }),
           ),
         );
       } catch (pluginError) {
@@ -1054,10 +1057,11 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         const error = ensureError(maybeError);
         try {
           await Promise.all(
-            this.internals.plugins.map(async (plugin) =>
-              plugin.contextCreationDidFail?.({
-                error,
-              }),
+            this.internals.plugins.map(
+              async (plugin) =>
+                plugin.contextCreationDidFail?.({
+                  error,
+                }),
             ),
           );
         } catch (pluginError) {
@@ -1090,8 +1094,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ) {
         try {
           await Promise.all(
-            this.internals.plugins.map(async (plugin) =>
-              plugin.invalidRequestWasReceived?.({ error: maybeError }),
+            this.internals.plugins.map(
+              async (plugin) =>
+                plugin.invalidRequestWasReceived?.({ error: maybeError }),
             ),
           );
         } catch (pluginError) {
@@ -1313,11 +1318,12 @@ export async function internalExecuteOperation<TContext extends BaseContext>(
     // If *these* hooks throw then we'll still get a 500 but won't mask its
     // error.
     await Promise.all(
-      internals.plugins.map(async (plugin) =>
-        plugin.unexpectedErrorProcessingRequest?.({
-          requestContext,
-          error,
-        }),
+      internals.plugins.map(
+        async (plugin) =>
+          plugin.unexpectedErrorProcessingRequest?.({
+            requestContext,
+            error,
+          }),
       ),
     );
     // Mask unexpected error externally.

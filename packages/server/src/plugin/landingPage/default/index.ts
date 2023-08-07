@@ -72,7 +72,7 @@ const getNonEmbeddedLandingPageHTML = (
   <h1>Welcome to Apollo Server</h1>
   <p>The full landing page cannot be loaded; it appears that you might be offline.</p>
 </div>
-<script>window.landingPage = ${encodedConfig};</script>
+<script nonce="${nonce}">window.landingPage = ${encodedConfig};</script>
 <script nonce="${nonce}" src="https://apollo-server-landing-page.cdn.apollographql.com/${encodeURIComponent(
     cdnVersion,
   )}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;

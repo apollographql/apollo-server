@@ -1,5 +1,62 @@
 # @apollo/server
 
+## 4.9.1
+
+### Patch Changes
+
+- [#7672](https://github.com/apollographql/apollo-server/pull/7672) [`ebfde0007`](https://github.com/apollographql/apollo-server/commit/ebfde0007c647d9fb73e3aa24b968def3e307084) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add missing `nonce` on `script` tag for non-embedded landing page
+
+## 4.9.0
+
+### Minor Changes
+
+- [#7617](https://github.com/apollographql/apollo-server/pull/7617) [`4ff81ca50`](https://github.com/apollographql/apollo-server/commit/4ff81ca508d46eaafa4aa7c265cf2ba2c4421524) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Introduce new `ApolloServerPluginSubscriptionCallback` plugin. This plugin implements the [subscription callback protocol](https://github.com/apollographql/router/blob/dev/dev-docs/callback_protocol.md) which is used by Apollo Router. This feature implements subscriptions over HTTP via a callback URL which Apollo Router registers with Apollo Server. This feature is currently in preview and is subject to change.
+
+  You can enable callback subscriptions like so:
+
+  ```ts
+  import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
+  import { ApolloServer } from '@apollo/server';
+
+  const server = new ApolloServer({
+    // ...
+    plugins: [ApolloServerPluginSubscriptionCallback()],
+  });
+  ```
+
+  Note that there is currently no tracing or metrics mechanism in place for callback subscriptions. Additionally, this plugin "intercepts" callback subscription requests and bypasses some of Apollo Server's internals. The result of this is that certain plugin hooks (notably `executionDidStart` and `willResolveField`) will not be called when handling callback subscription requests or when sending subscription events.
+
+  For more information on the subscription callback protocol, visit the docs:
+  https://www.apollographql.com/docs/router/executing-operations/subscription-callback-protocol/
+
+### Patch Changes
+
+- [#7659](https://github.com/apollographql/apollo-server/pull/7659) [`4784f46fb`](https://github.com/apollographql/apollo-server/commit/4784f46fb580cdcd4359a86180def7d221856480) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+## 4.8.1
+
+### Patch Changes
+
+- [#7636](https://github.com/apollographql/apollo-server/pull/7636) [`42fc65cb2`](https://github.com/apollographql/apollo-server/commit/42fc65cb282a8d5b8bf853775a8eedc421d33524) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update test suite for compatibility with Node v20
+
+## 4.8.0
+
+### Minor Changes
+
+- [#7634](https://github.com/apollographql/apollo-server/pull/7634) [`f8a8ea08f`](https://github.com/apollographql/apollo-server/commit/f8a8ea08fed4090115b1a025e57bdb0f2deb82fc) Thanks [@dfperry5](https://github.com/dfperry5)! - Updating the ApolloServer constructor to take in a stringifyResult function that will allow a consumer to pass in a function that formats the result of an http query.
+
+  Usage:
+
+  ```ts
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    stringifyResult: (value: FormattedExecutionResult) => {
+      return JSON.stringify(value, null, 2);
+    },
+  });
+  ```
+
 ## 4.7.5
 
 ### Patch Changes

@@ -1,5 +1,41 @@
 # @apollo/server-integration-testsuite
 
+## 4.9.1
+
+### Patch Changes
+
+- Updated dependencies [[`ebfde0007`](https://github.com/apollographql/apollo-server/commit/ebfde0007c647d9fb73e3aa24b968def3e307084)]:
+  - @apollo/server@4.9.1
+
+## 4.9.0
+
+### Patch Changes
+
+- [#7659](https://github.com/apollographql/apollo-server/pull/7659) [`4784f46fb`](https://github.com/apollographql/apollo-server/commit/4784f46fb580cdcd4359a86180def7d221856480) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- Updated dependencies [[`4ff81ca50`](https://github.com/apollographql/apollo-server/commit/4ff81ca508d46eaafa4aa7c265cf2ba2c4421524), [`4784f46fb`](https://github.com/apollographql/apollo-server/commit/4784f46fb580cdcd4359a86180def7d221856480)]:
+  - @apollo/server@4.9.0
+
+## 4.8.1
+
+### Patch Changes
+
+- [#7636](https://github.com/apollographql/apollo-server/pull/7636) [`42fc65cb2`](https://github.com/apollographql/apollo-server/commit/42fc65cb282a8d5b8bf853775a8eedc421d33524) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Update test suite for compatibility with Node v20
+
+- Updated dependencies [[`42fc65cb2`](https://github.com/apollographql/apollo-server/commit/42fc65cb282a8d5b8bf853775a8eedc421d33524)]:
+  - @apollo/server@4.8.1
+
+## 4.8.0
+
+### Patch Changes
+
+- [#7649](https://github.com/apollographql/apollo-server/pull/7649) [`d33acdfdd`](https://github.com/apollographql/apollo-server/commit/d33acdfddd525c2cb1d5d5810a98e02fb917ac9f) Thanks [@mastrzyz](https://github.com/mastrzyz)! - Add missing `supertest` dependency
+
+- [#7632](https://github.com/apollographql/apollo-server/pull/7632) [`64f8177ab`](https://github.com/apollographql/apollo-server/commit/64f8177abca46865c155ff2fc8ed0194ad8d0c83) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- Updated dependencies [[`f8a8ea08f`](https://github.com/apollographql/apollo-server/commit/f8a8ea08fed4090115b1a025e57bdb0f2deb82fc)]:
+  - @apollo/server@4.8.0
+
 ## 4.7.5
 
 ### Patch Changes
