@@ -117,7 +117,7 @@ export default resolvers;
 You may notice the code for each resolver function is similar to the code in your application's `record` route. This is because these resolvers provide the same logic as performing CRUD operations on your records collection.
 
 To learn more about writing resolver functions, check out the [resolver docs](../data/resolvers).
-## Step 4: Add Apollo Server to your express server
+## Step 4: Add Apollo Server to your Express server
 
 Now, we can begin integrating Apollo Server into our Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and the `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
 
