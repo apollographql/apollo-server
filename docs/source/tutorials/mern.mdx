@@ -25,6 +25,11 @@ your server project's `node_modules` directory:
   npm install @apollo/server @apollo/subgraph graphql graphql-tag
 ```
 
+- [`graphql`](https://www.npmjs.com/package/graphql) is the JavaScript reference implementation for GraphQL
+- [`graphql-tag` ](https://www.npmjs.com/package/graphql-tag) is a utility package to parse a GraphQL string into the standard GraphQL abstract syntax tree (AST)
+- [`@apollo/subgraph`](https://www.npmjs.com/package/@apollo/subgraph) is a utility package to a build GraphQL schema that can also work in microservices
+- [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is a spec compliant GraphQL server to expose a `/graphql` endpoint
+
 ## Step 2: Define your GraphQL schema
 
 Every GraphQL server (including Apollo Server) uses a schema to define the data clients can query. The following example creates a schema for the prerequisite tutorial's `records` collection:
