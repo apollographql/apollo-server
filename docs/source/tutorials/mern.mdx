@@ -119,7 +119,7 @@ You may notice the code for each resolver function is similar to the code in you
 To learn more about writing resolver functions, check out the [resolver docs](../data/resolvers).
 ## Step 4: Add Apollo Server to your express server
 
-In your `mern/server/server.ts` (or wherever you instantiate your `express` server), import `@apollo/server` and the `expressMiddleware`:
+Now, we can begin integrating Apollo Server into our Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and the `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
 
 <MultiCodeBlock>
 
