@@ -62,8 +62,6 @@ Resolver functions are responsible for performing the actions defined in the sch
 
 In your server's `/src` folder, create a new `resolvers.ts` file and paste the following resolvers:
 
-<MultiCodeBlock>
-
 ```ts
 import db from "./db/conn.ts";
 
@@ -117,16 +115,12 @@ const resolvers = {
 export default resolvers;
 ```
 
-</MultiCodeBlock>
-
 You may notice the code for each resolver function is similar to the code in your application's `record` route. This is because these resolvers provide the same logic as performing CRUD operations on your records collection.
 
 To learn more about writing resolver functions, check out the [resolver docs](../data/resolvers).
 ## Step 4: Add Apollo Server to your Express server
 
 Now, we can begin integrating Apollo Server into our Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and the `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
-
-<MultiCodeBlock>
 
 ```ts
 import express, { json } from 'express';
@@ -171,15 +165,11 @@ app.listen(PORT, () => {
 });
 ```
 
-</MultiCodeBlock>
-
 Next, we'll use the middleware to integrate the previously defined resolvers into a route.
 
 ## Step 5: Add the `/graphql` route to your server API endpoints
 
 In the same server file, add the `/graphql` route:
-
-<MultiCodeBlock>
 
 ```ts
 app.use("/record", records);
@@ -199,7 +189,6 @@ app.listen(PORT, () => {
 ```
 
 This route provides access to our Apollo Server's resolver functions. Note that we haven't removed the `/records` route. That means our Express server can handle both GraphQL and RESTful routes.
-</MultiCodeBlock>
 
 ## Step 6: Start the server
 
