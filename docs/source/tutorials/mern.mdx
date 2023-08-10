@@ -67,7 +67,7 @@ const resolvers = {
     id: (parent) => parent.id ?? parent._id,
   },
   Query: {
-    async record(_, { id }, context) {
+    async record(_, { id }) {
       let collection = await db.collection("records");
       let query = { _id: new ObjectId(id) };
 
