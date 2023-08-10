@@ -114,6 +114,9 @@ export default resolvers;
 
 </MultiCodeBlock>
 
+You may notice the code for each resolver function is similar to the code in your application's `record` route. This is because these resolvers provide the same logic as performing CRUD operations on your records collection.
+
+To learn more about writing resolver functions, check out the [resolver docs](../data/resolvers).
 ## Step 4: Add Apollo Server to your express server
 
 In your `mern/server/server.ts` (or wherever you instantiate your `express` server), import `@apollo/server` and the `expressMiddleware`:
