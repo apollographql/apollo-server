@@ -53,7 +53,7 @@ type Record {
 This schema lets you perform various actions on records: fetching single or multiple records, creating new records, updating existing records, and deleting records. For more information on schema definition, check out the [schema basics](../schema/schema/) docs.
 ## Step 3: Define the resolvers
 
-The resolvers are where you're going to connect the GraphQL schema and your MongoDB instance.
+Resolver functions are responsible for performing the actions defined in the schema—for example, fetching and updating records. In a MERN stack application, they're how you connect the GraphQL schema to your MongoDB instance.
 
 Create a new `resolvers.ts` file and connect the resolvers to your MongoDB connection (similar to the code in the `record` route):
 
