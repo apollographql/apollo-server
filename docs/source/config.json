@@ -31,7 +31,8 @@
     },
     "Web Frameworks": {
       "Integrations": "/integrations/integration-index",
-      "Building integrations": "/integrations/building-integrations"
+      "Building integrations": "/integrations/building-integrations",
+      "MERN stack tutorial": "/integrations/mern"
     },
     "Development Workflow": {
       "Build and run queries": "/workflow/build-run-queries",
@@ -59,9 +60,6 @@
     "Monitoring": {
       "Metrics and logging": "/monitoring/metrics",
       "Health checks": "/monitoring/health-checks"
-    },
-    "Tutorials": {
-      "MERN Stack": "/tutorials/mern"
     },
     "API Reference": {
       "ApolloServer": "/api/apollo-server",
