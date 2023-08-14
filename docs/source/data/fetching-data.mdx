@@ -163,7 +163,7 @@ const server = new ApolloServer<ContextValue>({
 });
 
 const { url } = await startStandaloneServer(server, {
-  context: async () => {
+  context: async ({ req }) => {
     const { cache } = server; // highlight-line
     const token = req.headers.token;
     return {
