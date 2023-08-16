@@ -116,13 +116,13 @@ const resolvers = {
 export default resolvers;
 ```
 
-You may have noticed the code for each resolver function is similar to the code in your application's `record` route. That's because these resolvers provide the same logic as performing CRUD operations on your records collection.
+You may have noticed the code for each resolver function is similar to the code in your application's `/record` route. That's because these resolvers provide the same logic as performing CRUD operations on your records collection.
 
 To learn more about writing resolver functions, check out the [resolver docs](../data/resolvers).
 
 ## Step 4: Add Apollo Server to your Express server
 
-Now you can begin integrating Apollo Server into your Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and the `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
+Now you can begin integrating Apollo Server into your Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and its `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
 
 ```ts
 import express, { json } from 'express';
@@ -219,9 +219,8 @@ The Sandbox UI includes:
 - A **Response** panel for viewing query results (on the right)
 
 To learn more about what Sandbox offers, check out the [Sandbox docs](/graphos/explorer/sandbox/).
-The server supports querying the `records`, so let's do it!
 
-Paste this GraphQL query string for executing the `records` query into the **Operations** panel and click the run button.
+The server supports querying the `records`, so let's do it! Paste this GraphQL query string for executing the `records` query into the **Operations** panel and click the run button.
 
 ```graphql
 query GetRecords {
