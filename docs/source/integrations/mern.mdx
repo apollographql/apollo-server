@@ -2,7 +2,7 @@
 title: Teaching the MERN stack to speak GraphQL
 ---
 
-Apollo Server is designed to work seamlessly with MERN stack components. This tutorial shows how to add Apollo Server to an existing MERN stack project. Specifically, this tutorial demonstrates how to:
+Apollo Server is designed to work seamlessly with MERN stack (MongoDB, Express, React, Node) applications. This tutorial shows how to add Apollo Server to an existing MERN stack project. Specifically, this tutorial demonstrates how to:
 
 - Run an Apollo Server instance that lets you execute GraphQL operations
 - Expose a GraphQL route in a MERN stack application
@@ -10,10 +10,10 @@ Apollo Server is designed to work seamlessly with MERN stack components. This tu
 ## Prerequisites
 
 This tutorial assumes that you're familiar with the command line and JavaScript. Additionally, it requires the following:
-- You've installed a recent Node.js version (v14.16.0+).
+- You've installed a recent Node.js version (`v14.16.0+`).
 - You've completed MongoDB's [MERN stack tutorial](https://www.mongodb.com/languages/mern-stack-tutorial) or have your own existing MERN stack application.
     - The tutorial's code examples build off the tutorial, but you can adapt them to your application's requirements.
-- You have a MongoDB database with a `records` collection with `name`, `position`, and `level` columns.
+- You have a MongoDB database with a `records` collection that has `name`, `position`, and `level` columns.
     - The tutorial's code examples use these column names, but you can adapt them to your database's schema.
 
 ## Step 1: Install dependencies
@@ -22,17 +22,17 @@ In your server folder, run the following command to install these packages and s
 your server project's `node_modules` directory:
 
 ```bash
-  npm install @apollo/server @apollo/subgraph graphql graphql-tag
+  npm install graphql graphql-tag @apollo/subgraph @apollo/server 
 ```
 
 - [`graphql`](https://www.npmjs.com/package/graphql) is the JavaScript reference implementation for GraphQL
 - [`graphql-tag` ](https://www.npmjs.com/package/graphql-tag) is a utility package to parse a GraphQL string into the standard GraphQL abstract syntax tree (AST)
-- [`@apollo/subgraph`](https://www.npmjs.com/package/@apollo/subgraph) is a utility package to a build GraphQL schema that can also work in microservices
-- [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is a spec compliant GraphQL server to expose a `/graphql` endpoint
+- [`@apollo/subgraph`](https://www.npmjs.com/package/@apollo/subgraph) is a utility package for creating GraphQL microservices
+- [`@apollo/server`](https://www.npmjs.com/package/@apollo/server) is a spec-compliant GraphQL server that exposes a `/graphql` endpoint
 
 ## Step 2: Define your GraphQL schema
 
-Every GraphQL server (including Apollo Server) uses a schema to define the data clients can query. The following example creates a schema for the prerequisite tutorial's `records` collection:
+Every GraphQL server (including Apollo Server) uses a schema to define the data that clients can query. The following example creates a schema for the [prerequisite tutorial](https://www.mongodb.com/languages/mern-stack-tutorial)'s `records` collection:
 
 In your server's `/src` folder, create a `schema.graphql` file and paste in the following schema:
 
@@ -55,12 +55,13 @@ type Record {
   level: String
 }
 ```
-This schema lets you perform various actions on records: fetching single or multiple records, creating new records, updating existing records, and deleting records. For more information on schema definition, check out the [schema basics](../schema/schema/) docs.
+This schema lets you perform various actions on records: fetching single or multiple records, creating new records, deleting records, and updating existing records. For more information on schema definition, check out the [schema basics](../schema/schema/) docs.
+
 ## Step 3: Define the resolvers
 
 Resolver functions are responsible for performing the actions defined in the schema—for example, fetching and updating records. In a MERN stack application, they're how you connect the GraphQL schema to your MongoDB instance.
 
-In your server's `/src` folder, create a new `resolvers.ts` file and paste the following resolvers:
+In your server's `/src` folder, create a new `resolvers.ts` file and paste in the following resolvers:
 
 ```ts
 import db from "./db/conn.ts";
@@ -115,12 +116,13 @@ const resolvers = {
 export default resolvers;
 ```
 
-You may notice the code for each resolver function is similar to the code in your application's `record` route. This is because these resolvers provide the same logic as performing CRUD operations on your records collection.
+You may have noticed the code for each resolver function is similar to the code in your application's `record` route. That's because these resolvers provide the same logic as performing CRUD operations on your records collection.
 
 To learn more about writing resolver functions, check out the [resolver docs](../data/resolvers).
+
 ## Step 4: Add Apollo Server to your Express server
 
-Now, we can begin integrating Apollo Server into our Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and the `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
+Now you can begin integrating Apollo Server into your Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and the `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
 
 ```ts
 import express, { json } from 'express';
@@ -165,7 +167,7 @@ app.listen(PORT, () => {
 });
 ```
 
-Next, we'll use the middleware to integrate the previously defined resolvers into a route.
+Next, you'll use the middleware to integrate the [previously defined resolvers](#step-3-define-the-resolvers) into a route.
 
 ## Step 5: Add the `/graphql` route to your server API endpoints
 
@@ -173,7 +175,7 @@ In the same server file, add the `/graphql` route:
 
 ```ts
 app.use("/record", records);
-// Specify the path where we'd like to mount our server
+// Specify the path to mount the server
 //highlight-start
 app.use(
   '/graphql',
@@ -188,38 +190,38 @@ app.listen(PORT, () => {
 });
 ```
 
-This route provides access to our Apollo Server's resolver functions. Note that we haven't removed the `/records` route. That means our Express server can handle both GraphQL and RESTful routes.
+This route provides access to the Apollo Server's [resolver functions you previously defined](#step-3-define-the-resolvers). Note that the `/records` route hasn't been removed. That means your Express server can handle both GraphQL and RESTful routes.
 
 ## Step 6: Start the server
 
-We're ready to start our server! Run the following from your project's server
+You're ready to start your server! Run the following from your project's server
 directory:
 
 ```bash
 npm start
 ```
 
-The output of your console should display "Server is running on port: 5050".
+Your console output should display `Server is running on port: 5050`.
 
 ## Step 7: Execute your first query
 
-We can now execute GraphQL queries on our server. To execute our first query, we can use [**Apollo Sandbox**](/graphos/explorer/sandbox/).
+You can now execute GraphQL queries on the server. To execute your first query, you can use [**Apollo Sandbox**](/graphos/explorer/sandbox/).
 
 Visit your MERN server in your browser at the `/graphql` route, which will open the Apollo Sandbox:
 
-<img class="screenshot" src="./images/sandbox-mern-stack.png" alt="Apollo Sandbox" />
+<img class="screenshot" src="../images/sandbox-mern-stack.jpg" alt="Apollo Sandbox" />
 
 The Sandbox UI includes:
 
-- An Operations panel for writing and executing queries (in the middle)
-- A Response panel for viewing query results (on the right)
+- A URL input bar for connecting to other GraphQL servers (in the upper left)
 - Tabs for schema exploration, search, and settings (on the left)
-- A URL bar for connecting to other GraphQL servers (in the upper left)
+- An **Operations** panel for writing and executing queries (in the middle)
+- A **Response** panel for viewing query results (on the right)
 
 To learn more about what Sandbox offers, check out the [Sandbox docs](/graphos/explorer/sandbox/).
-Our server supports querying the `records`, so  let's do it!
+The server supports querying the `records`, so let's do it!
 
-Paste this GraphQL **query string** for executing the `records` query into the sandbox and click the run button.
+Paste this GraphQL query string for executing the `records` query into the **Operations** panel and click the run button.
 
 ```graphql
 query GetRecords {
@@ -230,6 +232,8 @@ query GetRecords {
   }
 }
 ```
+
+You should see your records appear in the **Response** panel.
 
 ## Complete example
 
@@ -244,19 +248,8 @@ You can view and fork the complete server example on Code Sandbox:
 
 ## Next steps
 
+Congrats on completing the tutorial! 🎉 Incorporating a GraphQL server into your MERN application marks a pivotal step towards creating more efficient, flexible, and user-centric web experiences. And now that you've integrated Apollo Server into your MERN stack application, you can use [GraphOS](/graphos/) to build and scale even faster.
 
-Congrats on completing the tutorial! Incorporating a GraphQL server into your MERN application marks a pivotal step towards creating more efficient, flexible, and user-centric web experiences.
-
-And while this tutorial only covers the server portion of the MERN stack, the `/client` folder in the completed example picks up where we left off and implements `@apollo/client` to interact with the server.
-
-For more information on implementing the Apollo Client, head over to our [getting started docs](https://www.apollographql.com/docs/react/get-started).
-
-Now that Apollo Server is integrated into your MERN stack application, you can use [GraphOS](/graphos/) to build and scale even faster.
+While this tutorial only covers the server portion of the MERN stack, the `/client` folder in the [completed example](#complete-example) picks up where the tutorial left off and implements [`@apollo/client`](/react/) to interact with the server. For more information on implementing the Apollo Client, head to the [getting started docs](/react/get-started).
 
 For more hands-on learning on GraphQL and Apollo's server and client libraries, check out our interactive [Odyssey tutorials](https://www.apollographql.com/tutorials/).
-of schemas, resolvers, and generating types:
-
-- [Schema basics](./schema/schema/)
-- [Resolvers](./data/resolvers/)
-- [Generating TS types for your schema](./workflow/generate-types)
-
