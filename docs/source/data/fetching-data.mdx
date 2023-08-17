@@ -300,7 +300,7 @@ const server = new ApolloServer<MyContext>({
 });
 
 const { url } = await startStandaloneServer(server, {
-  context: async () => {
+  context: async ({ req }) => {
     //highlight-start
     const { cache } = server;
     const token = req.headers.token;
