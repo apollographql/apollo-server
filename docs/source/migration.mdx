@@ -239,8 +239,6 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import pkg from 'body-parser';
-const { json } = pkg;
 import { typeDefs, resolvers } from './schema';
 
 interface MyContext {
@@ -257,7 +255,7 @@ const server = new ApolloServer<MyContext>({
 await server.start();
 app.use('/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server, {
     context: async ({ req }) => ({ token: req.headers.token }),
   }),

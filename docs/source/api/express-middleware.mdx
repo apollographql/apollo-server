@@ -25,7 +25,6 @@ The `expressMiddleware` function accepts two arguments. The first **required** a
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import cors from 'cors';
-import { json } from 'body-parser';
 import express from 'express';
 
 const app = express();
@@ -43,7 +42,7 @@ await server.start();
 app.use(
   '/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 //highlight-end
