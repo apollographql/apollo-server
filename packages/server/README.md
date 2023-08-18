@@ -92,6 +92,12 @@ First, install Apollo Server, the JavaScript implementation of the core GraphQL 
 npm install @apollo/server graphql express cors body-parser
 ```
 
+If using Typescript you may also need to install additional type declaration packages as development dependencies to avoid common errors when importing the above packages (i.e. Could not find a declaration file for module '`cors`'):
+
+```
+npm install --save-dev @types/cors @types/express @types/body-parser
+```
+
 Then, write the following to `server.mjs`. (By using the `.mjs` extension, Node lets you use the `await` keyword at the top level.)
 
 ```js
