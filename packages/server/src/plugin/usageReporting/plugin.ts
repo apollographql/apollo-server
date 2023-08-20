@@ -584,8 +584,14 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             // Search above for a comment about "didResolveSource" to see which
             // of the pre-source-resolution errors we are intentionally avoiding.
             if (!didResolveSource) return;
-            if (requestContext.errors) {
-              treeBuilder.didEncounterErrors(requestContext.errors);
+            if ('singleResult' in requestContext.response.body) {
+              treeBuilder.didEncounterErrors(
+                requestContext.response.body.singleResult.errors,
+              );
+            } else {
+              treeBuilder.didEncounterErrors(
+                requestContext.response.body.initialResult.errors,
+              );
             }
 
             // If there isn't any defer/stream coming later, we're done.
