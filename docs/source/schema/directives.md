@@ -105,17 +105,18 @@ If you want to define a custom schema directive to _transform_ your executable s
 
 ### In subgraphs
 
-> ⚠️ **Important considerations**
->
-> Before you use directives in a federated graph, make sure to consider the following:
->
-> - Custom directives are _not_ included in your graph's composed supergraph schema. The composition process strips all subgraph directives. Only a given subgraph is aware of its own directives.
-> - Because directives are specific to individual subgraphs, it's valid for different subgraphs to define the _same_ directive with _different_ logic. Composition does not detect or warn about such inconsistencies.
-> - If multiple subgraphs can resolve a particular field, each subgraph should almost always apply the exact same set of custom directives (with the exact same accompanying logic) to that field. Otherwise, the behavior of that field might vary depending on _which_ subgraph resolves it.
+Before you use custom directives in a federated graph, make sure to consider the following:
+- If multiple subgraphs can resolve a particular field, each subgraph should almost always apply the exact same set of custom directives (with the exact same definition) to that field. Otherwise, the behavior of that field might vary depending on _which_ subgraph resolves it.
+- Because directives are specific to individual subgraphs, it's technically valid for different subgraphs to define the _same_ directive with _different_ logic. As stated in the previous point, if a custom directive is used in multiple subgraphs to resolve a particular field, you should define the same directive with the same logic across subgraphs. _Composition does not detect or warn about such inconsistencies._
+- The composition process treats [executable (client-side)](/federation/federated-types/composition/#executable-directives) and [type system (server-side) directives](/federation/federated-types/composition/#type-system-directives) differently:
+  - An executable directive is composed into the supergraph schema if:
+      - All subgraphs define the directive identically 
+      - The directive is not included in any [`@composeDirective`](/federation/federated-types/federated-directives/#composedirective) directives
+  - Type system directives are not composed into the supergraph schema, but they can provide information to the router via the [`@composeDirective`](/federation/federated-types/federated-directives/#composedirective) directive.
 
+#### Transformer functions
 
 [As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/custom-directives/upper-case-directive/src/index.ts), in Apollo Server 3 and 4 you can define a **transformer function** for each of your subgraph schema's custom directives.
-
 
 To apply transformer functions to your executable subgraph schema, you first _generate_ the subgraph schema with `buildSubgraphSchema` as usual:
 
