@@ -31,7 +31,8 @@
     },
     "Web Frameworks": {
       "Integrations": "/integrations/integration-index",
-      "Building integrations": "/integrations/building-integrations"
+      "Building integrations": "/integrations/building-integrations",
+      "MERN stack tutorial": "/integrations/mern"
     },
     "Development Workflow": {
       "Build and run queries": "/workflow/build-run-queries",
