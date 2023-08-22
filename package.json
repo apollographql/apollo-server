@@ -95,6 +95,7 @@
     "nock": "13.3.2",
     "node-fetch": "2.6.12",
     "prettier": "3.0.1",
+    "prettier-2": "npm:prettier@^2",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
     "rollup": "3.28.0",
