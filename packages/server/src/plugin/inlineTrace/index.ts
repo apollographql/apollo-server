@@ -66,7 +66,7 @@ export function ApolloServerPluginInlineTrace(
         }
       }
     },
-    async requestDidStart({ request: { http }, metrics, logger }) {
+    async requestDidStart({ request: { http }, metrics }) {
       if (!enabled) {
         return;
       }
@@ -74,7 +74,6 @@ export function ApolloServerPluginInlineTrace(
       const treeBuilder = new TraceTreeBuilder({
         maskedBy: 'ApolloServerPluginInlineTrace',
         sendErrors: options.includeErrors,
-        logger,
       });
 
       // XXX Provide a mechanism to customize this logic.

@@ -6,7 +6,6 @@ import {
   type ResponsePath,
 } from 'graphql';
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
-import type { Logger } from '@apollo/utils.logger';
 import type { SendErrorsOptions } from './usageReporting';
 import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
 
@@ -16,7 +15,6 @@ function internalError(message: string) {
 
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
-  private logger: Logger;
   public trace = new Trace({
     root: this.rootNode,
     // By default, each trace counts as one operation for the sake of field
@@ -39,10 +37,9 @@ export class TraceTreeBuilder {
 
   public constructor(options: {
     maskedBy: string;
-    logger: Logger;
     sendErrors?: SendErrorsOptions;
   }) {
-    const { logger, sendErrors, maskedBy } = options;
+    const { sendErrors, maskedBy } = options;
     if (!sendErrors || 'masked' in sendErrors) {
       this.transformError = () =>
         new GraphQLError('<masked>', {
@@ -55,7 +52,6 @@ export class TraceTreeBuilder {
     } else {
       throw new UnreachableCaseError(sendErrors);
     }
-    this.logger = logger;
   }
 
   public startTiming() {
@@ -156,11 +152,21 @@ export class TraceTreeBuilder {
       if (specificNode) {
         node = specificNode;
       } else {
-        this.logger.warn(
-          `Could not find node with path ${path.join(
-            '.',
-          )}; defaulting to put errors on root node.`,
+        let nodePtr: Trace.INode = node;
+        // `path` becomes un-inferred as any[] inside the Array.isArray for
+        // some reason so just casting it back here.
+        const pathWithTypenames = (path as ReadonlyArray<string | number>).map(
+          (key) => {
+            nodePtr = nodePtr?.child?.find(
+              (child) => child.responseName === key,
+            )!;
+            return {
+              key: key as string | number,
+              typename: nodePtr?.parentType ?? undefined,
+            };
+          },
         );
+        node = this.newNode(responsePathFromArray(pathWithTypenames));
       }
     }
 
@@ -278,6 +284,29 @@ function responsePathAsString(p?: ResponsePath): string {
   }
 
   return res;
+}
+
+function responsePathFromArray(
+  pathAsArray: ReadonlyArray<{ key: string | number; typename?: string }>,
+): ResponsePath {
+  const idx = pathAsArray.length - 1;
+  return {
+    key: pathAsArray[idx].key,
+    prev: walkPath(pathAsArray, idx - 1),
+    typename: pathAsArray[idx].typename,
+  };
+}
+
+function walkPath(
+  pathAsArray: ReadonlyArray<{ key: string | number; typename?: string }>,
+  idx: number,
+): ResponsePath | undefined {
+  if (idx < 0) return undefined;
+  return {
+    key: pathAsArray[idx].key,
+    prev: walkPath(pathAsArray, idx - 1),
+    typename: pathAsArray[idx].typename,
+  };
 }
 
 function errorToProtobufError(error: GraphQLError): Trace.Error {

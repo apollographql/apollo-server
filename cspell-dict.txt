@@ -189,6 +189,7 @@ tsconfig
 tsconfigs
 typecheck
 typeis
+typenames
 typeof
 typesafe
 unawaited
