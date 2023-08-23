@@ -3,8 +3,7 @@
 # As far as we can tell, `npm deprecate` only deprecates currently existing
 # package versions. Whenever we publish a backport to AS2/AS3, the latest
 # version will end up not deprecated! So after publishing backport versions, we
-# run this script (with apollo-bot credentials). As far as we can tell you can't
-# use npm tokens for this so it requires you to enter a ton of OTPs. Fun!
+# run this script (with apollo-bot credentials). You must provide an OTP env variable in order for this script to run (it does indeed use the OTP more than once, but it works). Note: when I ran this last (8/22/23) I got a bunch of 422 errors from NPM, but it still worked.
 # https://stackoverflow.com/questions/74466186/keeping-npm-deprecated-packages-deprecated
 
 set -e
