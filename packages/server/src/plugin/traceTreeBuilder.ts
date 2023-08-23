@@ -8,7 +8,6 @@ import {
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
 import type { SendErrorsOptions } from './usageReporting';
 import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
-import { addPath } from 'graphql/jsutils/Path.js';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -285,7 +284,11 @@ function responsePathFromArray(
   let nodePtr: Trace.INode | undefined = node;
   for (const key of path) {
     nodePtr = nodePtr?.child?.find((child) => child.responseName === key);
-    responsePath = addPath(responsePath, key, nodePtr?.parentType ?? undefined);
+    responsePath = {
+      key,
+      prev: responsePath,
+      typename: nodePtr?.type ?? undefined,
+    };
   }
   return responsePath;
 }
