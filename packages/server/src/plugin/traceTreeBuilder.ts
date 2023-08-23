@@ -8,7 +8,7 @@ import {
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
 import type { SendErrorsOptions } from './usageReporting';
 import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
-import { addPath } from 'graphql/jsutils/Path';
+import { addPath } from 'graphql/jsutils/Path.js';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
