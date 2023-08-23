@@ -8,6 +8,7 @@ import {
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
 import type { SendErrorsOptions } from './usageReporting';
 import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
+import { addPath } from 'graphql/jsutils/Path';
 
 function internalError(message: string) {
   return new Error(`[internal apollo-server error] ${message}`);
@@ -152,21 +153,11 @@ export class TraceTreeBuilder {
       if (specificNode) {
         node = specificNode;
       } else {
-        let nodePtr: Trace.INode = node;
-        // `path` becomes un-inferred as any[] inside the Array.isArray for
-        // some reason so just casting it back here.
-        const pathWithTypenames = (path as ReadonlyArray<string | number>).map(
-          (key) => {
-            nodePtr = nodePtr?.child?.find(
-              (child) => child.responseName === key,
-            )!;
-            return {
-              key: key as string | number,
-              typename: nodePtr?.parentType ?? undefined,
-            };
-          },
-        );
-        node = this.newNode(responsePathFromArray(pathWithTypenames));
+        const responsePath = responsePathFromArray(path, this.rootNode);
+        if (!responsePath) {
+          throw internalError('addProtobufError called with invalid path!');
+        }
+        node = this.newNode(responsePath);
       }
     }
 
@@ -287,26 +278,16 @@ function responsePathAsString(p?: ResponsePath): string {
 }
 
 function responsePathFromArray(
-  pathAsArray: ReadonlyArray<{ key: string | number; typename?: string }>,
-): ResponsePath {
-  const idx = pathAsArray.length - 1;
-  return {
-    key: pathAsArray[idx].key,
-    prev: walkPath(pathAsArray, idx - 1),
-    typename: pathAsArray[idx].typename,
-  };
-}
-
-function walkPath(
-  pathAsArray: ReadonlyArray<{ key: string | number; typename?: string }>,
-  idx: number,
+  path: ReadonlyArray<string | number>,
+  node: Trace.Node,
 ): ResponsePath | undefined {
-  if (idx < 0) return undefined;
-  return {
-    key: pathAsArray[idx].key,
-    prev: walkPath(pathAsArray, idx - 1),
-    typename: pathAsArray[idx].typename,
-  };
+  let responsePath: ResponsePath | undefined;
+  let nodePtr: Trace.INode | undefined = node;
+  for (const key of path) {
+    nodePtr = nodePtr?.child?.find((child) => child.responseName === key);
+    responsePath = addPath(responsePath, key, nodePtr?.parentType ?? undefined);
+  }
+  return responsePath;
 }
 
 function errorToProtobufError(error: GraphQLError): Trace.Error {
