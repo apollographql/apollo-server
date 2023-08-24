@@ -480,8 +480,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       if (taggedServerListenersWithRenderLandingPage.length > 1) {
         throw Error('Only one plugin can implement renderLandingPage.');
       } else if (taggedServerListenersWithRenderLandingPage.length) {
-        landingPage = await taggedServerListenersWithRenderLandingPage[0]
-          .serverListener.renderLandingPage!();
+        landingPage =
+          await taggedServerListenersWithRenderLandingPage[0].serverListener
+            .renderLandingPage!();
       }
 
       const toDisposeLast = this.maybeRegisterTerminationSignalHandlers(
