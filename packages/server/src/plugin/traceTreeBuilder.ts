@@ -6,7 +6,6 @@ import {
   type ResponsePath,
 } from 'graphql';
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
-import type { Logger } from '@apollo/utils.logger';
 import type { SendErrorsOptions } from './usageReporting';
 import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
 
@@ -16,7 +15,6 @@ function internalError(message: string) {
 
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
-  private logger: Logger;
   public trace = new Trace({
     root: this.rootNode,
     // By default, each trace counts as one operation for the sake of field
@@ -39,10 +37,9 @@ export class TraceTreeBuilder {
 
   public constructor(options: {
     maskedBy: string;
-    logger: Logger;
     sendErrors?: SendErrorsOptions;
   }) {
-    const { logger, sendErrors, maskedBy } = options;
+    const { sendErrors, maskedBy } = options;
     if (!sendErrors || 'masked' in sendErrors) {
       this.transformError = () =>
         new GraphQLError('<masked>', {
@@ -55,7 +52,6 @@ export class TraceTreeBuilder {
     } else {
       throw new UnreachableCaseError(sendErrors);
     }
-    this.logger = logger;
   }
 
   public startTiming() {
@@ -156,11 +152,11 @@ export class TraceTreeBuilder {
       if (specificNode) {
         node = specificNode;
       } else {
-        this.logger.warn(
-          `Could not find node with path ${path.join(
-            '.',
-          )}; defaulting to put errors on root node.`,
-        );
+        const responsePath = responsePathFromArray(path, this.rootNode);
+        if (!responsePath) {
+          throw internalError('addProtobufError called with invalid path!');
+        }
+        node = this.newNode(responsePath);
       }
     }
 
@@ -278,6 +274,23 @@ function responsePathAsString(p?: ResponsePath): string {
   }
 
   return res;
+}
+
+function responsePathFromArray(
+  path: ReadonlyArray<string | number>,
+  node: Trace.Node,
+): ResponsePath | undefined {
+  let responsePath: ResponsePath | undefined;
+  let nodePtr: Trace.INode | undefined = node;
+  for (const key of path) {
+    nodePtr = nodePtr?.child?.find((child) => child.responseName === key);
+    responsePath = {
+      key,
+      prev: responsePath,
+      typename: nodePtr?.type ?? undefined,
+    };
+  }
+  return responsePath;
 }
 
 function errorToProtobufError(error: GraphQLError): Trace.Error {

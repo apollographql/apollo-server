@@ -411,7 +411,6 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         const treeBuilder: TraceTreeBuilder = new TraceTreeBuilder({
           maskedBy: 'ApolloServerPluginUsageReporting',
           sendErrors: options.sendErrors,
-          logger,
         });
         treeBuilder.startTiming();
         metrics.startHrTime = treeBuilder.startHrTime;
