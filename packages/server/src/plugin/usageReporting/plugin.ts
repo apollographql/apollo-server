@@ -451,9 +451,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             includeOperationInUsageReporting = true;
             return;
           }
-          includeOperationInUsageReporting = await options.includeRequest(
-            requestContext,
-          );
+          includeOperationInUsageReporting =
+            await options.includeRequest(requestContext);
 
           // Help the user understand they've returned an unexpected value,
           // which might be a subtle mistake.
@@ -540,9 +539,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 // were executed and what their performance was, at the tradeoff of
                 // some overhead for tracking the trace (and transmitting it between
                 // subgraph and gateway).
-                const rawWeight = await fieldLevelInstrumentation(
-                  requestContext,
-                );
+                const rawWeight =
+                  await fieldLevelInstrumentation(requestContext);
                 treeBuilder.trace.fieldExecutionWeight =
                   typeof rawWeight === 'number' ? rawWeight : rawWeight ? 1 : 0;
 

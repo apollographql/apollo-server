@@ -188,10 +188,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   // syntactically correct, so this string should not be trusted as a valid
   // document until after it's parsed and validated.
   await Promise.all(
-    requestListeners.map((l) =>
-      l.didResolveSource?.(
-        requestContext as GraphQLRequestContextDidResolveSource<TContext>,
-      ),
+    requestListeners.map(
+      (l) =>
+        l.didResolveSource?.(
+          requestContext as GraphQLRequestContextDidResolveSource<TContext>,
+        ),
     ),
   );
 
@@ -320,10 +321,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
   try {
     await Promise.all(
-      requestListeners.map((l) =>
-        l.didResolveOperation?.(
-          requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
-        ),
+      requestListeners.map(
+        (l) =>
+          l.didResolveOperation?.(
+            requestContext as GraphQLRequestContextDidResolveOperation<TContext>,
+          ),
       ),
     );
   } catch (err: unknown) {
@@ -372,10 +374,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   } else {
     const executionListeners = (
       await Promise.all(
-        requestListeners.map((l) =>
-          l.executionDidStart?.(
-            requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-          ),
+        requestListeners.map(
+          (l) =>
+            l.executionDidStart?.(
+              requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
+            ),
         ),
       )
     ).filter(isDefined);
@@ -387,8 +390,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       // symbol so it can be invoked by our `wrapField` method during execution.
       const invokeWillResolveField: GraphQLRequestExecutionListener<TContext>['willResolveField'] =
         (...args) =>
-          invokeSyncDidStartHook(executionListeners, (l) =>
-            l.willResolveField?.(...args),
+          invokeSyncDidStartHook(
+            executionListeners,
+            (l) => l.willResolveField?.(...args),
           );
 
       Object.defineProperty(
@@ -577,11 +581,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
                   const { errors } = incrementalResult;
                   if (errors) {
                     await Promise.all(
-                      requestListeners.map((l) =>
-                        l.didEncounterSubsequentErrors?.(
-                          requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
-                          errors,
-                        ),
+                      requestListeners.map(
+                        (l) =>
+                          l.didEncounterSubsequentErrors?.(
+                            requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+                            errors,
+                          ),
                       ),
                     );
 
@@ -601,11 +606,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
       // Invoke hook, which is allowed to mutate payload if it really wants to.
       await Promise.all(
-        requestListeners.map((l) =>
-          l.willSendSubsequentPayload?.(
-            requestContext as GraphQLRequestContextWillSendSubsequentPayload<TContext>,
-            payload,
-          ),
+        requestListeners.map(
+          (l) =>
+            l.willSendSubsequentPayload?.(
+              requestContext as GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+              payload,
+            ),
         ),
       );
 
@@ -615,10 +621,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
   async function invokeWillSendResponse() {
     await Promise.all(
-      requestListeners.map((l) =>
-        l.willSendResponse?.(
-          requestContext as GraphQLRequestContextWillSendResponse<TContext>,
-        ),
+      requestListeners.map(
+        (l) =>
+          l.willSendResponse?.(
+            requestContext as GraphQLRequestContextWillSendResponse<TContext>,
+          ),
       ),
     );
   }
@@ -629,10 +636,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     requestContext.errors = errors;
 
     return await Promise.all(
-      requestListeners.map((l) =>
-        l.didEncounterErrors?.(
-          requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
-        ),
+      requestListeners.map(
+        (l) =>
+          l.didEncounterErrors?.(
+            requestContext as GraphQLRequestContextDidEncounterErrors<TContext>,
+          ),
       ),
     );
   }
