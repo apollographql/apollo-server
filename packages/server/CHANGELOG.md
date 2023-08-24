@@ -1,5 +1,17 @@
 # @apollo/server
 
+## 4.9.2
+
+### Patch Changes
+
+- [#7699](https://github.com/apollographql/apollo-server/pull/7699) [`62e7d940d`](https://github.com/apollographql/apollo-server/commit/62e7d940de025f21e89c60404bce0dddac84ed6c) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Fix error path attachment for list items
+
+  Previously, when errors occurred while resolving a list item, the trace builder would fail to place the error at the correct path and just default to the root node with a warning message:
+
+  > `Could not find node with path x.y.1, defaulting to put errors on root node.`
+
+  This change places these errors at their correct paths and removes the log.
+
 ## 4.9.1
 
 ### Patch Changes
