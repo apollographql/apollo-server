@@ -96,7 +96,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
      server: httpServer,
      // Pass a different path here if app.use
      // serves expressMiddleware at a different path
-     path: '/graphql',
+     path: '/subscriptions',
    });
 
    // Hand in the schema we just created and have the
@@ -163,7 +163,7 @@ const httpServer = createServer(app);
 // Create our WebSocket server using the HTTP server we just set up.
 const wsServer = new WebSocketServer({
   server: httpServer,
-  path: '/graphql',
+  path: '/subscriptions',
 });
 // Save the returned server's info so we can shutdown this server later
 const serverCleanup = useServer({ schema }, wsServer);
