@@ -76,7 +76,7 @@ jobs:
 
   NodeJS 16:
     docker:
-    - image: cimg/node:16.10.0
+    - image: cimg/node:16.20
     steps:
       - common_test_steps
 
@@ -88,14 +88,14 @@ jobs:
 
   Prettier:
     docker:
-    - image: cimg/node:16.10.0
+    - image: cimg/node:16.20
     steps:
       - common_node_steps
       - run: npm run prettier-check
 
   Spell check:
     docker:
-    - image: cimg/node:16.10.0
+    - image: cimg/node:16.20
     steps:
       - common_node_steps
       - run: npm run spell-check
