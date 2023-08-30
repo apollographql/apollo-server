@@ -250,7 +250,7 @@ export default ({
         const req = request(app).head('/graphql').send();
         return req.then((res) => {
           expect(res.status).toEqual(405);
-          res.header
+          res.header;
           expect(res.get('allow')).toEqual('GET, POST');
         });
       });
@@ -516,9 +516,7 @@ export default ({
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
           // hapi defaults to no-cache, so we have to allow that.
-          expect([undefined, 'no-cache']).toContain(
-            res.get('cache-control'),
-          );
+          expect([undefined, 'no-cache']).toContain(res.get('cache-control'));
         });
       });
 

@@ -1,4 +1,8 @@
-import type { ApolloConfig, ApolloConfigInput, Logger } from 'apollo-server-types';
+import type {
+  ApolloConfig,
+  ApolloConfigInput,
+  Logger,
+} from 'apollo-server-types';
 import createSHA from './utils/createSHA';
 
 // This function combines the `apollo` constructor argument and some environment
