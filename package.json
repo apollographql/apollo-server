@@ -115,6 +115,7 @@
     "koa": "2.13.4",
     "lerna": "4.0.0",
     "lodash.sumby": "4.6.0",
+    "micro": "9.3.4",
     "mock-req": "0.2.0",
     "nock": "13.2.9",
     "node-fetch": "2.6.7",
