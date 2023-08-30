@@ -103,6 +103,43 @@ describe('ApolloServerBase construction', () => {
       `"Apollo Server requires either an existing schema, modules or typeDefs"`,
     );
   });
+
+  it('throws when an API key is not a valid header value', () => {
+    expect(() => {
+      new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        apollo: {
+          key: 'bar▒baz▒',
+        },
+      });
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"The API key provided to Apollo Server contains characters which are invalid as HTTP header values. The following characters found in the key are invalid: ▒, ▒. Valid header values may only contain ASCII visible characters. If you think there is an issue with your key, please contact Apollo support."`,
+    );
+  });
+
+  it('trims whitespace from incoming API keys and logs a warning', () => {
+    const logger = {
+      debug: jest.fn(),
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+    };
+    expect(() => {
+      new ApolloServerBase({
+        typeDefs,
+        resolvers,
+        apollo: {
+          key: 'barbaz\n',
+        },
+        logger,
+      });
+    }).not.toThrow();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'The provided API key has unexpected leading or trailing whitespace. ' +
+        'Apollo Server will trim the key value before use.',
+    );
+  });
 });
 
 describe('ApolloServerBase start', () => {

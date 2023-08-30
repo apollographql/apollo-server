@@ -34,21 +34,34 @@ export function determineApolloConfig(
 
   // Determine key.
   if (input?.key) {
-    apolloConfig.key = input.key;
+    apolloConfig.key = input.key.trim();
   } else if (typeof engine === 'object' && engine.apiKey) {
-    apolloConfig.key = engine.apiKey;
+    apolloConfig.key = engine.apiKey.trim();
   } else if (APOLLO_KEY) {
     if (ENGINE_API_KEY) {
       logger.warn(
         'Using `APOLLO_KEY` since `ENGINE_API_KEY` (deprecated) is also set in the environment.',
       );
     }
-    apolloConfig.key = APOLLO_KEY;
+    apolloConfig.key = APOLLO_KEY.trim();
   } else if (ENGINE_API_KEY) {
     logger.warn(
       '[deprecated] The `ENGINE_API_KEY` environment variable has been renamed to `APOLLO_KEY`.',
     );
-    apolloConfig.key = ENGINE_API_KEY;
+    apolloConfig.key = ENGINE_API_KEY.trim();
+  }
+
+  if ((input?.key ?? APOLLO_KEY ?? ENGINE_API_KEY) !== apolloConfig.key) {
+    logger.warn(
+      'The provided API key has unexpected leading or trailing whitespace. ' +
+        'Apollo Server will trim the key value before use.',
+    );
+  }
+
+  // Assert API key is a valid header value, since it's going to be used as one
+  // throughout.
+  if (apolloConfig.key) {
+    assertValidHeaderValue(apolloConfig.key);
   }
 
   // Determine key hash.
@@ -154,4 +167,18 @@ export function determineApolloConfig(
   }
 
   return apolloConfig as ApolloConfig; // can remove cast in AS3
+}
+
+function assertValidHeaderValue(value: string) {
+  // Ref: node-fetch@2.x `Headers` validation
+  // https://github.com/node-fetch/node-fetch/blob/9b9d45881e5ca68757077726b3c0ecf8fdca1f29/src/headers.js#L18
+  const invalidHeaderCharRegex = /[^\t\x20-\x7e\x80-\xff]/g;
+  if (invalidHeaderCharRegex.test(value)) {
+    const invalidChars = value.match(invalidHeaderCharRegex)!;
+    throw new Error(
+      `The API key provided to Apollo Server contains characters which are invalid as HTTP header values. The following characters found in the key are invalid: ${invalidChars.join(
+        ', ',
+      )}. Valid header values may only contain ASCII visible characters. If you think there is an issue with your key, please contact Apollo support.`,
+    );
+  }
 }
