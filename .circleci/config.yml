@@ -16,16 +16,25 @@ commands:
   # something different.  Probably best to avoid that, out of principle, though.
   common_node_steps:
     description: "Set up Node.js environment and install dependencies"
+    parameters:
+      npm_version:
+        default: '8'
+        type: string
     steps:
       - oss/install_specific_npm_version:
-          version: '8'
+          version: <<parameters.npm_version>>
       - checkout
       - oss/npm_clean_install_with_caching
 
   common_test_steps:
     description: "Set up Node.js environment and run tests"
+    parameters:
+      npm_version:
+        default: '8'
+        type: string
     steps:
-      - common_node_steps
+      - common_node_steps:
+          npm_version: <<parameters.npm_version>>
       - run:
           command: npm run test:ci
           environment:
@@ -47,7 +56,8 @@ jobs:
     docker:
     - image: cimg/node:12.22.6
     steps:
-      - common_test_steps
+      - common_test_steps:
+          npm_version: '6'
       # We will save the results of this one particular invocation to use in
       # the publish step. Not only does this make the publishing step take less
       # time, this also ensures that a passing version gets deployed even if,
@@ -131,7 +141,6 @@ common_publish_filters: &common_publish_filters
       ignore: /.*/
 
 workflows:
-  version: 2
   Build:
     jobs:
       - NodeJS 12:
