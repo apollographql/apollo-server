@@ -221,7 +221,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     this.logger = config.logger ?? defaultLogger();
 
-    const apolloConfig = determineApolloConfig(config.apollo);
+    const apolloConfig = determineApolloConfig(config.apollo, this.logger);
 
     const isDev = nodeEnv !== 'production';
 
