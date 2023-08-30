@@ -214,7 +214,7 @@ export class ApolloServerBase<
       this.logger = loglevelLogger;
     }
 
-    this.apolloConfig = determineApolloConfig(apollo);
+    this.apolloConfig = determineApolloConfig(apollo, this.logger);
 
     if (gateway && (modules || schema || typeDefs || resolvers)) {
       throw new Error(
