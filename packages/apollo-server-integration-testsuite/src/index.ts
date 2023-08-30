@@ -250,7 +250,8 @@ export default ({
         const req = request(app).head('/graphql').send();
         return req.then((res) => {
           expect(res.status).toEqual(405);
-          expect(res.headers['allow']).toEqual('GET, POST');
+          res.header;
+          expect(res.get('allow')).toEqual('GET, POST');
         });
       });
 
@@ -396,7 +397,7 @@ export default ({
 
         await req.then((res) => {
           expect(res.status).toEqual(405);
-          expect(res.headers['allow']).toEqual('POST');
+          expect(res.get('allow')).toEqual('POST');
           expect((res.error as HTTPError).text).toMatch(
             'GET supports only query operation',
           );
@@ -441,7 +442,7 @@ export default ({
         const req = request(app).get('/graphql').query(query);
         await req.then((res) => {
           expect(res.status).toEqual(405);
-          expect(res.headers['allow']).toEqual('POST');
+          expect(res.get('allow')).toEqual('POST');
           expect((res.error as HTTPError).text).toMatch(
             'GET supports only query operation',
           );
@@ -515,9 +516,7 @@ export default ({
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
           // hapi defaults to no-cache, so we have to allow that.
-          expect([undefined, 'no-cache']).toContain(
-            res.headers['cache-control'],
-          );
+          expect([undefined, 'no-cache']).toContain(res.get('cache-control'));
         });
       });
 
@@ -534,7 +533,7 @@ export default ({
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.headers['cache-control']).toBe('max-age=11, public');
+          expect(res.get('cache-control')).toBe('max-age=11, public');
         });
       });
 
@@ -554,7 +553,7 @@ export default ({
         return req.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data).toEqual(expected);
-          expect(res.headers['cache-control']).toBe('max-age=5, public');
+          expect(res.get('cache-control')).toBe('max-age=5, public');
         });
       });
 
@@ -579,7 +578,7 @@ export default ({
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
           );
-          expect(res.headers['cache-control']).toBe(
+          expect(res.get('cache-control')).toBe(
             'private, no-cache, must-revalidate',
           );
         });
@@ -607,7 +606,7 @@ export default ({
           expect(res.body.errors[0].message).toEqual(
             'PersistedQueryNotSupported',
           );
-          expect(res.headers['cache-control']).toBe(
+          expect(res.get('cache-control')).toBe(
             'private, no-cache, must-revalidate',
           );
         });
@@ -631,7 +630,7 @@ export default ({
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
-          expect(res.headers['cache-control']).toBe(
+          expect(res.get('cache-control')).toBe(
             'private, no-cache, must-revalidate',
           );
         });
@@ -655,7 +654,7 @@ export default ({
           expect(res.body.errors).toBeDefined();
           expect(res.body.errors.length).toEqual(1);
           expect(res.body.errors[0].message).toEqual('PersistedQueryNotFound');
-          expect(res.headers['cache-control']).toBe(
+          expect(res.get('cache-control')).toBe(
             'private, no-cache, must-revalidate',
           );
         });
@@ -1117,13 +1116,6 @@ export default ({
         return queryReq.then((res) => {
           expect(res.status).toEqual(200);
           expect(res.body.data.testRootValue).toEqual(expectedQuery);
-        });
-        const mutationReq = request(app).post('/graphql').send({
-          query: 'mutation test{ testMutation(echo: "ping") }',
-        });
-        return mutationReq.then((res) => {
-          expect(res.status).toEqual(200);
-          expect(res.body.data.testRootValue).toEqual(expectedMutation);
         });
       });
 

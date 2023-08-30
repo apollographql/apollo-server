@@ -30,6 +30,7 @@ async function createServer(
   });
   await apolloServer.start();
   const service = micro(apolloServer.createHandler(options));
+  // @ts-ignore
   const uri = await listen(service);
   return {
     service,
