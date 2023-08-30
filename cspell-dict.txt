@@ -16,6 +16,7 @@ automerges
 autopolling
 backoff
 backported
+barbaz
 beyoncé
 blahblah
 Blocklist
@@ -29,6 +30,7 @@ Carettoni
 Changesets
 cimg
 circleci
+cleartext
 codecov
 codegen
 codepaths
