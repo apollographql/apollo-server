@@ -110,6 +110,7 @@ describe('ApolloServerBase construction', () => {
         typeDefs,
         resolvers,
         apollo: {
+          graphRef: 'foo@bar',
           key: 'bar▒baz▒',
         },
       });
@@ -130,6 +131,7 @@ describe('ApolloServerBase construction', () => {
         typeDefs,
         resolvers,
         apollo: {
+          graphRef: 'foo@bar',
           key: 'barbaz\n',
         },
         logger,
