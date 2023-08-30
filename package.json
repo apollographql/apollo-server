@@ -87,6 +87,7 @@
     "@types/request-promise": "4.1.48",
     "@types/retry": "0.12.2",
     "@types/sinonjs__fake-timers": "8.1.2",
+    "@types/superagent": "4.1.6",
     "@types/supertest": "2.0.12",
     "@types/test-listen": "1.1.0",
     "@types/type-is": "1.6.3",
