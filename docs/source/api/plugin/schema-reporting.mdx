@@ -4,7 +4,7 @@ api_reference: true
 ---
 
 > Note:
-> **Schema reporting does not currently support graphs that use Apollo Federation.** If you would like to publish your monolith schema in your CI/CD pipeline, or if you are using Federation, you can use the [Rover CLI to publish your schema or subgraph changes](https://www.apollographql.com/docs/graphos/schema/cli-registration).
+> **The schema reporting plugin does not support graphs that use Apollo Federation.** If you are using Federation, or if you want to publish your monolith schema in your CI/CD pipeline, you can use the [Rover CLI to publish your schema or subgraph changes](/graphos/schema/cli-registration).
 
 ## Using the plugin
 
@@ -36,7 +36,8 @@ const server = new ApolloServer({
 </MultiCodeBlock>
 
 ### Using the plugin with multiple deployment instances
-A single instance of Apollo Server running the plugin will report the current schema hash to GraphOS in a hearbeat fashion. This hash is an identifier of the schema version, not any usage data of the schema. GraphOS will not reflect a new schema version in the changelog until all Apollo Server instances (whether that is 1 or more) are reporting the same schema hash.
+
+A single instance of Apollo Server running the plugin reports the current schema hash to GraphOS in a heartbeat fashion. This hash is an identifier of the schema version and doesn't incorporate any usage data. GraphOS only reflects a new schema version in the changelog once all Apollo Server instances—whether one or more—are reporting the same schema hash.
 
 ## Options
 
