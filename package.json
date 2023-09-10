@@ -98,7 +98,7 @@
     "prettier-2": "npm:prettier@2.8.8",
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
-    "rollup": "3.29.0",
+    "rollup": "3.29.1",
     "supertest": "6.3.3",
     "test-listen": "1.1.0",
     "ts-jest": "29.1.1",
