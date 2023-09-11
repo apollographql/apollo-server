@@ -84,7 +84,7 @@ jobs:
   # Ensure that any PR that changes packages has a changeset on it (perhaps
   # an empty one created with `changeset --empty`).
   # We run the Changesets job itself on all branches so that we can require
-  # it to pass, but we don't run any steps on the "Version Packages" PRs
+  # it to pass, but we don't run any steps on the "Version Packages" or Renovate PRs
   # themselves.
   Changesets:
     docker:
@@ -94,7 +94,7 @@ jobs:
       - unless:
           condition:
             matches:
-              pattern: "^changeset-release/.+$"
+              pattern: "^(changeset-release|renovate)/.+$"
               value: << pipeline.git.branch >>
           steps:
             - setup-node
