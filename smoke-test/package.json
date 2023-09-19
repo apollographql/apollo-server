@@ -1,6 +1,6 @@
 {
   "dependencies": {
-    "graphql": "16.8.0",
+    "graphql": "16.8.1",
     "make-fetch-happen": "13.0.0"
   },
   "devDependencies": {
