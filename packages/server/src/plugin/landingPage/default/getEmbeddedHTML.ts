@@ -163,6 +163,7 @@ export const getEmbeddedSandboxHTML = (
     endpointIsEditable: localDevelopmentEmbedConfigOrDefault.endpointIsEditable,
     runtime: apolloServerVersion,
     runTelemetry: localDevelopmentEmbedConfigOrDefault.runTelemetry,
+    sendOperationHeadersInIntrospection: false,
     allowDynamicStyles: false, // disabled for CSP - we add the iframe styles ourselves instead
   };
   return `

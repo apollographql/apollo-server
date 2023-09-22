@@ -86,7 +86,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     apolloStudioEnv: 'staging' | 'prod' | undefined;
   },
 ): ImplicitlyInstallablePlugin<TContext> {
-  const version = maybeVersion ?? '_latest';
+  const version = maybeVersion ?? '17c6b43a4068da710c3713ec72f03dcb34bbd3de'; // version as of the latest PR to change the config here. We pin the embed version so new changes to Sandbox don't change default behavior for folks here.
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
   const scriptSafeList = [
