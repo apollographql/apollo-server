@@ -2912,7 +2912,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
         url = (await createServer(makeServerConfig([]))).url;
         await get().expect(
           200,
-          /embeddable-sandbox.cdn.apollographql.com\/_latest\/embeddable-sandbox.umd.production.min.js/s,
+          /embeddable-sandbox.cdn.apollographql.com\/17c6b43a4068da710c3713ec72f03dcb34bbd3de\/embeddable-sandbox.umd.production.min.js/s,
         );
       });
 
