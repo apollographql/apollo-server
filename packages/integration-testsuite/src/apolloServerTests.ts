@@ -57,7 +57,10 @@ import {
   ApolloServerPluginLandingPageDisabled,
   ApolloServerPluginUsageReportingDisabled,
 } from '@apollo/server/plugin/disabled';
-import { ApolloServerPluginLandingPageLocalDefault } from '@apollo/server/plugin/landingPage/default';
+import {
+  ApolloServerPluginLandingPageLocalDefault,
+  DEFAULT_EMBED_VERSION,
+} from '@apollo/server/plugin/landingPage/default';
 import {
   jest,
   describe,
@@ -2912,7 +2915,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
         url = (await createServer(makeServerConfig([]))).url;
         await get().expect(
           200,
-          /embeddable-sandbox.cdn.apollographql.com\/17c6b43a4068da710c3713ec72f03dcb34bbd3de\/embeddable-sandbox.umd.production.min.js/s,
+          new RegExp(
+            `embeddable-sandbox.cdn.apollographql.com\/${DEFAULT_EMBED_VERSION}\/embeddable-sandbox.umd.production.min.js`,
+            's',
+          ),
         );
       });
 

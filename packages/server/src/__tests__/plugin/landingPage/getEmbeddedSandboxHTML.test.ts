@@ -54,7 +54,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/17c6b43a4068da710c3713ec72f03dcb34bbd3de/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/${DEFAULT_EMBED_VERSION}/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -109,7 +109,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/17c6b43a4068da710c3713ec72f03dcb34bbd3de/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/${DEFAULT_EMBED_VERSION}/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -162,7 +162,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/17c6b43a4068da710c3713ec72f03dcb34bbd3de/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/${DEFAULT_EMBED_VERSION}/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -217,7 +217,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/17c6b43a4068da710c3713ec72f03dcb34bbd3de/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/${DEFAULT_EMBED_VERSION}/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -277,7 +277,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/17c6b43a4068da710c3713ec72f03dcb34bbd3de/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/${DEFAULT_EMBED_VERSION}/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
