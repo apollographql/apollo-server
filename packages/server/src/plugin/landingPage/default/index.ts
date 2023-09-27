@@ -86,7 +86,9 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     apolloStudioEnv: 'staging' | 'prod' | undefined;
   },
 ): ImplicitlyInstallablePlugin<TContext> {
-  const version = maybeVersion ?? '_latest';
+  const explorerVersion = maybeVersion ?? 'v3';
+  const sandboxVersion = maybeVersion ?? 'v2';
+  const apolloServerLandingPageVersion = maybeVersion ?? '_latest';
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
   const scriptSafeList = [
@@ -116,7 +118,9 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
       }
       return {
         async renderLandingPage() {
-          const encodedVersion = encodeURIComponent(version);
+          const encodedASLandingPageVersion = encodeURIComponent(
+            apolloServerLandingPageVersion,
+          );
           async function html() {
             const nonce =
               config.precomputedNonce ??
@@ -134,7 +138,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     <meta http-equiv="Content-Security-Policy" content="${scriptCsp}; ${styleCsp}; ${imageCsp}; ${manifestCsp}; ${frameCsp}" />
     <link
       rel="icon"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedVersion}/assets/favicon.png"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedASLandingPageVersion}/assets/favicon.png"
     />
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <link rel="preconnect" href="https://fonts.gstatic.com" />
@@ -146,11 +150,11 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     <meta name="description" content="Apollo server landing page" />
     <link
       rel="apple-touch-icon"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedVersion}/assets/favicon.png"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedASLandingPageVersion}/assets/favicon.png"
     />
     <link
       rel="manifest"
-      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedVersion}/manifest.json"
+      href="https://apollo-server-landing-page.cdn.apollographql.com/${encodedASLandingPageVersion}/manifest.json"
     />
     <title>Apollo Server</title>
   </head>
@@ -178,17 +182,27 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     ${
       config.embed
         ? 'graphRef' in config && config.graphRef
-          ? getEmbeddedExplorerHTML(version, config, apolloServerVersion, nonce)
+          ? getEmbeddedExplorerHTML(
+              explorerVersion,
+              config,
+              apolloServerVersion,
+              nonce,
+            )
           : !('graphRef' in config)
-          ? getEmbeddedSandboxHTML(version, config, apolloServerVersion, nonce)
+          ? getEmbeddedSandboxHTML(
+              sandboxVersion,
+              config,
+              apolloServerVersion,
+              nonce,
+            )
           : getNonEmbeddedLandingPageHTML(
-              version,
+              apolloServerLandingPageVersion,
               config,
               apolloServerVersion,
               nonce,
             )
         : getNonEmbeddedLandingPageHTML(
-            version,
+            apolloServerLandingPageVersion,
             config,
             apolloServerVersion,
             nonce,
