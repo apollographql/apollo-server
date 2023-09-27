@@ -49,7 +49,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/v2/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -99,7 +99,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/v2/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -147,7 +147,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/v2/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -197,7 +197,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/v2/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -252,7 +252,7 @@ describe('Landing Page Config HTML', () => {
       <div id="embeddableSandbox">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-sandbox.cdn.apollographql.com/_latest/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-sandbox.cdn.apollographql.com/v2/embeddable-sandbox.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">

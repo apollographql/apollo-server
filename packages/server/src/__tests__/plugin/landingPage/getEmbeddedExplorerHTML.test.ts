@@ -58,7 +58,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -108,7 +108,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -159,7 +159,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -208,7 +208,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -260,7 +260,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
