@@ -472,8 +472,7 @@ If you've [changed your setup to use `@vendia/serverless-express`](#customizing-
 const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
 const serverlessExpress = require('@vendia/serverless-express');
-const express = require('express');
-const { json } = require('body-parser');
+const express, { json } = require('express');
 const cors = require('cors');
 
 const server = new ApolloServer({
@@ -522,8 +521,7 @@ You can update your Apollo Server setup to the following to have a fully functio
 const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
 const serverlessExpress = require('@vendia/serverless-express');
-const express = require('express');
-const { json } = require('body-parser');
+const express, { json } = require('express');
 const cors = require('cors');
 
 const server = new ApolloServer({

@@ -177,7 +177,6 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 
 // The GraphQL schema
 const typeDefs = `#graphql
@@ -206,7 +205,7 @@ await server.start();
 
 app.use(
   cors(),
-  bodyParser.json(),
+  express.json(),
   expressMiddleware(server),
 );
 
