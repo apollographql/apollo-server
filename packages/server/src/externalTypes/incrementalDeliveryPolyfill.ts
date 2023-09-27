@@ -40,6 +40,7 @@ export interface GraphQLExperimentalFormattedSubsequentIncrementalExecutionResul
     GraphQLExperimentalFormattedIncrementalResult<TData, TExtensions>
   >;
   extensions?: TExtensions;
+  completed?: ReadonlyArray<{ id: string }>;
 }
 
 export type GraphQLExperimentalFormattedIncrementalResult<

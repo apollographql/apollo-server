@@ -369,6 +369,7 @@ function orderSubsequentIncrementalExecutionResultFields(
     hasNext: result.hasNext,
     incremental: orderIncrementalResultFields(result.incremental),
     extensions: result.extensions,
+    completed: result.completed,
   };
 }
 
