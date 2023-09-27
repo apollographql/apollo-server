@@ -3,4 +3,4 @@
 '@apollo/server': patch
 ---
 
-Uninstalled `body-parser` and used `express` built-in `body-parser` funtionality instead(mainely the json middleware)
+Uninstalled `body-parser` and used `express` built-in `body-parser` functionality instead(mainly the json middleware)
