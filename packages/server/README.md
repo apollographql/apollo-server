@@ -86,6 +86,76 @@ Open the URL it prints in a web browser. It will show [Apollo Sandbox](https://w
 
 Apollo Server's built-in Express middleware lets you run your GraphQL server as part of an app built with [Express](https://expressjs.com/), the most popular web framework for Node.
 
+### Using express >= v4.16
+First, install Apollo Server, the JavaScript implementation of the core GraphQL algorithms, Express, and one common Express middleware package:
+
+```
+npm install @apollo/server graphql express cors
+```
+
+If using Typescript you may also need to install additional type declaration packages as development dependencies to avoid common errors when importing the above packages (i.e. Could not find a declaration file for module '`cors`'):
+
+```
+npm install --save-dev @types/cors @types/express
+```
+
+Then, write the following to `server.mjs`. (By using the `.mjs` extension, Node lets you use the `await` keyword at the top level.)
+
+```js
+import { ApolloServer } from '@apollo/server';
+import { expressMiddleware } from '@apollo/server/express4';
+import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import express from 'express';
+import http from 'http';
+import cors from 'cors';
+
+// The GraphQL schema
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
+
+// A map of functions which return data for the schema.
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+  },
+};
+
+const app = express();
+const httpServer = http.createServer(app);
+
+// Set up Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+});
+await server.start();
+
+app.use(
+  cors(),
+  express.json(),
+  expressMiddleware(server),
+);
+
+await new Promise((resolve) => httpServer.listen({ port: 4000 }, resolve));
+console.log(`🚀 Server ready at http://localhost:4000`);
+```
+
+Now run your server with:
+
+```
+node server.mjs
+```
+
+Open the URL it prints in a web browser. It will show [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox/), a web-based tool for running GraphQL operations. Try running the operation `query { hello }`!
+
+### Using express < v4.16
+
+If you're using express in a version less than v4.16, you'll need to install body-parser for it's json middleware.
+
 First, install Apollo Server, the JavaScript implementation of the core GraphQL algorithms, Express, and two common Express middleware packages:
 
 ```
