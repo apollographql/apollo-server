@@ -38,10 +38,10 @@ type InitialStateForEmbeds =
 
 export type ApolloServerPluginLandingPageDefaultBaseOptions = {
   /**
-   * By default, the landing page plugin uses the latest version of the landing
-   * page published to Apollo's CDN. If you'd like to pin the current version,
-   * pass the SHA served at
-   * https://apollo-server-landing-page.cdn.apollographql.com/_latest/version.txt
+   * By default, the landing page plugin uses the version of the landing
+   * page published to Apollo's CDN from https://github.com/apollographql/embeddable-explorer/commit/73baf89f5308d263425bbafe21a842a26123cfac.
+   * If you'd like to pin the current version, pass the SHA served at
+   * https://apollo-server-landing-page.cdn.apollographql.com/latest/version.txt
    * here.
    */
   version?: string;

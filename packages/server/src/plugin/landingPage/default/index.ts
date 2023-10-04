@@ -88,7 +88,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
 ): ImplicitlyInstallablePlugin<TContext> {
   const explorerVersion = maybeVersion ?? 'v3';
   const sandboxVersion = maybeVersion ?? 'v2';
-  const apolloServerLandingPageVersion = maybeVersion ?? '_latest';
+  const apolloServerLandingPageVersion = maybeVersion ?? '_latest'; // note _latest is frozen is time as of this PR https://github.com/apollographql/embeddable-explorer/pull/280
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
   const scriptSafeList = [
