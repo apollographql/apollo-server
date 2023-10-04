@@ -1,8 +1,9 @@
+import { DEFAULT_EMBEDDED_SANDBOX_VERSION } from 'packages/server/src/plugin/landingPage/default';
 import { getEmbeddedSandboxHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
 import type { ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
 
-const cdnVersion = 'v2';
+const cdnVersion = DEFAULT_EMBEDDED_SANDBOX_VERSION;
 expect.addSnapshotSerializer(require('jest-serializer-html'));
 const apolloServerVersion = '@apollo/server@4.0.0';
 

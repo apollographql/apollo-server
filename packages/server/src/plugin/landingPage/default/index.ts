@@ -78,6 +78,10 @@ const getNonEmbeddedLandingPageHTML = (
   )}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;
 };
 
+export const DEFAULT_EMBEDDED_EXPLORER_VERSION = 'v3';
+export const DEFAULT_EMBEDDED_SANDBOX_VERSION = 'v2';
+export const DEFAULT_APOLLO_SERVER_LANDING_PAGE_VERSION = '_latest';
+
 // Helper for the two actual plugin functions.
 function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   maybeVersion: string | undefined,
@@ -86,9 +90,10 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     apolloStudioEnv: 'staging' | 'prod' | undefined;
   },
 ): ImplicitlyInstallablePlugin<TContext> {
-  const explorerVersion = maybeVersion ?? 'v3';
-  const sandboxVersion = maybeVersion ?? 'v2';
-  const apolloServerLandingPageVersion = maybeVersion ?? '_latest'; // note _latest is frozen is time as of this PR https://github.com/apollographql/embeddable-explorer/pull/280
+  const explorerVersion = maybeVersion ?? DEFAULT_EMBEDDED_EXPLORER_VERSION;
+  const sandboxVersion = maybeVersion ?? DEFAULT_EMBEDDED_SANDBOX_VERSION;
+  const apolloServerLandingPageVersion =
+    maybeVersion ?? DEFAULT_APOLLO_SERVER_LANDING_PAGE_VERSION;
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
   const scriptSafeList = [

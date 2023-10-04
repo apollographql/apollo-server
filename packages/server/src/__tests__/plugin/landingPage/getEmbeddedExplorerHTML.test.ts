@@ -1,8 +1,9 @@
+import { DEFAULT_EMBEDDED_EXPLORER_VERSION } from 'packages/server/src/plugin/landingPage/default';
 import { getEmbeddedExplorerHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
 import type { ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
 
-const cdnVersion = 'v3';
+const cdnVersion = DEFAULT_EMBEDDED_EXPLORER_VERSION;
 expect.addSnapshotSerializer(require('jest-serializer-html'));
 const apolloServerVersion = '@apollo/server@4.0.0';
 
