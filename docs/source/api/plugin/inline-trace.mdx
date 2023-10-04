@@ -11,7 +11,7 @@ This article documents the options for the `ApolloServerPluginInlineTrace` plugi
 
 This plugin enables your GraphQL server to include encoded performance and usage traces inside responses. This is primarily designed for use with [Apollo Federation](/federation/metrics/). Federated subgraphs use this plugin and include a trace in the `ftv1` GraphQL response extension if requested to do so by the Apollo gateway. The gateway requests this trace by passing the HTTP header `apollo-federation-include-trace: ftv1`.
 
-Apollo Server installs this plugin by default in all federated subgraphs, with its default configuration. Apollo Server inspects whether or not the schema it is serving includes a field `_Service.sdl: String!` (as well as its former, nullable version from Federation v1: `_Service.sdl: String`) to determine if it is a federated subgraph. You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
+Apollo Server installs this plugin by default in all federated subgraphs, with its default configuration—masking `errors` and `extensions` (see [Options](#options) for more details). Apollo Server inspects whether or not the schema it is serving includes a field `_Service.sdl: String!` (as well as its former, nullable version from Federation v1: `_Service.sdl: String`) to determine if it is a federated subgraph. You typically do not have to install this plugin yourself; you only need to do so if you want to provide non-default configuration.
 
 If you want to configure the `ApolloServerPluginInlineTrace` plugin, import it and pass it to your `ApolloServer` constructor's `plugins` array:
 
