@@ -379,7 +379,7 @@ If you're using Node.js 12, upgrade your runtime before upgrading to Apollo Serv
 
 ### `graphql`
 
-Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package/graphql) (the core JS GraphQL implementation). Apollo Server 4 supports `graphql` v16.6.0 and later. (Apollo Server 3 supports `graphql` v15.3.0 through v16.)
+Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package/graphql) (the core JS GraphQL implementation). Apollo Server 4 supports `graphql` v16.6.0 and later, but we *strongly* recommend using at least v16.7.0 due to a [bug in `graphql`](https://github.com/graphql/graphql-js/issues/3528) which can crash your server. (Apollo Server 3 supports `graphql` v15.3.0 through v16.)
 
 If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 4.
 
