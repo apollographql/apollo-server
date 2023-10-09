@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   node: circleci/node@5.0.0
+  secops: apollo/circleci-secops-orb@2.0.0
 
 commands:
   install-volta:
@@ -151,3 +152,12 @@ workflows:
       - Smoke test built package
       - Full incremental delivery tests with graphql-js 17 canary
       - Changesets
+  security-scans:
+    jobs:
+      - secops/gitleaks:
+          context:
+            - platform-docker-ro
+            - github-orb
+            - secops-oidc
+          git-base-revision: <<#pipeline.git.base_revision>><<pipeline.git.base_revision>><</pipeline.git.base_revision >>
+          git-revision: << pipeline.git.revision >>
