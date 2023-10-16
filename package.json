@@ -38,7 +38,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.8.5",
+    "@apollo/client": "3.8.6",
     "@apollo/gateway": "2.5.6",
     "@apollo/subgraph": "2.5.6",
     "@apollo/utils.createhash": "2.0.1",
