@@ -86,7 +86,7 @@ If you create a public API or an API to embed in websites you don't control your
 If your application doesn't fit into any of the above categories, [`startStandaloneServer`](../api/standalone)'s CORS behavior should suit your use case. You can always choose to swap to another Apollo Server integration later to [customize your CORS configuration](#configuring-cors-options-for-apollo-server).
 
 ## Configuring CORS options for Apollo Server
-> 📣 **New in Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#body-parser-and-cors).
+> 📣 **New in Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#http-body-parsing-and-cors).
 
 Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standalone)) serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
 
@@ -104,7 +104,6 @@ import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
-import { json } from 'body-parser';
 import { typeDefs, resolvers } from './schema';
 // highlight-start
 import cors from 'cors';
@@ -125,7 +124,7 @@ app.use(
   // highlight-start
   cors<cors.CorsRequest>({ origin: ['https://www.your-app.example', 'https://studio.apollographql.com'] }),
   // highlight-end
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 
@@ -137,7 +136,7 @@ console.log(`🚀 Server ready at http://localhost:4000/graphql`);
 
 > Invoking the `cors` function with no arguments sets your server's `Access-Control-Allow-Origin` HTTP header to the wildcard value (`*`), allowing scripts on any origin to make requests. So, your server would have the same CORS behavior as `startStandaloneServer`.
 
-Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`. 
+Using the `cors` package directly, we can configure the `Access-Control-Allow-Origin` header using the [`origin` option](https://github.com/expressjs/cors#configuration-options). The example above enables CORS requests from `https://www.your-app.example`, along with `https://studio.apollographql.com`.
 
 > If you want to use [Apollo Studio Explorer](https://www.apollographql.com/docs/studio/explorer/explorer/) as a GraphQL web IDE, you should include `https://studio.apollographql.com` in your list of valid origins. However, if you plan to embed the [Explorer](https://www.apollographql.com/docs/studio/explorer/embed-explorer/) or use [Apollo Sandbox](https://www.apollographql.com/docs/studio/explorer/sandbox), you *don't* need to specify Studio's URL in your CORS origins because requests will go through the page embedding Studio.
 
@@ -170,7 +169,7 @@ app.use(
     credentials: true,
   }),
   // highlight-end
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 ```

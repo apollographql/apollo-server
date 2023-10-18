@@ -21,7 +21,6 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import typeDefs from './graphql/schema';
 import resolvers from './graphql/resolvers';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import express from 'express';
 import http from 'http';
 import https from 'https';
@@ -47,7 +46,7 @@ const app = express();
 app.use(
   '/graphql',
   cors<cors.CorsRequest>(),
-  bodyParser.json(),
+  express.json(),
   expressMiddleware(server),
 );
 

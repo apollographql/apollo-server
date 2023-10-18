@@ -13,7 +13,7 @@ This API reference documents Apollo Server 4's [Express](https://expressjs.com/)
 
 The `expressMiddleware` function enables you to attach Apollo Server to an Express server.
 
-The `expressMiddleware` function expects you to set up HTTP body parsing and CORS headers for your web framework. Specifically, you should install the [`body-parser`](https://www.npmjs.com/package/body-parser) and [`cors`](https://www.npmjs.com/package/cors) packages and use them to set up your Express app, as shown below.
+The `expressMiddleware` function expects you to set up HTTP body parsing and CORS headers for your web framework. Specifically, you can use the native [`express.json()`](https://expressjs.com/en/api.html#express.json) function (available in Express `v4.16.0` onwards) and the [`cors`](https://www.npmjs.com/package/cors) package to set up your Express app, as shown below.
 
 > See [Configuring CORS](../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project.
 
@@ -25,7 +25,6 @@ The `expressMiddleware` function accepts two arguments. The first **required** a
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import cors from 'cors';
-import { json } from 'body-parser';
 import express from 'express';
 
 const app = express();
@@ -43,7 +42,7 @@ await server.start();
 app.use(
   '/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 //highlight-end
@@ -96,14 +95,13 @@ Below is a full example of setting up `expressMiddleware`:
 <MultiCodeBlock>
 
 ```ts
-// npm install @apollo/server express graphql cors body-parser
+// npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import { typeDefs, resolvers } from './schema';
 
 interface MyContext {
@@ -132,7 +130,7 @@ await server.start();
 app.use(
   '/',
   cors<cors.CorsRequest>(),
-  bodyParser.json(),
+  express.json(),
   // expressMiddleware accepts the same arguments:
   // an Apollo Server instance and optional configuration options
   expressMiddleware(server, {

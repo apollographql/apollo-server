@@ -64,7 +64,7 @@ If there is no Apollo Server integration for your favorite framework _yet_, help
 Below are a few high-level changes for using framework integrations:
 
 - You can pass your [`context` initialization function](#context-initialization-function) directly to your framework's integration function (e.g., `expressMiddleware` or `startStandaloneServer`) instead of the `ApolloServer` constructor.
-- You are responsible for [setting up HTTP body parsing and CORS](#body-parser-and-cors) using your framework integration's standard functionality.
+- You are responsible for [setting up HTTP body parsing and CORS](#http-body-parsing-and-cors) using your framework integration's standard functionality.
 - If you want your server to listen on a specific URL path, pass that path directly to your framework's router instead of using the [`path` option](#path-parsing). If you did not specify a URL path, the default in Apollo Server 3 was `/graphql`, so to preserve existing behavior, you should specify that path explicitly.
 
 The following sections show how servers using `apollo-server` or `apollo-server-express` can update to Apollo Server 4.
@@ -189,9 +189,9 @@ If you used the `apollo-server-express` package in Apollo Server 3, use the `exp
 
 To migrate from Apollo Server 3's `apollo-server-express` package to using the `expressMiddleware` function, do the following:
 
-1. Install the `@apollo/server`, `cors`, and `body-parser` packages.
+1. Install the `@apollo/server` and `cors` packages.
 2. Import symbols from `@apollo/server` (i.e., instead of from `apollo-server-express` and `apollo-server-core`).
-3. Add `cors` and `bodyParser.json()` to your server setup.
+3. Add `cors` to your server setup.
 4. Remove the Apollo Server 3 `apollo-server-express` and `apollo-server-core` packages.
 5. If you are using `apollo-server-express`'s default `/graphql` URL path (i.e., not specifying another URL with the [path option](/apollo-server/v3/api/apollo-server/#path)), you can mount `expressMiddleware` at `/graphql` to maintain behavior. To use another URL path, mount your server (with `app.use`) at the specified path.
 
@@ -232,15 +232,13 @@ looks like this in Apollo Server 4:
 <MultiCodeBlock>
 
 ```ts title="apollo-server-4.ts"
-// npm install @apollo/server express graphql cors body-parser
+// npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import pkg from 'body-parser';
-const { json } = pkg;
 import { typeDefs, resolvers } from './schema';
 
 interface MyContext {
@@ -257,7 +255,7 @@ const server = new ApolloServer<MyContext>({
 await server.start();
 app.use('/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server, {
     context: async ({ req }) => ({ token: req.headers.token }),
   }),
@@ -910,11 +908,11 @@ In Apollo Server 4, you should use your framework's routing feature to mount you
 
 > Apollo Server 3's batteries-included `apollo-server` package, replaced by `startStandaloneServer` in Apollo Server 4,  serves all URLs (i.e., rather than only listening on `/graphql`).
 
-### `body-parser` and `cors`
+### HTTP body parsing and CORS
 
 In Apollo Server 3, framework integrations automatically set up HTTP body parsing and CORS response headers. You can customize your integration's CORS or body parsing functionality using the Apollo Server API; these configuration options [vary by integration](/apollo-server/v3/api/apollo-server#cors-1).
 
-In Apollo Server 4, it's your responsibility to set up HTTP body parsing and CORS headers for your web framework. Specifically, when using [`expressMiddleware`](#migrate-from-apollo-server-express), you should install the `body-parser` and `cors` npm packages and use them in your Express app, just like with any other JSON-based API server. If you passed a `cors` option to `applyMiddleware` or `getMiddleware`, pass the same value to the `cors` function. If you passed a `bodyParserConfig` option to `applyMiddleware` or `getMiddleware`, pass the same value to the `body-parser` package's `json` function.
+In Apollo Server 4, it's your responsibility to set up HTTP body parsing and CORS headers for your web framework. Specifically, when using [`expressMiddleware`](#migrate-from-apollo-server-express), you can use the native [`express.json()`](https://expressjs.com/en/api.html#express.json) function (available in Express `v4.16.0` onwards) for body parsing and the `cors` npm package for CORS headers. You can install use the `cors` package in your Express app, just like with any other JSON-based API server. If you passed a `cors` option to `applyMiddleware` or `getMiddleware`, pass the same value to the `cors` function. If you passed a `bodyParserConfig` option to `applyMiddleware` or `getMiddleware`, pass the same value to the [`express.json()`](https://expressjs.com/en/api.html#express.json) function.
 
 Note that [`startStandaloneServer`](#migrate-from-apollo-server) sets up body parsing and CORS functionality for you, but you can't configure this behavior. In Apollo Server 3, you could configure the batteries-included `apollo-server`'s CORS behavior via the `cors` constructor option. In Apollo Server 4, if you need to configure CORS behavior, use `expressMiddleware` rather than `startStandaloneServer`.
 
@@ -1106,7 +1104,7 @@ Whereas this query would be invalid:
 If you'd like to restore the previous behavior, you can `JSON.parse` the `variables` and `extensions` fields after your framework has parsed the request body. In Express that might look like:
 
 ```ts
-app.use(json());
+app.use(express.json());
 app.use((req, res, next) => {
   if (typeof req.body?.variables === 'string') {
     try {
