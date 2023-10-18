@@ -473,7 +473,6 @@ const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
 const serverlessExpress = require('@vendia/serverless-express');
 const express = require('express');
-const { json } = require('body-parser');
 const cors = require('cors');
 
 const server = new ApolloServer({
@@ -486,7 +485,7 @@ server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
 const app = express();
 app.use(
   cors(),
-  json(),
+  express.json(),
   expressMiddleware(server, {
     // The Express request and response objects are passed into
     // your context initialization function
@@ -523,7 +522,6 @@ const { ApolloServer } = require('@apollo/server');
 const { expressMiddleware } = require('@apollo/server/express4');
 const serverlessExpress = require('@vendia/serverless-express');
 const express = require('express');
-const { json } = require('body-parser');
 const cors = require('cors');
 
 const server = new ApolloServer({
@@ -534,7 +532,7 @@ const server = new ApolloServer({
 server.startInBackgroundHandlingStartupErrorsByLoggingAndFailingAllRequests();
 
 const app = express();
-app.use(cors(), json(), expressMiddleware(server));
+app.use(cors(), express.json(), expressMiddleware(server));
 
 exports.graphqlHandler = serverlessExpress({ app });
 ```

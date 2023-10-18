@@ -519,7 +519,7 @@ await server.start();
 app.use(
   '/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 ```

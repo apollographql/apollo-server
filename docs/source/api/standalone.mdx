@@ -150,10 +150,10 @@ console.log(`🚀  Server ready at ${url}`);
 ```
 </MultiCodeBlock>
 
-To swap to using `expressMiddleware`, you'll first need to install the following packages so you'll be able to set up HTTP body parsing and CORS for your server:
+To swap to using `expressMiddleware`, you'll first need to install the following packages so you'll be able to set up CORS for your server:
 
 ```bash
-npm install express cors body-parser
+npm install express cors
 ```
 
 Next, we can modify our code to match the following:
@@ -161,14 +161,13 @@ Next, we can modify our code to match the following:
 <MultiCodeBlock>
 
 ```ts
-// npm install @apollo/server express graphql cors body-parser
+// npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 import { typeDefs, resolvers } from './schema';
 
 interface MyContext {
