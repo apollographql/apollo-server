@@ -2,7 +2,7 @@ version: 2.1
 
 orbs:
   node: circleci/node@5.0.0
-  secops: apollo/circleci-secops-orb@2.0.0
+  secops: apollo/circleci-secops-orb@2.0.1
 
 commands:
   install-volta:
