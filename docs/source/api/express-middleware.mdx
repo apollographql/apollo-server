@@ -13,7 +13,7 @@ This API reference documents Apollo Server 4's [Express](https://expressjs.com/)
 
 The `expressMiddleware` function enables you to attach Apollo Server to an Express server.
 
-The `expressMiddleware` function expects you to set up HTTP body parsing and CORS headers for your web framework. Specifically, you can use the native [`express.json()`](https://expressjs.com/en/api.html#express.json) function and the [`cors`](https://www.npmjs.com/package/cors) package to set up your Express app, as shown below.
+The `expressMiddleware` function expects you to set up HTTP body parsing and CORS headers for your web framework. Specifically, you can use the native [`express.json()`](https://expressjs.com/en/api.html#express.json) function (available in Express `v4.16.0` onwards) and the [`cors`](https://www.npmjs.com/package/cors) package to set up your Express app, as shown below.
 
 > See [Configuring CORS](../security/cors#specifying-origins) for guidance on configuring the CORS behavior of your project.
 
