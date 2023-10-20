@@ -78,6 +78,8 @@ const getNonEmbeddedLandingPageHTML = (
   )}/static/js/main.js?runtime=${apolloServerVersion}"></script>`;
 };
 
+export const DEFAULT_EMBED_VERSION = '17c6b43a4068da710c3713ec72f03dcb34bbd3de';
+
 // Helper for the two actual plugin functions.
 function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
   maybeVersion: string | undefined,
@@ -86,7 +88,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
     apolloStudioEnv: 'staging' | 'prod' | undefined;
   },
 ): ImplicitlyInstallablePlugin<TContext> {
-  const version = maybeVersion ?? '_latest';
+  const version = maybeVersion ?? DEFAULT_EMBED_VERSION; // version as of the latest PR to change the config here. We pin the embed version so new changes to Sandbox don't change default behavior for folks here.
   const apolloServerVersion = `@apollo/server@${packageVersion}`;
 
   const scriptSafeList = [
