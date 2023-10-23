@@ -38,10 +38,12 @@ type InitialStateForEmbeds =
 
 export type ApolloServerPluginLandingPageDefaultBaseOptions = {
   /**
-   * Specify the major version of the landing page to use, i.e v2 or 
-   * provide a specific commit from the [embeddable explorer](https://github.com/apollographql/embeddable-explorer) repo. 
-   * We also support a `_latest` tag but don't recommend using it as it's subject to major version updates.
-   * here.
+   * Specify the major version of the landing page to use, i.e v2 or
+   * provide a specific commit from the
+   * [embeddable explorer](https://github.com/apollographql/embeddable-explorer)
+   * repo.
+   * We also support a `latest` tag but don't recommend using it
+   * as it's subject to major version updates.
    */
   version?: string;
   /**
