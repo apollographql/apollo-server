@@ -1,4 +1,4 @@
-import { DEFAULT_EMBEDDED_SANDBOX_VERSION } from 'packages/server/src/plugin/landingPage/default';
+import { DEFAULT_EMBEDDED_SANDBOX_VERSION } from '../../../plugin/landingPage/default';
 import { getEmbeddedSandboxHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
 import type { ApolloServerPluginEmbeddedLandingPageLocalDefaultOptions } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
