@@ -1,4 +1,4 @@
-import { DEFAULT_EMBEDDED_EXPLORER_VERSION } from 'packages/server/src/plugin/landingPage/default';
+import { DEFAULT_EMBEDDED_EXPLORER_VERSION } from '../../../plugin/landingPage/default';
 import { getEmbeddedExplorerHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
 import type { ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
