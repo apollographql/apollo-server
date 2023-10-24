@@ -40,7 +40,7 @@ export class SchemaReporter {
   private readonly fetcher: Fetcher;
 
   private isStopped: boolean;
-  private pollTimer?: NodeJS.Timer;
+  private pollTimer?: ReturnType<typeof setTimeout>;
   private readonly headers: Record<string, string>;
 
   constructor(options: {
