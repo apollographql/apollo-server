@@ -1,5 +1,13 @@
 # @apollo/server
 
+## 4.9.5
+
+### Patch Changes
+
+- [#7741](https://github.com/apollographql/apollo-server/pull/7741) [`07585fe39`](https://github.com/apollographql/apollo-server/commit/07585fe39751a5d4009664293b6e413078a9b827) Thanks [@mayakoneval](https://github.com/mayakoneval)! - Pin major releases of embeddable Explorer & Sandbox code.
+
+- [#7769](https://github.com/apollographql/apollo-server/pull/7769) [`4fac1628c`](https://github.com/apollographql/apollo-server/commit/4fac1628c5d92bb393ef757f65908129459ab045) Thanks [@cwikla](https://github.com/cwikla)! - Change SchemaReporter.pollTimer from being a NodeJS.Timer to a NodeJS.Timeout
+
 ## 4.9.4
 
 ### Patch Changes
