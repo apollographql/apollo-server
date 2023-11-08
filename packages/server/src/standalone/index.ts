@@ -1,5 +1,4 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
-import bodyParser from 'body-parser'; // note that importing 'json' directly doesn't work in ESM
 import cors from 'cors';
 import express from 'express';
 import http, { type IncomingMessage, type ServerResponse } from 'http';
@@ -58,7 +57,7 @@ export async function startStandaloneServer<TContext extends BaseContext>(
   const context = options?.context ?? (async () => ({}) as TContext);
   app.use(
     cors(),
-    bodyParser.json({ limit: '50mb' }),
+    express.json({ limit: '50mb' }),
     expressMiddleware(server, { context }),
   );
 

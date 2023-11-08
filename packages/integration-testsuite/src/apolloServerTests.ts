@@ -1,7 +1,6 @@
 import http from 'http';
 import { createHash } from '@apollo/utils.createhash';
 import express from 'express';
-import bodyParser from 'body-parser';
 import loglevel from 'loglevel';
 
 import { Report, Trace } from '@apollo/usage-reporting-protobuf';
@@ -874,7 +873,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               next();
             });
             this.app.use(
-              bodyParser.raw({
+              express.raw({
                 inflate: true,
                 type: '*/*',
               }),
