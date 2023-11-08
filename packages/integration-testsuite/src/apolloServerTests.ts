@@ -875,7 +875,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             this.app.use(
               express.raw({
                 inflate: true,
-                type: '*/*'
+                type: '*/*',
               }),
             );
 

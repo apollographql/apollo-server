@@ -52,7 +52,7 @@ export function expressMiddleware<TContext extends BaseContext>(
       res.status(500);
       res.send(
         '`req.body` is not set; this probably means you forgot to set up the ' +
-          '`body-parser` middleware before the Apollo Server middleware.',
+          '`json` middleware before the Apollo Server middleware.',
       );
       return;
     }
