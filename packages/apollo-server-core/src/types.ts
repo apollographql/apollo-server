@@ -107,7 +107,7 @@ export interface Config<ContextFunctionParams = any> extends BaseConfig {
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
-  disableValidation?: boolean;
+  dangerouslyDisableValidation?: boolean;
   documentStore?: DocumentStore | null;
   csrfPrevention?: CSRFPreventionOptions | boolean;
   cache?: KeyValueCache | 'bounded';

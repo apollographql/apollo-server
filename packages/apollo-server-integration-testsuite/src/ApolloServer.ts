@@ -288,7 +288,7 @@ export function testApolloServer<AS extends ApolloServerBase>(
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
             cache: 'bounded',
-            disableValidation: true,
+            dangerouslyDisableValidation: true,
           });
 
           const apolloFetch = createApolloFetch({ uri });

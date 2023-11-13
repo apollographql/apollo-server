@@ -62,7 +62,7 @@ export interface GraphQLServerOptions<
   persistedQueries?: PersistedQueryOptions;
   plugins?: ApolloServerPlugin[];
   documentStore?: DocumentStore | null;
-  disableValidation?: boolean;
+  dangerouslyDisableValidation?: boolean;
   parseOptions?: ParseOptions;
   nodeEnv?: string;
   allowBatchedHttpRequests?: boolean;

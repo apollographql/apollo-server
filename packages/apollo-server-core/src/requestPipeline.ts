@@ -91,7 +91,7 @@ export interface GraphQLRequestPipelineConfig<TContext> {
   ) => GraphQLResponse | null;
 
   plugins?: ApolloServerPlugin[];
-  disableValidation?: boolean;
+  dangerouslyDisableValidation?: boolean;
   documentStore?: DocumentStore | null;
 
   parseOptions?: ParseOptions;
@@ -258,7 +258,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       return await sendErrorResponse(syntaxError as GraphQLError, SyntaxError);
     }
 
-    if (config.disableValidation !== true) {
+    if (config.dangerouslyDisableValidation !== true) {
       const validationDidEnd = await dispatcher.invokeDidStartHook(
         'validationDidStart',
         requestContext as GraphQLRequestContextValidationDidStart<TContext>,

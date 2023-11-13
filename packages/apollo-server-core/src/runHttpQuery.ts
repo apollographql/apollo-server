@@ -274,7 +274,7 @@ export async function runHttpQuery(
     // passed in.
     cache: options.cache!,
     dataSources: options.dataSources,
-    disableValidation: options.disableValidation,
+    dangerouslyDisableValidation: options.dangerouslyDisableValidation,
     documentStore: options.documentStore,
 
     persistedQueries: options.persistedQueries,
