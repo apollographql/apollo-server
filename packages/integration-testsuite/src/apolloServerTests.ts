@@ -312,6 +312,21 @@ export function defineIntegrationTestSuiteApolloServerTests(
           );
         });
 
+        it('allows disabling validation rules', async () => {
+          const uri = await createServerAndGetUrl({
+            schema,
+            stopOnTerminationSignals: false,
+            nodeEnv: 'production',
+            disableValidation: true,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({ query: INTROSPECTION_QUERY });
+          expect(result.data).toBeDefined();
+          expect(result.errors).toBeUndefined();
+        });
+
         it('allows introspection to be enabled explicitly', async () => {
           const uri = await createServerAndGetUrl({
             schema,
