@@ -155,7 +155,7 @@ type ServerState =
 export interface ApolloServerInternals<TContext extends BaseContext> {
   state: ServerState;
   gatewayExecutor: GatewayExecutor | null;
-  disableValidation?: boolean;
+  dangerouslyDisableValidation?: boolean;
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
@@ -296,7 +296,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ...(config.validationRules ?? []),
         ...(introspectionEnabled ? [] : [NoIntrospection]),
       ],
-      disableValidation: config.disableValidation ?? false,
+      dangerouslyDisableValidation:
+        config.dangerouslyDisableValidation ?? false,
       fieldResolver: config.fieldResolver,
       includeStacktraceInErrorResponses:
         config.includeStacktraceInErrorResponses ??

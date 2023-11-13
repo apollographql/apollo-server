@@ -97,7 +97,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
-  disableValidation?: boolean;
+  dangerouslyDisableValidation?: boolean;
   csrfPrevention?: CSRFPreventionOptions | boolean;
 
   // Used for parsing operations; unlike in AS3, this is not also used for

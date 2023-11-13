@@ -317,7 +317,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             schema,
             stopOnTerminationSignals: false,
             nodeEnv: 'production',
-            disableValidation: true,
+            dangerouslyDisableValidation: true,
           });
 
           const apolloFetch = createApolloFetch({ uri });

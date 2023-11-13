@@ -235,7 +235,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
     await parsingDidEnd();
 
-    if (internals.disableValidation !== true) {
+    if (internals.dangerouslyDisableValidation !== true) {
       const validationDidEnd = await invokeDidStartHook(
         requestListeners,
         async (l) =>
