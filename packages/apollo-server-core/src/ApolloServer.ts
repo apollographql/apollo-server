@@ -959,6 +959,7 @@ export class ApolloServerBase<
       logger: this.logger,
       plugins: this.plugins,
       documentStore,
+      disableValidation: this.config.disableValidation,
       context,
       parseOptions: this.parseOptions,
       ...this.requestOptions,

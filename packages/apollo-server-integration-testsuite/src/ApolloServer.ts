@@ -282,6 +282,22 @@ export function testApolloServer<AS extends ApolloServerBase>(
           );
         });
 
+        it('Allows disabling query validation', async () => {
+          const { url: uri } = await createApolloServer({
+            schema,
+            stopOnTerminationSignals: false,
+            nodeEnv: 'production',
+            cache: 'bounded',
+            disableValidation: true,
+          });
+
+          const apolloFetch = createApolloFetch({ uri });
+
+          const result = await apolloFetch({ query: INTROSPECTION_QUERY });
+          expect(result.errors).toBeUndefined();
+          expect(result.data).toBeDefined();
+        });
+
         it('allows introspection to be enabled explicitly', async () => {
           const { url: uri } = await createApolloServer({
             schema,
