@@ -7,6 +7,9 @@ The version headers in this history reflect the versions of Apollo Server itself
 - [`@apollo/gateway`](https://github.com/apollographql/federation/blob/HEAD/gateway-js/CHANGELOG.md)
 - [`@apollo/federation`](https://github.com/apollographql/federation/blob/HEAD/federation-js/CHANGELOG.md)
 
+## v3.13.0
+
+- `apollo-server-core`: Restore missing v1 `skipValidation` option as `dangerouslyDisableValidation`. Note that enabling this option exposes your server to potential security and unexpected runtime issues. Apollo will not support issues that arise as a result of using this option. [PR #7785](https://github.com/apollographql/apollo-server/pull/7785)
 
 ## v3.12.0
 - `apollo-reporting-protobuf`: Update protobuf file to be current [PR #7412](https://github.com/apollographql/apollo-server/pull/7412)
