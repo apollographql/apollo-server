@@ -235,27 +235,29 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
     await parsingDidEnd();
 
-    const validationDidEnd = await invokeDidStartHook(
-      requestListeners,
-      async (l) =>
-        l.validationDidStart?.(
-          requestContext as GraphQLRequestContextValidationDidStart<TContext>,
-        ),
-    );
-
-    const validationErrors = validate(
-      schemaDerivedData.schema,
-      requestContext.document,
-      [...specifiedRules, ...internals.validationRules],
-    );
-
-    if (validationErrors.length === 0) {
-      await validationDidEnd();
-    } else {
-      await validationDidEnd(validationErrors);
-      return await sendErrorResponse(
-        validationErrors.map((error) => new ValidationError(error)),
+    if (internals.dangerouslyDisableValidation !== true) {
+      const validationDidEnd = await invokeDidStartHook(
+        requestListeners,
+        async (l) =>
+          l.validationDidStart?.(
+            requestContext as GraphQLRequestContextValidationDidStart<TContext>,
+          ),
       );
+
+      const validationErrors = validate(
+        schemaDerivedData.schema,
+        requestContext.document,
+        [...specifiedRules, ...internals.validationRules],
+      );
+
+      if (validationErrors.length === 0) {
+        await validationDidEnd();
+      } else {
+        await validationDidEnd(validationErrors);
+        return await sendErrorResponse(
+          validationErrors.map((error) => new ValidationError(error)),
+        );
+      }
     }
 
     if (schemaDerivedData.documentStore) {
