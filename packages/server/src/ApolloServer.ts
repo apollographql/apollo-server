@@ -329,9 +329,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         config.csrfPrevention === true || config.csrfPrevention === undefined
           ? recommendedCsrfPreventionRequestHeaders
           : config.csrfPrevention === false
-          ? null
-          : config.csrfPrevention.requestHeaders ??
-            recommendedCsrfPreventionRequestHeaders,
+            ? null
+            : config.csrfPrevention.requestHeaders ??
+              recommendedCsrfPreventionRequestHeaders,
       status400ForVariableCoercionErrors:
         config.status400ForVariableCoercionErrors ?? false,
       __testing_incrementalExecutionResults:

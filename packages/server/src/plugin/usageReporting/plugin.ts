@@ -65,8 +65,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             ? 1 / fieldLevelInstrumentationOption
             : 0
       : fieldLevelInstrumentationOption
-      ? fieldLevelInstrumentationOption
-      : async () => true;
+        ? fieldLevelInstrumentationOption
+        : async () => true;
 
   let requestDidStartHandler:
     | ((
@@ -627,8 +627,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 policyIfCacheable.scope === 'PRIVATE'
                   ? Trace.CachePolicy.Scope.PRIVATE
                   : policyIfCacheable.scope === 'PUBLIC'
-                  ? Trace.CachePolicy.Scope.PUBLIC
-                  : Trace.CachePolicy.Scope.UNKNOWN,
+                    ? Trace.CachePolicy.Scope.PUBLIC
+                    : Trace.CachePolicy.Scope.UNKNOWN,
               // Convert from seconds to ns.
               maxAgeNs: policyIfCacheable.maxAge * 1e9,
             });
