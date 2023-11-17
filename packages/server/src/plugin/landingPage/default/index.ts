@@ -194,18 +194,18 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
               nonce,
             )
           : !('graphRef' in config)
-          ? getEmbeddedSandboxHTML(
-              sandboxVersion,
-              config,
-              apolloServerVersion,
-              nonce,
-            )
-          : getNonEmbeddedLandingPageHTML(
-              apolloServerLandingPageVersion,
-              config,
-              apolloServerVersion,
-              nonce,
-            )
+            ? getEmbeddedSandboxHTML(
+                sandboxVersion,
+                config,
+                apolloServerVersion,
+                nonce,
+              )
+            : getNonEmbeddedLandingPageHTML(
+                apolloServerLandingPageVersion,
+                config,
+                apolloServerVersion,
+                nonce,
+              )
         : getNonEmbeddedLandingPageHTML(
             apolloServerLandingPageVersion,
             config,
