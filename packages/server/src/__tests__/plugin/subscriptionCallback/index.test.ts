@@ -310,15 +310,25 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
-  it('updates id/verifier on heartbeat response with 400 + invalid IDs', async () => {
+  it('updates id/verifier on heartbeat response with 404', async () => {
     const server = await startSubscriptionServer({ logger });
     const secondSubscription = {
       id: '5678-dogs',
       verifier: 'another-verifier-token',
+      callback_url: 'http://mock-router-url.com/5678-dogs',
+      path: '/5678-dogs',
     };
 
     mockRouterCheckResponse();
     mockRouterCheckResponse({ requestOpts: secondSubscription });
+
+    // Trigger a heartbeat once to make sure it's working
+    const heartbeats = Promise.all([
+      mockRouterCheckResponse(),
+      mockRouterCheckResponse({
+        requestOpts: secondSubscription,
+      }),
+    ]);
 
     // Start the subscriptions; this triggers the initial check request and
     // starts the heartbeat interval. This simulates an incoming subscription
@@ -348,7 +358,7 @@ describe('SubscriptionCallbackPlugin', () => {
       `,
       extensions: {
         subscription: {
-          callback_url: 'http://mock-router-url.com',
+          callback_url: secondSubscription.callback_url,
           subscription_id: secondSubscription.id,
           verifier: secondSubscription.verifier,
         },
@@ -356,15 +366,6 @@ describe('SubscriptionCallbackPlugin', () => {
     });
 
     expect(secondResult.http.status).toEqual(200);
-
-    // Trigger a heartbeat once to make sure it's working
-    const heartbeats = Promise.all([
-      mockRouterCheckResponse(),
-      mockRouterCheckResponse({ requestOpts: {
-        id: secondSubscription.id,
-        verifier: secondSubscription.verifier
-      } }),
-    ]);
     jest.advanceTimersByTime(5000);
     await heartbeats;
 
@@ -392,6 +393,7 @@ describe('SubscriptionCallbackPlugin', () => {
         }
       `,
     });
+
     await firstUpdate;
 
     logger.debug('TESTING: Triggering second update');
@@ -408,10 +410,10 @@ describe('SubscriptionCallbackPlugin', () => {
     // let's have the router invalidate one with a 400 heartbeat.
     const heartbeatWithInvalidIds = Promise.all([
       mockRouterCheckResponse(),
-      mockRouterCheckResponseWithError({ requestOpts: {
-        id: secondSubscription.id,
-        verifier: secondSubscription.verifier
-      } }),
+      mockRouterCheckResponse({
+        requestOpts: secondSubscription,
+        statusCode: 404,
+      }),
     ]);
     jest.advanceTimersByTime(5000);
     await heartbeatWithInvalidIds;
@@ -457,14 +459,14 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[5678-dogs]: \`check\` request successful",
         "SubscriptionCallback[5678-dogs]: Starting graphql-js subscription",
         "SubscriptionCallback[5678-dogs]: graphql-js subscription successful",
-        "SubscriptionManager[5678-dogs]: Heartbeat interval already exists for http://mock-router-url.com, reusing existing interval",
+        "SubscriptionManager[5678-dogs]: Starting new heartbeat interval for http://mock-router-url.com/5678-dogs",
         "SubscriptionManager[5678-dogs]: Listening to graphql-js subscription",
         "SubscriptionCallback[5678-dogs]: Responding to original subscription request",
         "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 5678-dogs",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com/5678-dogs for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-        "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+        "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat request successful, ID: 5678-dogs",
         "TESTING: Triggering first update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router",
@@ -476,14 +478,14 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[5678-dogs]: Sending \`next\` request to router",
         "SubscriptionManager[1234-cats]: \`next\` request successful",
         "SubscriptionManager[5678-dogs]: \`next\` request successful",
-        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats,5678-dogs",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com/5678-dogs for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
         "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat request received invalid ID: 5678-dogs",
         "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
-        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-        "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com/5678-dogs",
         "TESTING: Triggering third update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router",
         "SubscriptionManager[5678-dogs]: Subscription already cancelled, ignoring current and future payloads",
@@ -498,20 +500,26 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
-  it('cancels heartbeat on 404 (all IDs invalid)', async () => {
+  it('cancels heartbeat on 404', async () => {
     const server = await startSubscriptionServer({ logger });
     const secondSubscription = {
       id: '5678-dogs',
       verifier: 'another-verifier-token',
+      callback_url: 'http://mock-router-url.com/5678-dogs',
+      path: '/5678-dogs',
     };
 
     mockRouterCheckResponse();
-    mockRouterCheckResponse({ requestOpts: secondSubscription });
+    mockRouterCheckResponse({
+      requestOpts: secondSubscription,
+    });
     // Mock the heartbeat response from the router. We'll trigger it once below
     // after the subscription is initialized to make sure it works.
     const heartbeats = Promise.all([
       mockRouterCheckResponse(),
-      mockRouterCheckResponse({ requestOpts: secondSubscription }),
+      mockRouterCheckResponse({
+        requestOpts: secondSubscription,
+      }),
     ]);
 
     // Start the subscriptions; this triggers the initial check request and
@@ -542,13 +550,12 @@ describe('SubscriptionCallbackPlugin', () => {
       `,
       extensions: {
         subscription: {
-          callback_url: 'http://mock-router-url.com',
+          callback_url: secondSubscription.callback_url,
           subscription_id: secondSubscription.id,
           verifier: secondSubscription.verifier,
         },
       },
     });
-
     expect(secondResult.http.status).toEqual(200);
 
     // Advance timers to trigger the heartbeat. This consumes the one
@@ -594,8 +601,11 @@ describe('SubscriptionCallbackPlugin', () => {
     // We've established two subscriptions are functional at this point. Now
     // let's have the router invalidate them with a 404 heartbeat.
     const secondHeartbeats = Promise.all([
-      mockRouterCheckResponse({statusCode: 404}),
-      mockRouterCheckResponse({ requestOpts: secondSubscription, statusCode: 404 }),
+      mockRouterCheckResponse({ statusCode: 404 }),
+      mockRouterCheckResponse({
+        requestOpts: secondSubscription,
+        statusCode: 404,
+      }),
     ]);
 
     jest.advanceTimersByTime(5000);
@@ -632,13 +642,15 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[5678-dogs]: \`check\` request successful",
         "SubscriptionCallback[5678-dogs]: Starting graphql-js subscription",
         "SubscriptionCallback[5678-dogs]: graphql-js subscription successful",
-        "SubscriptionManager[5678-dogs]: Heartbeat interval already exists for http://mock-router-url.com, reusing existing interval",
+        "SubscriptionManager[5678-dogs]: Starting new heartbeat interval for http://mock-router-url.com/5678-dogs",
         "SubscriptionManager[5678-dogs]: Listening to graphql-js subscription",
         "SubscriptionCallback[5678-dogs]: Responding to original subscription request",
         "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 5678-dogs",
-        "SubscriptionManager: Heartbeat received response for IDs: [1234-cats,5678-dogs]",
-        "SubscriptionManager: Heartbeat request successful, IDs: [1234-cats,5678-dogs]",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com/5678-dogs for ID: 5678-dogs",
+        "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+        "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
+        "SubscriptionManager: Heartbeat request successful, ID: 5678-dogs",
         "TESTING: Triggering first update",
         "SubscriptionManager[1234-cats]: Sending \`next\` request to router",
         "SubscriptionManager[5678-dogs]: Sending \`next\` request to router",
@@ -650,14 +662,15 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: \`next\` request successful",
         "SubscriptionManager[5678-dogs]: \`next\` request successful",
         "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 5678-dogs",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com/5678-dogs for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-        "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat request received invalid ID: 1234-cats",
-        "SubscriptionManager: Heartbeat request received invalid ID: 5678-dogs",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
         "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
+        "SubscriptionManager: Heartbeat request received invalid ID: 5678-dogs",
+        "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
+        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com/5678-dogs",
         "TESTING: Triggering third update",
         "SubscriptionManager[1234-cats]: Subscription already cancelled, ignoring current and future payloads",
         "SubscriptionManager[5678-dogs]: Subscription already cancelled, ignoring current and future payloads",
@@ -667,7 +680,7 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
-  it('sends a `complete` when a subscription terminates successfully', async () => {
+  it('sends a complete when a subscription terminates successfully', async () => {
     const server = await startSubscriptionServer({ logger });
 
     // Mock the initial check response from the router.
@@ -1618,6 +1631,7 @@ function mockRouterCheckResponse(opts?: {
     url?: string;
     id?: string;
     verifier?: string;
+    path?: string;
   };
   statusCode?: number;
   responseBody?: any;
@@ -1627,6 +1641,7 @@ function mockRouterCheckResponse(opts?: {
       url = 'http://mock-router-url.com',
       id = '1234-cats',
       verifier = 'my-verifier-token',
+      path = '/',
     } = {},
     statusCode = 204,
     responseBody = undefined,
@@ -1635,7 +1650,7 @@ function mockRouterCheckResponse(opts?: {
   return promisifyNock(
     nock(url)
       .matchHeader('content-type', 'application/json')
-      .post('/', {
+      .post(path, {
         kind: 'subscription',
         action: 'check',
         id,
@@ -1650,6 +1665,7 @@ function mockRouterCheckResponseWithError(opts?: {
     url?: string;
     id?: string;
     verifier?: string;
+    path?: string;
   };
 }) {
   const {
@@ -1657,13 +1673,14 @@ function mockRouterCheckResponseWithError(opts?: {
       url = 'http://mock-router-url.com',
       id = '1234-cats',
       verifier = 'my-verifier-token',
+      path = '/',
     } = {},
   } = opts ?? {};
 
   return promisifyNock(
     nock(url)
       .matchHeader('content-type', 'application/json')
-      .post('/', {
+      .post(path, {
         kind: 'subscription',
         action: 'check',
         id,
@@ -1673,10 +1690,10 @@ function mockRouterCheckResponseWithError(opts?: {
   );
 }
 
-
 function mockRouterNextResponse(requestOpts: {
   payload: Record<string, any>;
   url?: string;
+  path?: string;
   id?: string;
   verifier?: string;
   statusCode?: number;
@@ -1685,6 +1702,7 @@ function mockRouterNextResponse(requestOpts: {
     payload,
     url = 'http://mock-router-url.com',
     id = '1234-cats',
+    path = '/',
     verifier = 'my-verifier-token',
     statusCode = 200,
   } = requestOpts;
@@ -1692,7 +1710,7 @@ function mockRouterNextResponse(requestOpts: {
   return promisifyNock(
     nock(url)
       .matchHeader('content-type', 'application/json')
-      .post('/', {
+      .post(path, {
         kind: 'subscription',
         action: 'next',
         id,
@@ -1707,6 +1725,7 @@ function mockRouterCompleteResponse(requestOpts?: {
   errors?: any[];
   url?: string;
   id?: string;
+  path?: string;
   verifier?: string;
   statusCode?: number;
 }) {
@@ -1714,6 +1733,7 @@ function mockRouterCompleteResponse(requestOpts?: {
     errors = undefined,
     url = 'http://mock-router-url.com',
     id = '1234-cats',
+    path = '/',
     verifier = 'my-verifier-token',
     statusCode = 200,
   } = requestOpts ?? {};
@@ -1721,7 +1741,7 @@ function mockRouterCompleteResponse(requestOpts?: {
   return promisifyNock(
     nock(url)
       .matchHeader('content-type', 'application/json')
-      .post('/', {
+      .post(path, {
         kind: 'subscription',
         action: 'complete',
         id,

@@ -365,10 +365,12 @@ class SubscriptionManager {
       });
     }
 
-    // Skip interval creation if one already exists for this url
-    if (this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat) {
+    // Skip interval creation if one already exists for this url and id
+    if (
+      this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat?.id === id
+    ) {
       this.logger?.debug(
-        `Heartbeat interval already exists for ${callbackUrl}, reusing existing interval`,
+        `Heartbeat interval already exists for ${callbackUrl} with id ${id}, reusing existing interval`,
         id,
       );
       return;
@@ -439,7 +441,6 @@ class SubscriptionManager {
         const result = await heartbeatRequest;
 
         this.logger?.debug(`Heartbeat received response for ID: ${id}`);
-
         if (result.ok) {
           this.logger?.debug(`Heartbeat request successful, ID: ${id}`);
         } else if (result.status === 400) {
