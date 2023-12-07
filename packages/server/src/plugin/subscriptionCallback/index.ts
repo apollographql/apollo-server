@@ -220,7 +220,7 @@ class SubscriptionManager {
         interval: NodeJS.Timeout;
         queue: Promise<void>[];
       };
-      subscriptionsById: Map<string, SubscriptionObject>;
+      subscription?: SubscriptionObject;
     }
   > = new Map();
 
@@ -360,9 +360,7 @@ class SubscriptionManager {
     heartbeatIntervalMs: number;
   }) {
     if (!this.subscriptionInfoByCallbackUrl.has(callbackUrl)) {
-      this.subscriptionInfoByCallbackUrl.set(callbackUrl, {
-        subscriptionsById: new Map(),
-      });
+      this.subscriptionInfoByCallbackUrl.set(callbackUrl, {});
     }
 
     // Skip interval creation if one already exists for this url and id
@@ -520,20 +518,16 @@ class SubscriptionManager {
       );
       return;
     }
-    const { subscriptionsById, heartbeat } = subscriptionInfo;
-    const subscription = subscriptionsById.get(id);
+    const { subscription, heartbeat } = subscriptionInfo;
     if (subscription) {
       subscription.cancelled = true;
     }
-    subscriptionsById.delete(id);
     // if the list is empty now we can clean up everything for this callback url
-    if (subscriptionsById?.size === 0) {
-      this.logger?.debug(
-        `Terminating heartbeat interval, no more subscriptions for ${callbackUrl}`,
-      );
-      if (heartbeat) clearInterval(heartbeat.interval);
-      this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
-    }
+    this.logger?.debug(
+      `Terminating heartbeat interval, no more subscriptions for ${callbackUrl}`,
+    );
+    if (heartbeat) clearInterval(heartbeat.interval);
+    this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
   }
 
   // Consumes the AsyncIterable returned by `graphql-js`'s `subscribe` function.
@@ -625,8 +619,9 @@ class SubscriptionManager {
       this.logger?.error(
         `No existing heartbeat found for ${callbackUrl}, skipping subscription`,
       );
+    } else {
+      subscriptionInfo.subscription = subscriptionObject;
     }
-    subscriptionInfo?.subscriptionsById.set(id, subscriptionObject);
   }
 
   // Sends the `complete` request to the router.
@@ -652,8 +647,10 @@ class SubscriptionManager {
 
   collectAllSubscriptions() {
     return Array.from(this.subscriptionInfoByCallbackUrl.values()).reduce(
-      (subscriptions, { subscriptionsById }) => {
-        subscriptions.push(...Array.from(subscriptionsById.values()));
+      (subscriptions, { subscription }) => {
+        if (subscription) {
+          subscriptions.push(subscription);
+        }
         return subscriptions;
       },
       [] as SubscriptionObject[],
