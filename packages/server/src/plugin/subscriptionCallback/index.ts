@@ -522,9 +522,9 @@ class SubscriptionManager {
     if (subscription) {
       subscription.cancelled = true;
     }
-    // if the list is empty now we can clean up everything for this callback url
+    // cleanup heartbeat for subscription
     this.logger?.debug(
-      `Terminating heartbeat interval, no more subscriptions for ${callbackUrl}`,
+      `Terminating heartbeat interval for ${callbackUrl}`,
     );
     if (heartbeat) clearInterval(heartbeat.interval);
     this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
