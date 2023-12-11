@@ -206,7 +206,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           }
         | undefined;
 
-      let reportTimer: NodeJS.Timer | undefined;
+      let reportTimer: NodeJS.Timeout | undefined;
       if (!sendReportsImmediately) {
         reportTimer = setInterval(
           () => sendAllReportsAndReportErrors(),
