@@ -699,7 +699,7 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
-  it('sends a complete when a subscription terminates successfully', async () => {
+  it('sends a `complete` when a subscription terminates successfully', async () => {
     const server = await startSubscriptionServer({ logger });
 
     // Mock the initial check response from the router.
