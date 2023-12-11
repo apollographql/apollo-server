@@ -208,9 +208,7 @@ class SubscriptionManager {
   private logger?: ReturnType<typeof prefixedLogger>;
   private retryConfig?: retry.Options;
   private requestsInFlight: Set<Promise<any>> = new Set();
-  // A map of information about subscriptions for a given callback url. For each
-  // url, this tracks its single heartbeat interval (with relevant heartbeat
-  // request info) and active subscriptions.
+  // A map of information about subscription for a given callback url including the subscription id.
   private subscriptionInfoByCallbackUrl: Map<
     string,
     {
@@ -363,17 +361,6 @@ class SubscriptionManager {
       this.subscriptionInfoByCallbackUrl.set(callbackUrl, {});
     }
 
-    // Skip interval creation if one already exists for this url and id
-    if (
-      this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat?.id === id
-    ) {
-      this.logger?.debug(
-        `Heartbeat interval already exists for ${callbackUrl} with id ${id}, reusing existing interval`,
-        id,
-      );
-      return;
-    }
-
     // Kickoff heartbeat interval since there isn't one already
     this.logger?.debug(
       `Starting new heartbeat interval for ${callbackUrl}`,
@@ -434,8 +421,8 @@ class SubscriptionManager {
         });
         this.requestsInFlight.add(heartbeatRequest);
 
-        // The heartbeat response might contain updates for us to act upon, so we
-        // need to await it
+        // heartbeat response might be a 400, in which case we'd need to
+        // terminate the subscription, so we need to await it
         const result = await heartbeatRequest;
 
         this.logger?.debug(`Heartbeat received response for ID: ${id}`);
@@ -446,7 +433,7 @@ class SubscriptionManager {
 
           this.terminateSubscription(id, callbackUrl);
         } else if (result.status === 404) {
-          // all ids we sent are invalid
+          // the id we sent is invalid
           this.logger?.debug(`Heartbeat request received invalid ID: ${id}`);
           // This will also handle cleaning up the heartbeat interval
           this.terminateSubscription(id, callbackUrl);
