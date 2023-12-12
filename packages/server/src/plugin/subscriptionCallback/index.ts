@@ -421,7 +421,7 @@ class SubscriptionManager {
         });
         this.requestsInFlight.add(heartbeatRequest);
 
-        // heartbeat response might be a 400, in which case we'd need to
+        // heartbeat response might be a 4xx, in which case we'd need to
         // terminate the subscription, so we need to await it
         const result = await heartbeatRequest;
 
@@ -510,9 +510,7 @@ class SubscriptionManager {
       subscription.cancelled = true;
     }
     // cleanup heartbeat for subscription
-    this.logger?.debug(
-      `Terminating heartbeat interval for ${callbackUrl}`,
-    );
+    this.logger?.debug(`Terminating heartbeat interval for ${callbackUrl}`);
     if (heartbeat) clearInterval(heartbeat.interval);
     this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
   }

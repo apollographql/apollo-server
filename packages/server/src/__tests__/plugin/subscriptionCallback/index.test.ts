@@ -102,6 +102,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -111,6 +119,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
     logger.debug('TESTING: Triggering second update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -154,7 +170,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
@@ -170,6 +186,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
     const result = await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         subscription {
           count
@@ -206,6 +230,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -215,6 +247,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
     logger.debug('TESTING: Triggering second update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -258,7 +298,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
@@ -274,6 +314,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
     const result = await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         subscription {
           count
@@ -311,6 +359,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -320,6 +376,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
     logger.debug('TESTING: Triggering second update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -363,7 +427,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
@@ -389,6 +453,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Start the subscriptions.
     const router1Result = await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         subscription {
           count
@@ -438,6 +510,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -448,6 +528,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
     logger.debug('TESTING: Triggering second update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -510,10 +598,10 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[5678-dogs]: Sending \`complete\` request to router",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionManager[5678-dogs]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url-2.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url-2.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
@@ -545,6 +633,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
     const firstResult = await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         subscription {
           count
@@ -562,6 +658,14 @@ describe('SubscriptionCallbackPlugin', () => {
     expect(firstResult.http.status).toEqual(200);
 
     const secondResult = await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         subscription {
           count
@@ -597,6 +701,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -608,6 +720,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
     logger.debug('TESTING: Triggering second update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -633,6 +753,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // Trigger a 3rd update to make sure both subscriptions are cancelled.
     logger.debug('TESTING: Triggering third update');
     await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         mutation {
           addOne
@@ -685,11 +813,11 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
         "SubscriptionManager: Heartbeat request received invalid ID: 1234-cats",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat request received invalid ID: 5678-dogs",
         "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com/5678-dogs",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com/5678-dogs",
         "TESTING: Triggering third update",
         "SubscriptionManager[1234-cats]: Subscription already cancelled, ignoring current and future payloads",
         "SubscriptionManager[5678-dogs]: Subscription already cancelled, ignoring current and future payloads",
@@ -717,6 +845,14 @@ describe('SubscriptionCallbackPlugin', () => {
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
     const result = await server.executeOperation({
+      http: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+        ]),
+      },
       query: `#graphql
         subscription {
           terminatesSuccessfully
@@ -761,7 +897,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
@@ -924,6 +1060,14 @@ describe('SubscriptionCallbackPlugin', () => {
       // starts the heartbeat interval. This simulates an incoming subscription
       // request from the router.
       const result = await server.executeOperation({
+        http: {
+          method: 'POST',
+          search: '',
+          body: '',
+          headers: new HeaderMap([
+            ['accept', 'application/json+graphql+callback/1.0'],
+          ]),
+        },
         query: `#graphql
           subscription {
             count
@@ -983,7 +1127,7 @@ describe('SubscriptionCallbackPlugin', () => {
           "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
           "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: request to http://mock-router-url.com/ failed, reason: network request error",
           "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-          "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+          "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
           "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         ]
       `);
@@ -999,6 +1143,14 @@ describe('SubscriptionCallbackPlugin', () => {
       // starts the heartbeat interval. This simulates an incoming subscription
       // request from the router.
       const result = await server.executeOperation({
+        http: {
+          method: 'POST',
+          search: '',
+          body: '',
+          headers: new HeaderMap([
+            ['accept', 'application/json+graphql+callback/1.0'],
+          ]),
+        },
         query: `#graphql
           subscription {
             count
@@ -1063,7 +1215,7 @@ describe('SubscriptionCallbackPlugin', () => {
           "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): Unexpected status code: 500",
           "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: Unexpected status code: 500",
           "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-          "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+          "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
           "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         ]
       `);
@@ -1083,6 +1235,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
         const result = await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
             subscription {
               count
@@ -1113,6 +1273,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
         await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
             mutation {
               addOne
@@ -1156,7 +1324,7 @@ describe('SubscriptionCallbackPlugin', () => {
             "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
             "SubscriptionManager[1234-cats]: \`complete\` request successful",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-            "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
@@ -1172,6 +1340,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
         const result = await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
           subscription {
             count
@@ -1214,6 +1390,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
         await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
           mutation {
             addOne
@@ -1223,6 +1407,14 @@ describe('SubscriptionCallbackPlugin', () => {
 
         logger.debug('TESTING: Triggering second update');
         await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
           mutation {
             addOne
@@ -1273,7 +1465,7 @@ describe('SubscriptionCallbackPlugin', () => {
             "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
             "SubscriptionManager[1234-cats]: \`complete\` request successful",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-            "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
@@ -1289,6 +1481,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
         const result = await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
             subscription {
               count
@@ -1319,6 +1519,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
         await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
             mutation {
               addOne
@@ -1365,7 +1573,7 @@ describe('SubscriptionCallbackPlugin', () => {
             "WARN: SubscriptionManager[1234-cats]: Retrying \`complete\` request (attempt 2) due to error: \`complete\` request failed with unexpected status code: 500",
             "SubscriptionManager[1234-cats]: \`complete\` request successful",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-            "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
@@ -1381,6 +1589,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
         const result = await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
             subscription {
               count
@@ -1411,6 +1627,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
         await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
             mutation {
               addOne
@@ -1462,7 +1686,7 @@ describe('SubscriptionCallbackPlugin', () => {
             "WARN: SubscriptionManager[1234-cats]: Retrying \`complete\` request (attempt 5) due to error: \`complete\` request failed with unexpected status code: 500",
             "ERROR: SubscriptionManager[1234-cats]: \`complete\` request failed: \`complete\` request failed with unexpected status code: 500",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-            "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
@@ -1478,6 +1702,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
         const result = await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
           subscription {
             count
@@ -1515,6 +1747,14 @@ describe('SubscriptionCallbackPlugin', () => {
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
         await server.executeOperation({
+          http: {
+            method: 'POST',
+            search: '',
+            body: '',
+            headers: new HeaderMap([
+              ['accept', 'application/json+graphql+callback/1.0'],
+            ]),
+          },
           query: `#graphql
           mutation {
             addOne
@@ -1556,7 +1796,7 @@ describe('SubscriptionCallbackPlugin', () => {
             "WARN: SubscriptionManager[1234-cats]: Retrying \`next\` request (attempt 5) due to error: \`next\` request failed with unexpected status code: 500",
             "ERROR: SubscriptionManager[1234-cats]: \`next\` request failed, terminating subscription: \`next\` request failed with unexpected status code: 500",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-            "SubscriptionManager: Terminating heartbeat interval, no more subscriptions for http://mock-router-url.com",
+            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
             "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
