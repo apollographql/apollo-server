@@ -1035,7 +1035,7 @@ describe('SubscriptionCallbackPlugin', () => {
       for (let i = 0; i < 5; i++) {
         // mock heartbeat response failure
         nock('http://mock-router-url.com')
-          .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+          .matchHeader('content-type', 'application/json')
           .post('/', {
             kind: 'subscription',
             action: 'check',
@@ -1114,7 +1114,7 @@ describe('SubscriptionCallbackPlugin', () => {
       for (let i = 0; i < 5; i++) {
         // mock heartbeat response failure
         nock('http://mock-router-url.com')
-          .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+          .matchHeader('content-type', 'application/json')
           .post('/', {
             kind: 'subscription',
             action: 'check',
@@ -1213,10 +1213,10 @@ describe('SubscriptionCallbackPlugin', () => {
           buildHTTPGraphQLRequest({
             body: {
               query: `#graphql
-            mutation {
-              addOne
-            }
-          `,
+                mutation {
+                  addOne
+                }
+              `,
             },
           }),
         );
@@ -1805,7 +1805,7 @@ function mockRouterCheckResponse(opts?: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+      .matchHeader('content-type', 'application/json')
       .matchHeader('subscription-protocol', 'callback/1.0')
       .post(path, {
         kind: 'subscription',
@@ -1836,7 +1836,8 @@ function mockRouterCheckResponseWithError(opts?: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+      .matchHeader('content-type', 'application/json')
+      .matchHeader('subscription-protocol', 'callback/1.0')
       .post(path, {
         kind: 'subscription',
         action: 'check',
@@ -1866,7 +1867,7 @@ function mockRouterNextResponse(requestOpts: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+      .matchHeader('content-type', 'application/json')
       .post(path, {
         kind: 'subscription',
         action: 'next',
@@ -1897,7 +1898,7 @@ function mockRouterCompleteResponse(requestOpts?: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+      .matchHeader('content-type', 'application/json')
       .post(path, {
         kind: 'subscription',
         action: 'complete',

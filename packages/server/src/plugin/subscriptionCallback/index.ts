@@ -245,6 +245,7 @@ class SubscriptionManager {
     verifier,
     payload,
     errors,
+    headers,
   }: {
     url: string;
     action: 'check' | 'next' | 'complete';
@@ -252,6 +253,7 @@ class SubscriptionManager {
     verifier: string;
     payload?: ExecutionResult;
     errors?: readonly GraphQLError[];
+    headers?: Record<string, string>;
   }) {
     let response: Promise<Response> | undefined;
     try {
@@ -265,8 +267,8 @@ class SubscriptionManager {
           response = fetch(url, {
             method: 'POST',
             headers: {
-              'content-type': 'application/json+graphql+callback/1.0',
-              'subscription-protocol': 'callback/1.0',
+              'content-type': 'application/json',
+              ...headers,
             },
             body: JSON.stringify({
               kind: 'subscription',
@@ -344,6 +346,7 @@ class SubscriptionManager {
       action: 'check',
       id,
       verifier,
+      headers: { 'subscription-protocol': 'callback/1.0' },
     });
   }
 
@@ -423,7 +426,7 @@ class SubscriptionManager {
             verifier,
           }),
           headers: {
-            'content-type': 'application/json+graphql+callback/1.0',
+            'content-type': 'application/json',
             'subscription-protocol': 'callback/1.0',
           },
         });
