@@ -1354,6 +1354,8 @@ export function isImplicitlyInstallablePlugin<TContext extends BaseContext>(
 
 export const MEDIA_TYPES = {
   APPLICATION_JSON: 'application/json; charset=utf-8',
+  APPLICATION_JSON_GRAPHQL_CALLBACK:
+    'application/json+graphql+callback/1.0; charset=utf-8',
   APPLICATION_GRAPHQL_RESPONSE_JSON:
     'application/graphql-response+json; charset=utf-8',
   // We do *not* currently support this content-type; we will once incremental
@@ -1378,6 +1380,7 @@ export function chooseContentTypeForSingleResultResponse(
     }).mediaType([
       MEDIA_TYPES.APPLICATION_JSON,
       MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
+      MEDIA_TYPES.APPLICATION_JSON_GRAPHQL_CALLBACK,
     ]);
     if (preferred) {
       return preferred;

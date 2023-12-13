@@ -2,6 +2,7 @@ import {
   ApolloServer,
   ApolloServerOptionsWithTypeDefs,
   BaseContext,
+  HTTPGraphQLRequest,
   HeaderMap,
 } from '@apollo/server';
 import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
@@ -56,6 +57,22 @@ describe('SubscriptionCallbackPlugin', () => {
     jest.useRealTimers();
   });
 
+  function buildHTTPGraphQLRequest(options: Partial<HTTPGraphQLRequest>) {
+    return {
+      httpGraphQLRequest: {
+        method: 'POST',
+        search: '',
+        body: '',
+        headers: new HeaderMap([
+          ['accept', 'application/json+graphql+callback/1.0'],
+          ['content-type', 'application/json'],
+        ]),
+        ...options,
+      },
+      context: async () => ({}),
+    };
+  }
+
   it('simple happy path', async () => {
     const server = await startSubscriptionServer({ logger });
 
@@ -65,22 +82,26 @@ describe('SubscriptionCallbackPlugin', () => {
     // Start the subscription; this triggers the initial check request and
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
-    const result = await server.executeOperation({
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: 'http://mock-router-url.com',
-          subscriptionId: '1234-cats',
-          verifier: 'my-verifier-token',
+    const result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              count
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
         },
-      },
-    });
+      }),
+    );
 
-    expect(result.http.status).toEqual(200);
+    expect(result.status).toEqual(200);
 
     // Mock the heartbeat response from the router. We'll trigger it once below
     // after the subscription is initialized to make sure it works.
@@ -101,38 +122,30 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
 
     logger.debug('TESTING: Triggering second update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
     await updates;
 
     // When we shutdown the server, we'll stop listening for subscription
@@ -185,30 +198,26 @@ describe('SubscriptionCallbackPlugin', () => {
     // Start the subscription; this triggers the initial check request and
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
-    const result = await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callback_url: 'http://mock-router-url.com',
-          subscription_id: '1234-cats',
-          verifier: 'my-verifier-token',
+    const result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+          subscription {
+            count
+          }
+        `,
+          extensions: {
+            subscription: {
+              callback_url: 'http://mock-router-url.com',
+              subscription_id: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
         },
-      },
-    });
+      }),
+    );
 
-    expect(result.http.status).toEqual(200);
+    expect(result.status).toEqual(200);
 
     // Mock the heartbeat response from the router. We'll trigger it once below
     // after the subscription is initialized to make sure it works.
@@ -229,38 +238,30 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
 
     logger.debug('TESTING: Triggering second update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
     await updates;
 
     // When we shutdown the server, we'll stop listening for subscription
@@ -313,31 +314,27 @@ describe('SubscriptionCallbackPlugin', () => {
     // Start the subscription; this triggers the initial check request and
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
-    const result = await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: 'http://mock-router-url.com',
-          subscriptionId: '1234-cats',
-          verifier: 'my-verifier-token',
-          heartbeatIntervalMs: 2000,
+    const result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              count
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+              heartbeatIntervalMs: 2000,
+            },
+          },
         },
-      },
-    });
+      }),
+    );
 
-    expect(result.http.status).toEqual(200);
+    expect(result.status).toEqual(200);
 
     // Mock the heartbeat response from the router. We'll trigger it once below
     // after the subscription is initialized to make sure it works.
@@ -358,38 +355,30 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
 
     logger.debug('TESTING: Triggering second update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
     await updates;
 
     // When we shutdown the server, we'll stop listening for subscription
@@ -452,44 +441,44 @@ describe('SubscriptionCallbackPlugin', () => {
     ]);
 
     // Start the subscriptions.
-    const router1Result = await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: 'http://mock-router-url.com',
-          subscriptionId: '1234-cats',
-          verifier: 'my-verifier-token',
+    const router1Result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              count
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
         },
-      },
-    });
-    const router2Result = await server.executeOperation({
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: router2.url,
-          subscriptionId: router2.id,
-          verifier: router2.verifier,
+      }),
+    );
+    const router2Result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              count
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: router2.url,
+              subscriptionId: router2.id,
+              verifier: router2.verifier,
+            },
+          },
         },
-      },
-    });
-    expect(router1Result.http.status).toEqual(200);
-    expect(router2Result.http.status).toEqual(200);
+      }),
+    );
+    expect(router1Result.status).toEqual(200);
+    expect(router2Result.status).toEqual(200);
 
     // Advance timers to trigger the heartbeat once. This consumes the
     // heartbeat mocks from above (one per router).
@@ -509,39 +498,31 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
     await firstUpdate;
 
     logger.debug('TESTING: Triggering second update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
     await secondUpdate;
 
     // When we shutdown the server, we'll stop listening for subscription
@@ -632,54 +613,46 @@ describe('SubscriptionCallbackPlugin', () => {
     // Start the subscriptions; this triggers the initial check request and
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
-    const firstResult = await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: 'http://mock-router-url.com',
-          subscriptionId: '1234-cats',
-          verifier: 'my-verifier-token',
+    const firstResult = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              count
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
         },
-      },
-    });
+      }),
+    );
 
-    expect(firstResult.http.status).toEqual(200);
+    expect(firstResult.status).toEqual(200);
 
-    const secondResult = await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        subscription {
-          count
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: secondSubscription.callbackUrl,
-          subscriptionId: secondSubscription.id,
-          verifier: secondSubscription.verifier,
+    const secondResult = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              count
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: secondSubscription.callbackUrl,
+              subscriptionId: secondSubscription.id,
+              verifier: secondSubscription.verifier,
+            },
+          },
         },
-      },
-    });
-    expect(secondResult.http.status).toEqual(200);
+      }),
+    );
+    expect(secondResult.status).toEqual(200);
 
     // Advance timers to trigger the heartbeat. This consumes the one
     // heartbeat mock from above.
@@ -700,40 +673,32 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Trigger a couple updates. These send `next` requests to the router.
     logger.debug('TESTING: Triggering first update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
 
     await firstUpdate;
 
     logger.debug('TESTING: Triggering second update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
 
     await secondUpdate;
 
@@ -752,21 +717,17 @@ describe('SubscriptionCallbackPlugin', () => {
 
     // Trigger a 3rd update to make sure both subscriptions are cancelled.
     logger.debug('TESTING: Triggering third update');
-    await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        mutation {
-          addOne
-        }
-      `,
-    });
+    await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+        },
+      }),
+    );
 
     // The heartbeat should be cleaned up at this point. There is no remaining
     // heartbeat mock, so if it ticks again it'll throw an error.
@@ -844,30 +805,26 @@ describe('SubscriptionCallbackPlugin', () => {
     // Start the subscription; this triggers the initial check request and
     // starts the heartbeat interval. This simulates an incoming subscription
     // request from the router.
-    const result = await server.executeOperation({
-      http: {
-        method: 'POST',
-        search: '',
-        body: '',
-        headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
-        ]),
-      },
-      query: `#graphql
-        subscription {
-          terminatesSuccessfully
-        }
-      `,
-      extensions: {
-        subscription: {
-          callbackUrl: 'http://mock-router-url.com',
-          subscriptionId: '1234-cats',
-          verifier: 'my-verifier-token',
+    const result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              terminatesSuccessfully
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
         },
-      },
-    });
+      }),
+    );
     // The response to the router's initial request should be status 200
-    expect(result.http.status).toEqual(200);
+    expect(result.status).toEqual(200);
 
     await completeRequest;
 
@@ -915,8 +872,8 @@ describe('SubscriptionCallbackPlugin', () => {
       });
 
       // This triggers the check request which will fail.
-      const result = await server.executeHTTPGraphQLRequest({
-        httpGraphQLRequest: {
+      const result = await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
           body: {
             query: `#graphql
             subscription {
@@ -931,12 +888,8 @@ describe('SubscriptionCallbackPlugin', () => {
               },
             },
           },
-          headers: new HeaderMap([['content-type', 'application/json']]),
-          method: 'POST',
-          search: '',
-        },
-        context: async () => ({}),
-      });
+        }),
+      );
 
       expect(result.status).toEqual(500);
       assert(result.body.kind === 'complete');
@@ -989,8 +942,8 @@ describe('SubscriptionCallbackPlugin', () => {
       });
 
       // Trigger an invalid subscription
-      const response = await server.executeHTTPGraphQLRequest({
-        httpGraphQLRequest: {
+      const response = await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
           body: {
             query: `#graphql
             subscription {
@@ -1005,12 +958,8 @@ describe('SubscriptionCallbackPlugin', () => {
               },
             },
           },
-          headers: new HeaderMap([['content-type', 'application/json']]),
-          method: 'POST',
-          search: '',
-        },
-        context: async () => ({}),
-      });
+        }),
+      );
       expect(response.status).toEqual(400);
       assert(response.body.kind === 'complete');
       expect(JSON.parse(response.body.string)).toEqual({
@@ -1059,30 +1008,26 @@ describe('SubscriptionCallbackPlugin', () => {
       // Start the subscription; this triggers the initial check request and
       // starts the heartbeat interval. This simulates an incoming subscription
       // request from the router.
-      const result = await server.executeOperation({
-        http: {
-          method: 'POST',
-          search: '',
-          body: '',
-          headers: new HeaderMap([
-            ['accept', 'application/json+graphql+callback/1.0'],
-          ]),
-        },
-        query: `#graphql
-          subscription {
-            count
-          }
-        `,
-        extensions: {
-          subscription: {
-            callbackUrl: 'http://mock-router-url.com',
-            subscriptionId: '1234-cats',
-            verifier: 'my-verifier-token',
+      const result = await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
+          body: {
+            query: `#graphql
+            subscription {
+              count
+            }
+          `,
+            extensions: {
+              subscription: {
+                callbackUrl: 'http://mock-router-url.com',
+                subscriptionId: '1234-cats',
+                verifier: 'my-verifier-token',
+              },
+            },
           },
-        },
-      });
+        }),
+      );
 
-      expect(result.http.status).toEqual(200);
+      expect(result.status).toEqual(200);
 
       // 5 failures is the limit before the heartbeat is cancelled. We expect to
       // see 5 errors and then a final error indicating the heartbeat was
@@ -1090,7 +1035,7 @@ describe('SubscriptionCallbackPlugin', () => {
       for (let i = 0; i < 5; i++) {
         // mock heartbeat response failure
         nock('http://mock-router-url.com')
-          .matchHeader('content-type', 'application/json')
+          .matchHeader('content-type', 'application/json+graphql+callback/1.0')
           .post('/', {
             kind: 'subscription',
             action: 'check',
@@ -1142,30 +1087,26 @@ describe('SubscriptionCallbackPlugin', () => {
       // Start the subscription; this triggers the initial check request and
       // starts the heartbeat interval. This simulates an incoming subscription
       // request from the router.
-      const result = await server.executeOperation({
-        http: {
-          method: 'POST',
-          search: '',
-          body: '',
-          headers: new HeaderMap([
-            ['accept', 'application/json+graphql+callback/1.0'],
-          ]),
-        },
-        query: `#graphql
-          subscription {
-            count
-          }
-        `,
-        extensions: {
-          subscription: {
-            callbackUrl: 'http://mock-router-url.com',
-            subscriptionId: '1234-cats',
-            verifier: 'my-verifier-token',
+      const result = await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
+          body: {
+            query: `#graphql
+            subscription {
+              count
+            }
+          `,
+            extensions: {
+              subscription: {
+                callbackUrl: 'http://mock-router-url.com',
+                subscriptionId: '1234-cats',
+                verifier: 'my-verifier-token',
+              },
+            },
           },
-        },
-      });
+        }),
+      );
 
-      expect(result.http.status).toEqual(200);
+      expect(result.status).toEqual(200);
 
       // 5 failures is the limit before the heartbeat is cancelled. We expect to
       // see 5 errors and then a final error indicating the heartbeat was
@@ -1173,7 +1114,7 @@ describe('SubscriptionCallbackPlugin', () => {
       for (let i = 0; i < 5; i++) {
         // mock heartbeat response failure
         nock('http://mock-router-url.com')
-          .matchHeader('content-type', 'application/json')
+          .matchHeader('content-type', 'application/json+graphql+callback/1.0')
           .post('/', {
             kind: 'subscription',
             action: 'check',
@@ -1234,30 +1175,26 @@ describe('SubscriptionCallbackPlugin', () => {
         // Start the subscription; this triggers the initial check request and
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
-        const result = await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
+        const result = await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
             subscription {
               count
             }
           `,
-          extensions: {
-            subscription: {
-              callbackUrl: 'http://mock-router-url.com',
-              subscriptionId: '1234-cats',
-              verifier: 'my-verifier-token',
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
             },
-          },
-        });
+          }),
+        );
 
-        expect(result.http.status).toEqual(200);
+        expect(result.status).toEqual(200);
 
         // Mock the heartbeat response from the router. We'll trigger it once below
         // after the subscription is initialized to make sure it works.
@@ -1272,21 +1209,17 @@ describe('SubscriptionCallbackPlugin', () => {
 
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
-        await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
+        await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
             mutation {
               addOne
             }
           `,
-        });
+            },
+          }),
+        );
 
         await update;
 
@@ -1339,30 +1272,26 @@ describe('SubscriptionCallbackPlugin', () => {
         // Start the subscription; this triggers the initial check request and
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
-        const result = await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
-          subscription {
-            count
-          }
-        `,
-          extensions: {
-            subscription: {
-              callbackUrl: 'http://mock-router-url.com',
-              subscriptionId: '1234-cats',
-              verifier: 'my-verifier-token',
+        const result = await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
+            subscription {
+              count
+            }
+          `,
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
             },
-          },
-        });
+          }),
+        );
 
-        expect(result.http.status).toEqual(200);
+        expect(result.status).toEqual(200);
 
         // Mock the heartbeat response from the router. We'll trigger it once below
         // after the subscription is initialized to make sure it works.
@@ -1389,38 +1318,30 @@ describe('SubscriptionCallbackPlugin', () => {
 
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
-        await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
-          mutation {
-            addOne
-          }
-        `,
-        });
+        await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+            },
+          }),
+        );
 
         logger.debug('TESTING: Triggering second update');
-        await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
-          mutation {
-            addOne
-          }
-        `,
-        });
+        await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+            },
+          }),
+        );
 
         await updates;
 
@@ -1480,30 +1401,26 @@ describe('SubscriptionCallbackPlugin', () => {
         // Start the subscription; this triggers the initial check request and
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
-        const result = await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
+        const result = await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
             subscription {
               count
             }
           `,
-          extensions: {
-            subscription: {
-              callbackUrl: 'http://mock-router-url.com',
-              subscriptionId: '1234-cats',
-              verifier: 'my-verifier-token',
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
             },
-          },
-        });
+          }),
+        );
 
-        expect(result.http.status).toEqual(200);
+        expect(result.status).toEqual(200);
 
         // Mock the heartbeat response from the router. We'll trigger it once below
         // after the subscription is initialized to make sure it works.
@@ -1518,21 +1435,17 @@ describe('SubscriptionCallbackPlugin', () => {
 
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
-        await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
+        await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
             mutation {
               addOne
             }
           `,
-        });
+            },
+          }),
+        );
 
         await update;
 
@@ -1588,30 +1501,26 @@ describe('SubscriptionCallbackPlugin', () => {
         // Start the subscription; this triggers the initial check request and
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
-        const result = await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
+        const result = await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
             subscription {
               count
             }
           `,
-          extensions: {
-            subscription: {
-              callbackUrl: 'http://mock-router-url.com',
-              subscriptionId: '1234-cats',
-              verifier: 'my-verifier-token',
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
             },
-          },
-        });
+          }),
+        );
 
-        expect(result.http.status).toEqual(200);
+        expect(result.status).toEqual(200);
 
         // Mock the heartbeat response from the router. We'll trigger it once below
         // after the subscription is initialized to make sure it works.
@@ -1626,21 +1535,17 @@ describe('SubscriptionCallbackPlugin', () => {
 
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
-        await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
+        await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
             mutation {
               addOne
             }
           `,
-        });
+            },
+          }),
+        );
 
         await update;
 
@@ -1701,30 +1606,26 @@ describe('SubscriptionCallbackPlugin', () => {
         // Start the subscription; this triggers the initial check request and
         // starts the heartbeat interval. This simulates an incoming subscription
         // request from the router.
-        const result = await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
-          subscription {
-            count
-          }
-        `,
-          extensions: {
-            subscription: {
-              callbackUrl: 'http://mock-router-url.com',
-              subscriptionId: '1234-cats',
-              verifier: 'my-verifier-token',
+        const result = await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
+            subscription {
+              count
+            }
+          `,
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
             },
-          },
-        });
+          }),
+        );
 
-        expect(result.http.status).toEqual(200);
+        expect(result.status).toEqual(200);
 
         // Mock the heartbeat response from the router. We'll trigger it once below
         // after the subscription is initialized to make sure it works.
@@ -1746,21 +1647,17 @@ describe('SubscriptionCallbackPlugin', () => {
 
         // Trigger a couple updates. These send `next` requests to the router.
         logger.debug('TESTING: Triggering first update');
-        await server.executeOperation({
-          http: {
-            method: 'POST',
-            search: '',
-            body: '',
-            headers: new HeaderMap([
-              ['accept', 'application/json+graphql+callback/1.0'],
-            ]),
-          },
-          query: `#graphql
-          mutation {
-            addOne
-          }
-        `,
-        });
+        await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+            },
+          }),
+        );
 
         // After 5 failures, the plugin will terminate the subscriptions without
         // sending a `complete` request.
@@ -1908,7 +1805,8 @@ function mockRouterCheckResponse(opts?: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json')
+      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
+      .matchHeader('subscription-protocol', 'callback/1.0')
       .post(path, {
         kind: 'subscription',
         action: 'check',
@@ -1938,7 +1836,7 @@ function mockRouterCheckResponseWithError(opts?: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json')
+      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
       .post(path, {
         kind: 'subscription',
         action: 'check',
@@ -1968,7 +1866,7 @@ function mockRouterNextResponse(requestOpts: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json')
+      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
       .post(path, {
         kind: 'subscription',
         action: 'next',
@@ -1999,7 +1897,7 @@ function mockRouterCompleteResponse(requestOpts?: {
 
   return promisifyNock(
     nock(url)
-      .matchHeader('content-type', 'application/json')
+      .matchHeader('content-type', 'application/json+graphql+callback/1.0')
       .post(path, {
         kind: 'subscription',
         action: 'complete',

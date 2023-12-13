@@ -51,7 +51,9 @@ export function ApolloServerPluginSubscriptionCallback(
           return {
             http: {
               status: 200,
-              headers: new HeaderMap(),
+              headers: new HeaderMap([
+                ['content-type', 'application/json+graphql+callback/1.0'],
+              ]),
             },
             body: {
               kind: 'single',
@@ -262,7 +264,10 @@ class SubscriptionManager {
         async (bail) => {
           response = fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'content-type': 'application/json+graphql+callback/1.0',
+              'subscription-protocol': 'callback/1.0',
+            },
             body: JSON.stringify({
               kind: 'subscription',
               action,
@@ -417,7 +422,10 @@ class SubscriptionManager {
             id,
             verifier,
           }),
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'content-type': 'application/json+graphql+callback/1.0',
+            'subscription-protocol': 'callback/1.0',
+          },
         });
         this.requestsInFlight.add(heartbeatRequest);
 
