@@ -1,22 +1,22 @@
-import { ApolloServer, HeaderMap } from '..';
-import type { ApolloServerOptions } from '..';
+import type { GatewayInterface } from '@apollo/server-gateway-interface';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { describe, expect, it, jest } from '@jest/globals';
+import assert from 'assert';
 import {
   FormattedExecutionResult,
   GraphQLError,
   GraphQLSchema,
-  parse,
   TypedQueryDocumentNode,
+  parse,
 } from 'graphql';
+import gql from 'graphql-tag';
+import type { ApolloServerOptions } from '..';
+import { ApolloServer, HeaderMap } from '..';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
+import type { GraphQLResponseBody } from '../externalTypes/graphql';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import { mockLogger } from './mockLogger.js';
-import gql from 'graphql-tag';
-import type { GatewayInterface } from '@apollo/server-gateway-interface';
-import { jest, describe, it, expect } from '@jest/globals';
-import type { GraphQLResponseBody } from '../externalTypes/graphql';
-import assert from 'assert';
 
 const typeDefs = gql`
   type Query {
@@ -148,6 +148,41 @@ describe('ApolloServer construction', () => {
         resolvers,
         stringifyResult: (value: FormattedExecutionResult) => {
           let result = JSON.stringify(value, null, 10000);
+          result = result.replace('world', 'stringifyResults works!'); // replace text with something custom
+          return result;
+        },
+      });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ hello }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      const { body } = await server.executeHTTPGraphQLRequest(request);
+      assert(body.kind === 'complete');
+      expect(body.string).toMatchInlineSnapshot(`
+      "{
+                "data": {
+                          "hello": "stringifyResults works!"
+                }
+      }"
+      `);
+      await server.stop();
+    });
+
+    it('async stringifyResult', async () => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: async (value: FormattedExecutionResult) => {
+          let result = await Promise.resolve(JSON.stringify(value, null, 10000));
           result = result.replace('world', 'stringifyResults works!'); // replace text with something custom
           return result;
         },
