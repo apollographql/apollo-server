@@ -52,7 +52,7 @@ export function ApolloServerPluginSubscriptionCallback(
             http: {
               status: 200,
               headers: new HeaderMap([
-                ['content-type', 'application/json+graphql+callback/1.0'],
+                // ['content-type', 'application/json+graphql+callback/1.0'],
               ]),
             },
             body: {
