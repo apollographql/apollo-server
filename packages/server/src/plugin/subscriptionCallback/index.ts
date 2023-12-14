@@ -34,10 +34,19 @@ export function ApolloServerPluginSubscriptionCallback(
       // The GA version of callback protocol use camelCase, this is to keep backward compatibility
       callbackUrl = callbackUrl || subscriptionExtension.callback_url;
       id = id || subscriptionExtension.subscription_id;
-      heartbeatIntervalMs =
-        heartbeatIntervalMs ||
-        subscriptionExtension.heartbeat_interval_ms ||
-        5000;
+      if (
+        heartbeatIntervalMs == null &&
+        subscriptionExtension.heartbeat_interval_ms != null
+      ) {
+        // Deprecated field name
+        heartbeatIntervalMs = subscriptionExtension.heartbeat_interval_ms;
+      } else if (
+        heartbeatIntervalMs == null &&
+        subscriptionExtension.heartbeat_interval_ms == null
+      ) {
+        // Default value
+        heartbeatIntervalMs = 5000;
+      }
 
       return {
         // Implementing `responseForOperation` is the only hook that allows us
@@ -367,6 +376,12 @@ class SubscriptionManager {
       this.subscriptionInfoByCallbackUrl.set(callbackUrl, {});
     }
 
+    if (heartbeatIntervalMs === 0) {
+      // Heartbeat has been disabled on the router
+      this.logger?.debug(`Heartbeat disabled for ${callbackUrl}`, id);
+      return;
+    }
+
     // Kickoff heartbeat interval since there isn't one already
     this.logger?.debug(
       `Starting new heartbeat interval for ${callbackUrl}`,
@@ -519,8 +534,10 @@ class SubscriptionManager {
       subscription.cancelled = true;
     }
     // cleanup heartbeat for subscription
-    this.logger?.debug(`Terminating heartbeat interval for ${callbackUrl}`);
-    if (heartbeat) clearInterval(heartbeat.interval);
+    if (heartbeat) {
+      this.logger?.debug(`Terminating heartbeat interval for ${callbackUrl}`);
+      clearInterval(heartbeat.interval);
+    }
     this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
   }
 
