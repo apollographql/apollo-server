@@ -64,7 +64,7 @@ describe('SubscriptionCallbackPlugin', () => {
         search: '',
         body: '',
         headers: new HeaderMap([
-          ['accept', 'application/json+graphql+callback/1.0'],
+          ['accept', 'application/json;callbackSpec=1.0'],
           ['content-type', 'application/json'],
         ]),
         ...options,
