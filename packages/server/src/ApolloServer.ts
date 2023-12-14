@@ -1115,7 +1115,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   private async errorResponse(
     error: unknown,
     requestHead: HTTPGraphQLHead,
-  ): HTTPGraphQLResponse {
+  ): Promise<HTTPGraphQLResponse> {
     const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
       [error],
       {
