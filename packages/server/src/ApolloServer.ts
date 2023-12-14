@@ -1112,7 +1112,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     }
   }
 
-  private errorResponse(
+  private async errorResponse(
     error: unknown,
     requestHead: HTTPGraphQLHead,
   ): HTTPGraphQLResponse {
@@ -1144,7 +1144,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ]),
       body: {
         kind: 'complete',
-        string: prettyJSONStringify({
+        string: await this.internals.stringifyResult({
           errors: formattedErrors,
         }),
       },
