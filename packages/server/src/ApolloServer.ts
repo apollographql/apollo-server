@@ -180,7 +180,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   // flip default behavior.
   status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
-  stringifyResult: (value: FormattedExecutionResult) => string;
+  stringifyResult: (value: FormattedExecutionResult) => string | Promise<string>;
 }
 
 function defaultLogger(): Logger {

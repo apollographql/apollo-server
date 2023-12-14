@@ -260,7 +260,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
       ...graphQLResponse.http,
       body: {
         kind: 'complete',
-        string: internals.stringifyResult(
+        string: await internals.stringifyResult(
           orderExecutionResultFields(graphQLResponse.body.singleResult),
         ),
       },

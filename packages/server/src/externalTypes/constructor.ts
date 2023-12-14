@@ -89,7 +89,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   includeStacktraceInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;
-  stringifyResult?: (value: FormattedExecutionResult) => string;
+  stringifyResult?: (value: FormattedExecutionResult) => string | Promise<string>;
   introspection?: boolean;
   plugins?: ApolloServerPlugin<TContext>[];
   persistedQueries?: PersistedQueryOptions | false;
