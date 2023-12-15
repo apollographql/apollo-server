@@ -182,7 +182,9 @@ describe('ApolloServer construction', () => {
         typeDefs,
         resolvers,
         stringifyResult: async (value: FormattedExecutionResult) => {
-          let result = await Promise.resolve(JSON.stringify(value, null, 10000));
+          let result = await Promise.resolve(
+            JSON.stringify(value, null, 10000),
+          );
           result = result.replace('world', 'stringifyResults works!'); // replace text with something custom
           return result;
         },
