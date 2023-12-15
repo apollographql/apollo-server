@@ -34,19 +34,10 @@ export function ApolloServerPluginSubscriptionCallback(
       // The GA version of callback protocol use camelCase, this is to keep backward compatibility
       callbackUrl = callbackUrl || subscriptionExtension.callback_url;
       id = id || subscriptionExtension.subscription_id;
-      if (
-        heartbeatIntervalMs == null &&
-        subscriptionExtension.heartbeat_interval_ms != null
-      ) {
-        // Deprecated field name
-        heartbeatIntervalMs = subscriptionExtension.heartbeat_interval_ms;
-      } else if (
-        heartbeatIntervalMs == null &&
-        subscriptionExtension.heartbeat_interval_ms == null
-      ) {
-        // Default value
-        heartbeatIntervalMs = 5000;
-      }
+      heartbeatIntervalMs =
+        heartbeatIntervalMs ??
+        subscriptionExtension.heartbeat_interval_ms ??
+        5000;
 
       return {
         // Implementing `responseForOperation` is the only hook that allows us

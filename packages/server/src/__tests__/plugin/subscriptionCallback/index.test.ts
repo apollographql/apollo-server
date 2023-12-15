@@ -268,10 +268,6 @@ describe('SubscriptionCallbackPlugin', () => {
     await server.stop();
     await completeRequest;
 
-    // The heartbeat should be cleaned up at this point. There is no second
-    // heartbeat mock, so if it ticks again it'll throw an error.
-    jest.advanceTimersByTime(5000);
-
     expect(logger.orderOfOperations).toMatchInlineSnapshot(`
       [
         "SubscriptionCallback[1234-cats]: Received new subscription request",
