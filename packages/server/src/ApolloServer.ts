@@ -1,27 +1,29 @@
+import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import { isNodeLike } from '@apollo/utils.isnodelike';
+import {
+  InMemoryLRUCache,
+  PrefixingKeyValueCache,
+  type KeyValueCache,
+} from '@apollo/utils.keyvaluecache';
 import type { Logger } from '@apollo/utils.logger';
+import type { WithRequired } from '@apollo/utils.withrequired';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import resolvable, { type Resolvable } from '@josephg/resolvable';
 import {
-  assertValidSchema,
-  type DocumentNode,
   GraphQLError,
+  assertValidSchema,
+  print,
+  printSchema,
+  type DocumentNode,
+  type FormattedExecutionResult,
   type GraphQLFieldResolver,
   type GraphQLFormattedError,
   type GraphQLSchema,
   type ParseOptions,
-  print,
-  printSchema,
   type TypedQueryDocumentNode,
   type ValidationContext,
   type ValidationRule,
-  type FormattedExecutionResult,
 } from 'graphql';
-import {
-  type KeyValueCache,
-  InMemoryLRUCache,
-  PrefixingKeyValueCache,
-} from '@apollo/utils.keyvaluecache';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import { newCachePolicy } from './cachePolicy.js';
@@ -35,45 +37,43 @@ import {
   ApolloServerErrorCode,
   ApolloServerValidationErrorCode,
 } from './errors/index.js';
+import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
+  ExecuteOperationOptions,
+  VariableValues,
+} from './externalTypes/graphql.js';
+import type {
+  ApolloConfig,
+  ApolloServerOptions,
   ApolloServerPlugin,
   BaseContext,
+  ContextThunk,
+  DocumentStore,
   GraphQLRequest,
+  GraphQLRequestContext,
   GraphQLResponse,
-  GraphQLServerListener,
   GraphQLServerContext,
+  GraphQLServerListener,
+  HTTPGraphQLHead,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   LandingPage,
-  ApolloConfig,
-  ApolloServerOptions,
-  DocumentStore,
   PersistedQueryOptions,
-  ContextThunk,
-  GraphQLRequestContext,
-  HTTPGraphQLHead,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import { type InternalPluginId, pluginIsInternal } from './internalPlugin.js';
+import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
-import { SchemaManager } from './utils/schemaManager.js';
-import { isDefined } from './utils/isDefined.js';
+import { HeaderMap } from './utils/HeaderMap.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
-import type { WithRequired } from '@apollo/utils.withrequired';
-import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
-import type { GatewayExecutor } from '@apollo/server-gateway-interface';
-import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
-import { HeaderMap } from './utils/HeaderMap.js';
-import type {
-  ExecuteOperationOptions,
-  VariableValues,
-} from './externalTypes/graphql.js';
+import { isDefined } from './utils/isDefined.js';
+import { SchemaManager } from './utils/schemaManager.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {
@@ -1354,6 +1354,8 @@ export function isImplicitlyInstallablePlugin<TContext extends BaseContext>(
 
 export const MEDIA_TYPES = {
   APPLICATION_JSON: 'application/json; charset=utf-8',
+  APPLICATION_JSON_GRAPHQL_CALLBACK:
+    'application/json; callbackSpec=1.0; charset=utf-8',
   APPLICATION_GRAPHQL_RESPONSE_JSON:
     'application/graphql-response+json; charset=utf-8',
   // We do *not* currently support this content-type; we will once incremental
@@ -1378,6 +1380,7 @@ export function chooseContentTypeForSingleResultResponse(
     }).mediaType([
       MEDIA_TYPES.APPLICATION_JSON,
       MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
+      MEDIA_TYPES.APPLICATION_JSON_GRAPHQL_CALLBACK,
     ]);
     if (preferred) {
       return preferred;
