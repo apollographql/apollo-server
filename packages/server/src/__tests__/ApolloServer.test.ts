@@ -213,6 +213,63 @@ describe('ApolloServer construction', () => {
       `);
       await server.stop();
     });
+
+    it('throws the custom parsed error from stringifyResult', async () => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: (_: FormattedExecutionResult) => {
+          throw new Error('A custom synchronous error');
+        },
+      });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ error }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      await expect(
+        server.executeHTTPGraphQLRequest(request),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"A custom synchronous error"`,
+      );
+
+      await server.stop();
+    });
+
+    it('throws the custom parsed error from async stringifyResult', async () => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: async (_: FormattedExecutionResult) =>
+          Promise.reject('A custom asynchronous error'),
+      });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ error }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      await expect(
+        server.executeHTTPGraphQLRequest(request),
+      ).rejects.toMatchInlineSnapshot(`"A custom asynchronous error"`);
+
+      await server.stop();
+    });
   });
 
   it('throws when an API key is not a valid header value', () => {
@@ -538,7 +595,7 @@ describe('ApolloServer executeOperation', () => {
 
     const { body, http } = await server.executeOperation({
       query: `#graphql
-        query NeedsArg($arg: CompoundInput!) { needsCompoundArg(aCompound: $arg) }
+      query NeedsArg($arg: CompoundInput!) { needsCompoundArg(aCompound: $arg) }
       `,
       // @ts-expect-error for `null` case
       variables,
