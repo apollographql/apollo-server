@@ -14,7 +14,6 @@
 # This creates a fairly fragile allowlisting mechanism. This file allows us to leverage the full capabilities of the Gitleaks rule syntax
 # to create allowlisting functionality.
 
-
 [[ rules ]]
     id = "high-entropy-base64"
     [ rules.allowlist ]
