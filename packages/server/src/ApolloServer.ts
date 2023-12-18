@@ -180,7 +180,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   // flip default behavior.
   status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
-  stringifyResult: (value: FormattedExecutionResult) => string;
+  stringifyResult: (
+    value: FormattedExecutionResult,
+  ) => string | Promise<string>;
 }
 
 function defaultLogger(): Logger {
@@ -1015,7 +1017,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // This is typically either the masked error from when background startup
         // failed, or related to invoking this function before startup or
         // during/after shutdown (due to lack of draining).
-        return this.errorResponse(error, httpGraphQLRequest);
+        return await this.errorResponse(error, httpGraphQLRequest);
       }
 
       if (
@@ -1031,7 +1033,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           } catch (maybeError: unknown) {
             const error = ensureError(maybeError);
             this.logger.error(`Landing page \`html\` function threw: ${error}`);
-            return this.errorResponse(error, httpGraphQLRequest);
+            return await this.errorResponse(error, httpGraphQLRequest);
           }
         }
 
@@ -1076,7 +1078,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // If some random function threw, add a helpful prefix when converting
         // to GraphQLError. If it was already a GraphQLError, trust that the
         // message was chosen thoughtfully and leave off the prefix.
-        return this.errorResponse(
+        return await this.errorResponse(
           ensureGraphQLError(error, 'Context creation failed: '),
           httpGraphQLRequest,
         );
@@ -1108,14 +1110,14 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           );
         }
       }
-      return this.errorResponse(maybeError, httpGraphQLRequest);
+      return await this.errorResponse(maybeError, httpGraphQLRequest);
     }
   }
 
-  private errorResponse(
+  private async errorResponse(
     error: unknown,
     requestHead: HTTPGraphQLHead,
-  ): HTTPGraphQLResponse {
+  ): Promise<HTTPGraphQLResponse> {
     const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
       [error],
       {
@@ -1144,7 +1146,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ]),
       body: {
         kind: 'complete',
-        string: prettyJSONStringify({
+        string: await this.internals.stringifyResult({
           errors: formattedErrors,
         }),
       },
