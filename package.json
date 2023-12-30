@@ -60,7 +60,7 @@
     "@types/lodash.xorby": "4.7.9",
     "@types/negotiator": "0.6.3",
     "@types/node": "14.18.63",
-    "@types/node-fetch": "2.6.9",
+    "@types/node-fetch": "2.6.10",
     "@types/qs-middleware": "1.0.4",
     "@types/retry": "0.12.5",
     "@types/superagent": "4.1.24",
