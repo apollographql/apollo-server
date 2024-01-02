@@ -1,5 +1,23 @@
 # @apollo/server
 
+## 4.10.0
+
+### Minor Changes
+
+- [#7786](https://github.com/apollographql/apollo-server/pull/7786) [`869ec98`](https://github.com/apollographql/apollo-server/commit/869ec980458df3b22dcc2ed128cedc9d3a85c54b) Thanks [@ganemone](https://github.com/ganemone)! - Restore missing v1 `skipValidation` option as `dangerouslyDisableValidation`. Note that enabling this option exposes your server to potential security and unexpected runtime issues. Apollo will not support issues that arise as a result of using this option.
+
+- [#7803](https://github.com/apollographql/apollo-server/pull/7803) [`e9a0d6e`](https://github.com/apollographql/apollo-server/commit/e9a0d6ed035d1a4f509ce39f0558dc17dfb9ccd0) Thanks [@favna](https://github.com/favna)! - allow `stringifyResult` to return a `Promise<string>`
+
+  Users who implemented the `stringifyResult` hook can now expect error responses to be formatted with the hook as well. Please take care when updating to this version to ensure this is the desired behavior, or implement the desired behavior accordingly in your `stringifyResult` hook. This was considered a non-breaking change as we consider that it was an oversight in the original PR that introduced `stringifyResult` hook.
+
+### Patch Changes
+
+- [#7793](https://github.com/apollographql/apollo-server/pull/7793) [`9bd7748`](https://github.com/apollographql/apollo-server/commit/9bd7748565735e3e01cdce38674dbc7dcc44507b) Thanks [@bnjjj](https://github.com/bnjjj)! - General availability of subscription callback protocol
+
+- [#7799](https://github.com/apollographql/apollo-server/pull/7799) [`63dc50f`](https://github.com/apollographql/apollo-server/commit/63dc50fc65cd7b4a9df0e1de4ab6d6ee82dbeb5c) Thanks [@stijnbe](https://github.com/stijnbe)! - Fix type of ApolloServerPluginUsageReporting reportTimer
+
+- [#7740](https://github.com/apollographql/apollo-server/pull/7740) [`fe68c1b`](https://github.com/apollographql/apollo-server/commit/fe68c1b05323931d766a5e081061b70e305ac67e) Thanks [@barnisanov](https://github.com/barnisanov)! - Uninstalled `body-parser` and used `express` built-in `body-parser` functionality instead(mainly the json middleware)
+
 ## 4.9.5
 
 ### Patch Changes
@@ -62,8 +80,8 @@
   You can enable callback subscriptions like so:
 
   ```ts
-  import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
-  import { ApolloServer } from '@apollo/server';
+  import { ApolloServerPluginSubscriptionCallback } from "@apollo/server/plugin/subscriptionCallback";
+  import { ApolloServer } from "@apollo/server";
 
   const server = new ApolloServer({
     // ...
