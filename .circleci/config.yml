@@ -26,7 +26,7 @@ commands:
       - when:
           condition: << parameters.node-version >>
           steps:
-            - run: volta pin node@<< parameters.node-version >>
+          - run: volta pin node@<< parameters.node-version >>
       - run: node --version
       - run: npm --version
       - node/install-packages
@@ -38,7 +38,7 @@ jobs:
       node-version:
         type: string
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - setup-node:
           node-version: <<parameters.node-version>>
@@ -49,14 +49,14 @@ jobs:
 
   Smoke test built package:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - setup-node
       - run: npm run test:smoke
 
   Full incremental delivery tests with graphql-js 17 canary:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     environment:
       INCREMENTAL_DELIVERY_TESTS_ENABLED: t
     steps:
@@ -70,14 +70,14 @@ jobs:
 
   Prettier:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - setup-node
       - run: npm run prettier-check
 
   ESLint:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - setup-node
       - run: npm run lint
@@ -89,7 +89,7 @@ jobs:
   # themselves.
   Changesets:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - run: echo Ensure there is at least one step
       - unless:
@@ -103,14 +103,14 @@ jobs:
 
   Spell check:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - setup-node
       - run: npm run spell-check
 
   Codegen check:
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
       - setup-node
       - run: npm run codegen-check
@@ -122,15 +122,15 @@ jobs:
   # on branches that still contain unresolved problems. In order for this file
   # to not cause this job to fail, we obfuscate the target string by encoding
   # the last letter in in hex (\x45 = E).
-  "Check for FIXME":
+  "Check for FIXM\x45":
     docker:
       - image: cimg/base:stable
     steps:
-      - checkout
-      - run:
-          name: "Check for FIXME"
+    - checkout
+    - run:
+        name: "Check for FIXM\x45"
         # ! means this fails if git grep succeeds, ie if there are any matches
-          command: "! git grep FIXME"
+        command: "! git grep FIXM\x45"
 
 workflows:
   Build:
@@ -144,7 +144,7 @@ workflows:
                 - "16"
                 - "18"
                 - "20"
-      - "Check for FIXME"
+      - "Check for FIXM\x45"
       - Prettier
       - ESLint
       - Spell check
