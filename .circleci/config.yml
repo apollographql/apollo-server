@@ -124,7 +124,7 @@ jobs:
   # the last letter in in hex (\x45 = E).
   "Check for FIXM\x45":
     docker:
-      - image: cimg/base:stable
+    - image: cimg/base:stable
     steps:
     - checkout
     - run:
