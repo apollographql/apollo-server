@@ -900,6 +900,15 @@ https://your.server/?query=%7B__typename%7D
 
 If you want a health check for your HTTP server unrelated to the health of the GraphQL execution engine (i.e., like Apollo Server 3's health check feature), you can add a `GET` handler that always succeeds to your web framework.
 
+
+To prevent inaccurate positive health checks, ensure that the `Accept` header is either unset or explicitly set to `application/json`.
+
+<Note>
+
+Using a trivial query with Apollo Server 3's health check feature always produces a GraphQL response. Apollo Server 4 returns an HTML page unless the `Accept` header's value is unset or explicitly set to `application/json`.
+
+</Note>
+
 ### Path parsing
 
 In Apollo Server 3, many framework integrations enable you to use the `path` option to configure the [URL path](/apollo-server/v3/api/apollo-server/#path) where Apollo Server processes requests. By default, the `path` option uses the `/graphql` URL path.
