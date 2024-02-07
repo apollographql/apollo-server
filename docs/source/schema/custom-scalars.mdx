@@ -16,7 +16,14 @@ scalar MyCustomScalar
 
 You can now use `MyCustomScalar` in your schema anywhere you can use a default scalar (e.g., as the type of an object field, input type field, or argument).
 
-However, Apollo Server still needs to know how to interact with values of this new scalar type.
+### Including scalar specification
+Updated in the [October 2021 version of the GraphQL spec](https://spec.graphql.org/October2021/#sec--specifiedBy), you can include a `@specifiedBy` directive as metadata for schema consumers to understand what format the scalar is using. This directive does not provide automatic validation, but can provide useful context for humans reading the schema.
+
+```graphql
+scalar MyCustomScalar @specifiedBy(url: "https://specs.example.com/rfc111")
+```
+
+However, Apollo Server still needs to know how to interact with and generate values of this new scalar type.
 
 ## Defining custom scalar logic
 
