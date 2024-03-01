@@ -61,10 +61,10 @@ This schema lets you perform various actions on records: fetching single or mult
 
 Resolver functions are responsible for performing the actions defined in the schema—for example, fetching and updating records. In a MERN stack application, they're how you connect the GraphQL schema to your MongoDB instance.
 
-In your server's `/src` folder, create a new `resolvers.ts` file and paste in the following resolvers:
+In your server's `/src` folder, create a new `resolvers.js` file and paste in the following resolvers:
 
-```ts
-import db from "./db/conn.ts";
+```js
+import db from "./db/connection.js";
 
 const resolvers = {
   Record: {
@@ -122,19 +122,19 @@ To learn more about writing resolver functions, check out the [resolver docs](..
 
 ## Step 4: Add Apollo Server to your Express server
 
-Now you can begin integrating Apollo Server into your Express server. Wherever you instantiate your `express` server (usually `mern/server/server.ts`), import `@apollo/server` and its `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
+Now you can begin integrating Apollo Server into your Express server. Wherever you instantiate your `express` server (usually `mern/server/server.js`), import `@apollo/server` and its `expressMiddleware`. Then, instantiate and `start` the Apollo Server:
 
-```ts
-import express, { json } from 'express';
+```js
+import express from 'express';
 import cors from 'cors';
-import "./loadEnvironment.mjs";
-import records from "./routes/record.mjs";
+import records from "./routes/record.js";
+
 //highlight-start
 import gql from "graphql-tag";
 import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 import { expressMiddleware } from '@apollo/server/express4';
-import resolvers from "./resolvers.mjs";
+import resolvers from "./resolvers.js";
 import { readFileSync } from "fs";
 //highlight-end
 
@@ -180,7 +180,7 @@ app.use("/record", records);
 app.use(
   '/graphql',
   cors(),
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 //highlight-end
