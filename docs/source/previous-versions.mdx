@@ -22,18 +22,13 @@ End-of-life versions will remain available in the npm registry and can still be 
 
 ## End-of-life versions
 
+Apollo no longer commits to providing any support for these versions. While you may still file issues about security concerns or significant regressions, Apollo may choose not to address them.
+
 ### Apollo Server 2
 
 [Apollo Server 2](/apollo-server/v2/) is end-of-life as of **October 22, 2023**. We encourage all users of Apollo Server 2 to **upgrade** to Apollo Server 4, first by following the [v3 migration guide](/apollo-server/v3/migration) and then following the [v4 migration guide](./migration). Note that Apollo Server 2 and 3 were distributed in various npm packages (such as `apollo-server`, `apollo-server-core`, and `apollo-server-express`); Apollo Server 4 combines these packages into a single new [`@apollo/server` package](./migration/#the-new-apolloserver-package).
 
 We recommend upgrading to Apollo Server 4 as _soon as possible_. Depending on which Apollo Server features you use, the upgrade process might require several changes to your server. The most straightforward upgrade path is to first upgrade from Apollo Server 2 to 3, then once everything works, continue upgrading from Apollo Server 3 to 4.
-
-Three features of Apollo Server 2 have reached their end-of-life date as of **December 31st, 2022**. These three features are:
-* [Subscriptions](/apollo-server/v2/data/subscriptions/)
-* [File uploads](/apollo-server/v2/data/file-uploads/)
-* [GraphQL Playground](/apollo-server/v2/testing/graphql-playground/).
-
-As of 2023, Apollo no longer commits to providing any support for these three features. While you may still file issues about security concerns or significant regressions, if the problems do not exist when a server is initialized with `new ApolloServer({ subscriptions: false, uploads: false, playground: false })`, Apollo may choose not to address them.
 
 ### Apollo Server 1
 
