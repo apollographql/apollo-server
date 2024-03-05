@@ -113,7 +113,7 @@ export function whenResultIsFinished(
 ) {
   if (isPromise(result)) {
     result.then(
-      (r: any) => callback(null, r),
+      (r: any) => whenResultIsFinished(r, callback),
       (err: Error) => callback(err),
     );
   } else if (Array.isArray(result)) {
