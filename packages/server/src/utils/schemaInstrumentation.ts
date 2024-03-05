@@ -106,7 +106,8 @@ function isPromise(x: any): boolean {
 
 // Given result (which may be a Promise or an array some of whose elements are
 // promises) Promises, set up 'callback' to be invoked when result is fully
-// resolved.
+// resolved. (Unfortunately, this does not perfectly handle every possible
+// return value shape, such as arrays of arrays of Promises.)
 export function whenResultIsFinished(
   result: any,
   callback: (err: Error | null, result?: any) => void,
