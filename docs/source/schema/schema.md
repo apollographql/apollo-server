@@ -55,6 +55,8 @@ type Author {
 }
 ```
 
+> List fields can be nested by using multiple pairs of square brackets `[[]]`.
+
 ### Field nullability
 
 By default, it's valid for any field in your schema to return `null` instead of its specified type. You can require that a particular field _doesn't_ return `null` with an exclamation mark `!`, like so:
@@ -81,6 +83,15 @@ type Author {
 - If `!` appears _inside_ the square brackets, the returned list can't include _items_ that are `null`.
 - If `!` appears _outside_ the square brackets, _the list itself_ can't be `null`.
 - In _any_ case, it's valid for a list field to return an _empty_ list.
+
+Based on the above principles, the below return types can potentially return these sample values:
+
+| Return Type | Example Allowed Return Values                            |
+|-------------|----------------------------------------------------------|
+| `[Book]`    | `[]`, `null`, `[null]`, and `[{title: "City of Glass"}]` |
+| `[Book!]`   | `[]`, `null`, and `[{title: "City of Glass"}]`           |
+| `[Book]!`   | `[]`, `[null]`, and `[{title: "City of Glass"}]`         |
+| `[Book!]!`  | `[]` and `[{title: "City of Glass"}]`                    |
 
 ## Supported types
 
