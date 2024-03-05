@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.10.1
+
+### Patch Changes
+
+- [#7843](https://github.com/apollographql/apollo-server/pull/7843) [`72f568e`](https://github.com/apollographql/apollo-server/commit/72f568edd512a865e37e4777bf16a319433ca5ba) Thanks [@bscherlein](https://github.com/bscherlein)! - Improves timing of the `willResolveField` end hook on fields which return Promises resolving to Arrays. This makes the use of the `setCacheHint` method more reliable.
+
 ## 4.10.0
 
 ### Minor Changes
