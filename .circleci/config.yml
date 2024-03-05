@@ -64,7 +64,7 @@ jobs:
           node-version: "18"
       # Install a prerelease of graphql-js 17 with incremental delivery support.
       # --legacy-peer-deps because nothing expects v17 yet.
-      - run: npm i --legacy-peer-deps graphql@17.0.0-alpha.1.canary.pr.3361.04ab27334641e170ce0e05bc927b972991953882
+      - run: npm i --legacy-peer-deps graphql@17.0.0-alpha.2
       - run: npm run test:ci
       - run: npm run test:smoke
 
