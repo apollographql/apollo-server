@@ -58,8 +58,9 @@ export function normalizeAndFormatErrors(
   function enrichError(maybeError: unknown): GraphQLFormattedError {
     const graphqlError = ensureGraphQLError(maybeError);
 
-    const code = graphqlError.extensions?.code
-      ?? ApolloServerErrorCode.INTERNAL_SERVER_ERROR;
+    const code =
+      graphqlError.extensions?.code ??
+      ApolloServerErrorCode.INTERNAL_SERVER_ERROR;
 
     const extensions: GraphQLErrorExtensions = {
       ...graphqlError.extensions,
