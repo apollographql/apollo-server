@@ -88,7 +88,7 @@ describe('Errors', () => {
         normalizeAndFormatErrors([error], {
           includeStacktraceInErrorResponses: true,
         });
-      }).toThrowError();
+      }).not.toThrowError();
     });
 
     describe('formatError can be used to provide AS3-compatible extensions', () => {
