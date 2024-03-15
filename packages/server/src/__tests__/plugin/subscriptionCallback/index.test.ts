@@ -185,6 +185,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        "SubscriptionManager[1234-cats]: Subscription completed without errors",
       ]
     `);
   });
@@ -289,6 +290,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        "SubscriptionManager[1234-cats]: Subscription completed without errors",
       ]
     `);
   });
@@ -405,6 +407,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        "SubscriptionManager[1234-cats]: Subscription completed without errors",
       ]
     `);
   });
@@ -522,6 +525,7 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        "SubscriptionManager[1234-cats]: Subscription completed without errors",
       ]
     `);
   });
@@ -684,10 +688,12 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+        "SubscriptionManager[1234-cats]: Subscription completed without errors",
         "SubscriptionManager[5678-dogs]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url-2.com",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        "SubscriptionManager[5678-dogs]: Subscription completed without errors",
       ]
     `);
   });
@@ -879,118 +885,120 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager: Heartbeat request received invalid ID: 1234-cats",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+        "SubscriptionManager[1234-cats]: Subscription completed without errors",
         "SubscriptionManager: Heartbeat received response for ID: 5678-dogs",
         "SubscriptionManager: Heartbeat request received invalid ID: 5678-dogs",
         "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com/5678-dogs",
+        "SubscriptionManager[5678-dogs]: Subscription completed without errors",
         "TESTING: Triggering third update",
-        "SubscriptionManager[1234-cats]: Subscription already cancelled, ignoring current and future payloads",
-        "SubscriptionManager[5678-dogs]: Subscription already cancelled, ignoring current and future payloads",
         "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
 
-  it('handles router termination via 404', async () => {
-    const server = await startSubscriptionServer({ logger });
+  (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it.skip : it)(
+    'handles router termination via 404',
+    async () => {
+      const server = await startSubscriptionServer({ logger });
 
-    mockRouterCheckResponse();
-    // Mock the heartbeat response from the router. We'll trigger it once below
-    // after the subscription is initialized to make sure it works.
-    const heartbeat = mockRouterCheckResponse();
+      mockRouterCheckResponse();
+      // Mock the heartbeat response from the router. We'll trigger it once below
+      // after the subscription is initialized to make sure it works.
+      const heartbeat = mockRouterCheckResponse();
 
-    // Start the subscriptions; this triggers the initial check request and
-    // starts the heartbeat interval. This simulates an incoming subscription
-    // request from the router.
-    const result = await server.executeHTTPGraphQLRequest(
-      buildHTTPGraphQLRequest({
-        body: {
-          query: `#graphql
+      // Start the subscriptions; this triggers the initial check request and
+      // starts the heartbeat interval. This simulates an incoming subscription
+      // request from the router.
+      const result = await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
+          body: {
+            query: `#graphql
             subscription {
               count
             }
           `,
-          extensions: {
-            subscription: {
-              callbackUrl: 'http://mock-router-url.com',
-              subscriptionId: '1234-cats',
-              verifier: 'my-verifier-token',
+            extensions: {
+              subscription: {
+                callbackUrl: 'http://mock-router-url.com',
+                subscriptionId: '1234-cats',
+                verifier: 'my-verifier-token',
+              },
             },
           },
-        },
-      }),
-    );
+        }),
+      );
 
-    expect(result.status).toEqual(200);
+      expect(result.status).toEqual(200);
 
-    // Advance timers to trigger the heartbeat. This consumes the one
-    // heartbeat mock from above.
-    jest.advanceTimersByTime(5000);
-    await heartbeat;
+      // Advance timers to trigger the heartbeat. This consumes the one
+      // heartbeat mock from above.
+      jest.advanceTimersByTime(5000);
+      await heartbeat;
 
-    // Next we'll trigger some subscription events. In advance, we'll mock the
-    // router responses.
-    const firstUpdate = mockRouterNextResponse({ payload: { count: 1 } });
-    const secondUpdate = mockRouterNextResponse({ payload: { count: 2 } });
+      // Next we'll trigger some subscription events. In advance, we'll mock the
+      // router responses.
+      const firstUpdate = mockRouterNextResponse({ payload: { count: 1 } });
+      const secondUpdate = mockRouterNextResponse({ payload: { count: 2 } });
 
-    // Trigger a couple updates. These send `next` requests to the router.
-    logger.debug('TESTING: Triggering first update');
-    await server.executeHTTPGraphQLRequest(
-      buildHTTPGraphQLRequest({
-        body: {
-          query: `#graphql
+      // Trigger a couple updates. These send `next` requests to the router.
+      logger.debug('TESTING: Triggering first update');
+      await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
+          body: {
+            query: `#graphql
             mutation {
               addOne
             }
           `,
-        },
-      }),
-    );
+          },
+        }),
+      );
 
-    await firstUpdate;
+      await firstUpdate;
 
-    logger.debug('TESTING: Triggering second update');
-    await server.executeHTTPGraphQLRequest(
-      buildHTTPGraphQLRequest({
-        body: {
-          query: `#graphql
+      logger.debug('TESTING: Triggering second update');
+      await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
+          body: {
+            query: `#graphql
             mutation {
               addOne
             }
           `,
-        },
-      }),
-    );
+          },
+        }),
+      );
 
-    await secondUpdate;
+      await secondUpdate;
 
-    // We've established two subscriptions are functional at this point. Now
-    // let's have the router invalidate them with a 404 response to the `next`.
-    const terminationResponse = mockRouterNextResponse({
-      statusCode: 404,
-      payload: { count: 3 },
-    });
+      // We've established two subscriptions are functional at this point. Now
+      // let's have the router invalidate them with a 404 response to the `next`.
+      const terminationResponse = mockRouterNextResponse({
+        statusCode: 404,
+        payload: { count: 3 },
+      });
 
-    // Trigger a 3rd update to make sure both subscriptions are cancelled.
-    logger.debug('TESTING: Triggering third (terminating) update');
-    await server.executeHTTPGraphQLRequest(
-      buildHTTPGraphQLRequest({
-        body: {
-          query: `#graphql
+      // Trigger a 3rd update to make sure both subscriptions are cancelled.
+      logger.debug('TESTING: Triggering third (terminating) update');
+      await server.executeHTTPGraphQLRequest(
+        buildHTTPGraphQLRequest({
+          body: {
+            query: `#graphql
             mutation {
               addOne
             }
           `,
-        },
-      }),
-    );
+          },
+        }),
+      );
 
-    await terminationResponse;
+      await terminationResponse;
 
-    await server.stop();
+      await server.stop();
 
-    expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
       [
         "SubscriptionCallback[1234-cats]: Received new subscription request",
         "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
@@ -1018,7 +1026,8 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
-  });
+    },
+  );
 
   it('sends a `complete` when a subscription terminates successfully', async () => {
     const server = await startSubscriptionServer({ logger });
@@ -1093,320 +1102,19 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
-  describe('error handling', () => {
-    it('encounters errors on initial `check`', async () => {
-      const server = await startSubscriptionServer({ logger });
-
-      // Mock the failed check response from the router.
-      mockRouterCheckResponse({
-        statusCode: 400,
-        responseBody: 'Invalid subscription ID provided',
-      });
-
-      // This triggers the check request which will fail.
-      const result = await server.executeHTTPGraphQLRequest(
-        buildHTTPGraphQLRequest({
-          body: {
-            query: `#graphql
-            subscription {
-              count
-            }
-          `,
-            extensions: {
-              subscription: {
-                callbackUrl: 'http://mock-router-url.com',
-                subscriptionId: '1234-cats',
-                verifier: 'my-verifier-token',
-              },
-            },
-          },
-        }),
-      );
-
-      expect(result.status).toEqual(500);
-      assert(result.body.kind === 'complete');
-      expect(JSON.parse(result.body.string)).toMatchInlineSnapshot(`
-        {
-          "data": null,
-          "errors": [
-            {
-              "message": "\`check\` request failed with unexpected status code: 400, terminating subscription",
-            },
-          ],
-        }
-      `);
-
-      // Trigger the heartbeat interval just to make sure it doesn't actually
-      // happen in this case (we haven't mocked it, so if it fires it will
-      // trigger an error and fail the test).
-      jest.advanceTimersByTime(5000);
-
-      await server.stop();
-
-      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
-        [
-          "SubscriptionCallback[1234-cats]: Received new subscription request",
-          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
-          "SubscriptionManager[1234-cats]: \`check\` request failed with unexpected status code: 400, terminating subscription",
-          "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-          "ERROR: SubscriptionManager: No subscriptions found for http://mock-router-url.com, skipping termination",
-          "ERROR: SubscriptionCallback[1234-cats]: \`check\` request failed: \`check\` request failed with unexpected status code: 400, terminating subscription",
-          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
-          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
-        ]
-      `);
-    });
-
-    it('encounters errors on subscription', async () => {
-      const server = await startSubscriptionServer({ logger });
-
-      // Mock the initial check response.
-      mockRouterCheckResponse();
-
-      const completeRequest = mockRouterCompleteResponse({
-        errors: [
-          {
-            message:
-              'The subscription field "invalidSubscriptionField" is not defined.',
-            locations: [{ line: 3, column: 15 }],
-          },
-        ],
-      });
-
-      // Trigger an invalid subscription
-      const response = await server.executeHTTPGraphQLRequest(
-        buildHTTPGraphQLRequest({
-          body: {
-            query: `#graphql
-            subscription {
-              invalidSubscriptionField
-            }
-          `,
-            extensions: {
-              subscription: {
-                callbackUrl: 'http://mock-router-url.com',
-                subscriptionId: '1234-cats',
-                verifier: 'my-verifier-token',
-              },
-            },
-          },
-        }),
-      );
-      expect(response.status).toEqual(400);
-      assert(response.body.kind === 'complete');
-      expect(JSON.parse(response.body.string)).toEqual({
-        errors: [
-          {
-            message:
-              'Cannot query field "invalidSubscriptionField" on type "Subscription".',
-            locations: [{ line: 3, column: 15 }],
-            extensions: {
-              code: 'GRAPHQL_VALIDATION_FAILED',
-            },
-          },
-        ],
-      });
-
-      // Trigger the heartbeat interval just to make sure it doesn't actually
-      // happen in this case (we haven't mocked it, so it'll throw an error if it
-      // sends a heartbeat).
-      jest.advanceTimersByTime(5000);
-
-      await completeRequest;
-      await server.stop();
-      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
-        [
-          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
-          "SubscriptionManager[1234-cats]: \`check\` request successful",
-          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
-          "ERROR: SubscriptionCallback[1234-cats]: graphql-js subscription unsuccessful: [
-        	The subscription field "invalidSubscriptionField" is not defined.
-        ]",
-          "SubscriptionManager[1234-cats]: Sending \`complete\` request to router with errors",
-          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
-          "SubscriptionManager[1234-cats]: \`complete\` request successful",
-          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
-          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
-        ]
-      `);
-    });
-
-    it('handles failed heartbeats', async () => {
-      const server = await startSubscriptionServer({ logger });
-
-      // Mock the initial check response from the router.
-      mockRouterCheckResponse();
-
-      // Start the subscription; this triggers the initial check request and
-      // starts the heartbeat interval. This simulates an incoming subscription
-      // request from the router.
-      const result = await server.executeHTTPGraphQLRequest(
-        buildHTTPGraphQLRequest({
-          body: {
-            query: `#graphql
-            subscription {
-              count
-            }
-          `,
-            extensions: {
-              subscription: {
-                callbackUrl: 'http://mock-router-url.com',
-                subscriptionId: '1234-cats',
-                verifier: 'my-verifier-token',
-              },
-            },
-          },
-        }),
-      );
-
-      expect(result.status).toEqual(200);
-
-      // 5 failures is the limit before the heartbeat is cancelled. We expect to
-      // see 5 errors and then a final error indicating the heartbeat was
-      // cancelled in the log snapshot below.
-      for (let i = 0; i < 5; i++) {
-        // mock heartbeat response failure
-        nock('http://mock-router-url.com')
-          .matchHeader('content-type', 'application/json')
-          .post('/', {
-            kind: 'subscription',
-            action: 'check',
-            id: '1234-cats',
-            verifier: 'my-verifier-token',
-          })
-          .replyWithError('network request error');
-        // trigger heartbeat
-        jest.advanceTimersByTime(5000);
-      }
-
-      await server.stop();
-
-      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
-        [
-          "SubscriptionCallback[1234-cats]: Received new subscription request",
-          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
-          "SubscriptionManager[1234-cats]: \`check\` request successful",
-          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
-          "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
-          "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
-          "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
-          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (1 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (2 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (3 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (4 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: request to http://mock-router-url.com/ failed, reason: network request error",
-          "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-          "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
-        ]
-      `);
-    });
-
-    it('handles failed heartbeats with unexpected status codes', async () => {
-      const server = await startSubscriptionServer({ logger });
-
-      // Mock the initial check response from the router.
-      mockRouterCheckResponse();
-
-      // Start the subscription; this triggers the initial check request and
-      // starts the heartbeat interval. This simulates an incoming subscription
-      // request from the router.
-      const result = await server.executeHTTPGraphQLRequest(
-        buildHTTPGraphQLRequest({
-          body: {
-            query: `#graphql
-            subscription {
-              count
-            }
-          `,
-            extensions: {
-              subscription: {
-                callbackUrl: 'http://mock-router-url.com',
-                subscriptionId: '1234-cats',
-                verifier: 'my-verifier-token',
-              },
-            },
-          },
-        }),
-      );
-
-      expect(result.status).toEqual(200);
-
-      // 5 failures is the limit before the heartbeat is cancelled. We expect to
-      // see 5 errors and then a final error indicating the heartbeat was
-      // cancelled in the log snapshot below.
-      for (let i = 0; i < 5; i++) {
-        // mock heartbeat response failure
-        nock('http://mock-router-url.com')
-          .matchHeader('content-type', 'application/json')
-          .post('/', {
-            kind: 'subscription',
-            action: 'check',
-            id: '1234-cats',
-            verifier: 'my-verifier-token',
-          })
-          .reply(500);
-        // trigger heartbeat
-        jest.advanceTimersByTime(5000);
-      }
-
-      await server.stop();
-
-      expect(logger.orderOfOperations).toMatchInlineSnapshot(`
-        [
-          "SubscriptionCallback[1234-cats]: Received new subscription request",
-          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
-          "SubscriptionManager[1234-cats]: \`check\` request successful",
-          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
-          "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
-          "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
-          "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
-          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
-          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (1 consecutive): Unexpected status code: 500",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (2 consecutive): Unexpected status code: 500",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (3 consecutive): Unexpected status code: 500",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (4 consecutive): Unexpected status code: 500",
-          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): Unexpected status code: 500",
-          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: Unexpected status code: 500",
-          "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-          "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
-        ]
-      `);
-    });
-
-    describe('retries', () => {
-      it('failed `check` requests', async () => {
+  (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? describe.skip : describe)(
+    'error handling',
+    () => {
+      it('encounters errors on initial `check`', async () => {
         const server = await startSubscriptionServer({ logger });
 
-        // Mock the initial check response from the router. We'll fail a couple
-        // first to test the retry logic.
-        mockRouterCheckResponseWithError();
-        mockRouterCheckResponseWithError();
-        mockRouterCheckResponse();
+        // Mock the failed check response from the router.
+        mockRouterCheckResponse({
+          statusCode: 400,
+          responseBody: 'Invalid subscription ID provided',
+        });
 
-        // Start the subscription; this triggers the initial check request and
-        // starts the heartbeat interval. This simulates an incoming subscription
-        // request from the router.
+        // This triggers the check request which will fail.
         const result = await server.executeHTTPGraphQLRequest(
           buildHTTPGraphQLRequest({
             body: {
@@ -1426,76 +1134,115 @@ describe('SubscriptionCallbackPlugin', () => {
           }),
         );
 
-        expect(result.status).toEqual(200);
+        expect(result.status).toEqual(500);
+        assert(result.body.kind === 'complete');
+        expect(JSON.parse(result.body.string)).toMatchInlineSnapshot(`
+        {
+          "data": null,
+          "errors": [
+            {
+              "message": "\`check\` request failed with unexpected status code: 400, terminating subscription",
+            },
+          ],
+        }
+      `);
 
-        // Mock the heartbeat response from the router. We'll trigger it once below
-        // after the subscription is initialized to make sure it works.
-        const firstHeartbeat = mockRouterCheckResponse();
-        // Advance timers to trigger the heartbeat once. This consumes the one
-        // heartbeat mock from above.
+        // Trigger the heartbeat interval just to make sure it doesn't actually
+        // happen in this case (we haven't mocked it, so if it fires it will
+        // trigger an error and fail the test).
         jest.advanceTimersByTime(5000);
-        await firstHeartbeat;
 
-        // Mock the update from the router, we'll trigger it below
-        const update = mockRouterNextResponse({ payload: { count: 1 } });
+        await server.stop();
 
-        // Trigger a couple updates. These send `next` requests to the router.
-        logger.debug('TESTING: Triggering first update');
-        await server.executeHTTPGraphQLRequest(
+        expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+        [
+          "SubscriptionCallback[1234-cats]: Received new subscription request",
+          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+          "SubscriptionManager[1234-cats]: \`check\` request failed with unexpected status code: 400, terminating subscription",
+          "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
+          "ERROR: SubscriptionManager: No subscriptions found for http://mock-router-url.com, skipping termination",
+          "ERROR: SubscriptionCallback[1234-cats]: \`check\` request failed: \`check\` request failed with unexpected status code: 400, terminating subscription",
+          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        ]
+      `);
+      });
+
+      it('encounters errors on subscription', async () => {
+        const server = await startSubscriptionServer({ logger });
+
+        // Mock the initial check response.
+        mockRouterCheckResponse();
+
+        const completeRequest = mockRouterCompleteResponse({
+          errors: [
+            {
+              message:
+                'The subscription field "invalidSubscriptionField" is not defined.',
+              locations: [{ line: 3, column: 15 }],
+            },
+          ],
+        });
+
+        // Trigger an invalid subscription
+        const response = await server.executeHTTPGraphQLRequest(
           buildHTTPGraphQLRequest({
             body: {
               query: `#graphql
-                mutation {
-                  addOne
-                }
-              `,
+            subscription {
+              invalidSubscriptionField
+            }
+          `,
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
             },
           }),
         );
+        expect(response.status).toEqual(400);
+        assert(response.body.kind === 'complete');
+        expect(JSON.parse(response.body.string)).toEqual({
+          errors: [
+            {
+              message:
+                'Cannot query field "invalidSubscriptionField" on type "Subscription".',
+              locations: [{ line: 3, column: 15 }],
+              extensions: {
+                code: 'GRAPHQL_VALIDATION_FAILED',
+              },
+            },
+          ],
+        });
 
-        await update;
-
-        // When we shutdown the server, we'll stop listening for subscription
-        // updates, await unresolved requests, and send a `complete` request to the
-        // router for each active subscription.
-        const completeRequest = mockRouterCompleteResponse();
-
-        await server.stop();
-        await completeRequest;
-
-        // The heartbeat should be cleaned up at this point. There is no second
-        // heartbeat mock, so if it ticks again it'll throw an error.
+        // Trigger the heartbeat interval just to make sure it doesn't actually
+        // happen in this case (we haven't mocked it, so it'll throw an error if it
+        // sends a heartbeat).
         jest.advanceTimersByTime(5000);
 
+        await completeRequest;
+        await server.stop();
         expect(logger.orderOfOperations).toMatchInlineSnapshot(`
-          [
-            "SubscriptionCallback[1234-cats]: Received new subscription request",
-            "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
-            "WARN: SubscriptionManager[1234-cats]: Retrying \`check\` request (attempt 1) due to error: request to http://mock-router-url.com/ failed, reason: network request error",
-            "WARN: SubscriptionManager[1234-cats]: Retrying \`check\` request (attempt 2) due to error: request to http://mock-router-url.com/ failed, reason: network request error",
-            "SubscriptionManager[1234-cats]: \`check\` request successful",
-            "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
-            "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
-            "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
-            "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
-            "SubscriptionCallback[1234-cats]: Responding to original subscription request",
-            "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-            "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-            "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
-            "TESTING: Triggering first update",
-            "SubscriptionManager[1234-cats]: Sending \`next\` request to router",
-            "SubscriptionManager[1234-cats]: \`next\` request successful",
-            "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
-            "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
-            "SubscriptionManager[1234-cats]: \`complete\` request successful",
-            "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-            "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
-          ]
-        `);
+        [
+          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+          "SubscriptionManager[1234-cats]: \`check\` request successful",
+          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+          "ERROR: SubscriptionCallback[1234-cats]: graphql-js subscription unsuccessful: [
+        	The subscription field "invalidSubscriptionField" is not defined.
+        ]",
+          "SubscriptionManager[1234-cats]: Sending \`complete\` request to router with errors",
+          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+          "SubscriptionManager[1234-cats]: \`complete\` request successful",
+          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        ]
+      `);
       });
 
-      it('failed `next` requests', async () => {
+      it('handles failed heartbeats', async () => {
         const server = await startSubscriptionServer({ logger });
 
         // Mock the initial check response from the router.
@@ -1525,71 +1272,338 @@ describe('SubscriptionCallbackPlugin', () => {
 
         expect(result.status).toEqual(200);
 
-        // Mock the heartbeat response from the router. We'll trigger it once below
-        // after the subscription is initialized to make sure it works.
-        const firstHeartbeat = mockRouterCheckResponse();
-        // Advance timers to trigger the heartbeat once. This consumes the one
-        // heartbeat mock from above.
-        jest.advanceTimersByTime(5000);
-        await firstHeartbeat;
-
-        // Next we'll trigger some subscription events. In advance, we'll mock the
-        // router responses. These responses will fail the first 3 times and
-        // succeed on the 4th. The retry logic is expected to handle this
-        // gracefully.
-        const updates = Promise.all([
-          mockRouterNextResponse({ payload: { count: 1 }, statusCode: 500 }),
-          mockRouterNextResponse({ payload: { count: 1 }, statusCode: 500 }),
-          mockRouterNextResponse({ payload: { count: 1 }, statusCode: 500 }),
-          mockRouterNextResponse({ payload: { count: 1 } }),
-          mockRouterNextResponse({ payload: { count: 2 }, statusCode: 500 }),
-          mockRouterNextResponse({ payload: { count: 2 }, statusCode: 500 }),
-          mockRouterNextResponse({ payload: { count: 2 }, statusCode: 500 }),
-          mockRouterNextResponse({ payload: { count: 2 } }),
-        ]);
-
-        // Trigger a couple updates. These send `next` requests to the router.
-        logger.debug('TESTING: Triggering first update');
-        await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
-            mutation {
-              addOne
-            }
-          `,
-            },
-          }),
-        );
-
-        logger.debug('TESTING: Triggering second update');
-        await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
-            mutation {
-              addOne
-            }
-          `,
-            },
-          }),
-        );
-
-        await updates;
-
-        // When we shutdown the server, we'll stop listening for subscription
-        // updates, await unresolved requests, and send a `complete` request to the
-        // router for each active subscription.
-        const completeRequest = mockRouterCompleteResponse();
+        // 5 failures is the limit before the heartbeat is cancelled. We expect to
+        // see 5 errors and then a final error indicating the heartbeat was
+        // cancelled in the log snapshot below.
+        for (let i = 0; i < 5; i++) {
+          // mock heartbeat response failure
+          nock('http://mock-router-url.com')
+            .matchHeader('content-type', 'application/json')
+            .post('/', {
+              kind: 'subscription',
+              action: 'check',
+              id: '1234-cats',
+              verifier: 'my-verifier-token',
+            })
+            .replyWithError('network request error');
+          // trigger heartbeat
+          jest.advanceTimersByTime(5000);
+        }
 
         await server.stop();
-        await completeRequest;
-
-        // The heartbeat should be cleaned up at this point. There is no second
-        // heartbeat mock, so if it ticks again it'll throw an error.
-        jest.advanceTimersByTime(5000);
 
         expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+        [
+          "SubscriptionCallback[1234-cats]: Received new subscription request",
+          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+          "SubscriptionManager[1234-cats]: \`check\` request successful",
+          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+          "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+          "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (1 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (2 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (3 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (4 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): request to http://mock-router-url.com/ failed, reason: network request error",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: request to http://mock-router-url.com/ failed, reason: network request error",
+          "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
+          "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+          "SubscriptionManager[1234-cats]: Subscription completed without errors",
+          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        ]
+      `);
+      });
+
+      it('handles failed heartbeats with unexpected status codes', async () => {
+        const server = await startSubscriptionServer({ logger });
+
+        // Mock the initial check response from the router.
+        mockRouterCheckResponse();
+
+        // Start the subscription; this triggers the initial check request and
+        // starts the heartbeat interval. This simulates an incoming subscription
+        // request from the router.
+        const result = await server.executeHTTPGraphQLRequest(
+          buildHTTPGraphQLRequest({
+            body: {
+              query: `#graphql
+            subscription {
+              count
+            }
+          `,
+              extensions: {
+                subscription: {
+                  callbackUrl: 'http://mock-router-url.com',
+                  subscriptionId: '1234-cats',
+                  verifier: 'my-verifier-token',
+                },
+              },
+            },
+          }),
+        );
+
+        expect(result.status).toEqual(200);
+
+        // 5 failures is the limit before the heartbeat is cancelled. We expect to
+        // see 5 errors and then a final error indicating the heartbeat was
+        // cancelled in the log snapshot below.
+        for (let i = 0; i < 5; i++) {
+          // mock heartbeat response failure
+          nock('http://mock-router-url.com')
+            .matchHeader('content-type', 'application/json')
+            .post('/', {
+              kind: 'subscription',
+              action: 'check',
+              id: '1234-cats',
+              verifier: 'my-verifier-token',
+            })
+            .reply(500);
+          // trigger heartbeat
+          jest.advanceTimersByTime(5000);
+        }
+
+        await server.stop();
+
+        expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+        [
+          "SubscriptionCallback[1234-cats]: Received new subscription request",
+          "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+          "SubscriptionManager[1234-cats]: \`check\` request successful",
+          "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+          "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+          "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+          "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (1 consecutive): Unexpected status code: 500",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (2 consecutive): Unexpected status code: 500",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (3 consecutive): Unexpected status code: 500",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (4 consecutive): Unexpected status code: 500",
+          "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+          "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed (5 consecutive): Unexpected status code: 500",
+          "ERROR: SubscriptionManager[1234-cats]: Heartbeat request failed 5 times, terminating subscriptions and heartbeat interval: Unexpected status code: 500",
+          "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
+          "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+          "SubscriptionManager[1234-cats]: Subscription completed without errors",
+          "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+        ]
+      `);
+      });
+
+      describe('retries', () => {
+        it('failed `check` requests', async () => {
+          const server = await startSubscriptionServer({ logger });
+
+          // Mock the initial check response from the router. We'll fail a couple
+          // first to test the retry logic.
+          mockRouterCheckResponseWithError();
+          mockRouterCheckResponseWithError();
+          mockRouterCheckResponse();
+
+          // Start the subscription; this triggers the initial check request and
+          // starts the heartbeat interval. This simulates an incoming subscription
+          // request from the router.
+          const result = await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
+            subscription {
+              count
+            }
+          `,
+                extensions: {
+                  subscription: {
+                    callbackUrl: 'http://mock-router-url.com',
+                    subscriptionId: '1234-cats',
+                    verifier: 'my-verifier-token',
+                  },
+                },
+              },
+            }),
+          );
+
+          expect(result.status).toEqual(200);
+
+          // Mock the heartbeat response from the router. We'll trigger it once below
+          // after the subscription is initialized to make sure it works.
+          const firstHeartbeat = mockRouterCheckResponse();
+          // Advance timers to trigger the heartbeat once. This consumes the one
+          // heartbeat mock from above.
+          jest.advanceTimersByTime(5000);
+          await firstHeartbeat;
+
+          // Mock the update from the router, we'll trigger it below
+          const update = mockRouterNextResponse({ payload: { count: 1 } });
+
+          // Trigger a couple updates. These send `next` requests to the router.
+          logger.debug('TESTING: Triggering first update');
+          await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
+                mutation {
+                  addOne
+                }
+              `,
+              },
+            }),
+          );
+
+          await update;
+
+          // When we shutdown the server, we'll stop listening for subscription
+          // updates, await unresolved requests, and send a `complete` request to the
+          // router for each active subscription.
+          const completeRequest = mockRouterCompleteResponse();
+
+          await server.stop();
+          await completeRequest;
+
+          // The heartbeat should be cleaned up at this point. There is no second
+          // heartbeat mock, so if it ticks again it'll throw an error.
+          jest.advanceTimersByTime(5000);
+
+          expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+          [
+            "SubscriptionCallback[1234-cats]: Received new subscription request",
+            "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+            "WARN: SubscriptionManager[1234-cats]: Retrying \`check\` request (attempt 1) due to error: request to http://mock-router-url.com/ failed, reason: network request error",
+            "WARN: SubscriptionManager[1234-cats]: Retrying \`check\` request (attempt 2) due to error: request to http://mock-router-url.com/ failed, reason: network request error",
+            "SubscriptionManager[1234-cats]: \`check\` request successful",
+            "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+            "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+            "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+            "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+            "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+            "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+            "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+            "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+            "TESTING: Triggering first update",
+            "SubscriptionManager[1234-cats]: Sending \`next\` request to router",
+            "SubscriptionManager[1234-cats]: \`next\` request successful",
+            "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+            "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
+            "SubscriptionManager[1234-cats]: \`complete\` request successful",
+            "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
+            "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+            "SubscriptionManager[1234-cats]: Subscription completed without errors",
+            "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+          ]
+        `);
+        });
+
+        it('failed `next` requests', async () => {
+          const server = await startSubscriptionServer({ logger });
+
+          // Mock the initial check response from the router.
+          mockRouterCheckResponse();
+
+          // Start the subscription; this triggers the initial check request and
+          // starts the heartbeat interval. This simulates an incoming subscription
+          // request from the router.
+          const result = await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
+            subscription {
+              count
+            }
+          `,
+                extensions: {
+                  subscription: {
+                    callbackUrl: 'http://mock-router-url.com',
+                    subscriptionId: '1234-cats',
+                    verifier: 'my-verifier-token',
+                  },
+                },
+              },
+            }),
+          );
+
+          expect(result.status).toEqual(200);
+
+          // Mock the heartbeat response from the router. We'll trigger it once below
+          // after the subscription is initialized to make sure it works.
+          const firstHeartbeat = mockRouterCheckResponse();
+          // Advance timers to trigger the heartbeat once. This consumes the one
+          // heartbeat mock from above.
+          jest.advanceTimersByTime(5000);
+          await firstHeartbeat;
+
+          // Next we'll trigger some subscription events. In advance, we'll mock the
+          // router responses. These responses will fail the first 3 times and
+          // succeed on the 4th. The retry logic is expected to handle this
+          // gracefully.
+          const updates = Promise.all([
+            mockRouterNextResponse({ payload: { count: 1 }, statusCode: 500 }),
+            mockRouterNextResponse({ payload: { count: 1 }, statusCode: 500 }),
+            mockRouterNextResponse({ payload: { count: 1 }, statusCode: 500 }),
+            mockRouterNextResponse({ payload: { count: 1 } }),
+            mockRouterNextResponse({ payload: { count: 2 }, statusCode: 500 }),
+            mockRouterNextResponse({ payload: { count: 2 }, statusCode: 500 }),
+            mockRouterNextResponse({ payload: { count: 2 }, statusCode: 500 }),
+            mockRouterNextResponse({ payload: { count: 2 } }),
+          ]);
+
+          // Trigger a couple updates. These send `next` requests to the router.
+          logger.debug('TESTING: Triggering first update');
+          await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+              },
+            }),
+          );
+
+          logger.debug('TESTING: Triggering second update');
+          await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
+            mutation {
+              addOne
+            }
+          `,
+              },
+            }),
+          );
+
+          await updates;
+
+          // When we shutdown the server, we'll stop listening for subscription
+          // updates, await unresolved requests, and send a `complete` request to the
+          // router for each active subscription.
+          const completeRequest = mockRouterCompleteResponse();
+
+          await server.stop();
+          await completeRequest;
+
+          // The heartbeat should be cleaned up at this point. There is no second
+          // heartbeat mock, so if it ticks again it'll throw an error.
+          jest.advanceTimersByTime(5000);
+
+          expect(logger.orderOfOperations).toMatchInlineSnapshot(`
           [
             "SubscriptionCallback[1234-cats]: Received new subscription request",
             "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
@@ -1619,84 +1633,85 @@ describe('SubscriptionCallbackPlugin', () => {
             "SubscriptionManager[1234-cats]: \`complete\` request successful",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
             "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+            "SubscriptionManager[1234-cats]: Subscription completed without errors",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
-      });
+        });
 
-      it('failed `complete` requests', async () => {
-        const server = await startSubscriptionServer({ logger });
+        it('failed `complete` requests', async () => {
+          const server = await startSubscriptionServer({ logger });
 
-        // Mock the initial check response from the router.
-        mockRouterCheckResponse();
+          // Mock the initial check response from the router.
+          mockRouterCheckResponse();
 
-        // Start the subscription; this triggers the initial check request and
-        // starts the heartbeat interval. This simulates an incoming subscription
-        // request from the router.
-        const result = await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
+          // Start the subscription; this triggers the initial check request and
+          // starts the heartbeat interval. This simulates an incoming subscription
+          // request from the router.
+          const result = await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
             subscription {
               count
             }
           `,
-              extensions: {
-                subscription: {
-                  callbackUrl: 'http://mock-router-url.com',
-                  subscriptionId: '1234-cats',
-                  verifier: 'my-verifier-token',
+                extensions: {
+                  subscription: {
+                    callbackUrl: 'http://mock-router-url.com',
+                    subscriptionId: '1234-cats',
+                    verifier: 'my-verifier-token',
+                  },
                 },
               },
-            },
-          }),
-        );
+            }),
+          );
 
-        expect(result.status).toEqual(200);
+          expect(result.status).toEqual(200);
 
-        // Mock the heartbeat response from the router. We'll trigger it once below
-        // after the subscription is initialized to make sure it works.
-        const firstHeartbeat = mockRouterCheckResponse();
-        // Advance timers to trigger the heartbeat once. This consumes the one
-        // heartbeat mock from above.
-        jest.advanceTimersByTime(5000);
-        await firstHeartbeat;
+          // Mock the heartbeat response from the router. We'll trigger it once below
+          // after the subscription is initialized to make sure it works.
+          const firstHeartbeat = mockRouterCheckResponse();
+          // Advance timers to trigger the heartbeat once. This consumes the one
+          // heartbeat mock from above.
+          jest.advanceTimersByTime(5000);
+          await firstHeartbeat;
 
-        // Mock the response to the upcoming subscription update.
-        const update = mockRouterNextResponse({ payload: { count: 1 } });
+          // Mock the response to the upcoming subscription update.
+          const update = mockRouterNextResponse({ payload: { count: 1 } });
 
-        // Trigger a couple updates. These send `next` requests to the router.
-        logger.debug('TESTING: Triggering first update');
-        await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
+          // Trigger a couple updates. These send `next` requests to the router.
+          logger.debug('TESTING: Triggering first update');
+          await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
             mutation {
               addOne
             }
           `,
-            },
-          }),
-        );
+              },
+            }),
+          );
 
-        await update;
+          await update;
 
-        // The server will send a `complete` request when it shuts down. Here we
-        // test that the retry logic works for sending `complete` requests.
-        const completeRetries = Promise.all([
-          mockRouterCompleteResponse({ statusCode: 500 }),
-          mockRouterCompleteResponse({ statusCode: 500 }),
-          mockRouterCompleteResponse(),
-        ]);
+          // The server will send a `complete` request when it shuts down. Here we
+          // test that the retry logic works for sending `complete` requests.
+          const completeRetries = Promise.all([
+            mockRouterCompleteResponse({ statusCode: 500 }),
+            mockRouterCompleteResponse({ statusCode: 500 }),
+            mockRouterCompleteResponse(),
+          ]);
 
-        await server.stop();
-        await completeRetries;
+          await server.stop();
+          await completeRetries;
 
-        // The heartbeat should be cleaned up at this point. There is no second
-        // heartbeat mock, so if it ticks again it'll throw an error.
-        jest.advanceTimersByTime(5000);
+          // The heartbeat should be cleaned up at this point. There is no second
+          // heartbeat mock, so if it ticks again it'll throw an error.
+          jest.advanceTimersByTime(5000);
 
-        expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+          expect(logger.orderOfOperations).toMatchInlineSnapshot(`
           [
             "SubscriptionCallback[1234-cats]: Received new subscription request",
             "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
@@ -1719,86 +1734,87 @@ describe('SubscriptionCallbackPlugin', () => {
             "SubscriptionManager[1234-cats]: \`complete\` request successful",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
             "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+            "SubscriptionManager[1234-cats]: Subscription completed without errors",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
-      });
+        });
 
-      it('`complete` requests to failure', async () => {
-        const server = await startSubscriptionServer({ logger });
+        it('`complete` requests to failure', async () => {
+          const server = await startSubscriptionServer({ logger });
 
-        // Mock the initial check response from the router.
-        mockRouterCheckResponse();
+          // Mock the initial check response from the router.
+          mockRouterCheckResponse();
 
-        // Start the subscription; this triggers the initial check request and
-        // starts the heartbeat interval. This simulates an incoming subscription
-        // request from the router.
-        const result = await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
+          // Start the subscription; this triggers the initial check request and
+          // starts the heartbeat interval. This simulates an incoming subscription
+          // request from the router.
+          const result = await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
             subscription {
               count
             }
           `,
-              extensions: {
-                subscription: {
-                  callbackUrl: 'http://mock-router-url.com',
-                  subscriptionId: '1234-cats',
-                  verifier: 'my-verifier-token',
+                extensions: {
+                  subscription: {
+                    callbackUrl: 'http://mock-router-url.com',
+                    subscriptionId: '1234-cats',
+                    verifier: 'my-verifier-token',
+                  },
                 },
               },
-            },
-          }),
-        );
+            }),
+          );
 
-        expect(result.status).toEqual(200);
+          expect(result.status).toEqual(200);
 
-        // Mock the heartbeat response from the router. We'll trigger it once below
-        // after the subscription is initialized to make sure it works.
-        const firstHeartbeat = mockRouterCheckResponse();
-        // Advance timers to trigger the heartbeat once. This consumes the one
-        // heartbeat mock from above.
-        jest.advanceTimersByTime(5000);
-        await firstHeartbeat;
+          // Mock the heartbeat response from the router. We'll trigger it once below
+          // after the subscription is initialized to make sure it works.
+          const firstHeartbeat = mockRouterCheckResponse();
+          // Advance timers to trigger the heartbeat once. This consumes the one
+          // heartbeat mock from above.
+          jest.advanceTimersByTime(5000);
+          await firstHeartbeat;
 
-        // Mock the response to the upcoming subscription update.
-        const update = mockRouterNextResponse({ payload: { count: 1 } });
+          // Mock the response to the upcoming subscription update.
+          const update = mockRouterNextResponse({ payload: { count: 1 } });
 
-        // Trigger a couple updates. These send `next` requests to the router.
-        logger.debug('TESTING: Triggering first update');
-        await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
+          // Trigger a couple updates. These send `next` requests to the router.
+          logger.debug('TESTING: Triggering first update');
+          await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
             mutation {
               addOne
             }
           `,
-            },
-          }),
-        );
+              },
+            }),
+          );
 
-        await update;
+          await update;
 
-        // The server will send a `complete` request when it shuts down. Here we
-        // test that the server will retry max 5 times and give up.
-        const completeRetries = Promise.all([
-          mockRouterCompleteResponse({ statusCode: 500 }),
-          mockRouterCompleteResponse({ statusCode: 500 }),
-          mockRouterCompleteResponse({ statusCode: 500 }),
-          mockRouterCompleteResponse({ statusCode: 500 }),
-          mockRouterCompleteResponse({ statusCode: 500 }),
-        ]);
+          // The server will send a `complete` request when it shuts down. Here we
+          // test that the server will retry max 5 times and give up.
+          const completeRetries = Promise.all([
+            mockRouterCompleteResponse({ statusCode: 500 }),
+            mockRouterCompleteResponse({ statusCode: 500 }),
+            mockRouterCompleteResponse({ statusCode: 500 }),
+            mockRouterCompleteResponse({ statusCode: 500 }),
+            mockRouterCompleteResponse({ statusCode: 500 }),
+          ]);
 
-        await server.stop();
-        await completeRetries;
+          await server.stop();
+          await completeRetries;
 
-        // The heartbeat should be cleaned up at this point. There is no second
-        // heartbeat mock, so if it ticks again it'll throw an error.
-        jest.advanceTimersByTime(5000);
+          // The heartbeat should be cleaned up at this point. There is no second
+          // heartbeat mock, so if it ticks again it'll throw an error.
+          jest.advanceTimersByTime(5000);
 
-        expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+          expect(logger.orderOfOperations).toMatchInlineSnapshot(`
           [
             "SubscriptionCallback[1234-cats]: Received new subscription request",
             "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
@@ -1824,86 +1840,87 @@ describe('SubscriptionCallbackPlugin', () => {
             "ERROR: SubscriptionManager[1234-cats]: \`complete\` request failed: \`complete\` request failed with unexpected status code: 500",
             "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
             "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+            "SubscriptionManager[1234-cats]: Subscription completed without errors",
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
-      });
+        });
 
-      it('terminates subscription after max retries `next` requests', async () => {
-        const server = await startSubscriptionServer({ logger });
+        it('terminates subscription after max retries `next` requests', async () => {
+          const server = await startSubscriptionServer({ logger });
 
-        // Mock the initial check response from the router.
-        mockRouterCheckResponse();
+          // Mock the initial check response from the router.
+          mockRouterCheckResponse();
 
-        // Start the subscription; this triggers the initial check request and
-        // starts the heartbeat interval. This simulates an incoming subscription
-        // request from the router.
-        const result = await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
+          // Start the subscription; this triggers the initial check request and
+          // starts the heartbeat interval. This simulates an incoming subscription
+          // request from the router.
+          const result = await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
             subscription {
               count
             }
           `,
-              extensions: {
-                subscription: {
-                  callbackUrl: 'http://mock-router-url.com',
-                  subscriptionId: '1234-cats',
-                  verifier: 'my-verifier-token',
+                extensions: {
+                  subscription: {
+                    callbackUrl: 'http://mock-router-url.com',
+                    subscriptionId: '1234-cats',
+                    verifier: 'my-verifier-token',
+                  },
                 },
               },
-            },
-          }),
-        );
-
-        expect(result.status).toEqual(200);
-
-        // Mock the heartbeat response from the router. We'll trigger it once below
-        // after the subscription is initialized to make sure it works.
-        const firstHeartbeat = mockRouterCheckResponse();
-        // Advance timers to trigger the heartbeat once. This consumes the one
-        // heartbeat mock from above.
-        jest.advanceTimersByTime(5000);
-        await firstHeartbeat;
-
-        // 5 failures to hit the retry limit
-        const updates = Promise.all(
-          [...new Array(5)].map(() =>
-            mockRouterNextResponse({
-              payload: { count: 1 },
-              statusCode: 500,
             }),
-          ),
-        );
+          );
 
-        // Trigger a couple updates. These send `next` requests to the router.
-        logger.debug('TESTING: Triggering first update');
-        await server.executeHTTPGraphQLRequest(
-          buildHTTPGraphQLRequest({
-            body: {
-              query: `#graphql
+          expect(result.status).toEqual(200);
+
+          // Mock the heartbeat response from the router. We'll trigger it once below
+          // after the subscription is initialized to make sure it works.
+          const firstHeartbeat = mockRouterCheckResponse();
+          // Advance timers to trigger the heartbeat once. This consumes the one
+          // heartbeat mock from above.
+          jest.advanceTimersByTime(5000);
+          await firstHeartbeat;
+
+          // 5 failures to hit the retry limit
+          const updates = Promise.all(
+            [...new Array(5)].map(() =>
+              mockRouterNextResponse({
+                payload: { count: 1 },
+                statusCode: 500,
+              }),
+            ),
+          );
+
+          // Trigger a couple updates. These send `next` requests to the router.
+          logger.debug('TESTING: Triggering first update');
+          await server.executeHTTPGraphQLRequest(
+            buildHTTPGraphQLRequest({
+              body: {
+                query: `#graphql
             mutation {
               addOne
             }
           `,
-            },
-          }),
-        );
+              },
+            }),
+          );
 
-        // After 5 failures, the plugin will terminate the subscriptions without
-        // sending a `complete` request.
-        await updates;
-        // Jest needs a little help here to finish handling the retry failures
-        // and cancel the subscription.
-        await new Promise((resolve) => setTimeout(resolve, 100));
-        await server.stop();
+          // After 5 failures, the plugin will terminate the subscriptions without
+          // sending a `complete` request.
+          await updates;
+          // Jest needs a little help here to finish handling the retry failures
+          // and cancel the subscription.
+          await new Promise((resolve) => setTimeout(resolve, 100));
+          await server.stop();
 
-        // The heartbeat should be cleaned up at this point. There is no second
-        // heartbeat mock, so if it ticks again it'll throw an error.
-        jest.advanceTimersByTime(5000);
+          // The heartbeat should be cleaned up at this point. There is no second
+          // heartbeat mock, so if it ticks again it'll throw an error.
+          jest.advanceTimersByTime(5000);
 
-        expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+          expect(logger.orderOfOperations).toMatchInlineSnapshot(`
           [
             "SubscriptionCallback[1234-cats]: Received new subscription request",
             "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
@@ -1930,9 +1947,10 @@ describe('SubscriptionCallbackPlugin', () => {
             "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
           ]
         `);
+        });
       });
-    });
-  });
+    },
+  );
 });
 
 async function startSubscriptionServer(

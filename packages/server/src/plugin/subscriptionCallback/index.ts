@@ -197,6 +197,7 @@ function isAsyncIterable<T>(value: any): value is AsyncIterable<T> {
 
 interface SubscriptionObject {
   cancelled: boolean;
+  asyncIter: AsyncGenerator<ExecutionResult, void, void>;
   startConsumingSubscription: () => Promise<void>;
   completeSubscription: () => Promise<void>;
 }
@@ -523,6 +524,7 @@ class SubscriptionManager {
     const { subscription, heartbeat } = subscriptionInfo;
     if (subscription) {
       subscription.cancelled = true;
+      subscription.asyncIter?.return();
     }
     // cleanup heartbeat for subscription
     if (heartbeat) {
@@ -551,6 +553,7 @@ class SubscriptionManager {
     // allows us to break out of the `for await` and ignore future payloads.
     const self = this;
     const subscriptionObject = {
+      asyncIter: subscription,
       cancelled: false,
       async startConsumingSubscription() {
         self.logger?.debug(`Listening to graphql-js subscription`, id);
