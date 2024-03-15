@@ -79,6 +79,17 @@ describe('Errors', () => {
       ]).formattedErrors;
       expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
     });
+    it('does not throw for undefined extensions', () => {
+      const error = new GraphQLError('Hello', {
+        extensions: undefined,
+      });
+
+      expect(() => {
+        normalizeAndFormatErrors([error], {
+          includeStacktraceInErrorResponses: true,
+        });
+      }).rejects.not.toThrow();
+    });
 
     describe('formatError can be used to provide AS3-compatible extensions', () => {
       function formatError(
