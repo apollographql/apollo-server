@@ -324,6 +324,8 @@
 
   Operations that receive errors from subgraphs (with no trace data in the response) are no longer sent as incomplete, error-less traces.
 
+  If you are upgrading to or beyond this version, you may notice a change in your error stats in Apollo Studio. Previously, configuring `fieldLevelInstrumentation` inadvertently affected the counting of error stats in the usage reporting plugin (whenever `fieldLevelInstrumentation` was set to or resolved to 0, errors would not be counted). With this change, errors are counted accurately regardless of the `fieldLevelInstrumentation` setting.
+
   Note: in order for this fix to take effect, your `@apollo/gateway` version must be updated to v2.3.1 or later.
 
 ## 4.3.2
