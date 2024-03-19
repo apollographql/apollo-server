@@ -120,7 +120,7 @@ type Comment {
 
 ### In your resolvers (dynamic)
 
-You can decide how to cache a particular field's result _while_ you're resolving it. To support this, Apollo Server provides a `cacheControl` object in the [`info` parameter](../data/resolvers/#resolver-arguments) that's passed to every resolver.
+You can decide how to cache a particular field's result _while_ you're resolving it. To support this, Apollo Server's [cache control plugin](../api/plugin/cache-control) provides a `cacheControl` object in the [`info` parameter](../data/resolvers/#resolver-arguments) that's passed to every resolver.
 
 > If you set a field's cache hint in its resolver, it **overrides** any cache hint you [provided in your schema](#in-your-schema-static).
 
@@ -129,11 +129,15 @@ You can decide how to cache a particular field's result _while_ you're resolving
 The `cacheControl` object includes a `setCacheHint` method, which you call like so:
 
 ```ts
+import { cacheControlFromInfo } from '@apollo/cache-control-types';
+
 const resolvers = {
   Query: {
     post: (_, { id }, _, info) => {
+      // Access ApolloServerPluginCacheControl's extension of the GraphQLResolveInfo object
+      const cacheControl = cacheControlFromInfo(info)
       // highlight-start
-      info.cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
+      cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
       // highlight-end
       return find(posts, { id });
     },
@@ -151,11 +155,16 @@ This object represents the field's current cache hint. Its fields include the fo
 - A `restrict` method, which is similar to `setCacheHint` but it can't _relax_ existing hint settings:
 
   ```ts
+  import { cacheControlFromInfo } from '@apollo/cache-control-types';
+
+  // Access ApolloServerPluginCacheControl's extension of the GraphQLResolveInfo object
+  const cacheControl = cacheControlFromInfo(info)
+
   // If we call this first...
-  info.cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
+  cacheControl.setCacheHint({ maxAge: 60, scope: 'PRIVATE' });
 
   // ...then this changes maxAge (more restrictive) but NOT scope (less restrictive)
-  info.cacheControl.cacheHint.restrict({ maxAge: 30, scope: 'PUBLIC' });
+  cacheControl.cacheHint.restrict({ maxAge: 30, scope: 'PUBLIC' });
   ```
 
 #### `cacheControl.cacheHintFromType`
