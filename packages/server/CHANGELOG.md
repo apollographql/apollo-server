@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.10.2
+
+### Patch Changes
+
+- [#7849](https://github.com/apollographql/apollo-server/pull/7849) [`c7e514c`](https://github.com/apollographql/apollo-server/commit/c7e514cf67b05521c66d0561448b3c36b2facee6) Thanks [@TylerBloom](https://github.com/TylerBloom)! - In the subscription callback server plugin, terminating a subscription now immediately closes the internal async generator. This avoids that generator existing after termination and until the next message is received.
+
 ## 4.10.1
 
 ### Patch Changes
