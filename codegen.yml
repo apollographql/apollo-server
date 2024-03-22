@@ -1,4 +1,7 @@
 schema: https://graphql.api.apollographql.com/api/graphql
+config:
+  namingConvention:
+    enumValues: keep
 generates:
   ./packages/server/src/plugin/schemaReporting/generated/operations.d.ts:
     documents: packages/server/src/plugin/schemaReporting/schemaReporter.ts
