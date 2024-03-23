@@ -149,7 +149,7 @@
     "node-abort-controller": "^3.1.1",
     "node-fetch": "^2.6.7",
     "uuid": "^9.0.0",
-    "whatwg-mimetype": "^3.0.0"
+    "whatwg-mimetype": "^4.0.0"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"
