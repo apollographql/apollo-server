@@ -351,13 +351,14 @@ Cache-Control: max-age=60, private
 When the response is not cacheable, the header has the value `Cache-Control: no-store`.
 
 To be cacheable, all of the following must be true:
+
 - The operation has a non-zero `maxAge`.
 - The operation has a single response rather than an [incremental delivery](../workflow/requests#incremental-delivery-experimental) response.
 - There are no errors in the response.
 
 If you run Apollo Server behind a CDN or another caching proxy, you can configure it to use this header's value to cache responses appropriately. See your CDN's documentation for details (for example, here's the [documentation for Amazon CloudFront](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/Expiration.html#expiration-individual-objects)).
 
-Some CDNs require custom headers for caching or custom values in the `cache-control` header like `s-maxage`. You can configure your `ApolloServer` instance accordingly by telling the built-in cache control plugin to just calculate a policy without setting HTTP headers, and specifying your own [plugin](../integrations/plugins):
+Some CDNs require custom headers for caching or custom values in the `cache-control` header like `s-maxage`. You can configure your `ApolloServer` instance accordingly by telling the built-in cache control plugin to just calculate a policy without setting HTTP headers, and specifying your own [plugin](../integrations/plugins.mdx):
 
 ```ts
 new ApolloServer({
