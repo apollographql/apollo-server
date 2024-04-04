@@ -7,6 +7,7 @@
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "types": {
         "require": "./dist/cjs/index.d.ts",
