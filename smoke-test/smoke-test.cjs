@@ -13,6 +13,7 @@ async function validateAllImports() {
   require('@apollo/server/plugin/schemaReporting');
   require('@apollo/server/plugin/usageReporting');
   require('@apollo/server/standalone');
+  require('@apollo/server/package.json');
 }
 
 async function smokeTest() {
