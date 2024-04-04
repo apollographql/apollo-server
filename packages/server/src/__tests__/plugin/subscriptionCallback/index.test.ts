@@ -1108,7 +1108,7 @@ describe('SubscriptionCallbackPlugin', () => {
     mockRouterCheckResponse();
     mockRouterCheckResponse();
     mockRouterCompleteResponse({
-      errors: [{ message: "The subscription generator didn't catch this!" }]
+      errors: [{ message: "The subscription generator didn't catch this!" }],
     });
 
     const result = await server.executeHTTPGraphQLRequest(
@@ -2073,12 +2073,14 @@ async function startSubscriptionServer(
             [Symbol.asyncIterator]() {
               return {
                 next: () => {
-                  throw new Error("The subscription generator didn't catch this!")
-                }
-              }
-            }
-          })
-        }
+                  throw new Error(
+                    "The subscription generator didn't catch this!",
+                  );
+                },
+              };
+            },
+          }),
+        },
       },
     },
     ...opts,
@@ -2237,7 +2239,7 @@ function orderOfOperationsLogger() {
     debug(msg: string) {
       this.orderOfOperations.push(msg);
     },
-    info() { },
+    info() {},
     warn(msg: string) {
       this.orderOfOperations.push(`WARN: ${msg}`);
     },

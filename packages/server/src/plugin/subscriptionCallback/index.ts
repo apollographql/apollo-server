@@ -466,7 +466,8 @@ class SubscriptionManager {
         const err = ensureError(e);
         // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${err.message
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${
+            err.message
           }`,
           existingHeartbeat.id,
         );
@@ -596,7 +597,7 @@ class SubscriptionManager {
             `Generator threw an error, terminating subscription: ${error.message}`,
             id,
           );
-          this.completeSubscription([error])
+          this.completeSubscription([error]);
         }
       },
       async completeSubscription(errors?: readonly GraphQLError[]) {
