@@ -591,12 +591,12 @@ class SubscriptionManager {
           self.logger?.debug(`Subscription completed without errors`, id);
           await this.completeSubscription();
         } catch (e) {
-          const originalError = ensureError(e);
+          const error = ensureGraphQLError(e);
           self.logger?.error(
-            `Generator threw an error, terminating subscription: ${originalError.message}`,
+            `Generator threw an error, terminating subscription: ${error.message}`,
             id,
           );
-          self.terminateSubscription(id, callbackUrl);
+          this.completeSubscription([error])
         }
       },
       async completeSubscription(errors?: readonly GraphQLError[]) {

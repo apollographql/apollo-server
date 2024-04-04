@@ -1102,9 +1102,15 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
-  it('terminates subscription when the producer throws', async () => {
+  it('sends a `complete` with errors when a subscription throws an error', async () => {
     const server = await startSubscriptionServer({ logger });
+
     mockRouterCheckResponse();
+    mockRouterCheckResponse();
+    mockRouterCompleteResponse({
+      errors: [{ message: "The subscription generator didn't catch this!" }]
+    });
+
     const result = await server.executeHTTPGraphQLRequest(
       buildHTTPGraphQLRequest({
         body: {
@@ -1124,7 +1130,9 @@ describe('SubscriptionCallbackPlugin', () => {
       }),
     );
     expect(result.status).toEqual(200);
+
     jest.advanceTimersByTime(5000);
+    await server.stop();
 
     expect(logger.orderOfOperations).toMatchInlineSnapshot(`
       [
@@ -1137,8 +1145,15 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
         "SubscriptionCallback[1234-cats]: Responding to original subscription request",
         "ERROR: SubscriptionManager[1234-cats]: Generator threw an error, terminating subscription: The subscription generator didn't catch this!",
+        "SubscriptionManager[1234-cats]: Sending \`complete\` request to router with errors",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+        "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+        "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+        "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
