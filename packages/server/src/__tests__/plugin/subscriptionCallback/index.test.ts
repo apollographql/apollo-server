@@ -1102,6 +1102,47 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
+  it('terminates subscription when the producer throws', async () => {
+    const server = await startSubscriptionServer({ logger });
+    mockRouterCheckResponse();
+    const result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              throwsError
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
+        },
+      }),
+    );
+    expect(result.status).toEqual(200);
+    jest.advanceTimersByTime(5000);
+
+    expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+      [
+        "SubscriptionCallback[1234-cats]: Received new subscription request",
+        "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+        "SubscriptionManager[1234-cats]: \`check\` request successful",
+        "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+        "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+        "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+        "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+        "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+        "ERROR: SubscriptionManager[1234-cats]: Generator threw an error, terminating subscription: The subscription generator didn't catch this!",
+        "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+      ]
+    `);
+  });
+
   (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? describe.skip : describe)(
     'error handling',
     () => {
@@ -1979,6 +2020,7 @@ async function startSubscriptionServer(
       type Subscription {
         count: Int
         terminatesSuccessfully: Boolean
+        throwsError: Int
       }
     `,
     resolvers: {
@@ -2011,6 +2053,17 @@ async function startSubscriptionServer(
             },
           }),
         },
+        throwsError: {
+          subscribe: () => ({
+            [Symbol.asyncIterator]() {
+              return {
+                next: () => {
+                  throw new Error("The subscription generator didn't catch this!")
+                }
+              }
+            }
+          })
+        }
       },
     },
     ...opts,
@@ -2169,7 +2222,7 @@ function orderOfOperationsLogger() {
     debug(msg: string) {
       this.orderOfOperations.push(msg);
     },
-    info() {},
+    info() { },
     warn(msg: string) {
       this.orderOfOperations.push(`WARN: ${msg}`);
     },

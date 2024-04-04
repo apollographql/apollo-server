@@ -466,8 +466,7 @@ class SubscriptionManager {
         const err = ensureError(e);
         // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${
-            err.message
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${err.message
           }`,
           existingHeartbeat.id,
         );
@@ -557,39 +556,48 @@ class SubscriptionManager {
       cancelled: false,
       async startConsumingSubscription() {
         self.logger?.debug(`Listening to graphql-js subscription`, id);
-        for await (const payload of subscription) {
-          if (this.cancelled) {
-            self.logger?.debug(
-              `Subscription already cancelled, ignoring current and future payloads`,
-              id,
-            );
-            // It's already been cancelled - something else has already handled
-            // sending the `complete` request so we don't want to `break` here
-            // and send it again after the loop.
-            return;
-          }
+        try {
+          for await (const payload of subscription) {
+            if (this.cancelled) {
+              self.logger?.debug(
+                `Subscription already cancelled, ignoring current and future payloads`,
+                id,
+              );
+              // It's already been cancelled - something else has already handled
+              // sending the `complete` request so we don't want to `break` here
+              // and send it again after the loop.
+              return;
+            }
 
-          try {
-            await self.retryFetch({
-              url: callbackUrl,
-              action: 'next',
-              id,
-              verifier,
-              payload,
-            });
-          } catch (e) {
-            const originalError = ensureError(e);
-            self.logger?.error(
-              `\`next\` request failed, terminating subscription: ${originalError.message}`,
-              id,
-            );
-            self.terminateSubscription(id, callbackUrl);
+            try {
+              await self.retryFetch({
+                url: callbackUrl,
+                action: 'next',
+                id,
+                verifier,
+                payload,
+              });
+            } catch (e) {
+              const originalError = ensureError(e);
+              self.logger?.error(
+                `\`next\` request failed, terminating subscription: ${originalError.message}`,
+                id,
+              );
+              self.terminateSubscription(id, callbackUrl);
+            }
           }
+          // The subscription ended without errors, send the `complete` request to
+          // the router
+          self.logger?.debug(`Subscription completed without errors`, id);
+          await this.completeSubscription();
+        } catch (e) {
+          const originalError = ensureError(e);
+          self.logger?.error(
+            `Generator threw an error, terminating subscription: ${originalError.message}`,
+            id,
+          );
+          self.terminateSubscription(id, callbackUrl);
         }
-        // The subscription ended without errors, send the `complete` request to
-        // the router
-        self.logger?.debug(`Subscription completed without errors`, id);
-        await this.completeSubscription();
       },
       async completeSubscription(errors?: readonly GraphQLError[]) {
         if (this.cancelled) return;
