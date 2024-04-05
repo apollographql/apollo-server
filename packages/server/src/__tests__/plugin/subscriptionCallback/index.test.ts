@@ -1102,6 +1102,62 @@ describe('SubscriptionCallbackPlugin', () => {
     `);
   });
 
+  it('sends a `complete` with errors when a subscription throws an error', async () => {
+    const server = await startSubscriptionServer({ logger });
+
+    mockRouterCheckResponse();
+    mockRouterCheckResponse();
+    mockRouterCompleteResponse({
+      errors: [{ message: "The subscription generator didn't catch this!" }],
+    });
+
+    const result = await server.executeHTTPGraphQLRequest(
+      buildHTTPGraphQLRequest({
+        body: {
+          query: `#graphql
+            subscription {
+              throwsError
+            }
+          `,
+          extensions: {
+            subscription: {
+              callbackUrl: 'http://mock-router-url.com',
+              subscriptionId: '1234-cats',
+              verifier: 'my-verifier-token',
+            },
+          },
+        },
+      }),
+    );
+    expect(result.status).toEqual(200);
+
+    jest.advanceTimersByTime(5000);
+    await server.stop();
+
+    expect(logger.orderOfOperations).toMatchInlineSnapshot(`
+      [
+        "SubscriptionCallback[1234-cats]: Received new subscription request",
+        "SubscriptionManager[1234-cats]: Sending \`check\` request to router",
+        "SubscriptionManager[1234-cats]: \`check\` request successful",
+        "SubscriptionCallback[1234-cats]: Starting graphql-js subscription",
+        "SubscriptionCallback[1234-cats]: graphql-js subscription successful",
+        "SubscriptionManager[1234-cats]: Starting new heartbeat interval for http://mock-router-url.com",
+        "SubscriptionManager[1234-cats]: Listening to graphql-js subscription",
+        "SubscriptionCallback[1234-cats]: Responding to original subscription request",
+        "ERROR: SubscriptionManager[1234-cats]: Generator threw an error, terminating subscription: The subscription generator didn't catch this!",
+        "SubscriptionManager[1234-cats]: Sending \`complete\` request to router with errors",
+        "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
+        "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+        "SubscriptionManager[1234-cats]: \`complete\` request successful",
+        "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
+        "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
+        "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
+      ]
+    `);
+  });
+
   (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? describe.skip : describe)(
     'error handling',
     () => {
@@ -1979,6 +2035,7 @@ async function startSubscriptionServer(
       type Subscription {
         count: Int
         terminatesSuccessfully: Boolean
+        throwsError: Int
       }
     `,
     resolvers: {
@@ -2006,6 +2063,19 @@ async function startSubscriptionServer(
                     value: { terminatesSuccessfully: true },
                     done: this.count > 1,
                   };
+                },
+              };
+            },
+          }),
+        },
+        throwsError: {
+          subscribe: () => ({
+            [Symbol.asyncIterator]() {
+              return {
+                next: () => {
+                  throw new Error(
+                    "The subscription generator didn't catch this!",
+                  );
                 },
               };
             },
