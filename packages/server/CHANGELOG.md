@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.10.3
+
+### Patch Changes
+
+- [#7866](https://github.com/apollographql/apollo-server/pull/7866) [`5f335a5`](https://github.com/apollographql/apollo-server/commit/5f335a527b6549219366fa44f4bea829e7359aaf) Thanks [@tninesling](https://github.com/tninesling)! - Catch errors thrown by subscription generators, and gracefully clean up the subscription instead of crashing.
+
 ## 4.10.2
 
 ### Patch Changes
