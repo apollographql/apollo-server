@@ -2245,7 +2245,7 @@ function orderOfOperationsLogger() {
     debug(msg: string) {
       this.orderOfOperations.push(msg);
     },
-    info() { },
+    info() {},
     warn(msg: string) {
       this.orderOfOperations.push(`WARN: ${msg}`);
     },
