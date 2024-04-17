@@ -98,6 +98,17 @@ export function ApolloServerPluginSubscriptionCallback(
             return;
           }
 
+          // We're about to `await` the subscription, which could have some
+          // nontrivial asynchronous work to do before returning the generator.
+          // We set up the heartbeat first so the router knows we're alive
+          // during that wait period.
+          subscriptionManager.initHeartbeat({
+            callbackUrl,
+            id,
+            verifier,
+            heartbeatIntervalMs,
+          });
+
           // The `check` request was successful, so we can initialize the actual
           // `graphql-js` subscription. We don't expect `subscribe` to throw,
           // but rather return an object with `errors` on it (if there are any).
@@ -156,12 +167,7 @@ export function ApolloServerPluginSubscriptionCallback(
             // interval and consume the AsyncIterable on the `subscription`
             // object.
             logger?.debug('graphql-js subscription successful', id);
-            subscriptionManager.initHeartbeat({
-              callbackUrl,
-              id,
-              verifier,
-              heartbeatIntervalMs,
-            });
+
 
             subscriptionManager.startConsumingSubscription({
               subscription,
@@ -466,8 +472,7 @@ class SubscriptionManager {
         const err = ensureError(e);
         // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${
-            err.message
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${err.message
           }`,
           existingHeartbeat.id,
         );
