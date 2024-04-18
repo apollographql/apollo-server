@@ -196,7 +196,7 @@ await server.start();
 app.use('/',
   cors<cors.CorsRequest>(),
   // 50mb is the limit that `startStandaloneServer` uses, but you may configure this to suit your needs
-  bodyParser.json({ limit: '50mb' }),
+  express.json({ limit: '50mb' }),
   // expressMiddleware accepts the same arguments:
   // an Apollo Server instance and optional configuration options
   expressMiddleware(server, {
