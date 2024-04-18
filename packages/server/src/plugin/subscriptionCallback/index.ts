@@ -470,7 +470,8 @@ class SubscriptionManager {
         const err = ensureError(e);
         // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${err.message
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${
+            err.message
           }`,
           existingHeartbeat.id,
         );
