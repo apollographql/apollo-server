@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.10.4
+
+### Patch Changes
+
+- [#7871](https://github.com/apollographql/apollo-server/pull/7871) [`18a3827`](https://github.com/apollographql/apollo-server/commit/18a3827d63c3916f6aaccbc4bdef3e0d550d91a7) Thanks [@tninesling](https://github.com/tninesling)! - Subscription heartbeats are initialized prior to awaiting subscribe(). This allows long-running setup to happen in the returned Promise without the subscription being terminated prior to resolution.
+
 ## 4.10.3
 
 ### Patch Changes
