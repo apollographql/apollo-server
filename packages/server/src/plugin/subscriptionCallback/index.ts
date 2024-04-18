@@ -163,9 +163,8 @@ export function ApolloServerPluginSubscriptionCallback(
               logger?.error(`\`complete\` request failed: ${e}`, id);
             }
           } else if (isAsyncIterable(subscription)) {
-            // We have a real subscription - now we can kick off the heartbeat
-            // interval and consume the AsyncIterable on the `subscription`
-            // object.
+            // We have a real subscription - now we can consume the
+            // AsyncIterable on the `subscription` object.
             logger?.debug('graphql-js subscription successful', id);
 
             subscriptionManager.startConsumingSubscription({
@@ -471,8 +470,7 @@ class SubscriptionManager {
         const err = ensureError(e);
         // The heartbeat request failed.
         this.logger?.error(
-          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${
-            err.message
+          `Heartbeat request failed (${++consecutiveHeartbeatFailureCount} consecutive): ${err.message
           }`,
           existingHeartbeat.id,
         );
