@@ -64,7 +64,7 @@
     "@types/qs-middleware": "1.0.4",
     "@types/retry": "0.12.5",
     "@types/superagent": "4.1.24",
-    "@types/supertest": "2.0.16",
+    "@types/supertest": "6.0.2",
     "@types/test-listen": "1.1.2",
     "@types/type-is": "1.6.6",
     "@types/uuid": "9.0.7",
