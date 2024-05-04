@@ -77,7 +77,7 @@
     "compression": "1.7.4",
     "cors": "2.8.5",
     "cspell": "6.31.3",
-    "eslint": "8.56.0",
+    "eslint": "9.2.0",
     "eslint-plugin-import": "2.29.1",
     "express": "4.19.2",
     "graphql": "16.8.1",
