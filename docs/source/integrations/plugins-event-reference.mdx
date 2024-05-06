@@ -487,6 +487,8 @@ if the GraphQL operation encounters one or more errors.
 
 (If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `willSendResponse` is called before the *initial* payload is sent; you can use `willSendSubsequentPayload` to find out when more payloads will be sent.)
 
+This is also the place you can mutate the GraphQL response in-place, like adding values to the `extensions` or merging responses from subgraphs with conditional logic.
+
 ```ts
 willSendResponse?(
   requestContext: WithRequired<
