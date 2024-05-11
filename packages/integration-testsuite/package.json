@@ -34,7 +34,7 @@
     "@apollo/utils.keyvaluecache": "^2.1.0",
     "@josephg/resolvable": "^1.0.1",
     "express": "^4.18.1",
-    "graphql-http": "1.22.0",
+    "graphql-http": "1.22.1",
     "graphql-tag": "^2.12.6",
     "loglevel": "^1.8.0",
     "node-fetch": "^2.6.7",
