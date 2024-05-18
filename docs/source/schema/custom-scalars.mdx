@@ -174,7 +174,7 @@ const typeDefs = `#graphql
 `;
 
 // Validation function for checking "oddness"
-function oddValue(value: number) {
+function oddValue(value: unknown) {
   if (typeof value === 'number' && Number.isInteger(value) && value % 2 !== 0) {
     return value;
   }
