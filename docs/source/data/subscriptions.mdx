@@ -48,7 +48,7 @@ subscription PostFeed {
 >
 > The following steps assume you've already swapped to [`expressMiddleware`](../api/express-middleware).
 
-To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listen`er.
+To run both an Express app _and_ a separate WebSocket server for subscriptions, we'll create an `http.Server` instance that effectively wraps the two and becomes our new `listener`.
 
 1. Install `graphql-ws`, `ws`, and `@graphql-tools/schema`:
 
