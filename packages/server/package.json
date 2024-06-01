@@ -135,7 +135,7 @@
     "@apollo/utils.logger": "^2.0.0",
     "@apollo/utils.usagereporting": "^2.1.0",
     "@apollo/utils.withrequired": "^2.0.0",
-    "@graphql-tools/schema": "^9.0.0",
+    "@graphql-tools/schema": "^10.0.0",
     "@josephg/resolvable": "^1.0.0",
     "@types/express": "^4.17.13",
     "@types/express-serve-static-core": "^4.17.30",
