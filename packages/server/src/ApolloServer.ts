@@ -1101,7 +1101,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           await Promise.all(
             this.internals.plugins.map(
               async (plugin) =>
-                plugin.invalidRequestWasReceived?.({ error: maybeError }),
+                plugin.invalidRequestWasReceived?.({
+                  request: httpGraphQLRequest,
+                  error: maybeError,
+                }),
             ),
           );
         } catch (pluginError) {
