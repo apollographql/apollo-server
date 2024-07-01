@@ -1,10 +1,10 @@
 {
   "dependencies": {
-    "graphql": "16.8.1",
-    "make-fetch-happen": "13.0.0"
+    "graphql": "16.9.0",
+    "make-fetch-happen": "13.0.1"
   },
   "devDependencies": {
-    "@rollup/plugin-commonjs": "25.0.7",
+    "@rollup/plugin-commonjs": "25.0.8",
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "15.2.3",
     "@types/make-fetch-happen": "10.0.4",
