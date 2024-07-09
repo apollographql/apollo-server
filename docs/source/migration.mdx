@@ -1808,7 +1808,7 @@ new ApolloServer({
 
 ### Usage reporting plugin is off by default on subgraphs
 
-In an Apollo Federation supergraph, your Apollo Gateway or Apollo Router sends [usage reports](./api/plugin/usage-reporting/) to Apollo's servers; information about what happens inside individual subgraph servers is sent from the subgraphs to the Gateway or Router via [inline traces](./api/plugin/inline-trace/). That is to say: the usage reporting plugin is *not* designed for use in federated subgraphs.
+In an Apollo Federation supergraph, your Apollo Gateway or GraphOS Router sends [usage reports](./api/plugin/usage-reporting/) to Apollo's servers; information about what happens inside individual subgraph servers is sent from the subgraphs to the Gateway or Router via [inline traces](./api/plugin/inline-trace/). That is to say: the usage reporting plugin is *not* designed for use in federated subgraphs.
 
 In Apollo Server 3, if you provide an Apollo API key and graph ref and do not explicitly install the `ApolloServerPluginUsageReporting` or `ApolloServerPluginUsageReportingDisabled` plugins, the `ApolloServerPluginUsageReporting` plugin will be installed with its default configuration, even if the server is a subgraph.
 
