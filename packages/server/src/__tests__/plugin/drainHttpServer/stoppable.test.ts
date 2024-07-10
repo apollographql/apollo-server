@@ -141,11 +141,13 @@ Object.keys(schemes).forEach((schemeName) => {
         // idle connections in these versions. However, `Stopper` _is_ still
         // useful for gracefully finishing in-flight requests within the timeout
         // (and aborting requests beyond the timeout).
-        // Update: Node 18.19+ had this change backported, so the comment from above
-        // applies to Node 18.19+ as well.
-        const isNode18 = !!process.version.match(/^v18\./);
+        //
+        // (Node 18.19.0 had this change backported but it was removed again in
+        // 18.20.3; our tests only pin major versions so we can assume 18 means
+        // >= 18.20.3.) Update: Node 18.19+ had this change backported, so the
+        // comment from above applies to Node 18.19+ as well.
         const isNode20 = !!process.version.match(/^v20\./);
-        expect(closed).toBe(isNode18 || isNode20 ? 1 : 0);
+        expect(closed).toBe(isNode20 ? 1 : 0);
       });
 
       // This test specifically added for Node 20 fails for Node 14. Just going
