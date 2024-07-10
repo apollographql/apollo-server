@@ -144,8 +144,7 @@ Object.keys(schemes).forEach((schemeName) => {
         //
         // (Node 18.19.0 had this change backported but it was removed again in
         // 18.20.3; our tests only pin major versions so we can assume 18 means
-        // >= 18.20.3.) Update: Node 18.19+ had this change backported, so the
-        // comment from above applies to Node 18.19+ as well.
+        // >= 18.20.3.)
         const isNode20 = !!process.version.match(/^v20\./);
         expect(closed).toBe(isNode20 ? 1 : 0);
       });
