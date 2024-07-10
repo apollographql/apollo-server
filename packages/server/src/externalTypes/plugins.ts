@@ -23,6 +23,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextWillSendSubsequentPayload,
 } from './requestPipeline.js';
+import type { HTTPGraphQLRequest } from './index.js';
 
 export interface GraphQLServerContext {
   readonly logger: Logger;
@@ -76,7 +77,13 @@ export interface ApolloServerPlugin<
    * incorrect headers, invalid JSON body, or invalid search params for GET),
    * but does not include malformed GraphQL.
    */
-  invalidRequestWasReceived?({ error }: { error: Error }): Promise<void>;
+  invalidRequestWasReceived?({
+    request,
+    error,
+  }: {
+    request: HTTPGraphQLRequest;
+    error: Error;
+  }): Promise<void>;
   // Called on startup fail. This can occur if the schema fails to load or if a
   // `serverWillStart` or `renderLandingPage` hook throws.
   startupDidFail?({ error }: { error: Error }): Promise<void>;
