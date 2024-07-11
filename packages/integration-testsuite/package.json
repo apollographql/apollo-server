@@ -32,7 +32,6 @@
     "@apollo/usage-reporting-protobuf": "^4.1.1",
     "@apollo/utils.createhash": "^2.0.0",
     "@apollo/utils.keyvaluecache": "^2.1.0",
-    "@josephg/resolvable": "^1.0.1",
     "express": "^4.18.1",
     "graphql-http": "1.22.0",
     "graphql-tag": "^2.12.6",
