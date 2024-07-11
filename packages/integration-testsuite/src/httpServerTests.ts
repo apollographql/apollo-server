@@ -4,7 +4,7 @@
 // function. Newer tests have generally been added to the apolloServerTests.ts
 // file.
 import { createHash } from '@apollo/utils.createhash';
-import resolvable, { type Resolvable } from '@josephg/resolvable';
+import resolvable, { type Resolvable } from './resolvable';
 import {
   BREAK,
   type DocumentNode,

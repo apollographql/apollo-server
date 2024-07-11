@@ -36,7 +36,7 @@ import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
 import { AbortController } from 'node-abort-controller';
-import resolvable, { Resolvable } from '@josephg/resolvable';
+import resolvable, { Resolvable } from '../../../utils/resolvable.js';
 
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;
