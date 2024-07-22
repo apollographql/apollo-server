@@ -98,7 +98,6 @@ instanceof
 iosapp
 isnodelike
 iteratees
-josephg
 jsdelivr
 keyv
 keyvadapter

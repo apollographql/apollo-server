@@ -4,7 +4,7 @@ import compression, { filter as defaultFilter } from 'compression';
 import { ApolloServer, BaseContext } from '../../index.js';
 import { expressMiddleware } from '../../express4/index.js';
 import { it, expect } from '@jest/globals';
-import resolvable from '@josephg/resolvable';
+import resolvable from '../../utils/resolvable.js';
 import cors from 'cors';
 
 it('gives helpful error if json middleware is not installed', async () => {

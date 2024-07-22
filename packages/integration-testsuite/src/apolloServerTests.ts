@@ -37,7 +37,7 @@ import {
 } from '@apollo/server';
 import fetch, { type Headers } from 'node-fetch';
 
-import resolvable, { type Resolvable } from '@josephg/resolvable';
+import resolvable, { type Resolvable } from './resolvable.js';
 import type { AddressInfo } from 'net';
 import request, { type Response } from 'supertest';
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
