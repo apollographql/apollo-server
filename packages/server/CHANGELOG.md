@@ -1,5 +1,13 @@
 # @apollo/server
 
+## 4.10.5
+
+### Patch Changes
+
+- [#7821](https://github.com/apollographql/apollo-server/pull/7821) [`b2e15e7`](https://github.com/apollographql/apollo-server/commit/b2e15e7db6902769d02de2b06ff920ce74701c51) Thanks [@renovate](https://github.com/apps/renovate)! - Non-major dependency updates
+
+- [#7900](https://github.com/apollographql/apollo-server/pull/7900) [`86d7111`](https://github.com/apollographql/apollo-server/commit/86d711133f3746d094cfb3b39e21fdfa3723181b) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Inline a small dependency that was causing build issues for ESM projects
+
 ## 4.10.4
 
 ### Patch Changes
@@ -104,8 +112,8 @@
   You can enable callback subscriptions like so:
 
   ```ts
-  import { ApolloServerPluginSubscriptionCallback } from "@apollo/server/plugin/subscriptionCallback";
-  import { ApolloServer } from "@apollo/server";
+  import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
+  import { ApolloServer } from '@apollo/server';
 
   const server = new ApolloServer({
     // ...
