@@ -144,6 +144,7 @@ workflows:
                 - "16"
                 - "18"
                 - "20"
+                - "22"
       - "Check for FIXM\x45"
       - Prettier
       - ESLint
