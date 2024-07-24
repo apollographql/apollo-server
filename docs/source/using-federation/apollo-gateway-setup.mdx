@@ -61,9 +61,9 @@ console.log(`🚀  Server ready at ${url}`);
 
 ### Composing the supergraph schema
 
-In the above example, we provide the `supergraphSdl` option to the `ApolloGateway` constructor. This is the string representation of our [supergraph schema](/federation/federated-types/overview/#supergraph-schema), which is composed from all of our subgraph schemas.
+In the above example, we provide the `supergraphSdl` option to the `ApolloGateway` constructor. This is the string representation of our [supergraph schema](/federation/federated-schemas/#supergraph-schema), which is composed from all of our subgraph schemas.
 
-To learn how to compose your supergraph schema, see [Supported methods](/federation/federated-types/composition/#supported-methods).
+To learn how to compose your supergraph schema, see [Supported methods](/federation/federated-schemas/composition/#supported-methods).
 
 > In production, we strongly recommend running the gateway in a **managed mode** with Apollo Studio, which enables your gateway to update its configuration without a restart. For details, see [Setting up managed federation](/federation/managed-federation/setup/).
 
@@ -428,7 +428,7 @@ type ExampleType {
 }
 ```
 
-The gateway strips all definitions _and_ uses of type system directives from your graph's [API schema](/federation/federated-types/overview/#api-schema). This has no effect on your subgraph schemas, which retain this information.
+The gateway strips all definitions _and_ uses of type system directives from your graph's [API schema](/federation/federated-schemas/#api-schema). This has no effect on your subgraph schemas, which retain this information.
 
 Effectively, the gateway supports type system directives by _ignoring_ them, making them the responsibility of the subgraphs that define them.
 
