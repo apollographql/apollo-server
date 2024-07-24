@@ -125,7 +125,7 @@ const gateway = new ApolloGateway({
 
 You provide your supergraph schema to the gateway with this option. You can provide it as a `string`, via a `SupergraphSdlHook`, or via a `SupergraphManager`.
 
-**When `supergraphSdl` is a `string`:** A [supergraph schema](/federation/federated-schemas//#supergraph-schema) ([generated with the Rover CLI](/rover/commands/supergraphs/#composing-a-supergraph-schema)) that's composed from your subgraph schemas. The supergraph schema includes directives that specify routing information for each subgraph.
+**When `supergraphSdl` is a `string`:** A [supergraph schema](/federation/federated-schemas/#supergraph-schema) ([generated with the Rover CLI](/rover/commands/supergraphs/#composing-a-supergraph-schema)) that's composed from your subgraph schemas. The supergraph schema includes directives that specify routing information for each subgraph.
 
 **When `supergraphSdl` is a `SupergraphSdlHook`:** This is an `async` function that returns an object containing a `supergraphSdl` string as well as a `cleanup` function. The hook accepts an object containing the following properties:
 
