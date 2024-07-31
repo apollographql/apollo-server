@@ -56,7 +56,7 @@ async function smokeTest() {
 
     assert.strictEqual(
       response.headers.get('content-type'),
-      'multipart/mixed; boundary="-"; deferSpec=20220824',
+      'multipart/mixed; boundary="-"',
     );
 
     const body = await response.text();

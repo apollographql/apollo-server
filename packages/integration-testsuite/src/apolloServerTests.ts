@@ -1187,9 +1187,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               expect(response.status).toBe(200);
               expect(
                 response.headers.get('content-type'),
-              ).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-              );
+              ).toMatchInlineSnapshot(`"multipart/mixed; boundary="-"`);
               expect(await response.text()).toMatchInlineSnapshot(`
                 "
                 ---

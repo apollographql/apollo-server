@@ -52,7 +52,7 @@ if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
 
   assert.strictEqual(
     response.headers.get('content-type'),
-    'multipart/mixed; boundary="-"; deferSpec=20220824',
+    'multipart/mixed; boundary="-"',
   );
 
   const body = await response.text();

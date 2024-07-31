@@ -2197,7 +2197,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
               });
             expect(res.status).toEqual(200);
             expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              `"multipart/mixed; boundary="-""`,
             );
             expect(res.text).toMatchInlineSnapshot(`
               "
@@ -2267,7 +2267,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             const res = await resPromise;
             expect(res.status).toEqual(200);
             expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              `"multipart/mixed; boundary="-""`,
             );
             expect(res.text).toMatchInlineSnapshot(`
               "
@@ -2354,7 +2354,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
               });
             expect(res.status).toEqual(200);
             expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              `"multipart/mixed; boundary="-"`,
             );
             expect(res.text).toEqual(`\r
 ---\r
@@ -2404,7 +2404,7 @@ content-type: application/json; charset=utf-8\r
             const res = await resPromise;
             expect(res.status).toEqual(200);
             expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              `"multipart/mixed; boundary="-"`,
             );
             expect(res.text).toMatchInlineSnapshot(`
               "
