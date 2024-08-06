@@ -70,7 +70,51 @@ describe('dynamic cache control', () => {
     expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
   });
 
-  it('can use restrict to set the maxAge for a field', async () => {
+  it('should set the maxAge for a field from a dynamic cache hint using a human-readable format', async () => {
+    const typeDefs = `
+      type Query {
+        droid(id: ID!): Droid
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers: GraphQLResolvers = {
+      Query: {
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).setCacheHint({ maxAge: '1d' });
+          return {
+            id: 2001,
+            name: 'R2-D2',
+          };
+        },
+      },
+    };
+
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 86400 }]]));
+  });
+
+  it('should set the max age of the field when cache hint is restricted', async () => {
     const typeDefs = `
       type Query {
         droid(id: ID!): Droid
@@ -112,6 +156,50 @@ describe('dynamic cache control', () => {
     );
 
     expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
+  });
+
+  it('should set the max age of the field when cache hint is restricted with a human readable format', async () => {
+    const typeDefs = `
+      type Query {
+        droid(id: ID!): Droid
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers: GraphQLResolvers = {
+      Query: {
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).cacheHint.restrict({ maxAge: '1d' });
+          return {
+            id: 2001,
+            name: 'R2-D2',
+          };
+        },
+      },
+    };
+
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 86400 }]]));
   });
 
   it('should set the scope for a field from a dynamic cache hint', async () => {

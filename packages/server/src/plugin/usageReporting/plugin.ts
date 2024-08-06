@@ -630,7 +630,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                     ? Trace.CachePolicy.Scope.PUBLIC
                     : Trace.CachePolicy.Scope.UNKNOWN,
               // Convert from seconds to ns.
-              maxAgeNs: policyIfCacheable.maxAge * 1e9,
+              // This will always be a number but user can pass in string to the cache hint which gets parsed into a number
+              maxAgeNs: (policyIfCacheable.maxAge as number) * 1e9,
             });
           }
 
