@@ -249,6 +249,14 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         [...specifiedRules, ...internals.validationRules],
       );
 
+      // Hide "did you mean" suggestions when introspection is disabled to avoid
+      // leaking schema information
+      if (!internals.introspectionEnabled) {
+        validationErrors.forEach((error) => {
+          error.message = error.message.replace(/ ?Did you mean(.+?)\?$/, '');
+        });
+      }
+
       if (validationErrors.length === 0) {
         await validationDidEnd();
       } else {

@@ -175,6 +175,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
 
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
+  introspectionEnabled: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
   // flip default behavior.
@@ -298,6 +299,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ...(config.validationRules ?? []),
         ...(introspectionEnabled ? [] : [NoIntrospection]),
       ],
+      introspectionEnabled,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,
       fieldResolver: config.fieldResolver,

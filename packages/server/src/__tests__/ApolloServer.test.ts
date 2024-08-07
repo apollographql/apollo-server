@@ -551,6 +551,51 @@ describe('ApolloServer executeOperation', () => {
     await server.stop();
   });
 
+  it('Should include "did you mean" when introspection is enabled', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      introspection: true,
+    });
+    await server.start();
+
+    const { body } = await server.executeOperation({ query: '{ hellooo }' });
+    const result = singleResult(body);
+    expect(result.errors).toEqual([
+      {
+        message:
+          'Cannot query field "hellooo" on type "Query". Did you mean "hello"?',
+        locations: [{ line: 1, column: 3 }],
+        extensions: {
+          code: 'GRAPHQL_VALIDATION_FAILED',
+        },
+      },
+    ]);
+    await server.stop();
+  });
+
+  it('Should not include "did you mean" when introspection is disabled', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      introspection: false,
+    });
+    await server.start();
+
+    const { body } = await server.executeOperation({ query: '{ hellooo }' });
+    const result = singleResult(body);
+    expect(result.errors).toEqual([
+      {
+        message: 'Cannot query field "hellooo" on type "Query".',
+        locations: [{ line: 1, column: 3 }],
+        extensions: {
+          code: 'GRAPHQL_VALIDATION_FAILED',
+        },
+      },
+    ]);
+    await server.stop();
+  });
+
   // TODO(AS5): expect an update here when default flips
   it.each([
     { status400ForVariableCoercionErrors: false, expectedStatus: undefined },
