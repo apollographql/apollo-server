@@ -175,7 +175,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
 
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
-  didYouMeanEnabled: boolean;
+  hideSchemaDetailsFromClientErrors: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
   // flip default behavior.
@@ -282,7 +282,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         };
 
     const introspectionEnabled = config.introspection ?? isDev;
-    const didYouMeanEnabled = config.didYouMean ?? true;
+    const hideSchemaDetailsFromClientErrors =
+      config.hideSchemaDetailsFromClientErrors ?? false;
 
     // We continue to allow 'bounded' for backwards-compatibility with the AS3.9
     // API.
@@ -300,7 +301,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ...(config.validationRules ?? []),
         ...(introspectionEnabled ? [] : [NoIntrospection]),
       ],
-      didYouMeanEnabled,
+      hideSchemaDetailsFromClientErrors,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,
       fieldResolver: config.fieldResolver,
@@ -837,8 +838,12 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   }
 
   private async addDefaultPlugins() {
-    const { plugins, apolloConfig, nodeEnv, didYouMeanEnabled } =
-      this.internals;
+    const {
+      plugins,
+      apolloConfig,
+      nodeEnv,
+      hideSchemaDetailsFromClientErrors,
+    } = this.internals;
     const isDev = nodeEnv !== 'production';
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
@@ -1001,7 +1006,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     {
       const alreadyHavePlugin =
         alreadyHavePluginWithInternalId('DisableSuggestions');
-      if (!didYouMeanEnabled && !alreadyHavePlugin) {
+      if (hideSchemaDetailsFromClientErrors && !alreadyHavePlugin) {
         const { ApolloServerPluginDisableSuggestions } = await import(
           './plugin/disableSuggestions/index.js'
         );
