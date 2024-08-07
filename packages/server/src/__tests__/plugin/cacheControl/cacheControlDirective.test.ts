@@ -280,8 +280,13 @@ describe('@cacheControl directives', () => {
   it('interaction between type implementing interface, both with specified `maxAge`', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {
-        droid(id: ID!): Droid
         named: Named
+        droid(id: ID!): Droid
+        alien(id: ID!): Alien
+      }
+
+      interface Named @cacheControl(maxAge: 60) {
+        name: String!
       }
 
       type Droid implements Named @cacheControl(maxAge: 30) {
@@ -289,7 +294,8 @@ describe('@cacheControl directives', () => {
         name: String!
       }
 
-      interface Named @cacheControl(maxAge: 60) {
+      type Alien implements Named {
+        id: ID!
         name: String!
       }
     `);
@@ -326,6 +332,23 @@ describe('@cacheControl directives', () => {
 
     expect(hintsDroid).toStrictEqual(
       new Map([['droid', { maxAge: 30, scope: undefined }]]),
+    );
+
+    const hintsAlien = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          alien(id: 3001) {
+            id
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hintsAlien).toStrictEqual(
+      new Map([['alien', { maxAge: 10, scope: undefined }]]),
     );
   });
 
