@@ -559,11 +559,13 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
+    // cspell:disable-next-line
     const { body } = await server.executeOperation({ query: '{ hellooo }' });
     const result = singleResult(body);
     expect(result.errors).toEqual([
       {
         message:
+          // cspell:disable-next-line
           'Cannot query field "hellooo" on type "Query". Did you mean "hello"?',
         locations: [{ line: 1, column: 3 }],
         extensions: {
@@ -582,10 +584,12 @@ describe('ApolloServer executeOperation', () => {
     });
     await server.start();
 
+    // cspell:disable-next-line
     const { body } = await server.executeOperation({ query: '{ hellooo }' });
     const result = singleResult(body);
     expect(result.errors).toEqual([
       {
+        // cspell:disable-next-line
         message: 'Cannot query field "hellooo" on type "Query".',
         locations: [{ line: 1, column: 3 }],
         extensions: {
