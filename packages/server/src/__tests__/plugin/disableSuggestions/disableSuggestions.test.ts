@@ -44,38 +44,32 @@ describe('ApolloServerPluginDisableSuggestions', () => {
   it('should not hide suggestions when plugin is not enabled', async () => {
     const response = await makeServer({
       withPlugin: false,
-      // cSpell:disable
       query: `#graphql
             query {
-              helloo
+              help
             }
           `,
-      // cSpell:enable
     });
 
     assert(response.body.kind === 'complete');
     expect(JSON.parse(response.body.string).errors[0].message).toBe(
-      // cspell:disable-next-line
-      'Cannot query field "helloo" on type "Query". Did you mean "hello"?',
+      'Cannot query field "help" on type "Query". Did you mean "hello"?',
     );
   });
 
   it('should hide suggestions when plugin is enabled', async () => {
     const response = await makeServer({
       withPlugin: true,
-      // cSpell:disable
       query: `#graphql
             query {
-              helloo
+              help
             }
           `,
-      // cSpell:enable
     });
 
     assert(response.body.kind === 'complete');
     expect(JSON.parse(response.body.string).errors[0].message).toBe(
-      // cspell:disable-next-line
-      'Cannot query field "helloo" on type "Query".',
+      'Cannot query field "help" on type "Query".',
     );
   });
 });
