@@ -277,6 +277,58 @@ describe('@cacheControl directives', () => {
     );
   });
 
+  it('interaction between type implementing interface, both with specified `maxAge`', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        droid(id: ID!): Droid
+        named: Named
+      }
+
+      type Droid implements Named @cacheControl(maxAge: 30) {
+        id: ID!
+        name: String!
+      }
+
+      interface Named @cacheControl(maxAge: 60) {
+        name: String!
+      }
+    `);
+
+    const hintsNamed = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          named {
+            ... on Droid {
+              id
+              name
+            }
+          }
+        }
+      `,
+    );
+
+    expect(hintsNamed).toStrictEqual(
+      new Map([['named', { maxAge: 60, scope: undefined }]]),
+    );
+
+    const hintsDroid = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            id
+            name
+          }
+        }
+      `,
+    );
+
+    expect(hintsDroid).toStrictEqual(
+      new Map([['droid', { maxAge: 30, scope: undefined }]]),
+    );
+  });
+
   it('inheritMaxAge', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
