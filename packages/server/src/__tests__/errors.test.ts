@@ -10,17 +10,19 @@ describe('Errors', () => {
     const code = 'CODE';
     const key = 'value';
 
-    it('exposes a stacktrace in debug mode', () => {
+    it('exposes a stacktrace in debug mode', async () => {
       const thrown = new Error(message);
       (thrown as any).key = key;
-      const [error] = normalizeAndFormatErrors(
-        [
-          new GraphQLError(thrown.message, {
-            originalError: thrown,
-            extensions: { code, key },
-          }),
-        ],
-        { includeStacktraceInErrorResponses: true },
+      const [error] = (
+        await normalizeAndFormatErrors(
+          [
+            new GraphQLError(thrown.message, {
+              originalError: thrown,
+              extensions: { code, key },
+            }),
+          ],
+          { includeStacktraceInErrorResponses: true },
+        )
       ).formattedErrors;
       expect(error.message).toEqual(message);
       expect(error.extensions?.key).toEqual(key);
@@ -29,29 +31,36 @@ describe('Errors', () => {
       // stacktrace should exist
       expect(error.extensions?.stacktrace).toBeDefined();
     });
-    it('hides stacktrace by default', () => {
+
+    it('hides stacktrace by default', async () => {
       const thrown = new Error(message);
       (thrown as any).key = key;
-      const error = normalizeAndFormatErrors([
-        new GraphQLError(thrown.message, { originalError: thrown }),
-      ]).formattedErrors[0];
+      const error = (
+        await normalizeAndFormatErrors([
+          new GraphQLError(thrown.message, { originalError: thrown }),
+        ])
+      ).formattedErrors[0];
       expect(error.message).toEqual(message);
       expect(error.extensions?.code).toEqual('INTERNAL_SERVER_ERROR');
       expect(error.extensions).not.toHaveProperty('exception'); // Removed in AS4
       // stacktrace should not exist
       expect(error.extensions).not.toHaveProperty('stacktrace');
     });
-    it('exposes extensions on error as extensions field and provides code', () => {
-      const error = normalizeAndFormatErrors([
-        new GraphQLError(message, {
-          extensions: { code, key },
-        }),
-      ]).formattedErrors[0];
+
+    it('exposes extensions on error as extensions field and provides code', async () => {
+      const error = (
+        await normalizeAndFormatErrors([
+          new GraphQLError(message, {
+            extensions: { code, key },
+          }),
+        ])
+      ).formattedErrors[0];
       expect(error.message).toEqual(message);
       expect(error.extensions?.key).toEqual(key);
       expect(error.extensions).not.toHaveProperty('exception'); // Removed in AS4
       expect(error.extensions?.code).toEqual(code);
     });
+
     it('calls formatError after exposing the code and stacktrace', () => {
       const error = new GraphQLError(message, {
         extensions: { code, key },
@@ -72,11 +81,11 @@ describe('Errors', () => {
       expect(formatErrorArgs[0].extensions?.code).toEqual(code);
       expect(formatErrorArgs[1]).toEqual(error);
     });
-    it('Formats native Errors in a JSON-compatible way', () => {
+
+    it('Formats native Errors in a JSON-compatible way', async () => {
       const error = new Error('Hello');
-      const [formattedError] = normalizeAndFormatErrors([
-        error,
-      ]).formattedErrors;
+      const [formattedError] = (await normalizeAndFormatErrors([error]))
+        .formattedErrors;
       expect(JSON.parse(JSON.stringify(formattedError)).message).toBe('Hello');
     });
 
@@ -105,13 +114,15 @@ describe('Errors', () => {
         };
       }
 
-      it('with stack trace', () => {
+      it('with stack trace', async () => {
         const thrown = new Error(message);
         (thrown as any).key = key;
-        const errors = normalizeAndFormatErrors([thrown], {
-          formatError,
-          includeStacktraceInErrorResponses: true,
-        }).formattedErrors;
+        const errors = (
+          await normalizeAndFormatErrors([thrown], {
+            formatError,
+            includeStacktraceInErrorResponses: true,
+          })
+        ).formattedErrors;
         expect(errors).toHaveLength(1);
         const [error] = errors;
         expect(error.extensions?.exception).toHaveProperty('stacktrace');
@@ -129,13 +140,15 @@ describe('Errors', () => {
         `);
       });
 
-      it('without stack trace', () => {
+      it('without stack trace', async () => {
         const thrown = new Error(message);
         (thrown as any).key = key;
-        const errors = normalizeAndFormatErrors([thrown], {
-          formatError,
-          includeStacktraceInErrorResponses: false,
-        }).formattedErrors;
+        const errors = (
+          await normalizeAndFormatErrors([thrown], {
+            formatError,
+            includeStacktraceInErrorResponses: false,
+          })
+        ).formattedErrors;
         expect(errors).toHaveLength(1);
         const [error] = errors;
         expect(error).toMatchInlineSnapshot(`

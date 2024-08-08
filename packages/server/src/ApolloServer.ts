@@ -159,7 +159,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
-  ) => GraphQLFormattedError;
+  ) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
   includeStacktraceInErrorResponses: boolean;
   persistedQueries?: WithRequired<PersistedQueryOptions, 'cache'>;
   nodeEnv: string;
@@ -1136,7 +1136,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     error: unknown,
     requestHead: HTTPGraphQLHead,
   ): Promise<HTTPGraphQLResponse> {
-    const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
+    const { formattedErrors, httpFromErrors } = await normalizeAndFormatErrors(
       [error],
       {
         includeStacktraceInErrorResponses:
