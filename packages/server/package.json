@@ -55,6 +55,14 @@
       "import": "./dist/esm/plugin/disabled/index.js",
       "require": "./dist/cjs/plugin/disabled/index.js"
     },
+    "./plugin/disableSuggestions": {
+      "types": {
+        "require": "./dist/cjs/plugin/disableSuggestions/index.d.ts",
+        "default": "./dist/esm/plugin/disableSuggestions/index.d.ts"
+      },
+      "import": "./dist/esm/plugin/disableSuggestions/index.js",
+      "require": "./dist/cjs/plugin/disableSuggestions/index.js"
+    },
     "./plugin/drainHttpServer": {
       "types": {
         "require": "./dist/cjs/plugin/drainHttpServer/index.d.ts",

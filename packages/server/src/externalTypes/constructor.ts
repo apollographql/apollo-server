@@ -93,6 +93,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
   introspection?: boolean;
+  hideSchemaDetailsFromClientErrors?: boolean;
   plugins?: ApolloServerPlugin<TContext>[];
   persistedQueries?: PersistedQueryOptions | false;
   stopOnTerminationSignals?: boolean;

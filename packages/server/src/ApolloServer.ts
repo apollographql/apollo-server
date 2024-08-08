@@ -175,6 +175,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
 
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
+  hideSchemaDetailsFromClientErrors: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
   // flip default behavior.
@@ -281,6 +282,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         };
 
     const introspectionEnabled = config.introspection ?? isDev;
+    const hideSchemaDetailsFromClientErrors =
+      config.hideSchemaDetailsFromClientErrors ?? false;
 
     // We continue to allow 'bounded' for backwards-compatibility with the AS3.9
     // API.
@@ -298,6 +301,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ...(config.validationRules ?? []),
         ...(introspectionEnabled ? [] : [NoIntrospection]),
       ],
+      hideSchemaDetailsFromClientErrors,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,
       fieldResolver: config.fieldResolver,
@@ -834,7 +838,12 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   }
 
   private async addDefaultPlugins() {
-    const { plugins, apolloConfig, nodeEnv } = this.internals;
+    const {
+      plugins,
+      apolloConfig,
+      nodeEnv,
+      hideSchemaDetailsFromClientErrors,
+    } = this.internals;
     const isDev = nodeEnv !== 'production';
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
@@ -992,6 +1001,17 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       }
       plugin.__internal_installed_implicitly__ = true;
       plugins.push(plugin);
+    }
+
+    {
+      const alreadyHavePlugin =
+        alreadyHavePluginWithInternalId('DisableSuggestions');
+      if (hideSchemaDetailsFromClientErrors && !alreadyHavePlugin) {
+        const { ApolloServerPluginDisableSuggestions } = await import(
+          './plugin/disableSuggestions/index.js'
+        );
+        plugins.push(ApolloServerPluginDisableSuggestions());
+      }
     }
   }
 
