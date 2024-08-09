@@ -149,8 +149,6 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 </tr>
 
 <tr>
-
-<tr>
 <td>
 
 ###### `hideSchemaDetailsFromClientErrors`
@@ -161,11 +159,11 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 
 <td>
 
-If `true`, Apollo Server will strip out "did you mean" suggestions when an operation fails validation.
+If `true`, Apollo Server strips out "did you mean" suggestions when an operation fails validation.
 
-For example, with this option set to `true`, an error would read `Cannot query field "help" on type "Query".` whereas with this option set to `false` it would read `Cannot query field "help" on type "Query". Did you mean "hello"?`.
+For example, with this option set to `true`, an error would read `Cannot query field "help" on type "Query".`. With this option set to `false`, the same error would read `Cannot query field "help" on type "Query". Did you mean "hello"?`.
 
-The default value is `false` but we recommend enabling this option in production to avoid leaking information about your schema.
+The default value is `false`, but Apollo recommends enabling this option in production to avoid leaking information about your schema.
 
 </td>
 </tr>
