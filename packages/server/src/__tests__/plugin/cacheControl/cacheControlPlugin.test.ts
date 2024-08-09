@@ -81,6 +81,42 @@ describe('plugin', () => {
         );
       });
 
+      // start
+      it('should set cache-control headers to default max age when provided a defaultMaxAge', async () => {
+        const response = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: true,
+            defaultMaxAge: 100,
+          },
+        });
+        expect(response.headers.get('cache-control')).toBe(
+          'max-age=100, public',
+        );
+      });
+
+      it('should set cache-control headers to default max age when provided a defaultMaxAge in a human readable format', async () => {
+        const response = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: true,
+            defaultMaxAge: '1d',
+          },
+        });
+        expect(response.headers.get('cache-control')).toBe(
+          'max-age=86400, public',
+        );
+      });
+
+      it('should not set cache-control headers when provided a defaultMaxAge in a invalid human readable format', async () => {
+        const response = await makePluginWithOptions({
+          pluginInitializationOptions: {
+            calculateHttpHeaders: true,
+            defaultMaxAge: '1ddddd',
+          },
+        });
+        expect(response.headers.get('cache-control')).toBe('no-store');
+      });
+      // end
+
       const shouldNotSetCacheControlHeader = (
         response: HTTPGraphQLResponse,
       ) => {
