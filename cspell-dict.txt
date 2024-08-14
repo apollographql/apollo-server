@@ -181,6 +181,7 @@ sumby
 supergraph
 Supergraph
 supergraphs
+technotes
 testful
 testonly
 testsuite
