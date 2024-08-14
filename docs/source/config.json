@@ -7,22 +7,22 @@
   ],
   "sidebar": {
     "Introduction": "/",
-    "Get started": "/getting-started",
+    "Get Started": "/getting-started",
     "New in v4": {
       "Migrating to Apollo Server 4": "/migration",
-      "Previous versions": "/previous-versions",
+      "Previous Versions": "/previous-versions",
       "Changelog": "https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md"
     },
     "Defining a Schema": {
-      "Schema basics": "/schema/schema",
-      "Unions and interfaces": "/schema/unions-interfaces",
-      "Custom scalars": "/schema/custom-scalars",
+      "Schema Basics": "/schema/schema",
+      "Unions and Interfaces": "/schema/unions-interfaces",
+      "Custom Scalars": "/schema/custom-scalars",
       "Directives": "/schema/directives"
     },
     "Resolving Operations": {
       "Resolvers": "/data/resolvers",
-      "Sharing context": "/data/context",
-      "Error handling": "/data/errors",
+      "Sharing Context": "/data/context",
+      "Error Handling": "/data/errors",
       "Subscriptions": "/data/subscriptions"
     },
     "Fetching Data": {
@@ -31,36 +31,35 @@
     },
     "Web Frameworks": {
       "Integrations": "/integrations/integration-index",
-      "Building integrations": "/integrations/building-integrations",
-      "MERN stack tutorial": "/integrations/mern"
+      "Building Integrations": "/integrations/building-integrations",
+      "MERN Stack Tutorial": "/integrations/mern"
     },
     "Development Workflow": {
-      "Build and run queries": "/workflow/build-run-queries",
-      "Request format": "/workflow/requests",
-      "Generating TS types": "/workflow/generate-types",
+      "Build and Run Queries": "/workflow/build-run-queries",
+      "Request Format": "/workflow/requests",
+      "Generating TS Types": "/workflow/generate-types",
       "Mocking": "/testing/mocking",
-      "Integration testing": "/testing/testing",
-      "Apollo Studio Explorer": "https://www.apollographql.com/docs/studio/explorer/"
+      "Integration Testing": "/testing/testing"
     },
     "Performance": {
       "Caching": "/performance/caching",
-      "Cache backends": "/performance/cache-backends",
+      "Cache Backends": "/performance/cache-backends",
       "Response Cache Eviction": "/performance/response-cache-eviction",
-      "Automatic persisted queries": "/performance/apq"
+      "Automatic Persisted Queries": "/performance/apq"
     },
     "Security": {
-      "Auth": "/security/authentication",
+      "Authentication and Authorization": "/security/authentication",
       "CORS": "/security/cors",
       "Terminating SSL": "/security/terminating-ssl",
-      "Proxy configuration": "/security/proxy-configuration"
+      "Proxy Configuration": "/security/proxy-configuration"
     },
     "Deployment": {
       "Lambda": "/deployment/lambda",
       "Heroku": "/deployment/heroku"
     },
     "Monitoring": {
-      "Metrics and logging": "/monitoring/metrics",
-      "Health checks": "/monitoring/health-checks"
+      "Metrics and Logging": "/monitoring/metrics",
+      "Health Checks": "/monitoring/health-checks"
     },
     "API Reference": {
       "ApolloServer": "/api/apollo-server",
@@ -69,29 +68,29 @@
     },
     "Plugins": {
       "Overview": "/builtin-plugins",
-      "Built-in": {
-        "Usage reporting": "/api/plugin/usage-reporting",
-        "Schema reporting": "/api/plugin/schema-reporting",
-        "Inline trace": "/api/plugin/inline-trace",
-        "Drain HTTP server": "/api/plugin/drain-http-server",
-        "Cache control": "/api/plugin/cache-control",
-        "Landing pages": "/api/plugin/landing-pages",
-        "Federated subscriptions": "/api/plugin/subscription-callback"
+      "Built-In": {
+        "Usage Reporting": "/api/plugin/usage-reporting",
+        "Schema Reporting": "/api/plugin/schema-reporting",
+        "Inline Trace": "/api/plugin/inline-trace",
+        "Drain HTTP Server": "/api/plugin/drain-http-server",
+        "Cache Control": "/api/plugin/cache-control",
+        "Landing Pages": "/api/plugin/landing-pages",
+        "Federated Subscriptions": "/api/plugin/subscription-callback"
       },
       "Custom": {
-        "Creating plugins": "/integrations/plugins",
-        "Event reference": "/integrations/plugins-event-reference"
+        "Creating Plugins": "/integrations/plugins",
+        "Event Reference": "/integrations/plugins-event-reference"
       }
     },
     "Using with Federation": {
-      "As a subgraph": {
+      "As a Subgraph": {
         "Setup": "/using-federation/apollo-subgraph-setup",
         "@apollo/subgraph reference": "/using-federation/api/apollo-subgraph/"
       },
-      "As a gateway": {
+      "As a Gateway": {
         "Setup": "/using-federation/apollo-gateway-setup",
         "Performance Optimizations": "/using-federation/gateway-performance",
-        "@apollo/gateway reference": "/using-federation/api/apollo-gateway/"
+        "@apollo/gateway Reference": "/using-federation/api/apollo-gateway/"
       }
     }
   }
