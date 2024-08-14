@@ -45,6 +45,7 @@
     "Performance": {
       "Caching": "/performance/caching",
       "Cache backends": "/performance/cache-backends",
+      "Response Cache Eviction": "/performance/response-cache-eviction",
       "Automatic persisted queries": "/performance/apq"
     },
     "Security": {
@@ -89,6 +90,7 @@
       },
       "As a gateway": {
         "Setup": "/using-federation/apollo-gateway-setup",
+        "Performance Optimizations": "/using-federation/gateway-performance",
         "@apollo/gateway reference": "/using-federation/api/apollo-gateway/"
       }
     }
