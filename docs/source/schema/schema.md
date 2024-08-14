@@ -1,5 +1,5 @@
 ---
-title: GraphQL schema basics
+title: GraphQL Schema Basics
 ---
 
 Your GraphQL server uses a **schema** to describe the shape of your available data. This schema defines a hierarchy of **types** with **fields** that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute.
