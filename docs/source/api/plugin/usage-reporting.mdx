@@ -3,7 +3,7 @@ title: "API Reference: Usage Reporting Plugin"
 api_reference: true
 ---
 
-> Sending metrics from Apollo Server to GraphOS requires an [enterprise plan](../org/plans/).
+> Sending metrics from Apollo Server to GraphOS requires an [enterprise plan](/graphos/org/plans).
 > If your organization _doesn't_ currently have an Enterprise plan, you can test out this functionality by signing up for a free [Enterprise trial](https://studio.apollographql.com/signup?type=enterprise-trial&referrer=docs-content).
 
 Apollo Server's built-in usage reporting plugin gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [GraphOS](/graphos/), as described in [Metrics and logging](../../monitoring/metrics/).
@@ -147,7 +147,7 @@ Providing a number `x` is equivalent to passing this function:
 * The operation _doesn't_ produce a trace that can be viewed in the Traces section of the Operations page in Studio.
 * The operation _does_ still contribute to most features of Studio, such as schema checks, the Operations page, and the "referencing operations" statistic on the Fields page.
 
-(For more information about the difference between the "referencing operations" and "field executions" statistics, see [the Studio Fields page documentation](https://apollographql.com/docs/studio/metrics/field-usage/).)
+(For more information about the difference between the "referencing operations" and "field executions" statistics, see [the Studio Fields page documentation](/graphos/metrics/field-usage).)
 
 Returning `false` (or `0`) for some or all operations can improve your server's performance, because calculating complete traces can introduce significant overhead. This is especially true for a federated graph, because traces are transmitted from the subgraph to the Gateway in-band inside the actual GraphQL response.
 

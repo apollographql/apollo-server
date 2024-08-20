@@ -4,13 +4,13 @@ api_reference: true
 ---
 
 > Note:
-> **The schema reporting plugin does not support graphs that use Apollo Federation.** If you are using Federation, or if you want to publish your monolith schema in your CI/CD pipeline, you can use the [Rover CLI to publish your schema or subgraph changes](/graphos/schema/cli-registration).
+> **The schema reporting plugin does not support graphs that use Apollo Federation.** If you are using Federation, or if you want to publish your monolith schema in your CI/CD pipeline, you can use the [Rover CLI to publish your schema or subgraph changes](/graphos/delivery/publishing-schemas).
 
 ## Using the plugin
 
 This article documents the options for the `ApolloServerPluginSchemaReporting` plugin, which you can import from `@apollo/server/plugin/schemaReporting`.
 
-This plugin enables your GraphQL server to register its latest schema with the Apollo schema registry every time it starts up. Full details on schema reporting can be found in [the Apollo Studio docs](/studio/schema/schema-reporting/).
+This plugin enables your GraphQL server to register its latest schema with the Apollo schema registry every time it starts up. Full details on schema reporting can be found in [the Apollo Studio docs](/graphos/delivery/publishing-schemas).
 
 In order to use this plugin, you must configure your server with a graph API key, either with the `APOLLO_KEY` environment variable or by passing it directly to your `ApolloServer` constructor (e.g., `new ApolloServer({apollo: {key: KEY}})`). This is the same way you configure [usage reporting](./usage-reporting).
 
