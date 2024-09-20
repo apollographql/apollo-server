@@ -368,3 +368,58 @@ class PersonalizationAPI extends RESTDataSource {
     return this.progressLoader.load(id);
   }
 ```
+
+### Initialize DataSource
+
+When dataSources are initialized, the initialize method is called. This is useful when you need to initialize the dataSources with the context or cache.
+
+This is the code that initializes the dataSources.
+
+```js
+async function initializeDataSources() {
+  if (config.dataSources) {
+    const context = requestContext.context;
+
+    const dataSources = config.dataSources();
+
+    const initializers: any[] = [];
+    for (const dataSource of Object.values(dataSources)) {
+      if (dataSource.initialize) {
+        initializers.push(
+          dataSource.initialize({
+            context,
+            cache: requestContext.cache,
+          })
+        );
+      }
+    }
+
+    await Promise.all(initializers);
+
+    if ('dataSources' in context) {
+      throw new Error(
+        'Please use the dataSources config option instead of putting dataSources on the context yourself.',
+      );
+    }
+
+    (context as any).dataSources = dataSources;
+  }
+}
+```
+
+If you need to initialize the dataSources with the context or cache, you can use the initialize method.
+
+```js
+class InternalApi extends RESTDataSource {
+  constructor() {
+    super();
+    this.baseURL = 'https://internal-api.example.com/';
+  }
+
+  async initialize({ context, cache }) {
+    this.context = context;
+    this.cache = cache;
+  }
+}
+```
+
