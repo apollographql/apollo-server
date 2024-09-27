@@ -8,7 +8,7 @@
     "@rollup/plugin-json": "6.1.0",
     "@rollup/plugin-node-resolve": "15.2.3",
     "@types/make-fetch-happen": "10.0.4",
-    "rollup": "3.29.4"
+    "rollup": "3.29.5"
   },
   "volta": {
     "extends": "../package.json"
