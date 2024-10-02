@@ -91,7 +91,7 @@ Now, make sure you've run `NODE_ENV=development npm run start:lambda`, and navig
 
 *Note - The GraphQL Playground will only run if your `NODE_ENV` is set to `development`. If you don't pass this, or your `NODE_ENV` is set to `production`, you will not see the GraphQL Playground.*
 
-![Local GraphQL Server](../images/graphql.png)
+![Local GraphQL Server](../images/graphql-playground.png)
 
 If you can see GraphQL Playground and run a simple query, you've done everything properly. Now, let's add Apollo Client to the frontend.
 
