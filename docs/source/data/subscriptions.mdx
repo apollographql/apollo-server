@@ -211,7 +211,7 @@ httpServer.listen(PORT, () => {
 
 </ExpansionPanel>
 
-> ⚠️ **Running into an error?** If you're using the `graphql-ws` library, your specified subscription protocol must be consistent across your backend, frontend, and **every other tool** you use (including [Apollo Sandbox](/studio/explorer/additional-features/#subscription-support)). For more information, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+> ⚠️ **Running into an error?** If you're using the `graphql-ws` library, your specified subscription protocol must be consistent across your backend, frontend, and **every other tool** you use (including [Apollo Sandbox](/graphos/platform/explorer/subscription-support). For more information, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
 
 ## Resolving a subscription
 
@@ -412,7 +412,7 @@ subscription IncrementingNumber {
 }
 ```
 
-> If you don't see the result of your subscription operation you might need to [adjust your Sandbox settings to use the `graphql-ws` protocol](/studio/explorer/additional-features/#subscription-support).
+> If you don't see the result of your subscription operation you might need to [adjust your Sandbox settings to use the `graphql-ws` protocol](/graphos/platform/explorer/subscription-support).
 
 After you start up the server in CodeSandbox, follow the instructions in the browser to test running the `numberIncremented` subscription in Apollo Sandbox. You should see the subscription's value update every second.
 
@@ -609,19 +609,19 @@ If you intend to [switch from `subscriptions-transport-ws` to `graphql-ws`](#swi
 <tr>
 <td>
 
-[Apollo Studio Explorer](/studio/explorer/explorer/)
+[Apollo Studio Explorer](/graphos/platform/explorer)
 
 </td>
 
 <td>
 
-[`graphql-ws`](/studio/explorer/additional-features/#subscription-support)
+[`graphql-ws`](/graphos/platform/explorer/subscription-support)
 
 </td>
 
 <td>
 
-[`subscriptions-transport-ws`](/studio/explorer/additional-features/#subscription-support)
+[`subscriptions-transport-ws`](/graphos/platform/explorer/subscription-support)
 </td>
 
 </tr>
@@ -652,7 +652,7 @@ Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
 <tr>
 <td>
 
-[Apollo iOS](/ios/subscriptions/)
+[Apollo iOS](/ios/fetching/subscriptions/)
 
 </td>
 

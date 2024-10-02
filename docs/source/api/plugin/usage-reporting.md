@@ -137,7 +137,7 @@ Providing a number `x` is equivalent to passing this function:
 * The operation _doesn't_ produce a trace that can be viewed in the Traces section of the Operations page in Studio.
 * The operation _does_ still contribute to most features of Studio, such as schema checks, the Operations page, and the "referencing operations" statistic on the Fields page.
 
-(For more information about the difference between the "referencing operations" and "field executions" statistics, see [the Studio Fields page documentation](https://apollographql.com/docs/studio/metrics/field-usage/).)
+(For more information about the difference between the "referencing operations" and "field executions" statistics, see the [field usage documentation](/graphos/platform/insights/field-usage).)
 
 Returning `false` (or `0`) for some or all operations can improve your server's performance, because calculating complete traces can introduce significant overhead. This is especially true for a federated graph, because traces are transmitted from the subgraph to the Gateway in-band inside the actual GraphQL response.
 
