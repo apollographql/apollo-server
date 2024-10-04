@@ -26,6 +26,12 @@ flowchart LR;
   client --Sends query--> ApolloServer;
 ```
 
+<Tip>
+
+[Learn how Apollo Connectors](/graphos/schema-design/connectors/) simplify incorporating REST APIs into your graph.
+
+</Tip>
+
 Because your server can use multiple various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important.
 
 For this reason, we recommend creating individual data source classes to encapsulate the logic of fetching data from a particular source, providing methods that resolvers can use to access data neatly. You can additionally customize your data source classes to help with caching, deduplication, or errors while resolving operations.
