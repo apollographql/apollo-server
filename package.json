@@ -78,7 +78,7 @@
     "cspell": "6.31.3",
     "eslint": "8.57.0",
     "eslint-plugin-import": "2.29.1",
-    "express": "4.20.0",
+    "express": "4.21.1",
     "graphql": "16.9.0",
     "graphql-subscriptions": "2.0.0",
     "graphql-tag": "2.12.6",
