@@ -16,7 +16,7 @@ export type CacheScope = 'PUBLIC' | 'PRIVATE';
  * specify a maxAge and/or a scope.
  */
 export interface CacheHint {
-  maxAge?: number;
+  maxAge?: number | string;
   scope?: CacheScope;
 }
 
