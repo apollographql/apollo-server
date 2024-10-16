@@ -1,5 +1,5 @@
 ---
-title: Server-side caching
+title: Server-Side Caching
 description: Configure caching behavior on a per-field basis
 ---
 

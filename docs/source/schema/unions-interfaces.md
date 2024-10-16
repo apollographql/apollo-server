@@ -1,5 +1,5 @@
 ---
-title: Unions and interfaces
+title: Unions and Interfaces
 description: Abstract schema types
 ---
 

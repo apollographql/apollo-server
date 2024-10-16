@@ -1,5 +1,5 @@
 ---
-title: Automatic persisted queries
+title: Automatic Persisted Queries
 description: Improve network performance by sending smaller requests
 ---
 

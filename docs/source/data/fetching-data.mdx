@@ -1,5 +1,5 @@
 ---
-title: Fetching data
+title: Fetching Data
 description: Manage connections to databases and other data sources
 ---
 
@@ -25,6 +25,12 @@ flowchart LR;
   client(ApolloClient);
   client --Sends query--> ApolloServer;
 ```
+
+<Tip>
+
+[Learn how Apollo Connectors](/graphos/schema-design/connectors/) simplify incorporating REST APIs into your graph.
+
+</Tip>
 
 Because your server can use multiple various data sources, keeping your [resolvers](./resolvers) tidy becomes _even more_ important.
 
