@@ -3,31 +3,25 @@ title: GraphQL Playground
 description: Visually explore Apollo Server
 ---
 
-import { Link } from 'gatsby';
-
-<blockquote>
-
 #### 📣 Query your server with Apollo Sandbox
 
 **Apollo Sandbox** provides a special instance of our Explorer IDE that you can use for local development without an Apollo account.
 
-<p style={{"margin-top": "15px", "margin-bottom": "15px"}}>
-  <Button
+<p
+  style="margin-top:15px; marign-bottom:15px"
+>
+  <ButtonLink
     size="lg"
     colorScheme="indigo"
-    as={Link}
-    to="https://studio.apollographql.com/sandbox/?referrer=docs-content"
-    isExternal
+    href="https://studio.apollographql.com/sandbox/?referrer=docs-content"
   >
     Launch Sandbox
-  </Button>
+  </ButtonLink>
 </p>
 
 Sandbox automatically attempts to connect to a GraphQL server running at `http://localhost:4000`. Use the box in the top-left to change this URL to any local or remote GraphQL endpoint that's reachable by your browser.
 
 [Learn more about Sandbox.](/graphos/explorer/sandbox)
-
-</blockquote>
 
 ## About GraphQL Playground
 
@@ -38,8 +32,6 @@ Sandbox automatically attempts to connect to a GraphQL server running at `http:/
 [GraphQL Playground](https://github.com/prismagraphql/graphql-playground) is a graphical, interactive, in-browser GraphQL IDE, created by [Prisma](https://www.prisma.io/) and based on [GraphiQL](https://github.com/graphql/graphiql).
 
 In development, Apollo Server enables GraphQL Playground on the same URL as the GraphQL server itself (e.g. `http://localhost:4000/graphql`) and automatically serves the GUI to web browsers.  When `NODE_ENV` is set to `production`, GraphQL Playground (as well as introspection) is disabled as a production best-practice.
-
-![GraphQL Playground](../images/graphql-playground.png)
 
 ## Configuring Playground
 
