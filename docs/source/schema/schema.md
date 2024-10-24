@@ -2,6 +2,8 @@
 title: GraphQL Schema Basics
 ---
 
+> If you learn best by doing, check out the [intro tutorial to GraphQL with TypeScript & Apollo Server](https://www.apollographql.com/tutorials/intro-typescript?referrer=docs-content).
+
 Your GraphQL server uses a **schema** to describe the shape of your available data. This schema defines a hierarchy of **types** with **fields** that are populated from your back-end data stores. The schema also specifies exactly which **queries** and **mutations** are available for clients to execute.
 
 This article describes the fundamental building blocks of a schema and how to create one for your GraphQL server.

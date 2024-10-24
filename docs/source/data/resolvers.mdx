@@ -5,6 +5,8 @@ description: How Apollo Server processes GraphQL operations
 
 import TopLevelAwait from "../shared/top-level-await.mdx"
 
+> If you learn best by doing, check out the [tutorial on writing resolvers](https://www.apollographql.com/tutorials/lift-off-part2?referrer=docs-content).
+
 Apollo Server needs to know how to populate data for every field in your schema so that it can respond to requests for that data. To accomplish this, it uses resolvers.
 
 **A resolver is a function that's responsible for populating the data for a single field in your schema.** It can populate that data in any way you define, such as by fetching data from a back-end database or a third-party API.
