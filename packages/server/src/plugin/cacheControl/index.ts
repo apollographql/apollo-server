@@ -17,6 +17,7 @@ import type {
   CacheScope,
   GraphQLResolveInfoWithCacheControl,
 } from '@apollo/cache-control-types';
+import ms from 'ms';
 
 /**
  * CacheAnnotation represents the contents of a `@cacheControl` directive.
@@ -37,7 +38,7 @@ export interface ApolloServerPluginCacheControlOptions {
    * field in your operation and every field with sub-fields must have a cache
    * hint or the overall operation will not be cacheable.)
    */
-  defaultMaxAge?: number;
+  defaultMaxAge?: number | string;
   /**
    * Determines whether to set the `Cache-Control` HTTP header. If true (the
    * default), the header is written on all responses (with a value of
@@ -123,7 +124,16 @@ export function ApolloServerPluginCacheControl(
         return annotation;
       }
 
-      const defaultMaxAge: number = options.defaultMaxAge ?? 0;
+      let defaultMaxAge: number = 0;
+      if (typeof options.defaultMaxAge === 'string') {
+        const parsedFromHumanReadable = ms(options.defaultMaxAge); // Convert human-readable format to milliseconds
+        if (parsedFromHumanReadable) {
+          defaultMaxAge = parsedFromHumanReadable / 1000; // If it was valid, convert to seconds
+        }
+      } else if (typeof options.defaultMaxAge === 'number') {
+        defaultMaxAge = options.defaultMaxAge;
+      }
+
       const calculateHttpHeaders = options.calculateHttpHeaders ?? true;
       const { __testing__cacheHints } = options;
 
@@ -409,11 +419,18 @@ function cacheAnnotationFromDirectives(
     return { inheritMaxAge: true, scope };
   }
 
+  let maxAge = undefined;
+  if (maxAgeArgument?.value?.kind === 'IntValue') {
+    maxAge = parseInt(maxAgeArgument.value.value);
+  } else if (maxAgeArgument?.value?.kind === 'StringValue') {
+    const parsedFromHumanReadable = ms(maxAgeArgument.value.value); // Convert human-readable format to milliseconds
+    if (parsedFromHumanReadable) {
+      maxAge = parsedFromHumanReadable / 1000; // If it was valid, convert to seconds
+    }
+  }
+
   return {
-    maxAge:
-      maxAgeArgument?.value?.kind === 'IntValue'
-        ? parseInt(maxAgeArgument.value.value)
-        : undefined,
+    maxAge,
     scope,
   };
 }

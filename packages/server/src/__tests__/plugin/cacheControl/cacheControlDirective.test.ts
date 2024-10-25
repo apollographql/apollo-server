@@ -109,6 +109,60 @@ describe('@cacheControl directives', () => {
     expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
   });
 
+  it('should set the specified maxAge from a human-readable cache hint on the field when a string is passed', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        droid(id: ID!): Droid @cacheControl(maxAge: "1d")
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `);
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 86400 }]]));
+  });
+
+  it('should set the default maxAge cache hint on the field when an invalid string is passed', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        droid(id: ID!): Droid @cacheControl(maxAge: "1ddddd")
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `);
+
+    const hints = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 10 }]]));
+  });
+
   it('should set the specified maxAge for a field from a cache hint on the target type', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {

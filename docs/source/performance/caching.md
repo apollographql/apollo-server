@@ -9,7 +9,7 @@ description: Configure caching behavior on a per-field basis
 type Post {
   id: ID!
   title: String
-  author: Author
+  author: Author @cacheControl(maxAge: "1d")
   votes: Int @cacheControl(maxAge: 30)
   comments: [Comment]
   readByCurrentUser: Boolean! @cacheControl(maxAge: 10, scope: PRIVATE)
@@ -55,7 +55,7 @@ The `@cacheControl` directive accepts the following arguments:
 
 | Name | Description |
 |------|-------------|
-| `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
+| `maxAge` | The maximum amount of time the field's cached value is valid in seconds or [human-readable string](https://www.npmjs.com/package/ms). The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
 | `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
 | `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-a-different-default-maxage). Do not provide `maxAge` if you provide this argument. |
 

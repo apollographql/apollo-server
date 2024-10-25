@@ -347,7 +347,9 @@ export default function plugin<TContext extends BaseContext>(
             // still calls `cache.set` synchronously (ie, that it writes to
             // InMemoryLRUCache synchronously).
             cache
-              .set(key, serializedValue, { ttl: policyIfCacheable.maxAge })
+              .set(key, serializedValue, {
+                ttl: policyIfCacheable.maxAge as number, // This will always be a number but user can pass in string to the cache hint which gets parsed into a number
+              })
               .catch(logger.warn);
           };
 
