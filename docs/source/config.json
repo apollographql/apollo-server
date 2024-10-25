@@ -6,7 +6,7 @@
       "to": "/apollo-server/previous-versions",
       "content": "Learn more about upgrading to a supported Apollo Server version."
     },
-    "message": "Apollo Server 3 is officially deprecated, with end-of-life scheduled for 22 October 2024."
+    "message": "Apollo Server 3 is officially end-of-life as of 22 October 2024."
   },
   "algoliaFilters": [
     "docset:server",
