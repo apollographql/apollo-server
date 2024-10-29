@@ -265,7 +265,7 @@ class SubscriptionManager {
         `Sending \`${action}\` request to router` + maybeWithErrors,
         id,
       );
-      return retry(
+      return retry<Response, Error>(
         async (bail) => {
           response = fetch(url, {
             method: 'POST',
