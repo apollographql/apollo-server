@@ -44,14 +44,14 @@
     {
       groupName: "graphql-http",
       matchPackageNames: ["graphql-http"],
-      matchPaths: ["packages/integration-testsuite/package.json"],
+      matchFileNames: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
     // We want the testsuite to explicitly pin the version of @apollo/server
     // since they are supposed to be in lockstep.
     {
       matchPackageNames: ["@apollo/server"],
-      matchPaths: ["packages/integration-testsuite/package.json"],
+      matchFileNames: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
     // We need to support Node v14, so we don't allow ourselves to use type definitions
@@ -67,12 +67,12 @@
     },
     // @apollo/utils@3 drop support for node v14. We can take this when we drop node v14 support.
     {
-      matchPackagePatterns: ["^@apollo/utils"],
+      matchPackageNames: ["/^@apollo/utils/"],
       allowedVersions: "2.x"
     },
     // @graphql-codegen@4 drops support for node v14. We can take this when we drop node v14 support.
     {
-      matchPackagePatterns: ["^@graphql-codegen"],
+      matchPackageNames: ["/^@graphql-codegen/"],
       allowedVersions: "3.x"
     },
     // @graphql-tools/mock@8 drops support for node v14. We can take this when we drop node v14 support.
@@ -111,12 +111,12 @@
     // fetch implementation to be Node's built-in implementation and drop this
     // very old node-fetch implementation.)
     {
-      "matchPackagePatterns": ["node-fetch", "@types/node-fetch"],
+      "matchPackageNames": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
     },
     {
       // Major upgrade rollup plugins along with rollup itself.
-      matchSourceUrlPrefixes: ["https://github.com/rollup/"],
+      matchSourceUrls: ["https://github.com/rollup/{/,}**"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
     },
