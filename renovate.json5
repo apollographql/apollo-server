@@ -1,5 +1,5 @@
 {
-  "extends": [
+  extends: [
     "apollo-open-source",
     "group:monorepos",
     "group:jestPlusTSJest",
@@ -9,8 +9,8 @@
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
   // Disable circleci manager; see apollographql/federation's renovate file for details.
-  "enabledManagers": ["npm"],
-  "dependencyDashboard": true,
+  enabledManagers: ["npm"],
+  dependencyDashboard: true,
   // It seems like a nice idea to let Renovate use GitHub's native "automerge" since PRs
   // can get merged between Renovate runs. The downsides are:
   // - Renovate doesn't seem to set up the automerges to use squash-and-merge (this is
@@ -20,28 +20,30 @@
   //   old branch point. GH auto-merge doesn't have that property so it's a bit more likely that
   //   a deps update could break the build if there are recent related changes.
   platformAutomerge: false,
-  "packageRules": [
+  packageRules: [
     // Bunch up all non-major dependencies into a single PR.  In the common case
     // where the upgrades apply cleanly, this causes less noise and is resolved faster
     // than starting a bunch of upgrades in parallel for what may turn out to be
     // a suite of related packages all released at once.
     {
-      "groupName": "all non-major dependencies",
-      "matchUpdateTypes": ["patch", "minor"],
-      "groupSlug": "all-minor-patch",
+      groupName: "all non-major dependencies",
+      matchUpdateTypes: ["patch", "minor"],
+      groupSlug: "all-minor-patch",
     },
     // TypeScript minor versions don't follow semver, and typically require a
     // few changes on our end to take the upgrade. Break them out from the
     // all-minor-patch group so they don't block other upgrades.
-    //
+    {
+      groupName: "typescript",
+      matchPackageNames: ["typescript"],
+      matchUpdateTypes: ["minor"],
+    },
     // Also, we're currently stuck at v5.4.x because v5.5 ships a lib.dom.d.ts
     // that's incompatible with `@types/node@14` which we are pinning until we
     // drop Node v14 support. See
     // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/66617
     {
-      "groupName": "typescript",
-      "matchPackageNames": ["typescript"],
-      "matchUpdateTypes": ["minor"],
+      matchPackageNames: ["typescript"],
       allowedVersions: "5.4.x",
     },
     // The testsuite depends directly on the tests in `graphql-http`.
@@ -114,8 +116,8 @@
     // fetch implementation to be Node's built-in implementation and drop this
     // very old node-fetch implementation.)
     {
-      "matchPackageNames": ["node-fetch", "@types/node-fetch"],
-      "allowedVersions": "2.x"
+      matchPackageNames: ["node-fetch", "@types/node-fetch"],
+      allowedVersions: "2.x"
     },
     {
       // Major upgrade rollup plugins along with rollup itself.
