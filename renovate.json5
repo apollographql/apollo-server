@@ -30,11 +30,19 @@
       "matchUpdateTypes": ["patch", "minor"],
       "groupSlug": "all-minor-patch",
     },
-    // TypeScript minor versions don't follow semver, and typically require a few changes on our end to take the upgrade. Break them out from the all-minor-patch group so they don't block other upgrades.
+    // TypeScript minor versions don't follow semver, and typically require a
+    // few changes on our end to take the upgrade. Break them out from the
+    // all-minor-patch group so they don't block other upgrades.
+    //
+    // Also, we're currently stuck at v5.4.x because v5.5 ships a lib.dom.d.ts
+    // that's incompatible with `@types/node@14` which we are pinning until we
+    // drop Node v14 support. See
+    // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/66617
     {
       "groupName": "typescript",
       "matchPackageNames": ["typescript"],
       "matchUpdateTypes": ["minor"],
+      allowedVersions: "5.4.x",
     },
     // The testsuite depends directly on the tests in `graphql-http`.
     // Because of this, updates to `graphql-http` affect the contents of
