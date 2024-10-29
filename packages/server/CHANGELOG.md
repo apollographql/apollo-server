@@ -1,5 +1,9 @@
 # @apollo/server
 
+## 4.11.2
+
+(No change; there is a change to the `@apollo/server-integration-testsuite` used to test integrations, and the two packages always have matching versions.)
+
 ## 4.11.1
 
 ### Patch Changes
