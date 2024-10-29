@@ -138,6 +138,11 @@
       matchPackageNames: ["negotiator"],
       allowedVersions: "0.x",
     },
+    // npm@10 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["npm"],
+      allowedVersions: "9.x",
+    },
     // We specifically provide a first-party integration (`expressMiddleware`
     // imported from `@apollo/server/express4`) for Express v4 because it is the
     // most common web framework. (Additionally, as an internal implementation
