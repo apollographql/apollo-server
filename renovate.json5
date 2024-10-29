@@ -77,18 +77,13 @@
     },
     // @graphql-tools/mock@8 drops support for node v14. We can take this when we drop node v14 support.
     {
-      matchPackageNames: ["^@graphql-tools/mock"],
+      matchPackageNames: ["@graphql-tools/mock"],
       allowedVersions: "8.x"
     },
     // @graphql-tools/schema@9 drops support for node v14. We can take this when we drop node v14 support.
     {
-      matchPackageNames: ["^@graphql-tools/schema"],
+      matchPackageNames: ["@graphql-tools/schema"],
       allowedVersions: "9.x"
-    },
-    // make-fetch-happen@12 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["^make-fetch-happen"],
-      allowedVersions: "11.x"
     },
     // @typescript-eslint@6 drops support for node v14. We can take this when we drop node v14 support.
     {
