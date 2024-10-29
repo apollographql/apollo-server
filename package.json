@@ -38,23 +38,23 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.11.1",
+    "@apollo/client": "3.11.8",
     "@apollo/gateway": "2.8.4",
-    "@apollo/subgraph": "2.8.4",
+    "@apollo/subgraph": "2.9.3",
     "@apollo/utils.createhash": "2.0.1",
     "@changesets/changelog-github": "0.5.0",
-    "@changesets/cli": "2.27.7",
+    "@changesets/cli": "2.27.9",
     "@graphql-codegen/cli": "3.3.1",
     "@graphql-codegen/typescript-operations": "3.0.4",
     "@graphql-tools/mock": "8.7.20",
     "@graphql-tools/schema": "9.0.19",
     "@rollup/plugin-commonjs": "25.0.8",
-    "@types/async-retry": "1.4.8",
+    "@types/async-retry": "1.4.9",
     "@types/compression": "1.7.5",
     "@types/cors": "2.8.17",
     "@types/express": "4.17.21",
-    "@types/express-serve-static-core": "4.19.5",
-    "@types/lodash": "4.17.7",
+    "@types/express-serve-static-core": "4.19.6",
+    "@types/lodash": "4.17.12",
     "@types/lodash.sumby": "4.6.9",
     "@types/lodash.xorby": "4.7.9",
     "@types/negotiator": "0.6.3",
@@ -76,8 +76,8 @@
     "compression": "1.7.4",
     "cors": "2.8.5",
     "cspell": "6.31.3",
-    "eslint": "8.57.0",
-    "eslint-plugin-import": "2.29.1",
+    "eslint": "8.57.1",
+    "eslint-plugin-import": "2.31.0",
     "express": "4.21.1",
     "graphql": "16.9.0",
     "graphql-subscriptions": "2.0.0",
@@ -89,7 +89,7 @@
     "jest-mock-random": "1.1.1",
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
-    "nock": "13.5.4",
+    "nock": "13.5.5",
     "node-fetch": "2.7.0",
     "prettier": "3.3.3",
     "prettier-2": "npm:prettier@2.8.8",
@@ -98,7 +98,7 @@
     "rollup": "3.29.5",
     "supertest": "6.3.4",
     "test-listen": "1.1.0",
-    "ts-jest": "29.2.3",
+    "ts-jest": "29.2.5",
     "typescript": "5.4.2"
   },
   "jest": {
@@ -107,7 +107,7 @@
     ]
   },
   "volta": {
-    "node": "20.16.0",
+    "node": "20.18.0",
     "npm": "9.9.3"
   }
 }
