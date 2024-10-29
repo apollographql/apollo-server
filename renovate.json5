@@ -135,8 +135,13 @@
     // change in https://github.com/uuidjs/uuid/pull/750 and then later started
     // using the new-in-v16 `??=` operator.)
     {
-      matchPackageNames: ["uuid"],
+      matchPackageNames: ["uuid", "@types/uuid"],
       allowedVersions: "9.x",
+    },
+    // negotiator@1 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["negotiator"],
+      allowedVersions: "0.x",
     },
     // We specifically provide a first-party integration (`expressMiddleware`
     // imported from `@apollo/server/express4`) for Express v4 because it is the
@@ -153,6 +158,6 @@
     {
       matchPackageNames: ["express", "@types/express", "@types/express-serve-static-core"],
       allowedVersions: "4.x",
-    }
+    },
   ]
 }
