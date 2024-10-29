@@ -1,5 +1,16 @@
 # @apollo/server-integration-testsuite
 
+## 4.11.2
+
+### Patch Changes
+
+- [#7879](https://github.com/apollographql/apollo-server/pull/7879) [`b0fb33b`](https://github.com/apollographql/apollo-server/commit/b0fb33b1e22b18923d2e88fb6b30e23de3b664a1) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- [#7968](https://github.com/apollographql/apollo-server/pull/7968) [`68977e2`](https://github.com/apollographql/apollo-server/commit/68977e2b7fdf87197cd5c5cd7035c3b74298150a) Thanks [@glasser](https://github.com/glasser)! - Upgrade supertest and superagent dependencies
+
+- Updated dependencies []:
+  - @apollo/server@4.11.2
+
 ## 4.11.1
 
 ### Patch Changes

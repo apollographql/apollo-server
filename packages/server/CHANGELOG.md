@@ -1,5 +1,7 @@
 # @apollo/server
 
+## 4.11.2
+
 ## 4.11.1
 
 ### Patch Changes
