@@ -95,10 +95,21 @@
       matchPackageNames: ["^@typescript-eslint"],
       allowedVersions: "5.x"
     },
+    // cspell@7 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["cspell"],
+      allowedVersions: "6.x",
+    },
+    // whatwg-mimetype@4 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["whatwg-mimetype"],
+      allowedVersions: "3.x",
+    },
     // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
-    // ESM and we're not going to go ESM-only for a while. So let's stay on v2.
-    // (Perhaps we could swap to undici instead if this pin gets to be a
-    // problem.)
+    // ESM, so let's stay on v2.
+    // (Once we drop support for node older than v18, we can switch our default
+    // fetch implementation to be Node's built-in implementation and drop this
+    // very old node-fetch implementation.)
     {
       "matchPackagePatterns": ["node-fetch", "@types/node-fetch"],
       "allowedVersions": "2.x"
@@ -108,6 +119,11 @@
       matchSourceUrlPrefixes: ["https://github.com/rollup/"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
+    },
+    // rollup@4 drops support for node v14. We can take this when we drop node v14 support.
+    {
+      matchPackageNames: ["rollup"],
+      allowedVersions: "4.x",
     },
     // Only needed until Jest supports prettier@3 for snapshots
     {
