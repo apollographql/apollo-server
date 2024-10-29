@@ -1,134 +1,92 @@
 {
-  "extends": [
+  extends: [
     "apollo-open-source",
     "group:monorepos",
     "group:jestPlusTSJest",
     "group:jestPlusTypes",
   ],
-  // Override this value set in apollo-open-source back to the default.
-  // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
-  // Disable circleci manager; see apollographql/federation's renovate file for details.
-  "enabledManagers": ["npm"],
-  "dependencyDashboard": true,
-  // It seems like a nice idea to let Renovate use GitHub's native "automerge" since PRs
-  // can get merged between Renovate runs. The downsides are:
-  // - Renovate doesn't seem to set up the automerges to use squash-and-merge (this is
-  //   likely going to be fixed, see eg https://github.com/renovatebot/renovate/issues/12290)
-  // - When Renovate does the merge itself, it does its best to ensure that the PR is fully
-  //   rebased on main so that the CI that ran is based on main rather than a possibly slightly
-  //   old branch point. GH auto-merge doesn't have that property so it's a bit more likely that
-  //   a deps update could break the build if there are recent related changes.
+  enabledManagers: ["npm"],
+  dependencyDashboard: true,
   platformAutomerge: false,
-  "packageRules": [
-    // Bunch up all non-major dependencies into a single PR.  In the common case
-    // where the upgrades apply cleanly, this causes less noise and is resolved faster
-    // than starting a bunch of upgrades in parallel for what may turn out to be
-    // a suite of related packages all released at once.
+  packageRules: [
     {
-      "groupName": "all non-major dependencies",
-      "matchUpdateTypes": ["patch", "minor"],
-      "groupSlug": "all-minor-patch",
+      groupName: "all non-major dependencies",
+      matchUpdateTypes: ["patch", "minor"],
+      groupSlug: "all-minor-patch",
     },
-    // TypeScript minor versions don't follow semver, and typically require a few changes on our end to take the upgrade. Break them out from the all-minor-patch group so they don't block other upgrades.
     {
-      "groupName": "typescript",
-      "matchPackageNames": ["typescript"],
-      "matchUpdateTypes": ["minor"],
+      groupName: "typescript",
+      matchPackageNames: ["typescript"],
+      matchUpdateTypes: ["minor"],
     },
-    // The testsuite depends directly on the tests in `graphql-http`.
-    // Because of this, updates to `graphql-http` affect the contents of
-    // published packages, require a changeset, and cannot be auto-merged.
-    // So we split it into its own Renovate PRs so that it doesn't block
-    // other upgrades.
     {
       groupName: "graphql-http",
       matchPackageNames: ["graphql-http"],
-      matchPaths: ["packages/integration-testsuite/package.json"],
+      matchFileNames: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
-    // We want the testsuite to explicitly pin the version of @apollo/server
-    // since they are supposed to be in lockstep.
     {
       matchPackageNames: ["@apollo/server"],
-      matchPaths: ["packages/integration-testsuite/package.json"],
+      matchFileNames: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
-    // We need to support Node v14, so we don't allow ourselves to use type definitions
-    // that would let us write v16-specific code.
     {
       matchPackageNames: ["@types/node"],
-      allowedVersions: "14.x"
+      allowedVersions: "14.x",
     },
-    // lru-cache@8 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["lru-cache"],
-      allowedVersions: "7.x"
+      allowedVersions: "7.x",
     },
-    // @apollo/utils@3 drop support for node v14. We can take this when we drop node v14 support.
     {
-      matchPackagePatterns: ["^@apollo/utils"],
-      allowedVersions: "2.x"
+      allowedVersions: "2.x",
+      matchPackageNames: ["/^@apollo/utils/"],
     },
-    // @graphql-codegen@4 drops support for node v14. We can take this when we drop node v14 support.
     {
-      matchPackagePatterns: ["^@graphql-codegen"],
-      allowedVersions: "3.x"
+      allowedVersions: "3.x",
+      matchPackageNames: ["/^@graphql-codegen/"],
     },
-    // @graphql-tools/mock@8 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["^@graphql-tools/mock"],
-      allowedVersions: "8.x"
+      allowedVersions: "8.x",
     },
-    // @graphql-tools/schema@9 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["^@graphql-tools/schema"],
-      allowedVersions: "9.x"
+      allowedVersions: "9.x",
     },
-    // make-fetch-happen@12 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["^make-fetch-happen"],
-      allowedVersions: "11.x"
+      allowedVersions: "11.x",
     },
-    // @typescript-eslint@6 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["^@typescript-eslint"],
-      allowedVersions: "5.x"
+      allowedVersions: "5.x",
     },
-    // cspell@7 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["cspell"],
       allowedVersions: "6.x",
     },
-    // whatwg-mimetype@4 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["whatwg-mimetype"],
       allowedVersions: "3.x",
     },
-    // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
-    // ESM, so let's stay on v2.
-    // (Once we drop support for node older than v18, we can switch our default
-    // fetch implementation to be Node's built-in implementation and drop this
-    // very old node-fetch implementation.)
     {
-      "matchPackagePatterns": ["node-fetch", "@types/node-fetch"],
-      "allowedVersions": "2.x"
+      allowedVersions: "2.x",
+      matchPackageNames: ["/node-fetch/", "/@types/node-fetch/"],
     },
     {
-      // Major upgrade rollup plugins along with rollup itself.
-      matchSourceUrlPrefixes: ["https://github.com/rollup/"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
+      matchSourceUrls: ["https://github.com/rollup/{/,}**"],
     },
-    // rollup@4 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["rollup"],
       allowedVersions: "4.x",
     },
-    // Only needed until Jest supports prettier@3 for snapshots
     {
-      "matchPackageNames": ["prettier-2"],
-      "allowedVersions": "2.x"
+      matchPackageNames: ["prettier-2"],
+      allowedVersions: "2.x",
     },
-  ]
+  ],
 }
