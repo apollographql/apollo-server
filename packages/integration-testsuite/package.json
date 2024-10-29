@@ -38,7 +38,7 @@
     "loglevel": "^1.8.0",
     "node-fetch": "^2.6.7",
     "superagent": "^8.0.9",
-    "supertest": "^6.2.3"
+    "supertest": "^7.0.0"
   },
   "peerDependencies": {
     "@jest/globals": "28.x || 29.x",
