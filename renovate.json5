@@ -1,6 +1,6 @@
 {
   extends: [
-    "apollo-open-source",
+    "github>apollographql/renovate-config-apollo-open-source",
     "group:monorepos",
     "group:jestPlusTSJest",
     "group:jestPlusTypes",
