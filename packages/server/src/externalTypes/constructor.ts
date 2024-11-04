@@ -20,6 +20,7 @@ import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
 import type { BaseContext } from './index.js';
 import type { GraphQLExperimentalIncrementalExecutionResults } from '../incrementalDeliveryPolyfill.js';
+import { GraphQLExecutor } from './requestPipeline.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -118,6 +119,8 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
 
   // For testing only.
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+
+  customExecutor?: GraphQLExecutor;
 }
 
 export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>

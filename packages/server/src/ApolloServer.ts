@@ -74,6 +74,7 @@ import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import { isDefined } from './utils/isDefined.js';
 import { SchemaManager } from './utils/schemaManager.js';
+import { GraphQLExecutor } from './externalTypes/requestPipeline.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {
@@ -184,6 +185,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
+  customExecutor?: GraphQLExecutor;
 }
 
 function defaultLogger(): Logger {
@@ -330,6 +332,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       stopOnTerminationSignals: config.stopOnTerminationSignals,
 
       gatewayExecutor: null, // set by _start
+      customExecutor: config.customExecutor,
 
       csrfPreventionRequestHeaders:
         config.csrfPrevention === true || config.csrfPrevention === undefined

@@ -121,3 +121,15 @@ export type GraphQLRequestContextDidEncounterSubsequentErrors<
 export type GraphQLRequestContextWillSendSubsequentPayload<
   TContext extends BaseContext,
 > = GraphQLRequestContextWillSendResponse<TContext>;
+
+export type GraphQLExecutionResult = {
+  data?: Record<string, any> | null;
+  errors?: ReadonlyArray<GraphQLError>;
+  extensions?: Record<string, any>;
+};
+
+export type GraphQLExecutor<
+  TContext extends BaseContext = Record<string, any>,
+> = (
+  requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
+) => Promise<GraphQLExecutionResult>;
