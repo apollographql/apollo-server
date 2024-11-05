@@ -199,6 +199,8 @@ function isAsyncIterable<T>(value: any): value is AsyncIterable<T> {
   return value && typeof value[Symbol.asyncIterator] === 'function';
 }
 
+type RetryResponse = Response | Error;
+
 interface SubscriptionObject {
   cancelled: boolean;
   asyncIter: AsyncGenerator<ExecutionResult, void, void>;
@@ -265,7 +267,7 @@ class SubscriptionManager {
         `Sending \`${action}\` request to router` + maybeWithErrors,
         id,
       );
-      return retry<Response, Error>(
+      return retry<RetryResponse>(
         async (bail) => {
           response = fetch(url, {
             method: 'POST',
