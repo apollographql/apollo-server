@@ -7,7 +7,10 @@ import type {
 } from 'graphql';
 import { makeExecutableSchemaWithCacheControlSupport } from './cacheControlSupport';
 
-import { collectCacheControlHints } from './collectCacheControlHints';
+import {
+  collectCacheControlHints,
+  executeOperationWithCacheControl,
+} from './collectCacheControlHints';
 import { describe, it, expect } from '@jest/globals';
 
 export interface GraphQLResolvers {
@@ -202,5 +205,51 @@ describe('dynamic cache control', () => {
     );
 
     expect(hints).toStrictEqual(new Map([['droid', { maxAge: 120 }]]));
+  });
+
+  it('should not execute a dynamic cache hint when plugin is set to staticOnly mode', async () => {
+    const typeDefs = `
+      type Query {
+        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers: GraphQLResolvers = {
+      Query: {
+        droid: (_source, _args, _context, info) => {
+          cacheControlFromInfo(info).setCacheHint({ maxAge: 120 });
+          return {
+            id: 2001,
+            name: 'R2-D2',
+          };
+        },
+      },
+    };
+
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
+
+    const { response } = await executeOperationWithCacheControl(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10, staticOnly: true },
+    );
+
+    expect(response.errors?.[0].message).toMatch(
+      'The `info` argument does not appear to have a cacheControl field.',
+    );
   });
 });

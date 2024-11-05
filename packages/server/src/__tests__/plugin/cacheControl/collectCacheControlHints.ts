@@ -1,11 +1,12 @@
 import type { CacheHint } from '@apollo/cache-control-types';
-import type { GraphQLSchema } from 'graphql';
+import type { FormattedExecutionResult, GraphQLSchema } from 'graphql';
 import { ApolloServer } from '../../..';
 import {
   ApolloServerPluginCacheControl,
   ApolloServerPluginCacheControlOptions,
 } from '../../../plugin/cacheControl';
 import { expect } from '@jest/globals';
+import { ObjMap } from 'graphql/jsutils/ObjMap';
 
 export async function collectCacheControlHintsAndPolicyIfCacheable(
   schema: GraphQLSchema,
@@ -14,6 +15,26 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
 ): Promise<{
   hints: Map<string, CacheHint>;
   policyIfCacheable: Required<CacheHint> | null;
+}> {
+  const { hints, policyIfCacheable, response } =
+    await executeOperationWithCacheControl(schema, source, options);
+
+  expect(response.errors).toBeUndefined();
+
+  return {
+    hints,
+    policyIfCacheable,
+  };
+}
+
+export async function executeOperationWithCacheControl(
+  schema: GraphQLSchema,
+  source: string,
+  options: ApolloServerPluginCacheControlOptions = {},
+): Promise<{
+  hints: Map<string, CacheHint>;
+  policyIfCacheable: Required<CacheHint> | null;
+  response: FormattedExecutionResult<Record<string, unknown>, ObjMap<unknown>>;
 }> {
   const cacheHints = new Map<string, CacheHint>();
   const server = new ApolloServer({
@@ -50,12 +71,11 @@ export async function collectCacheControlHintsAndPolicyIfCacheable(
     throw new Error('expected single result');
   }
 
-  expect(response.body.singleResult.errors).toBeUndefined();
-
   return {
     hints: cacheHints,
     policyIfCacheable: response.body.singleResult.extensions!
       .__policyIfCacheable__ as any,
+    response: response.body.singleResult,
   };
 }
 

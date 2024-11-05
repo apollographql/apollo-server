@@ -100,7 +100,7 @@ export function cacheControlFromInfo(
     throw new Error(
       'The `info` argument does not appear to have a cacheControl field. ' +
         "Check that you are using Apollo Server 3 or newer and that you aren't using " +
-        'ApolloServerPluginCacheControlDisabled.',
+        'ApolloServerPluginCacheControlDisabled or staticOnly mode.',
     );
   }
   if (!(info as any).cacheControl?.cacheHint?.restrict) {

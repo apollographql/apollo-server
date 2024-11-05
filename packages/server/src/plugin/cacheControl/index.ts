@@ -48,6 +48,14 @@ export interface ApolloServerPluginCacheControlOptions {
    * delivery response, and the body contains no errors.
    */
   calculateHttpHeaders?: boolean | 'if-cacheable';
+
+  /**
+   * Disables instrumenting all fields for dynamic cache control hints. This is
+   * a pretty big significant performant boost, especially the larger a response
+   * is.
+   */
+  staticOnly?: boolean;
+
   // For testing only.
   __testing__cacheHints?: Map<string, CacheHint>;
 }
@@ -125,10 +133,14 @@ export function ApolloServerPluginCacheControl(
 
       const defaultMaxAge: number = options.defaultMaxAge ?? 0;
       const calculateHttpHeaders = options.calculateHttpHeaders ?? true;
+      const staticOnly = options.staticOnly ?? false;
       const { __testing__cacheHints } = options;
 
       return {
         async executionDidStart() {
+          if (staticOnly) {
+            return {};
+          }
           // Did something set the overall cache policy before we've even
           // started? If so, consider that as an override and don't touch it.
           // Just put set up fake `info.cacheControl` objects and otherwise
