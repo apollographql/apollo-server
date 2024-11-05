@@ -20,6 +20,12 @@ When Apollo Server resolves an operation, it calculates the result's correct cac
 
 ## Setting cache hints
 
+<Note>
+
+We recommend [setting `staticOnly`](#enabling-staticonly-mode) if you are only using static cache control hints as it will improve the overall performance of Apollo Server.
+
+</Note>
+
 You can define field-level cache hints [statically](#in-your-schema-static) in your schema definition or [dynamically](#in-your-resolvers-dynamic) in your resolvers (or both).
 
 Note that when setting cache hints, it's important to understand:
@@ -415,6 +421,23 @@ import { ApolloServerPluginCacheControlDisabled } from '@apollo/server/plugin/di
 const server = new ApolloServer({
   // ...other options...
   plugins: [ApolloServerPluginCacheControlDisabled()],
+});
+```
+
+## Enabling `staticOnly` mode
+
+The cache control plugin, by default, instruments the schema to allow dynamic cache hints, which can significantly impact performance, especially for larger response sizes.
+
+We recommend that you opt out of this functionality if you do not need it by configuring the plugin to use `staticOnly` mode which will skip instrumenting the schema for dynamic cache control hints.
+
+```ts
+import { ApolloServerPluginCacheControl } from '@apollo/server/plugin/cacheControl';
+
+const server = new ApolloServer<BaseContext>({
+  // ...other options...
+  plugins: [
+    ApolloServerPluginCacheControl({ staticOnly: true }),
+  ],
 });
 ```
 

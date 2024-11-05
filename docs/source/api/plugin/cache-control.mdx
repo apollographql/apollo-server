@@ -100,6 +100,22 @@ By default, the cache control plugin sets the `cache-control` HTTP response head
 </td>
 </tr>
 
+<tr>
+<td>
+
+###### `staticOnly`
+
+`boolean`
+</td>
+<td>
+
+By default, the cache control plugin instruments the schema to allow for dynamic cache hints. This can have a significant performance overhead, especially on larger response sizes.
+
+We recommend that you opt out of this functionality if you do not need it by setting `staticOnly` to `true` which will skip instrumenting the schema for dynamic cache control hints.
+
+</td>
+</tr>
+
 
 </tbody>
 </table>
