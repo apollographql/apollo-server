@@ -74,6 +74,7 @@ import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import { isDefined } from './utils/isDefined.js';
 import { SchemaManager } from './utils/schemaManager.js';
+import { GraphQLExecutor } from './externalTypes/requestPipeline.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {
@@ -184,6 +185,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
+  customExecutor?: GraphQLExecutor;
 }
 
 function defaultLogger(): Logger {
@@ -238,6 +240,13 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           '`PrefixingKeyValueCache.cacheDangerouslyDoesNotNeedPrefixesForIsolation`' +
           'to `new ApolloServer({ cache })`, because Apollo Server may use it for ' +
           'multiple features whose cache keys must be distinct from each other.',
+      );
+    }
+
+    if (config.gateway && config.customExecutor) {
+      throw new Error(
+        'You cannot specify both config.gateway and config.customExecutor' +
+          'because they are mutually exclusive.',
       );
     }
 
@@ -330,6 +339,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       stopOnTerminationSignals: config.stopOnTerminationSignals,
 
       gatewayExecutor: null, // set by _start
+      customExecutor: config.customExecutor,
 
       csrfPreventionRequestHeaders:
         config.csrfPrevention === true || config.csrfPrevention === undefined
