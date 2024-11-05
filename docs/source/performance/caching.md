@@ -20,11 +20,7 @@ When Apollo Server resolves an operation, it calculates the result's correct cac
 
 ## Setting cache hints
 
-<Note>
-
-We recommend [setting `staticOnly`](#enabling-staticonly-mode) if you are only using static cache control hints as it will improve the overall performance of Apollo Server.
-
-</Note>
+> We recommend [setting `staticOnly`](#enabling-staticonly-mode) if you are only using static cache control hints as it will improve the overall performance of Apollo Server.
 
 You can define field-level cache hints [statically](#in-your-schema-static) in your schema definition or [dynamically](#in-your-resolvers-dynamic) in your resolvers (or both).
 
