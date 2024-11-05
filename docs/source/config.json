@@ -45,7 +45,8 @@
       "Caching": "/performance/caching",
       "Cache Backends": "/performance/cache-backends",
       "Response Cache Eviction": "/performance/response-cache-eviction",
-      "Automatic Persisted Queries": "/performance/apq"
+      "Automatic Persisted Queries": "/performance/apq",
+      "Using a Custom Executor": "/performance/custom-executor"
     },
     "Security": {
       "Authentication and Authorization": "/security/authentication",
