@@ -74,7 +74,7 @@ import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import { isDefined } from './utils/isDefined.js';
 import { SchemaManager } from './utils/schemaManager.js';
-import { GraphQLExecutor } from './externalTypes/requestPipeline.js';
+import type { GraphQLExecutor } from './externalTypes/requestPipeline.js';
 
 const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
   Field(node) {

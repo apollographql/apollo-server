@@ -20,7 +20,7 @@ import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
 import type { BaseContext } from './index.js';
 import type { GraphQLExperimentalIncrementalExecutionResults } from '../incrementalDeliveryPolyfill.js';
-import { GraphQLExecutor } from './requestPipeline.js';
+import type { GraphQLExecutor } from './requestPipeline.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
