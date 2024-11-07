@@ -14,6 +14,7 @@ import type { Logger } from '@apollo/utils.logger';
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type {
   DocumentNode,
+  ExecutionResult,
   GraphQLError,
   GraphQLSchema,
   OperationDefinitionNode,
@@ -122,14 +123,8 @@ export type GraphQLRequestContextWillSendSubsequentPayload<
   TContext extends BaseContext,
 > = GraphQLRequestContextWillSendResponse<TContext>;
 
-export type GraphQLExecutionResult = {
-  data?: Record<string, any> | null;
-  errors?: ReadonlyArray<GraphQLError>;
-  extensions?: Record<string, any>;
-};
-
 export type GraphQLExecutor<
   TContext extends BaseContext = Record<string, any>,
 > = (
   requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-) => Promise<GraphQLExecutionResult>;
+) => Promise<ExecutionResult>;
