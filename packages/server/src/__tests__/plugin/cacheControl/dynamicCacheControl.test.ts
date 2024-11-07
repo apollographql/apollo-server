@@ -252,4 +252,49 @@ describe('dynamic cache control', () => {
       'The `info` argument does not appear to have a cacheControl field.',
     );
   });
+
+  it('should return cache hint when plugin is set to staticOnly mode', async () => {
+    const typeDefs = `
+      type Query {
+        hello: String
+        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+        droids: [Droid]
+      }
+
+      type Droid {
+        id: ID!
+        name: String!
+      }
+    `;
+
+    const resolvers: GraphQLResolvers = {
+      Query: {
+        droid: (_source, _args, _context) => {
+          return {
+            id: 2001,
+            name: 'R2-D2',
+          };
+        },
+      },
+    };
+
+    const schema = makeExecutableSchemaWithCacheControlSupport({
+      typeDefs,
+      resolvers,
+    });
+
+    const { hints } = await executeOperationWithCacheControl(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10, staticOnly: true },
+    );
+
+    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
+  });
 });
