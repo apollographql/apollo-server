@@ -38,7 +38,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.11.9",
+    "@apollo/client": "3.11.10",
     "@apollo/gateway": "2.9.3",
     "@apollo/subgraph": "2.9.3",
     "@apollo/utils.createhash": "2.0.1",
@@ -59,7 +59,7 @@
     "@types/lodash.xorby": "4.7.9",
     "@types/negotiator": "0.6.3",
     "@types/node": "14.18.63",
-    "@types/node-fetch": "2.6.11",
+    "@types/node-fetch": "2.6.12",
     "@types/qs-middleware": "1.0.4",
     "@types/retry": "0.12.5",
     "@types/superagent": "8.1.9",
