@@ -133,6 +133,7 @@ Nuxt
 oneof
 onwarn
 opde
+opentelemetry
 paque
 parseurl
 pbjs
