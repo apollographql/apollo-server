@@ -43,7 +43,10 @@ export function expressMiddleware<TContext extends BaseContext>(
   const context: ContextFunction<[ExpressContextFunctionArgument], TContext> =
     options?.context ?? defaultContext;
 
-  return (req, res, next) => {
+  // Note that some instrumentation, such as @opentelemetry/instrumentation-express,
+  // relies on middleware functions being named. Returning a named function here
+  // is the difference between seeing `apolloGraphQL` and `anonymous` in traces.
+  return function apolloGraphQL(req, res, next) {
     if (!req.body) {
       // The json body-parser *always* sets req.body to {} if it's unset (even
       // if the Content-Type doesn't match), so if it isn't set, you probably
