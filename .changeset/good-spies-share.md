@@ -7,8 +7,7 @@
 Apollo Server uses graphql-js behind the scenes when executing graphql queries.
 If you would like to use a custom executor, such as
 [graphql-jit](https://github.com/zalando-incubator/graphql-jit/tree/main),
-you can swap in a `customExecutor`. This can result in significant performance
-gains when used in combination with `staticOnly` cache control hints, especially with larger response sizes.
+you can swap in a `customExecutor`. This can result in  This can result in improved performance.
 
 Note that this cannot be used when using the `gateway` option.
 
