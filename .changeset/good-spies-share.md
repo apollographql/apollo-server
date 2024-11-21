@@ -15,9 +15,9 @@ Note that this cannot be used when using the `gateway` option.
 import { compileQuery, isCompiledQuery } from 'graphql-jit';
 import { lru } from 'tiny-lru';
 
-const executor = (schema: GraphQLSchema, cacheSize = 2014, compilerOpts = {}) => {
+const executor = (cacheSize = 2014, compilerOpts = {}) => {
   const cache = lru(cacheSize);
-  return async ({ contextValue, document, operationName, request, queryHash }) => {
+  return async ({ contextValue, document, operationName, request, queryHash, schema }) => {
     const prefix = operationName || 'NotParametrized';
     const cacheKey = `${prefix}-${queryHash}`;
     let compiledQuery = cache.get(cacheKey);
@@ -40,6 +40,6 @@ const schema = buildSubgraphSchema([{ typeDefs, resolvers }]);
 
 const server = new ApolloServer<BaseContext>({
   schema,
-  customExecutor: executor(schema),
+  customExecutor: executor(),
 });
 ```
