@@ -38,7 +38,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.12.0",
+    "@apollo/client": "3.12.2",
     "@apollo/gateway": "2.9.3",
     "@apollo/subgraph": "2.9.3",
     "@apollo/utils.createhash": "2.0.1",
@@ -78,7 +78,7 @@
     "cspell": "6.31.3",
     "eslint": "8.57.1",
     "eslint-plugin-import": "2.31.0",
-    "express": "4.21.1",
+    "express": "4.21.2",
     "graphql": "16.9.0",
     "graphql-subscriptions": "2.0.0",
     "graphql-tag": "2.12.6",
