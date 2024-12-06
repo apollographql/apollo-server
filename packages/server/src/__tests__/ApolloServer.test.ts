@@ -17,6 +17,9 @@ import type { GraphQLResponseBody } from '../externalTypes/graphql';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
 import { mockLogger } from './mockLogger.js';
+import { GraphQLExecutor } from '../externalTypes/requestPipeline';
+import { compileQuery, isCompiledQuery } from 'graphql-jit';
+import { lru } from 'tiny-lru';
 
 const typeDefs = gql`
   type Query {
@@ -107,6 +110,27 @@ describe('ApolloServer construction', () => {
       // @ts-expect-error
       new ApolloServer({});
     }).toThrow();
+  });
+
+  it('throws when both a Gateway and a customExecutor are provided', () => {
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const gateway: GatewayInterface = {
+      async load() {
+        return { schema, executor: null };
+      },
+      async stop() {},
+      onSchemaLoadOrUpdate() {
+        return () => {};
+      },
+    };
+
+    const customExecutor: GraphQLExecutor = async () => {
+      return {};
+    };
+
+    expect(() => new ApolloServer({ gateway, customExecutor })).toThrowError(
+      'You cannot specify both config.gateway and config.customExecutor',
+    );
   });
 
   it('TypeScript enforces schema-related option combinations', async () => {
@@ -503,6 +527,60 @@ describe('ApolloServer executeOperation', () => {
         }
       `,
     });
+    const result = singleResult(body);
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.hello).toBe('world');
+    await server.stop();
+  });
+
+  it('is able to use a custom executor', async () => {
+    const executor = (
+      schema: GraphQLSchema,
+      cacheSize = 2014,
+      compilerOpts = {},
+    ) => {
+      const cache = lru(cacheSize);
+      return async ({
+        contextValue,
+        document,
+        operationName,
+        request,
+        queryHash,
+      }: any) => {
+        const prefix = operationName || 'NotParametrized';
+        const cacheKey = `${prefix}-${queryHash}`;
+        let compiledQuery = cache.get(cacheKey);
+        if (!compiledQuery) {
+          const compilationResult = compileQuery(
+            schema,
+            document,
+            operationName || undefined,
+            compilerOpts,
+          );
+          if (isCompiledQuery(compilationResult)) {
+            compiledQuery = compilationResult;
+            cache.set(cacheKey, compiledQuery);
+          } else {
+            // ...is ExecutionResult
+            return compilationResult;
+          }
+        }
+
+        return compiledQuery.query(
+          undefined,
+          contextValue,
+          request.variables || {},
+        );
+      };
+    };
+    const schema = makeExecutableSchema({ typeDefs, resolvers });
+    const server = new ApolloServer({
+      schema,
+      customExecutor: executor(schema),
+    });
+    await server.start();
+
+    const { body } = await server.executeOperation({ query: '{ hello }' });
     const result = singleResult(body);
     expect(result.errors).toBeUndefined();
     expect(result.data?.hello).toBe('world');

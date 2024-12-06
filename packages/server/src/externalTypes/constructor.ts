@@ -20,6 +20,7 @@ import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
 import type { BaseContext } from './index.js';
 import type { GraphQLExperimentalIncrementalExecutionResults } from '../incrementalDeliveryPolyfill.js';
+import type { GraphQLExecutor } from './requestPipeline.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -115,6 +116,8 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   // unless you've explicitly worked around this regression already (and maybe
   // consider undoing the workaround).
   status400ForVariableCoercionErrors?: boolean;
+
+  customExecutor?: GraphQLExecutor;
 
   // For testing only.
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;

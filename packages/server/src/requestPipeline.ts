@@ -539,6 +539,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         makeGatewayGraphQLRequestContext(requestContext, server, internals),
       );
       return { singleResult: result };
+    } else if (internals.customExecutor) {
+      const result = await internals.customExecutor(requestContext);
+      return { singleResult: result };
     } else {
       const resultOrResults = await executeIncrementally({
         schema: schemaDerivedData.schema,
