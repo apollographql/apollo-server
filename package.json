@@ -80,7 +80,7 @@
     "eslint-plugin-import": "2.31.0",
     "express": "4.21.2",
     "graphql": "16.9.0",
-    "graphql-subscriptions": "2.0.0",
+    "graphql-subscriptions": "3.0.0",
     "graphql-tag": "2.12.6",
     "jest": "29.7.0",
     "jest-config": "29.7.0",
