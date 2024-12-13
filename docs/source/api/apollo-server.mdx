@@ -421,6 +421,27 @@ You can also manually call `stop()` in other contexts. Note that `stop()` is asy
 </td>
 </tr>
 
+
+<tr>
+<td>
+
+###### `customExecutor`
+
+`Object`
+
+</td>
+<td>
+
+Apollo Server uses graphql-js behind the scenes when executing graphql queries.
+If you would like to use a [custom executor](/apollo-server/performance/custom-executor), such as
+[graphql-jit](https://github.com/zalando-incubator/graphql-jit/tree/main),
+you can swap in a `customExecutor`.
+
+Note that this cannot be used when using the `gateway` option.
+
+</td>
+</tr>
+
 <tr>
 <td colspan="2">
 
