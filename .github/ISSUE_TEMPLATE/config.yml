@@ -1,10 +1,5 @@
 blank_issues_enabled: true
 contact_links:
-  - name: "GraphOS Discord Server"
-    url: https://discord.com/invite/graphos
-    about: >-
-      Come join us in our GraphOS Discord server; our community and DevRel team
-      are happy to answer any questions you might have.
   - name: "Apollo Discourse Community"
     url: https://community.apollographql.com/tag/server
     about: >-
