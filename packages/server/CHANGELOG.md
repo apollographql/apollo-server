@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.11.3
+
+### Patch Changes
+
+- [#8005](https://github.com/apollographql/apollo-server/pull/8005) [`70eecce`](https://github.com/apollographql/apollo-server/commit/70eecce69fb9c2b8a812713d1337fdc5c1578ef6) Thanks [@Meschreiber](https://github.com/Meschreiber)! - Remove Discord link from README.md and templates
+
 ## 4.11.2
 
 (No change; there is a change to the `@apollo/server-integration-testsuite` used to test integrations, and the two packages always have matching versions.)
