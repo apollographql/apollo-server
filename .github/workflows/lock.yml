@@ -21,5 +21,5 @@ jobs:
           issue-comment: >
             This issue has been automatically locked since there has not been any recent activity after it was closed. Please open a new issue for related bugs.
 
-            For general questions, we recommend using [StackOverflow](https://stackoverflow.com/questions/tagged/apollo-server) or our [discord server](https://discord.gg/graphos).
+            For general questions, we recommend using our [Community Forum](https://community.apollographql.com/tag/server) or [Stack Overflow](https://stackoverflow.com/questions/tagged/apollo-server).
           pr-inactive-days: '30'
