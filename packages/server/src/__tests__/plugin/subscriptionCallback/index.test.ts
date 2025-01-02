@@ -2056,7 +2056,7 @@ async function startSubscriptionServer(
       },
       Subscription: {
         count: {
-          subscribe: () => pubsub.asyncIterator(['ADD_ONE']),
+          subscribe: () => pubsub.asyncIterableIterator(['ADD_ONE']),
         },
         terminatesSuccessfully: {
           subscribe: () => ({
