@@ -30,7 +30,7 @@
     "@apollo/client": "^3.6.9",
     "@apollo/server": "4.11.2",
     "@apollo/usage-reporting-protobuf": "^4.1.1",
-    "@apollo/utils.createhash": "^2.0.0",
+    "@apollo/utils.createhash": "^2.0.2",
     "@apollo/utils.keyvaluecache": "^2.1.0",
     "express": "^4.21.1",
     "graphql-http": "1.22.3",

@@ -190,6 +190,7 @@ triaging
 tsbuildinfo
 tsconfig
 tsconfigs
+Turbopack
 typecheck
 typeis
 typenames
