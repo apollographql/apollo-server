@@ -1,5 +1,14 @@
 # @apollo/server-integration-testsuite
 
+## 4.11.3
+
+### Patch Changes
+
+- [#8010](https://github.com/apollographql/apollo-server/pull/8010) [`f4228e8`](https://github.com/apollographql/apollo-server/commit/f4228e88509b4cd2f50cf10bc6376d48488e03c1) Thanks [@glasser](https://github.com/glasser)! - Compatibility with Next.js Turbopack. Fixes #8004.
+
+- Updated dependencies [[`f4228e8`](https://github.com/apollographql/apollo-server/commit/f4228e88509b4cd2f50cf10bc6376d48488e03c1), [`70eecce`](https://github.com/apollographql/apollo-server/commit/70eecce69fb9c2b8a812713d1337fdc5c1578ef6)]:
+  - @apollo/server@4.11.3
+
 ## 4.11.2
 
 ### Patch Changes
