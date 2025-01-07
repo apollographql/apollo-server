@@ -302,7 +302,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
   graphQLResponse.http.headers.set(
     'content-type',
-    'multipart/mixed; boundary="-"; deferSpec=20220824',
+    'multipart/mixed; boundary="-"',
   );
   return {
     ...graphQLResponse.http,
