@@ -25,6 +25,7 @@ import {
 } from '..';
 import { mockLogger } from './mockLogger';
 import { jest, describe, it, expect } from '@jest/globals';
+import { singleResult } from './ApolloServer.test';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -1191,5 +1192,52 @@ describe('parsing and validation cache', () => {
     await server.executeOperation({ query: queryLarge });
     expect(parsingDidStart.mock.calls.length).toBe(6);
     expect(validationDidStart.mock.calls.length).toBe(6);
+  });
+
+  describe('validationMaxErrors option', () => {
+    it('should be 100 by default', async () => {
+      const server = new ApolloServer({
+        schema,
+      });
+      await server.start();
+
+      const vars = new Array(1000).fill(`$a:a`).join(',');
+      const query = `query aaa (${vars}) { a }`;
+
+      const res = await server.executeOperation({ query });
+      expect(res.http.status).toBe(400);
+
+      const body = singleResult(res.body);
+
+      // 100 by default plus one "Too many validation errors" error
+      // https://github.com/graphql/graphql-js/blob/main/src/validation/validate.ts#L46
+      expect(body.errors).toHaveLength(101);
+      await server.stop();
+    });
+    it('aborts the validation if max errors more than expected', async () => {
+      const server = new ApolloServer({
+        schema,
+        validationMaxErrors: 1,
+      });
+      await server.start();
+
+      const vars = new Array(1000).fill(`$a:a`).join(',');
+      const query = `query aaa (${vars}) { a }`;
+
+      const res = await server.executeOperation({ query });
+      expect(res.http.status).toBe(400);
+
+      const body = singleResult(res.body);
+
+      expect(body.errors).toHaveLength(2);
+      expect(body.errors?.[0]).toMatchObject({
+        message: `There can be only one variable named "$a".`,
+      });
+      expect(body.errors?.[1]).toMatchObject({
+        message: `Too many validation errors, error limit reached. Validation aborted.`,
+      });
+
+      await server.stop();
+    });
   });
 });

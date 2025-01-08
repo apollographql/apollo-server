@@ -156,6 +156,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   state: ServerState;
   gatewayExecutor: GatewayExecutor | null;
   dangerouslyDisableValidation?: boolean;
+  validationMaxErrors?: number;
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
@@ -304,6 +305,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       hideSchemaDetailsFromClientErrors,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,
+      validationMaxErrors: config.validationMaxErrors,
       fieldResolver: config.fieldResolver,
       includeStacktraceInErrorResponses:
         config.includeStacktraceInErrorResponses ??
