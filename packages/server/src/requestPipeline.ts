@@ -247,7 +247,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         schemaDerivedData.schema,
         requestContext.document,
         [...specifiedRules, ...internals.validationRules],
-        { maxErrors: internals.validationMaxErrors },
+        internals.validationOptions,
       );
 
       if (validationErrors.length === 0) {

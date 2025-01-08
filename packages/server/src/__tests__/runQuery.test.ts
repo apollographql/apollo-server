@@ -1201,7 +1201,7 @@ describe('parsing and validation cache', () => {
       });
       await server.start();
 
-      const vars = new Array(1000).fill(`$a:a`).join(',');
+      const vars = new Array(1000).fill('$a:a').join(',');
       const query = `query aaa (${vars}) { a }`;
 
       const res = await server.executeOperation({ query });
@@ -1214,14 +1214,15 @@ describe('parsing and validation cache', () => {
       expect(body.errors).toHaveLength(101);
       await server.stop();
     });
+
     it('aborts the validation if max errors more than expected', async () => {
       const server = new ApolloServer({
         schema,
-        validationMaxErrors: 1,
+        validationOptions: { maxErrors: 1 },
       });
       await server.start();
 
-      const vars = new Array(1000).fill(`$a:a`).join(',');
+      const vars = new Array(1000).fill('$a:a').join(',');
       const query = `query aaa (${vars}) { a }`;
 
       const res = await server.executeOperation({ query });

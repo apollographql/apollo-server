@@ -20,6 +20,7 @@ import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
 import type { BaseContext } from './index.js';
 import type { GraphQLExperimentalIncrementalExecutionResults } from '../incrementalDeliveryPolyfill.js';
+import type { ValidateOptions } from '../ApolloServer.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -101,7 +102,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
   dangerouslyDisableValidation?: boolean;
-  validationMaxErrors?: number;
+  validationOptions?: ValidateOptions;
   csrfPrevention?: CSRFPreventionOptions | boolean;
 
   // Used for parsing operations; unlike in AS3, this is not also used for
