@@ -65,7 +65,7 @@
     "@types/superagent": "8.1.9",
     "@types/supertest": "6.0.2",
     "@types/test-listen": "1.1.2",
-    "@types/type-is": "1.6.6",
+    "@types/type-is": "1.6.7",
     "@types/uuid": "9.0.8",
     "@types/whatwg-mimetype": "3.0.2",
     "@typescript-eslint/eslint-plugin": "5.62.0",
