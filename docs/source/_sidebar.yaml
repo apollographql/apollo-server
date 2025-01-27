@@ -1,0 +1,153 @@
+switcher:
+  heading: 'Apollo Server'
+  versions:
+    - label: v4
+      latest: true
+      href: ./
+    - label: v3
+      href: ./v3
+    - label: v2
+      href: ./v2
+items:
+  - label: Introduction
+    href: '.'
+  - label: Get started
+    href: './getting-started'
+  - label: New in v4
+    children:
+      - label: Migrating to Apollo Server 4
+        href: './migration'
+      - label: Previous versions
+        href: './previous-versions'
+      - label: Changelog
+        href: 'https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md'
+  - label: Defining a Schema
+    children:
+      - label: Schema basics
+        href: './schema/schema'
+      - label: Unions and interfaces
+        href: './schema/unions-interfaces'
+      - label: Custom scalars
+        href: './schema/custom-scalars'
+      - label: Directives
+        href: './schema/directives'
+  - label: Resolving Operations
+    children:
+      - label: Resolvers
+        href: './data/resolvers'
+      - label: Sharing context
+        href: './data/context'
+      - label: Error handling
+        href: './data/errors'
+      - label: Subscriptions
+        href: './data/subscriptions'
+  - label: Fetching Data
+    children:
+      - label: Overview
+        href: './data/fetching-data'
+      - label: REST APIs
+        href: './data/fetching-rest'
+  - label: Web Frameworks
+    children:
+      - label: Integrations
+        href: './integrations/integration-index'
+      - label: Building integrations
+        href: './integrations/building-integrations'
+      - label: MERN stack tutorial
+        href: './integrations/mern'
+  - label: Development Workflow
+    children:
+      - label: Build and run queries
+        href: './workflow/build-run-queries'
+      - label: Request format
+        href: './workflow/requests'
+      - label: Generating TS types
+        href: './workflow/generate-types'
+      - label: Mocking
+        href: './testing/mocking'
+      - label: Integration testing
+        href: './testing/testing'
+      - label: Apollo Studio Explorer
+        href: 'https://www.apollographql.com/docs/studio/explorer/'
+  - label: Performance
+    children:
+      - label: Caching
+        href: './performance/caching'
+      - label: Cache backends
+        href: './performance/cache-backends'
+      - label: Response Cache Eviction
+        href: './performance/response-cache-eviction'
+      - label: Automatic persisted queries
+        href: './performance/apq'
+  - label: Security
+    children:
+      - label: Auth
+        href: './security/authentication'
+      - label: CORS
+        href: './security/cors'
+      - label: Terminating SSL
+        href: './security/terminating-ssl'
+      - label: Proxy configuration
+        href: './security/proxy-configuration'
+  - label: Deployment
+    children:
+      - label: Lambda
+        href: './deployment/lambda'
+      - label: Heroku
+        href: './deployment/heroku'
+  - label: Monitoring
+    children:
+      - label: Metrics and logging
+        href: './monitoring/metrics'
+      - label: Health checks
+        href: './monitoring/health-checks'
+  - label: API Reference
+    children:
+      - label: ApolloServer
+        href: './api/apollo-server'
+      - label: startStandaloneServer
+        href: './api/standalone'
+      - label: expressMiddleware
+        href: './api/express-middleware'
+  - label: Plugins
+    children:
+      - label: Overview
+        href: './builtin-plugins'
+      - label: Built-in
+        children:
+          - label: Usage reporting
+            href: './api/plugin/usage-reporting'
+          - label: Schema reporting
+            href: './api/plugin/schema-reporting'
+          - label: Inline trace
+            href: './api/plugin/inline-trace'
+          - label: Drain HTTP server
+            href: './api/plugin/drain-http-server'
+          - label: Cache control
+            href: './api/plugin/cache-control'
+          - label: Landing pages
+            href: './api/plugin/landing-pages'
+          - label: Federated subscriptions
+            href: './api/plugin/subscription-callback'
+      - label: Custom
+        children:
+          - label: Creating plugins
+            href: './integrations/plugins'
+          - label: Event reference
+            href: './integrations/plugins-event-reference'
+  - label: Using with Federation
+    children:
+      - label: As a subgraph
+        children:
+          - label: Setup
+            href: './using-federation/apollo-subgraph-setup'
+          - label: '@apollo/subgraph reference'
+            href: './using-federation/api/apollo-subgraph/'
+      - label: As a gateway
+        children:
+          - label: Setup
+            href: './using-federation/apollo-gateway-setup'
+          - label: Gateway performance
+            href: './using-federation/gateway-performance'
+          - label: '@apollo/gateway reference'
+            href: './using-federation/api/apollo-gateway/'
