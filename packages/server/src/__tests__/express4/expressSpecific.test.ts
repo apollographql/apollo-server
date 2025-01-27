@@ -122,7 +122,7 @@ it('incremental delivery works with compression', async () => {
   // Confirm that the response has actually been gzipped.
   expect(res.header['content-encoding']).toMatchInlineSnapshot(`"gzip"`);
   expect(res.header['content-type']).toMatchInlineSnapshot(
-    `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+    `"multipart/mixed; boundary="-""`,
   );
   expect(res.text).toMatchInlineSnapshot(`
     "
