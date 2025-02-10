@@ -141,6 +141,13 @@ it('incremental delivery works with compression', async () => {
   await server.stop();
 });
 
+it('express middleware has a name', async () => {
+  const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });
+  await server.start();
+  expect(expressMiddleware(server).name).toEqual('apolloGraphQL');
+  await server.stop();
+});
+
 it('supporting doubly-encoded variables example from migration guide', async () => {
   const server = new ApolloServer({
     typeDefs: 'type Query {hello(s: String!): String!}',
