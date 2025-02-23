@@ -97,7 +97,7 @@
     "rollup": "3.29.5",
     "supertest": "7.0.0",
     "test-listen": "1.1.0",
-    "ts-jest": "29.2.5",
+    "ts-jest": "29.2.6",
     "typescript": "5.4.5"
   },
   "jest": {
