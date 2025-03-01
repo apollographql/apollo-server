@@ -54,7 +54,7 @@
     "@types/cors": "2.8.17",
     "@types/express": "4.17.21",
     "@types/express-serve-static-core": "4.19.6",
-    "@types/lodash": "4.17.15",
+    "@types/lodash": "4.17.16",
     "@types/lodash.sumby": "4.6.9",
     "@types/lodash.xorby": "4.7.9",
     "@types/negotiator": "0.6.3",
