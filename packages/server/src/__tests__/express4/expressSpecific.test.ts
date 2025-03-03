@@ -163,6 +163,7 @@ it('supporting doubly-encoded variables example from migration guide', async () 
       } catch (e) {
         // https://github.com/graphql/graphql-over-http/blob/main/spec/GraphQLOverHTTP.md#json-parsing-failure
         res.status(400).send(e instanceof Error ? e.message : e);
+        return;
       }
     }
     next();
