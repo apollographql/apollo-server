@@ -38,7 +38,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.13.1",
+    "@apollo/client": "3.13.2",
     "@apollo/gateway": "2.10.0",
     "@apollo/subgraph": "2.10.0",
     "@apollo/utils.createhash": "2.0.2",
@@ -48,7 +48,7 @@
     "@graphql-codegen/typescript-operations": "3.0.4",
     "@graphql-tools/mock": "8.7.20",
     "@graphql-tools/schema": "9.0.19",
-    "@rollup/plugin-commonjs": "28.0.2",
+    "@rollup/plugin-commonjs": "28.0.3",
     "@types/async-retry": "1.4.9",
     "@types/compression": "1.7.5",
     "@types/cors": "2.8.17",
