@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.11.4
+
+### Patch Changes
+
+- [#8031](https://github.com/apollographql/apollo-server/pull/8031) [`2550d9f`](https://github.com/apollographql/apollo-server/commit/2550d9fefe03069075e16141b043115170012e80) Thanks [@slagiewka](https://github.com/slagiewka)! - Add return after sending 400 response in doubly escaped JSON parser middleware
+
 ## 4.11.3
 
 ### Patch Changes
