@@ -38,7 +38,7 @@
     "npm": ">=8.5.0"
   },
   "devDependencies": {
-    "@apollo/client": "3.13.4",
+    "@apollo/client": "3.13.5",
     "@apollo/gateway": "2.10.0",
     "@apollo/subgraph": "2.10.0",
     "@apollo/utils.createhash": "2.0.2",
@@ -95,7 +95,7 @@
     "qs-middleware": "1.0.3",
     "requisition": "1.7.0",
     "rollup": "3.29.5",
-    "supertest": "7.0.0",
+    "supertest": "7.1.0",
     "test-listen": "1.1.0",
     "ts-jest": "29.2.6",
     "typescript": "5.4.5"
