@@ -23,13 +23,13 @@
       "import": "./dist/esm/errors/index.js",
       "require": "./dist/cjs/errors/index.js"
     },
-    "./express4": {
+    "./express5": {
       "types": {
-        "require": "./dist/cjs/express4/index.d.ts",
-        "default": "./dist/esm/express4/index.d.ts"
+        "require": "./dist/cjs/express5/index.d.ts",
+        "default": "./dist/esm/express5/index.d.ts"
       },
-      "import": "./dist/esm/express4/index.js",
-      "require": "./dist/cjs/express4/index.js"
+      "import": "./dist/esm/express5/index.js",
+      "require": "./dist/cjs/express5/index.js"
     },
     "./standalone": {
       "types": {
@@ -130,7 +130,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=14.16.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
@@ -144,12 +144,12 @@
     "@apollo/utils.usagereporting": "^2.1.0",
     "@apollo/utils.withrequired": "^2.0.0",
     "@graphql-tools/schema": "^9.0.0",
-    "@types/express": "^4.17.13",
-    "@types/express-serve-static-core": "^4.17.30",
+    "@types/express": "^5.0.1",
+    "@types/express-serve-static-core": "^5.0.6",
     "@types/node-fetch": "^2.6.1",
     "async-retry": "^1.2.1",
     "cors": "^2.8.5",
-    "express": "^4.21.1",
+    "express": "^5.1.0",
     "loglevel": "^1.6.8",
     "lru-cache": "^7.10.1",
     "negotiator": "^0.6.3",

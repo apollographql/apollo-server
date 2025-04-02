@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/express5",
+  "type": "module",
+  "main": "../dist/cjs/express5/index.js",
+  "module": "../dist/esm/express5/index.js",
+  "types": "../dist/esm/express5/index.d.ts",
+  "sideEffects": false
+}

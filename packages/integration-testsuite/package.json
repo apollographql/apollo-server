@@ -23,7 +23,7 @@
   },
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "engines": {
-    "node": ">=14.16.0"
+    "node": ">=18"
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
@@ -32,7 +32,7 @@
     "@apollo/usage-reporting-protobuf": "^4.1.1",
     "@apollo/utils.createhash": "^2.0.2",
     "@apollo/utils.keyvaluecache": "^2.1.0",
-    "express": "^4.21.1",
+    "express": "^5.1.0",
     "graphql-http": "1.22.3",
     "graphql-tag": "^2.12.6",
     "loglevel": "^1.8.0",

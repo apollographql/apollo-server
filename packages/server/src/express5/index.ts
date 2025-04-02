@@ -44,19 +44,6 @@ export function expressMiddleware<TContext extends BaseContext>(
     options?.context ?? defaultContext;
 
   return (req, res, next) => {
-    if (!req.body) {
-      // The json body-parser *always* sets req.body to {} if it's unset (even
-      // if the Content-Type doesn't match), so if it isn't set, you probably
-      // forgot to set up body-parser. (Note that this may change in the future
-      // body-parser@2.)
-      res.status(500);
-      res.send(
-        '`req.body` is not set; this probably means you forgot to set up the ' +
-          '`json` middleware before the Apollo Server middleware.',
-      );
-      return;
-    }
-
     const headers = new HeaderMap();
     for (const [key, value] of Object.entries(req.headers)) {
       if (value !== undefined) {

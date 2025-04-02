@@ -1,25 +1,11 @@
-import express, { json } from 'express';
+import express from 'express';
 import request from 'supertest';
 import compression, { filter as defaultFilter } from 'compression';
 import { ApolloServer, BaseContext } from '../../index.js';
-import { expressMiddleware } from '../../express4/index.js';
+import { expressMiddleware } from '../../express5/index.js';
 import { it, expect } from '@jest/globals';
 import resolvable from '../../utils/resolvable.js';
 import cors from 'cors';
-
-it('gives helpful error if json middleware is not installed', async () => {
-  const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });
-  await server.start();
-  const app = express();
-  // Note lack of `json` here.
-  app.use(expressMiddleware(server));
-
-  await request(app)
-    .post('/')
-    .send({ query: '{hello}' })
-    .expect(500, /forgot to set up the `json` middleware/);
-  await server.stop();
-});
 
 it('not calling start causes a clear error', async () => {
   const server = new ApolloServer({ typeDefs: 'type Query {f: ID}' });
@@ -90,7 +76,7 @@ it('incremental delivery works with compression', async () => {
           .startsWith('multipart/mixed'),
     }),
     cors(),
-    json(),
+    express.json({ limit: '50mb' }),
     expressMiddleware(server),
   );
 
@@ -153,7 +139,7 @@ it('supporting doubly-encoded variables example from migration guide', async () 
   await server.start();
   const app = express();
 
-  app.use(json());
+  app.use(express.json({ limit: '50mb' }));
 
   // Test will fail if you remove this middleware.
   app.use((req, res, next) => {

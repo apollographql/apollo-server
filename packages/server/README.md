@@ -108,7 +108,7 @@ Then, write the following to `server.mjs`. (By using the `.mjs` extension, Node 
 
 ```js
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@apollo/server/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import express from 'express';
 import http from 'http';

@@ -234,7 +234,7 @@ looks like this in Apollo Server 4:
 ```ts title="apollo-server-4.ts"
 // npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@apollo/server/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';
@@ -1923,7 +1923,7 @@ This section lists the TypeScript-only types (i.e., interfaces, not classes) tha
 
 Apollo Server 4 changes the name of the constructor options type from `Config` to `ApolloServerOptions`.  In Apollo Server 3, some integration packages export their own versions of this type (e.g., `ApolloServerExpressConfig`). In Apollo Server 4, there is only one `ApolloServer` type with only one constructor, so these additional types are no longer necessary.
 
-Two types in `apollo-server-express` now have more explicit names exported from `@apollo/server/express4`. `GetMiddlewareOptions` is now `ExpressMiddlewareOptions` and `ExpressContext` is now `ExpressContextFunctionArgument`.
+Two types in `apollo-server-express` now have more explicit names exported from `@apollo/server/express5`. `GetMiddlewareOptions` is now `ExpressMiddlewareOptions` and `ExpressContext` is now `ExpressContextFunctionArgument`.
 
 ### Removed types
 

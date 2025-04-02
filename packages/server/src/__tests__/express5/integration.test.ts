@@ -1,8 +1,8 @@
 import cors from 'cors';
-import express, { json } from 'express';
+import express from 'express';
 import http from 'http';
 import { ApolloServer, ApolloServerOptions, BaseContext } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@apollo/server/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import {
@@ -30,7 +30,7 @@ defineIntegrationTestSuite(async function (
 
   app.use(
     cors(),
-    json(),
+    express.json({ limit: '50mb' }),
     expressMiddleware(server, {
       context: testOptions?.context,
     }),

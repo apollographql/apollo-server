@@ -4,7 +4,7 @@ import express from 'express';
 import http, { type IncomingMessage, type ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer.js';
-import { expressMiddleware } from '../express4/index.js';
+import { expressMiddleware } from '../express5/index.js';
 import type { BaseContext, ContextFunction } from '../externalTypes/index.js';
 import { ApolloServerPluginDrainHttpServer } from '../plugin/drainHttpServer/index.js';
 import { urlForHttpServer } from '../utils/urlForHttpServer.js';

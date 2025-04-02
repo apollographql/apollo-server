@@ -153,21 +153,5 @@
       matchPackageNames: ["npm"],
       allowedVersions: "9.x",
     },
-    // We specifically provide a first-party integration (`expressMiddleware`
-    // imported from `@apollo/server/express4`) for Express v4 because it is the
-    // most common web framework. (Additionally, as an internal implementation
-    // detail, it is what powers `startStandaloneServer`, though users of that
-    // function should not rely on anything other than that it uses standard
-    // Node `http` request and response objects.) It is easy to build
-    // integrations for other web servers, including Express v5, which is not
-    // yet as popular as Express v4. So we don't plan to provide a built-in
-    // Express v5 implementation any time soon (most likely as part of a new
-    // major version); we appreciate the simplicity of a build system that only
-    // installs one version of any given practice. See
-    // https://github.com/apollographql/apollo-server/issues/7928.
-    {
-      matchPackageNames: ["express", "@types/express", "@types/express-serve-static-core"],
-      allowedVersions: "4.x",
-    },
   ]
 }
