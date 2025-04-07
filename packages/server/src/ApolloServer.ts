@@ -284,7 +284,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           ? [createMaxRecursiveSelectionsRule(config.maxRecursiveSelections)]
           : [];
 
-    // If the rescursive selections rule has been enabled, then run configured
+    // If the recursive selections rule has been enabled, then run configured
     // validations in a later validate() pass.
     const validationRules = [
       ...(introspectionEnabled ? [] : [NoIntrospection]),
