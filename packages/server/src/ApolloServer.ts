@@ -21,7 +21,6 @@ import {
   type GraphQLSchema,
   type ParseOptions,
   type TypedQueryDocumentNode,
-  type ValidationContext,
   type ValidationRule,
 } from 'graphql';
 import loglevel from 'loglevel';
@@ -33,10 +32,7 @@ import {
   ensureGraphQLError,
   normalizeAndFormatErrors,
 } from './errorNormalize.js';
-import {
-  ApolloServerErrorCode,
-  ApolloServerValidationErrorCode,
-} from './errors/index.js';
+import { ApolloServerErrorCode } from './errors/index.js';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
   ExecuteOperationOptions,
@@ -74,25 +70,11 @@ import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import { isDefined } from './utils/isDefined.js';
 import { SchemaManager } from './utils/schemaManager.js';
-
-const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
-  Field(node) {
-    if (node.name.value === '__schema' || node.name.value === '__type') {
-      context.reportError(
-        new GraphQLError(
-          'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
-          {
-            nodes: [node],
-            extensions: {
-              validationErrorCode:
-                ApolloServerValidationErrorCode.INTROSPECTION_DISABLED,
-            },
-          },
-        ),
-      );
-    }
-  },
-});
+import {
+  NoIntrospection,
+  createMaxRecursiveSelectionsRule,
+  DEFAULT_MAX_RECURSIVE_SELECTIONS,
+} from './validationRules/index.js';
 
 export type SchemaDerivedData = {
   schema: GraphQLSchema;
@@ -175,6 +157,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
 
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
+  laterValidationRules?: Array<ValidationRule>;
   hideSchemaDetailsFromClientErrors: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
@@ -292,15 +275,35 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ? new InMemoryLRUCache()
         : config.cache;
 
+    // Check whether the recursive selections limit has been enabled (off by
+    // default), or whether a custom limit has been specified.
+    const maxRecursiveSelectionsRule =
+      config.maxRecursiveSelections === true
+        ? [createMaxRecursiveSelectionsRule(DEFAULT_MAX_RECURSIVE_SELECTIONS)]
+        : typeof config.maxRecursiveSelections === 'number'
+          ? [createMaxRecursiveSelectionsRule(config.maxRecursiveSelections)]
+          : [];
+
+    // If the recursive selections rule has been enabled, then run configured
+    // validations in a later validate() pass.
+    const validationRules = [
+      ...(introspectionEnabled ? [] : [NoIntrospection]),
+      ...maxRecursiveSelectionsRule,
+    ];
+    let laterValidationRules;
+    if (maxRecursiveSelectionsRule.length > 0) {
+      laterValidationRules = config.validationRules;
+    } else {
+      validationRules.push(...(config.validationRules ?? []));
+    }
+
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
     this.internals = {
       formatError: config.formatError,
       rootValue: config.rootValue,
-      validationRules: [
-        ...(config.validationRules ?? []),
-        ...(introspectionEnabled ? [] : [NoIntrospection]),
-      ],
+      validationRules,
+      laterValidationRules,
       hideSchemaDetailsFromClientErrors,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,

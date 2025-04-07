@@ -243,11 +243,18 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ),
       );
 
-      const validationErrors = validate(
+      let validationErrors = validate(
         schemaDerivedData.schema,
         requestContext.document,
         [...specifiedRules, ...internals.validationRules],
       );
+      if (validationErrors.length === 0 && internals.laterValidationRules) {
+        validationErrors = validate(
+          schemaDerivedData.schema,
+          requestContext.document,
+          internals.laterValidationRules,
+        );
+      }
 
       if (validationErrors.length === 0) {
         await validationDidEnd();
