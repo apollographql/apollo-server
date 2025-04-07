@@ -1,5 +1,15 @@
 # @apollo/server
 
+## 4.12.0
+
+### Minor Changes
+
+- [#8054](https://github.com/apollographql/apollo-server/pull/8054) [`89e3f84`](https://github.com/apollographql/apollo-server/commit/89e3f848e64590e15b08a07df498fe3fdb4f370d) Thanks [@clenfest](https://github.com/clenfest)! - Adds a new graphql-js validation rule to reject operations that recursively request selections above a specified maximum, which is disabled by default. Use configuration option `maxRecursiveSelections=true` to enable with a maximum of 10,000,000, or `maxRecursiveSelections=<number>` for a custom maximum. Enabling this validation can help avoid performance issues with configured validation rules or plugins.
+
+### Patch Changes
+
+- [#8031](https://github.com/apollographql/apollo-server/pull/8031) [`2550d9f`](https://github.com/apollographql/apollo-server/commit/2550d9fefe03069075e16141b043115170012e80) Thanks [@slagiewka](https://github.com/slagiewka)! - Add return after sending 400 response in doubly escaped JSON parser middleware
+
 ## 4.11.3
 
 ### Patch Changes
