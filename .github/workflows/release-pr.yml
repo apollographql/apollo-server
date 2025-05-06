@@ -12,7 +12,7 @@ jobs:
     if: github.repository == 'apollographql/apollo-server'
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
@@ -22,7 +22,7 @@ jobs:
 
       # Because Mise installs Node, this action mostly just caches node_modules.
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           cache: 'npm'
 
