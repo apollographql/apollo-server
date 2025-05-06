@@ -44,8 +44,5 @@
     "@jest/globals": "28.x || 29.x",
     "graphql": "^16.6.0",
     "jest": "28.x || 29.x"
-  },
-  "volta": {
-    "extends": "../../package.json"
   }
 }

@@ -4,32 +4,34 @@ orbs:
   node: circleci/node@5.0.0
   secops: apollo/circleci-secops-orb@2.0.7
 
-commands:
-  install-volta:
-    description: Install volta to manage Node/npm versions
-    steps:
-      - run:
-          name: Install volta
-          # Teach the volta installer to update Circle's special env
-          # file instead of the default.
-          command: |
-            curl https://get.volta.sh | PROFILE="$BASH_ENV" bash
+parameters:
+  mise_version:
+    type: string
+    default: "v2025.5.1"
 
+commands:
   setup-node:
     parameters:
       node-version:
         type: string
         default: ''
     steps:
-      - install-volta
       - checkout
+      # We can consider using the CircleCI cache to cache Mise and Node, but it tends
+      # to be pretty fast to install.
+      - run:
+          name: Install Mise
+          command: |
+            curl https://mise.run | MISE_VERSION=<< pipeline.parameters.mise_version >> sh
       - when:
           condition: << parameters.node-version >>
           steps:
-          - run: volta pin node@<< parameters.node-version >>
-      - run: node --version
-      - run: npm --version
-      - node/install-packages
+          - run: mise use node@<< parameters.node-version >>
+      - run:
+          name: Use Mise to configure the environment
+          command: stty cols 80 && ~/.local/bin/mise install --verbose && mise ls && mise env --shell bash >> "$BASH_ENV" && cat "$BASH_ENV"
+      - node/install-packages:
+          cache-version: node-v<< parameters.node-version >>
 
 
 jobs:

@@ -35,8 +35,5 @@
   "homepage": "https://github.com/apollographql/apollo-server#readme",
   "peerDependencies": {
     "graphql": "14.x || 15.x || 16.x"
-  },
-  "volta": {
-    "extends": "../../package.json"
   }
 }

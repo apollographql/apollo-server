@@ -160,8 +160,5 @@
   },
   "peerDependencies": {
     "graphql": "^16.6.0"
-  },
-  "volta": {
-    "extends": "../../package.json"
   }
 }
