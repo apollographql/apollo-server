@@ -1,0 +1,15 @@
+# This is a config file for "mise-en-place": https://mise.jdx.dev/
+# It pins the version of Node and can be used to run other tools as well.
+# It's what we use to set up tools in CI.
+
+[tools]
+# This actually uses the copy of npm that comes with Node to install the version
+# of npm that we want. Since we test on ancient versions of Node like v14, we
+# want to use a slightly more modern npm. Listing it before "node" means we'll
+# actually use it instead of the version that comes with node.
+"npm:npm" = "9.9.4"
+node = "22.13.0"
+
+[env]
+# Put binaries from npm-installed packages on PATH (eg `changeset`).
+_.path = ["{{config_root}}/node_modules/.bin"]

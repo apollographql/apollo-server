@@ -45,8 +45,5 @@
   "//": "Don't caret this, we want to be explicit about the version of our fork of protobufjs and update it intentionally if we need to.",
   "dependencies": {
     "@apollo/protobufjs": "1.2.7"
-  },
-  "volta": {
-    "extends": "../../package.json"
   }
 }
