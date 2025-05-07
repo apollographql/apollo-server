@@ -849,3 +849,72 @@ it('TypedQueryDocumentNode', async () => {
     // that.
   }
 });
+
+describe('content-type negotiation', () => {
+  it('responds with a BadRequest error with custom `accept` header', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+    });
+    await server.start();
+
+    const { body } = await server.executeHTTPGraphQLRequest({
+      httpGraphQLRequest: {
+        body: { query: '{ hello }' },
+        headers: new HeaderMap([
+          ['accept', 'application/json;v=1'],
+          ['content-type', 'application/json'],
+        ]),
+        method: 'POST',
+        search: '',
+      },
+      context: async () => ({ foo: 'bla' }),
+    });
+    assert(body.kind === 'complete');
+    const result = JSON.parse(body.string);
+    expect(result.errors).toMatchInlineSnapshot(`
+      [
+        {
+          "extensions": {
+            "code": "BAD_REQUEST",
+          },
+          "message": "An 'accept' header was provided for this request which does not accept application/json; charset=utf-8 or application/graphql-response+json; charset=utf-8. If you'd like to use a custom content-type and bypass content-type negotiation altogether, set the \`content-type\` response header in a plugin.",
+        },
+      ]
+    `);
+    await server.stop();
+  });
+
+  it('permits a custom `accept` header when the `content-type` response header is set', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      plugins: [
+        {
+          async requestDidStart({ response }) {
+            response.http?.headers.set('content-type', 'application/json;v=1');
+          },
+        },
+      ],
+    });
+    await server.start();
+
+    const { body } = await server.executeHTTPGraphQLRequest({
+      httpGraphQLRequest: {
+        body: { query: '{ hello }' },
+        headers: new HeaderMap([
+          ['accept', 'application/json;v=1'],
+          ['content-type', 'application/json'],
+        ]),
+        method: 'POST',
+        search: '',
+      },
+      context: async () => ({ foo: 'bla' }),
+    });
+    assert(body.kind === 'complete');
+    const result = JSON.parse(body.string);
+    expect(result.errors).toBeUndefined();
+    expect(result.data?.hello).toBe('world');
+    await server.stop();
+  });
+});
