@@ -625,6 +625,34 @@ describe('ApolloServer executeOperation', () => {
     await server.stop();
   });
 
+  it('variable coercion errors, configure max number of errors', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      status400ForVariableCoercionErrors: true,
+      executionOptions: {
+        maxCoercionErrors: 1,
+      },
+    });
+    await server.start();
+    const { body, http } = await server.executeOperation({
+      query: `#graphql
+      query NeedsArg($arg: CompoundInput!) { needsCompoundArg(aCompound: $arg) }
+      `,
+      variables: {
+        arg: { compound: { error1: '1', error2: '2', error3: '3' } },
+      },
+    });
+    const result = singleResult(body);
+    expect(result.errors).toHaveLength(2);
+    expect(result.errors?.[0].extensions?.code).toBe('BAD_USER_INPUT');
+    expect(result.errors?.[1].extensions?.code).toBe('INTERNAL_SERVER_ERROR');
+    expect(result.errors?.[1].message).toMatch(
+      'Too many errors processing variables, error limit reached. Execution aborted.',
+    );
+    expect(http.status).toBe(400);
+  });
+
   it('passes its second argument as context object', async () => {
     const server = new ApolloServer({
       typeDefs,

@@ -566,7 +566,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
     if (internals.__testing_incrementalExecutionResults) {
       return internals.__testing_incrementalExecutionResults;
-    } else if (internals.gatewayExecutor) {
+    }
+    if (internals.gatewayExecutor) {
       const result = await internals.gatewayExecutor(
         makeGatewayGraphQLRequestContext(requestContext, server, internals),
       );
@@ -584,6 +585,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         operationName: request.operationName,
         fieldResolver: internals.fieldResolver,
         useLegacyIncremental,
+        options: internals.executionOptions,
       });
       if ('initialResult' in resultOrResults) {
         return {
