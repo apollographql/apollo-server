@@ -8,6 +8,7 @@ import type { Logger } from '@apollo/utils.logger';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
   DocumentNode,
+  ExecutionArgs,
   FormattedExecutionResult,
   GraphQLFieldResolver,
   GraphQLFormattedError,
@@ -107,6 +108,8 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   // Used for parsing operations; unlike in AS3, this is not also used for
   // parsing the schema.
   parseOptions?: ParseOptions;
+
+  executionOptions?: ExecutionArgs['options'];
 
   // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
   // flip default behavior. Default false. This opt-in configuration fixes a
