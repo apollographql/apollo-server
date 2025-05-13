@@ -1,10 +1,12 @@
 import { createHash } from '@apollo/utils.createhash';
 import type { ApolloConfig, ApolloConfigInput } from './externalTypes/index.js';
+import type { Logger } from '@apollo/utils.logger';
 
 // This function combines the `apollo` constructor argument and some environment
 // variables to come up with a full ApolloConfig.
 export function determineApolloConfig(
   input: ApolloConfigInput | undefined,
+  logger: Logger,
 ): ApolloConfig {
   const apolloConfig: ApolloConfig = {};
 
@@ -17,9 +19,21 @@ export function determineApolloConfig(
 
   // Determine key.
   if (input?.key) {
-    apolloConfig.key = input.key;
+    apolloConfig.key = input.key.trim();
   } else if (APOLLO_KEY) {
-    apolloConfig.key = APOLLO_KEY;
+    apolloConfig.key = APOLLO_KEY.trim();
+  }
+  if ((input?.key ?? APOLLO_KEY) !== apolloConfig.key) {
+    logger.warn(
+      'The provided API key has unexpected leading or trailing whitespace. ' +
+        'Apollo Server will trim the key value before use.',
+    );
+  }
+
+  // Assert API key is a valid header value, since it's going to be used as one
+  // throughout.
+  if (apolloConfig.key) {
+    assertValidHeaderValue(apolloConfig.key);
   }
 
   // Determine key hash.
@@ -64,4 +78,18 @@ export function determineApolloConfig(
   }
 
   return apolloConfig;
+}
+
+function assertValidHeaderValue(value: string) {
+  // Ref: node-fetch@2.x `Headers` validation
+  // https://github.com/node-fetch/node-fetch/blob/9b9d45881e5ca68757077726b3c0ecf8fdca1f29/src/headers.js#L18
+  const invalidHeaderCharRegex = /[^\t\x20-\x7e\x80-\xff]/g;
+  if (invalidHeaderCharRegex.test(value)) {
+    const invalidChars = value.match(invalidHeaderCharRegex)!;
+    throw new Error(
+      `The API key provided to Apollo Server contains characters which are invalid as HTTP header values. The following characters found in the key are invalid: ${invalidChars.join(
+        ', ',
+      )}. Valid header values may only contain ASCII visible characters. If you think there is an issue with your key, please contact Apollo support.`,
+    );
+  }
 }

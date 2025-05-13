@@ -21,7 +21,7 @@ npm i
 if [[ -n "${INCREMENTAL_DELIVERY_TESTS_ENABLED:-}" ]]; then
   npm i --no-save --legacy-peer-deps \
     "$TARBALL_DIR"/*.tgz \
-    graphql@17.0.0-alpha.1.canary.pr.3361.04ab27334641e170ce0e05bc927b972991953882
+    graphql@17.0.0-alpha.2
 else
   npm i --no-save "$TARBALL_DIR"/*.tgz
 fi

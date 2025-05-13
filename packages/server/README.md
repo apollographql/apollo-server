@@ -5,7 +5,13 @@
 [![npm version](https://badge.fury.io/js/%40apollo%2Fserver.svg)](https://badge.fury.io/js/%40apollo%2Fserver)
 [![Build Status](https://circleci.com/gh/apollographql/apollo-server.svg?style=svg)](https://circleci.com/gh/apollographql/apollo-server)
 [![Join the community](https://img.shields.io/discourse/status?label=Join%20the%20community&server=https%3A%2F%2Fcommunity.apollographql.com)](https://community.apollographql.com)
-[![Join our Discord server](https://img.shields.io/discord/1022972389463687228.svg?color=7389D8&labelColor=6A7EC2&logo=discord&logoColor=ffffff&style=flat-square)](https://discord.gg/graphos)
+
+---
+
+**Announcement:**
+Join 1000+ engineers at GraphQL Summit 2025 by Apollo for talks, workshops, and office hours. Oct 6-8, 2025 in San Francisco. [Get your pass here ->](https://www.apollographql.com/graphql-summit-2025?utm_campaign=2025-03-04_graphql-summit-github-announcement&utm_medium=github&utm_source=apollo-server)
+
+---
 
 ## A TypeScript/JavaScript GraphQL server
 
@@ -90,6 +96,12 @@ First, install Apollo Server, the JavaScript implementation of the core GraphQL 
 
 ```
 npm install @apollo/server graphql express cors body-parser
+```
+
+If using Typescript you may also need to install additional type declaration packages as development dependencies to avoid common errors when importing the above packages (i.e. Could not find a declaration file for module '`cors`'):
+
+```
+npm install --save-dev @types/cors @types/express @types/body-parser
 ```
 
 Then, write the following to `server.mjs`. (By using the `.mjs` extension, Node lets you use the `await` keyword at the top level.)

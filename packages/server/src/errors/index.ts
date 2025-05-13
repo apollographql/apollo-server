@@ -13,6 +13,7 @@ export enum ApolloServerErrorCode {
 
 export enum ApolloServerValidationErrorCode {
   INTROSPECTION_DISABLED = 'INTROSPECTION_DISABLED',
+  MAX_RECURSIVE_SELECTIONS_EXCEEDED = 'MAX_RECURSIVE_SELECTIONS_EXCEEDED',
 }
 
 /**

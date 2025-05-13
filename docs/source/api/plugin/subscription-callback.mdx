@@ -1,0 +1,122 @@
+---
+title: "API Reference: Subscription Callback Plugin"
+api_reference: true
+minVersion: 4.9.0
+---
+
+This document covers the usage of the subscription callback plugin for use in Apollo Federation with GraphOS Router. For more information about the protocol itself, see the [subscription callback protocol](/router/executing-operations/subscription-callback-protocol).
+
+> ⚠️ **Note**: The subscription callback protocol is currently in [preview](/resources/product-launch-stages#preview). Breaking changes might be introduced during the preview period.
+
+## Using the plugin
+
+This article documents the options for the `ApolloServerPluginSubscriptionCallback` plugin, which you can import from `@apollo/server/plugin/subscriptionCallback`.
+
+This plugin enables your GraphQL server to respond to [subscription operations](/apollo-server/data/subscriptions/) using the [subscription callback protocol](https://www.apollographql.com/docs/router/executing-operations/subscription-callback-protocol/#initialization).  GraphOS Router uses this protocol to execute subscription operations and receive updates at a URL specified by the router.
+
+This feature can only be enabled by providing an `ApolloServerPluginSubscriptionCallback` instance to your `ApolloServer` constructor:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
+
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  plugins: [
+    ApolloServerPluginSubscriptionCallback(),
+  ],
+});
+```
+
+</MultiCodeBlock>
+
+## Caveats
+
+The subscription plugin implementation inherently bypasses Apollo Server's request lifecycle. This means that certain plugin hooks (notably `executionDidStart` and `willResolveField`) will not be called when handling callback subscription requests or when sending subscription events. There is currently no metrics or tracing support for callback subscriptions.
+
+#### Options
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+
+<tr>
+<td>
+
+###### `heartbeatIntervalMs`
+
+`number`
+</td>
+<td>
+
+Optionally configure the heartbeat interval in milliseconds. The default is 5 seconds, which is the interval that GraphOS Router expects. Lengthening this interval may cause GraphOS Router to invalidate existing subscriptions frequently and is not recommended. You may want to shorten this interval if you have latency issues between your GraphQL Server and GraphOS Router.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `logger`
+
+[`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
+</td>
+<td>
+
+Optionally provide a [`Logger`](https://www.npmjs.com/package/@apollo/utils.logger) instance to capture logs from the plugin.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
+###### `retry`
+
+`Options`
+</td>
+<td>
+
+This plugin uses the `async-retry` module to retry failed requests to GraphOS Router. You can optionally provide an `Options` object to configure the retry behavior. The configuration options for `async-retry` can be found in the [README](https://www.npmjs.com/package/async-retry).
+
+The default configuration provided by this plugin is:
+```ts
+{
+  retries: 5,
+  minTimeout: 100,
+  maxTimeout: 1000,
+}
+```
+
+These defaults can be overridden (and other options can be provided) by passing an `Options` object to the plugin:
+```ts
+new ApolloServer({
+  plugins: [
+    ApolloServerPluginSubscriptionCallback({
+      retry: {
+        retries: 3,
+        minTimeout: 1000,
+        maxTimeout: 5000,
+        randomize: true,
+      },
+    }),
+  ],
+  // ...
+})
+```
+
+</td>
+</tr>
+
+
+</tbody>
+</table>

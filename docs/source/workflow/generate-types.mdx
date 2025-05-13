@@ -1,5 +1,5 @@
 ---
-title: Generating types from a GraphQL schema
+title: Generating Types from a GraphQL Schema
 description: How to ensure your resolvers are type safe
 ---
 
@@ -49,6 +49,12 @@ import { readFileSync } from 'fs';
 // root directory, which is the current working directory
 // if the server is executed using `npm run`.
 const typeDefs = readFileSync('./schema.graphql', { encoding: 'utf-8' });
+
+interface MyContext {
+  dataSources: {
+    books: Book[];
+  };
+}
 
 const server = new ApolloServer<MyContext>({
   typeDefs,
@@ -158,9 +164,7 @@ import { QueryResolvers } from '__generated__/resolvers-types';
 // Use the generated `QueryResolvers`
 // type to type check our queries!
 const queries: QueryResolvers = {
-  Query: {
   // ...queries
-  },
 };
 
 export default queries;
@@ -172,9 +176,7 @@ import { MutationResolvers } from '__generated__/resolvers-types';
 // Use the generated `MutationResolvers` type
 // to type check our mutations!
 const mutations: MutationResolvers = {
-  Mutation: {
-    // ...mutations
-  },
+  // ...mutations
 };
 
 export default mutations;
@@ -237,12 +239,11 @@ const resolvers: Resolvers = {
 Check out our example using Apollo Server with generated types on CodeSandbox:
 
 FIXME: update repo
-<a href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/generated-types?fontsize=14&hidenavigation=1&initialpath=%2Fgraphql&theme=dark">
-  <img
-    alt="Edit server-generated-types-as4"
-    src="https://codesandbox.io/static/img/play-codesandbox.svg"
-  />
-</a>
-<br/>
+<ButtonLink
+  href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/generated-types?fontsize=14&hidenavigation=1&initialpath=%2Fgraphql&theme=dark"
+  size="lg"
+>
+  Edit in CodeSandbox
+</ButtonLink>
 
 See [GraphQL Code Generator's docs](https://www.the-guild.dev/graphql/codegen/docs/guides/further-reading) for further guidance on the different features and integrations it supports.

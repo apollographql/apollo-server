@@ -1,5 +1,5 @@
 ---
-title: Configuring cache backends
+title: Configuring Cache Backends
 description: How to configure Apollo Server's cache
 ---
 
@@ -96,12 +96,13 @@ npm install keyv @keyv/redis @apollo/utils.keyvadapter
 ### Single instance
 ```ts
 import Keyv from "keyv";
+import KeyvRedis from "@keyv/redis";
 import { KeyvAdapter } from "@apollo/utils.keyvadapter";
 
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  cache: new KeyvAdapter(new Keyv("redis://user:pass@localhost:6379")), // highlight-line
+  cache: new KeyvAdapter(new Keyv(new KeyvRedis("redis://user:pass@localhost:6379"))), // highlight-line
 });
 ```
 
@@ -114,14 +115,14 @@ const server = new ApolloServer({
   typeDefs,
   resolvers,
   // highlight-start
-  cache: new KeyvAdapter(
-    new Keyv("redis://user:pass@localhost:6379", {
+  cache: new KeyvAdapter(new Keyv(
+    new KeyvRedis("redis://user:pass@localhost:6379", {
       sentinels: [
         { host: "localhost", port: 26379 },
         { host: "localhost", port: 26380 },
       ],
     })
-  ),
+  )),
   // highlight-end
 });
 ```
@@ -208,10 +209,11 @@ To provide error tolerance for cache backends that connect via a client (e.g., R
 
 ```typescript
 import Keyv from "keyv";
+import KeyvRedis from "@keyv/redis";
 import { KeyvAdapter } from "@apollo/utils.keyvadapter";
 import { ErrorsAreMissesCache } from "@apollo/utils.keyvaluecache";
 
-const redisCache = new Keyv("redis://user:pass@localhost:6379");
+const redisCache = new Keyv(new KeyvRedis("redis://user:pass@localhost:6379"));
 const faultTolerantCache = new ErrorsAreMissesCache(
   new KeyvAdapter(redisCache),
 );

@@ -5,7 +5,7 @@ api_reference: true
 
 This API reference documents the exports from the `@apollo/gateway` package. This package enables you to use Apollo Server as a gateway for a federated supergraph. For more information, see [Implementing a gateway with Apollo Server](../apollo-gateway-setup).
 
-> We recommend that all supergraphs use the Apollo Router instead of this Node.js-based gateway. See [Choosing a router library](/federation/building-supergraphs/router/#choosing-a-router-library).
+> We recommend that all supergraphs use the GraphOS Router instead of this Node.js-based gateway. See [Choosing a router library](/federation/building-supergraphs/router/#choosing-a-router-library).
 
 ## `class ApolloGateway`
 
@@ -125,7 +125,7 @@ const gateway = new ApolloGateway({
 
 You provide your supergraph schema to the gateway with this option. You can provide it as a `string`, via a `SupergraphSdlHook`, or via a `SupergraphManager`.
 
-**When `supergraphSdl` is a `string`:** A [supergraph schema](/federation/federated-types/overview/#supergraph-schema) ([generated with the Rover CLI](/rover/commands/supergraphs/#composing-a-supergraph-schema)) that's composed from your subgraph schemas. The supergraph schema includes directives that specify routing information for each subgraph.
+**When `supergraphSdl` is a `string`:** A [supergraph schema](/federation/federated-schemas/#supergraph-schema) ([generated with the Rover CLI](/rover/commands/supergraphs/#composing-a-supergraph-schema)) that's composed from your subgraph schemas. The supergraph schema includes directives that specify routing information for each subgraph.
 
 **When `supergraphSdl` is a `SupergraphSdlHook`:** This is an `async` function that returns an object containing a `supergraphSdl` string as well as a `cleanup` function. The hook accepts an object containing the following properties:
 

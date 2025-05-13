@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server",
-  "version": "4.9.0",
+  "version": "4.12.0",
   "description": "Core engine for Apollo GraphQL server",
   "type": "module",
   "main": "dist/cjs/index.js",
@@ -54,6 +54,14 @@
       },
       "import": "./dist/esm/plugin/disabled/index.js",
       "require": "./dist/cjs/plugin/disabled/index.js"
+    },
+    "./plugin/disableSuggestions": {
+      "types": {
+        "require": "./dist/cjs/plugin/disableSuggestions/index.d.ts",
+        "default": "./dist/esm/plugin/disableSuggestions/index.d.ts"
+      },
+      "import": "./dist/esm/plugin/disableSuggestions/index.js",
+      "require": "./dist/cjs/plugin/disableSuggestions/index.js"
     },
     "./plugin/drainHttpServer": {
       "types": {
@@ -136,14 +144,12 @@
     "@apollo/utils.usagereporting": "^2.1.0",
     "@apollo/utils.withrequired": "^3.0.0",
     "@graphql-tools/schema": "^10.0.0",
-    "@josephg/resolvable": "^1.0.0",
-    "@types/express-serve-static-core": "^4.17.30",
     "@types/express": "^4.17.13",
+    "@types/express-serve-static-core": "^4.17.30",
     "@types/node-fetch": "^2.6.1",
     "async-retry": "^1.2.1",
-    "body-parser": "^1.20.0",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.21.1",
     "loglevel": "^1.6.8",
     "lru-cache": "^7.10.1",
     "negotiator": "^0.6.3",
@@ -153,8 +159,5 @@
   },
   "peerDependencies": {
     "graphql": "^16.6.0"
-  },
-  "volta": {
-    "extends": "../../package.json"
   }
 }

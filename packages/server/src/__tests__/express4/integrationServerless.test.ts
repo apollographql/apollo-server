@@ -1,6 +1,5 @@
-import { json } from 'body-parser';
 import cors from 'cors';
-import express from 'express';
+import express, { json } from 'express';
 import http from 'http';
 import { ApolloServer, ApolloServerOptions, BaseContext } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';

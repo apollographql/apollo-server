@@ -1,22 +1,24 @@
 ---
 title: Introduction to Apollo Server
+subtitle: Learn how to build scalable, production-ready GraphQL APIs
+description: Learn how Apollo Server simplifies building GraphQL APIs with its straightforward setup and support for any data source or client.
 ---
 
 > 📣 **Apollo Server 5 is generally available!**
 >
-> Not much has changed since v4, the [update to the migration guide](./migration/#apollo-server-5) is a one minute read.
+> FIXME something like: Not much has changed since v4, the [update to the migration guide](./migration/#apollo-server-5) is a one minute read.
+> [See what's new](/apollo-server/migration/) or check out the [tutorial for migrating from Apollo Server 3](https://www.apollographql.com/tutorials/side-quest-as4?referrer=docs-content).
 >
 > Using Apollo Server 3? Be sure to follow the [full migration guide](./migration/) first. Docs for v3 are [available here](/apollo-server/v3/).
 
 **Apollo Server is an [open-source](https://github.com/apollographql/apollo-server), spec-compliant GraphQL server** that's compatible with any GraphQL client, including [Apollo Client](/react). It's the best way to build a production-ready, self-documenting GraphQL API that can use data from any source.
 
-<img src="./images/frontend_backend_diagram.svg" width="500" alt="Diagram showing Apollo Server bridging frontend and backend" />
+<img src="./images/introduction.jpg" width="600" alt="Diagram showing Apollo Server bridging GraphQL Operations to web apps and frameworks" />
 
 #### You can use Apollo Server as:
 
-* The GraphQL server for a [subgraph](./using-federation/apollo-subgraph-setup) in a federated supergraph
-* A [stand-alone GraphQL server](./api/standalone)
-* An add-on to your application's existing Node.js [middleware](./integrations/integration-index) (such as [Express](./api/express-middleware), AWS Lambda, or Fastify)
+* The GraphQL server for a [subgraph](/apollo-server/using-federation/apollo-subgraph-setup) in a federated supergraph
+* An add-on to any new or existing Node.js apps—this includes apps running on [Express](/apollo-server/api/express-middleware) (including [MERN stack](/apollo-server/integrations/mern) apps), [AWS Lambda](https://www.npmjs.com/package/@as-integrations/aws-lambda), [Azure Functions](https://www.npmjs.com/package/@as-integrations/azure-functions), [Cloudflare](https://www.npmjs.com/package/@as-integrations/cloudflare-workers), [Fastify](https://www.npmjs.com/package/@as-integrations/fastify), and [more](/apollo-server/integrations/integration-index)
 
 #### Apollo Server provides:
 
@@ -25,11 +27,8 @@ title: Introduction to Apollo Server
 *  **Universal compatibility** with any data source, any build tool, and any GraphQL client
 *  **Production readiness**, enabling you to confidently run your graph in production
 
-
 #### Ready to try it out?
 
-<div align="center">
-  <ButtonLink href="./getting-started" size="lg">
-    Get started!
-  </ButtonLink>
-</div>
+<ButtonLink href="/apollo-server/getting-started" size="lg">
+  Get started!
+</ButtonLink>

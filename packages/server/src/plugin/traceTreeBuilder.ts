@@ -6,7 +6,6 @@ import {
   type ResponsePath,
 } from 'graphql';
 import { Trace, google } from '@apollo/usage-reporting-protobuf';
-import type { Logger } from '@apollo/utils.logger';
 import type { SendErrorsOptions } from './usageReporting';
 import { UnreachableCaseError } from '../utils/UnreachableCaseError.js';
 
@@ -16,7 +15,6 @@ function internalError(message: string) {
 
 export class TraceTreeBuilder {
   private rootNode = new Trace.Node();
-  private logger: Logger;
   public trace = new Trace({
     root: this.rootNode,
     // By default, each trace counts as one operation for the sake of field
@@ -39,10 +37,9 @@ export class TraceTreeBuilder {
 
   public constructor(options: {
     maskedBy: string;
-    logger: Logger;
     sendErrors?: SendErrorsOptions;
   }) {
-    const { logger, sendErrors, maskedBy } = options;
+    const { sendErrors, maskedBy } = options;
     if (!sendErrors || 'masked' in sendErrors) {
       this.transformError = () =>
         new GraphQLError('<masked>', {
@@ -55,7 +52,6 @@ export class TraceTreeBuilder {
     } else {
       throw new UnreachableCaseError(sendErrors);
     }
-    this.logger = logger;
   }
 
   public startTiming() {
@@ -89,7 +85,49 @@ export class TraceTreeBuilder {
       throw internalError('willResolveField called before startTiming!');
     }
     if (this.stopped) {
-      throw internalError('willResolveField called after stopTiming!');
+      // We've been stopped, which means execution is done... and yet we're
+      // still resolving more fields? How can that be? Shouldn't we throw an
+      // error or something?
+      //
+      // Well... we used to do exactly that. But this "shouldn't happen" error
+      // showed up in practice! Turns out that graphql-js can actually continue
+      // to execute more fields indefinitely long after `execute()` resolves!
+      // That's because parallelism on a selection set is implemented using
+      // `Promise.all`, and as soon as one of its arguments (ie, one field)
+      // throws an error, the combined Promise resolves, but there's no
+      // "cancellation" of the Promises that are the other arguments to
+      // `Promise.all`. So the code contributing to those Promises keeps on
+      // chugging away indefinitely.
+      //
+      // Concrete example: let’s say you have
+      //
+      //    { x y { ARBITRARY_SELECTION_SET } }
+      //
+      // where x has a non-null return type, and x and y both have resolvers
+      // that return Promises. And let’s say that x returns a Promise that
+      // rejects (or resolves to null). What this means is that we’re going to
+      // eventually end up with `data: null` (nothing under y will actually
+      // matter), but graphql-js execution will continue running whatever is
+      // under ARBITRARY_SELECTION_SET without any sort of short circuiting. In
+      // fact, the Promise returned from execute itself can happily resolve
+      // while execution is still chugging away on an arbitrary amount of fields
+      // under that ARBITRARY_SELECTION_SET. There’s no way to detect from the
+      // outside "all the execution related to this operation is done", nor to
+      // "short-circuit" execution so that it stops going.
+      //
+      // So, um. We will record any field whose execution we manage to observe
+      // before we "stop" the TraceTreeBuilder (whether it is one that actually
+      // ends up in the response or whether it gets thrown away due to null
+      // bubbling), but if we get any more fields afterwards, we just ignore
+      // them rather than throwing a confusing error.
+      //
+      // (That said, the error we used to throw here generally was hidden
+      // anyway, for the same reason: it comes from a branch of execution that
+      // ends up not being included in the response. But
+      // https://github.com/graphql/graphql-js/pull/3529 means that this
+      // sometimes crashed execution anyway. Our error never caught any actual
+      // problematic cases, so keeping it around doesn't really help.)
+      return () => {};
     }
 
     const path = info.path;
@@ -156,11 +194,11 @@ export class TraceTreeBuilder {
       if (specificNode) {
         node = specificNode;
       } else {
-        this.logger.warn(
-          `Could not find node with path ${path.join(
-            '.',
-          )}; defaulting to put errors on root node.`,
-        );
+        const responsePath = responsePathFromArray(path, this.rootNode);
+        if (!responsePath) {
+          throw internalError('addProtobufError called with invalid path!');
+        }
+        node = this.newNode(responsePath);
       }
     }
 
@@ -278,6 +316,23 @@ function responsePathAsString(p?: ResponsePath): string {
   }
 
   return res;
+}
+
+function responsePathFromArray(
+  path: ReadonlyArray<string | number>,
+  node: Trace.Node,
+): ResponsePath | undefined {
+  let responsePath: ResponsePath | undefined;
+  let nodePtr: Trace.INode | undefined = node;
+  for (const key of path) {
+    nodePtr = nodePtr?.child?.find((child) => child.responseName === key);
+    responsePath = {
+      key,
+      prev: responsePath,
+      typename: nodePtr?.type ?? undefined,
+    };
+  }
+  return responsePath;
 }
 
 function errorToProtobufError(error: GraphQLError): Trace.Error {

@@ -1,8 +1,9 @@
+import { DEFAULT_EMBEDDED_EXPLORER_VERSION } from '../../../plugin/landingPage/default';
 import { getEmbeddedExplorerHTML } from '../../../plugin/landingPage/default/getEmbeddedHTML';
 import type { ApolloServerPluginEmbeddedLandingPageProductionDefaultOptions } from '../../../plugin/landingPage/default/types';
 import { describe, it, expect } from '@jest/globals';
 
-const cdnVersion = '_latest';
+const cdnVersion = DEFAULT_EMBEDDED_EXPLORER_VERSION;
 expect.addSnapshotSerializer(require('jest-serializer-html'));
 const apolloServerVersion = '@apollo/server@4.0.0';
 
@@ -58,7 +59,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -108,7 +109,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -159,7 +160,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -208,7 +209,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">
@@ -260,7 +261,7 @@ describe('Embedded Explorer Landing Page Config HTML', () => {
       <div id="embeddableExplorer">
       </div>
       <script nonce="nonce"
-              src="https://embeddable-explorer.cdn.apollographql.com/_latest/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
+              src="https://embeddable-explorer.cdn.apollographql.com/v3/embeddable-explorer.umd.production.min.js?runtime=%40apollo%2Fserver%404.0.0"
       >
       </script>
       <script nonce="nonce">

@@ -1,0 +1,140 @@
+---
+title: Response Cache Eviction
+subtitle: Advanced cache eviction patterns using custom cache keys
+description: Use advanced cache eviction patterns with custom cache keys to selectively evict cached responses when relevant events occur.
+published: 2022-08-10
+id: TN0010
+redirectFrom:
+  - /technotes/TN0011-response-cache-eviction/
+---
+
+<Tip>
+
+For a runnable example of this cache eviction solution, see the [Response Cache Eviction](https://github.com/apollosolutions/response-cache-eviction) repo.
+
+</Tip>
+
+Apollo Server's Full Response Cache plugin (`@apollo/server-plugin-response-cache`) caches the results of operations for a period of time (time-to-live or TTL). After that time expires, the results are evicted from the cache, and the server fully resolves the operation the next time a client executes it.
+
+The most straightforward way to avoid stale data in the response cache is to set a short default TTL. However, this limits the cache's effectiveness for responses that rarely (or never) change.
+
+The Full Response Cache plugin supports advanced cache eviction patterns via custom cache keys in versions `3.7.0` and later. This enables you to set a longer default TTL and increase the cache's hit rate, because you can selectively evict cached responses when relevant events occur.
+
+## Customizing the cache key
+
+This works by defining a custom response cache key by a pattern that can later be searched on in the cache. What this key should be comprised of and how it should be structured depends on the use-case and what search patterns our cache implementation supports.
+
+### Ensuring cache key uniqueness
+
+Keep in mind that each key links to a full response object, so if your key is too generic, you risk potentially returning the wrong data for queries. For example, generating a cache key based solely on the operation name would yield the same responses for all operations with the same name, even if the entire query is different. Make sure your keys are unique for each execution of the incoming operations that returns different data.
+
+### Defining a custom cache key
+
+As noted above, the `3.7.0` of the Full Response Cache plugin introduced the `generateCacheKey` configuration method. The response from this function will be used as the cache key to store the current query response.
+
+Here's the method signature:
+
+```typescript
+generateCacheKey(
+  requestContext: GraphQLRequestContext<Record<string, any>>,
+  keyData: unknown,
+): string;
+```
+
+The [`requestContext`](https://github.com/apollographql/apollo-server/blob/578dc68831d93d5809b78174d6179c10afc8c2ef/packages/server/src/externalTypes/requestPipeline.ts#L38) parameter holds data about the running GraphQL request, such as the request / response objects as well as the [context object](/apollo-server/v3/data/resolvers/#the-context-argument) that is passed to your resolver functions. Any portion of these data objects can be used as part of your cache key.
+
+The `keyData` parameter can be used to ensure the uniqueness of your key. In most cases, hashing this variable should be enough to generate a unique key per operation. In fact, the [default implementation](https://github.com/apollographql/apollo-server/blob/578dc68831d93d5809b78174d6179c10afc8c2ef/packages/plugin-response-cache/src/ApolloServerPluginResponseCache.ts#L182) hashes a `JSON.stringify` version of this parameter as the cache key.
+
+In this example, we prefix the default key with the name of the incoming operation:
+
+```typescript
+import { createHash } from 'crypto';
+
+function sha(s: string) {
+  return createHash('sha256').update(s).digest('hex');
+}
+
+generateCacheKey(requestContext, keyData) {
+  const operationName = requestContext.request.operationName ?? 'unnamed';
+  const key = operationName + ':' + sha(JSON.stringify(keyData));
+  return key;
+}
+```
+
+An example key for the named operation “MyOpName”:
+
+```bash showLineNumbers=false
+keyv:fqc:MyOpName:e7eed80930547ed4ab4ece81a18955967831ff4c40757eda9bf1f0de84e042f8
+```
+
+This approach ensures that all cache keys are unique enough to store unique responses, but gives us a pattern we can use to selectively remove cache entries based on our operation names.
+
+## Evicting cache entries
+
+There are two main strategies for evicting response cache entries: manually evicting from a shell prompt, or in response to some event, like a mutation.
+
+Actually removing entries from the cache once a custom cache key is being used will depend on your caching backend, as each offer different ways to list and remove keys. We'll explore both options using Redis.
+
+### Evicting manually
+
+If you need to evict cache entries for local testing or debugging, it might suffice to define a custom cache key pattern and delete entries as needed with `redis-cli`.
+
+Here's an example of removing all keys in a Redis instance that match a given pattern:
+
+```bash showLineNumbers=false
+redis-cli --raw KEYS "$PATTERN" | xargs redis-cli del
+```
+
+This command lists every key matching any glob-style "$PATTERN" and removes them one by one.
+
+Here's an example using the operation name prefix pattern described above to remove all entries with unnamed operations:
+
+```bash showLineNumbers=false
+redis-cli --raw KEYS "keyv:fqc:unnamed*" | xargs redis-cli del
+```
+
+[The Redis docs for the KEYS command](https://redis.io/commands/keys/) recommend NOT using the `KEYS` function in production application code and only executing against production with "extreme care." Redis specifically recommends instead using `SCAN`, which is described in [Event-based eviction](#event-based-eviction).
+
+The utility of this approach will depend on the number of records stored in your cache and how performant the pattern search is, as well as the number of records that need to be removed. If your searches are scanning and/or returning millions of records, this approach probably should be avoided in a production environment.
+
+### Event-based eviction
+
+Most other use cases need to evict cache entries in response to certain events. The [Response Cache Eviction](https://github.com/apollosolutions/response-cache-eviction) repo provides a full walkthrough of evicting certain operation responses from the cache when a specific mutation is executed.
+
+Redis clients currently offer no way to batch delete entries based on a pattern. As a result, our event based solution needs to do a similar algorithm: look up keys by a pattern, then remove those keys.
+
+The following snippet is from [the repo mentioned above](https://github.com/apollosolutions/response-cache-eviction):
+
+```ts
+import {createClient, RedisClientType} from 'redis';
+
+const deleteByPrefix = async (prefix: string) => {
+  const client = createClient({url: 'redis://localhost:6379'});
+  await client.connect();
+
+  const scanIterator = client.scanIterator({
+    MATCH: `keyv:fqc:${prefix}*`,
+    COUNT: 2000
+  });
+
+  let keys = [];
+
+  for await (const key of scanIterator) {
+    keys.push(key);
+  }
+
+  if (keys.length > 0) {
+    await client.del(keys); // This is blocking, consider handling async in production if the number of keys is large
+  }
+
+  return keys;
+};
+```
+
+This solution uses the `scanIterator` function (which uses the `SCAN` Redis function) to scan through cache entries in a memory-efficient way, as opposed to the `KEYS` method mentioned above. The `SCAN` method is more appropriate to use in a production environment.
+
+The `deleteByPrefix` method can be added to your context object and then executed in your mutation resolvers to remove certain operations from the cache.
+
+## Final thoughts
+
+Either of the eviction solutions mentioned above should be used with caution. Make sure you have an understanding of the sorts of effects that your setup will have on your cache. Its a good idea to monitor your caching server when testing your different use cases to ensure that you aren't overloading your cache.

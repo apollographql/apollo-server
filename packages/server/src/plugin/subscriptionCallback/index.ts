@@ -1,13 +1,12 @@
 import type { Logger } from '@apollo/utils.logger';
-import { type GraphQLError, subscribe, type ExecutionResult } from 'graphql';
+import retry from 'async-retry';
+import { subscribe, type ExecutionResult, type GraphQLError } from 'graphql';
 import fetch, { type Response } from 'node-fetch';
 import { ensureError, ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import { HeaderMap } from '../../utils/HeaderMap.js';
-import retry from 'async-retry';
 
 export interface ApolloServerPluginSubscriptionCallbackOptions {
-  heartbeatIntervalMs?: number;
   maxConsecutiveHeartbeatFailures?: number;
   logger?: Logger;
   retry?: retry.Options;
@@ -26,11 +25,19 @@ export function ApolloServerPluginSubscriptionCallback(
       const subscriptionExtension = request?.extensions?.subscription;
       // If it's not a callback subscription, ignore the request.
       if (!subscriptionExtension) return;
-      const {
-        callback_url: callbackUrl,
-        subscription_id: id,
+      let {
+        callbackUrl,
+        subscriptionId: id,
         verifier,
+        heartbeatIntervalMs,
       } = subscriptionExtension;
+      // The GA version of callback protocol use camelCase, this is to keep backward compatibility
+      callbackUrl = callbackUrl || subscriptionExtension.callback_url;
+      id = id || subscriptionExtension.subscription_id;
+      heartbeatIntervalMs =
+        heartbeatIntervalMs ??
+        subscriptionExtension.heartbeat_interval_ms ??
+        5000;
 
       return {
         // Implementing `responseForOperation` is the only hook that allows us
@@ -44,7 +51,7 @@ export function ApolloServerPluginSubscriptionCallback(
           return {
             http: {
               status: 200,
-              headers: new HeaderMap(),
+              headers: new HeaderMap([['content-type', 'application/json']]),
             },
             body: {
               kind: 'single',
@@ -90,6 +97,17 @@ export function ApolloServerPluginSubscriptionCallback(
             }
             return;
           }
+
+          // We're about to `await` the subscription, which could have some
+          // nontrivial asynchronous work to do before returning the generator.
+          // We set up the heartbeat first so the router knows we're alive
+          // during that wait period.
+          subscriptionManager.initHeartbeat({
+            callbackUrl,
+            id,
+            verifier,
+            heartbeatIntervalMs,
+          });
 
           // The `check` request was successful, so we can initialize the actual
           // `graphql-js` subscription. We don't expect `subscribe` to throw,
@@ -145,15 +163,9 @@ export function ApolloServerPluginSubscriptionCallback(
               logger?.error(`\`complete\` request failed: ${e}`, id);
             }
           } else if (isAsyncIterable(subscription)) {
-            // We have a real subscription - now we can kick off the heartbeat
-            // interval and consume the AsyncIterable on the `subscription`
-            // object.
+            // We have a real subscription - now we can consume the
+            // AsyncIterable on the `subscription` object.
             logger?.debug('graphql-js subscription successful', id);
-            subscriptionManager.initHeartbeat({
-              callbackUrl,
-              id,
-              verifier,
-            });
 
             subscriptionManager.startConsumingSubscription({
               subscription,
@@ -189,6 +201,7 @@ function isAsyncIterable<T>(value: any): value is AsyncIterable<T> {
 
 interface SubscriptionObject {
   cancelled: boolean;
+  asyncIter: AsyncGenerator<ExecutionResult, void, void>;
   startConsumingSubscription: () => Promise<void>;
   completeSubscription: () => Promise<void>;
 }
@@ -196,14 +209,11 @@ interface SubscriptionObject {
 // router requests. It keeps track of in flight requests so we can await them
 // during server cleanup.
 class SubscriptionManager {
-  private heartbeatIntervalMs: number;
   private maxConsecutiveHeartbeatFailures: number;
   private logger?: ReturnType<typeof prefixedLogger>;
   private retryConfig?: retry.Options;
   private requestsInFlight: Set<Promise<any>> = new Set();
-  // A map of information about subscriptions for a given callback url. For each
-  // url, this tracks its single heartbeat interval (with relevant heartbeat
-  // request info) and active subscriptions.
+  // A map of information about subscription for a given callback url including the subscription id.
   private subscriptionInfoByCallbackUrl: Map<
     string,
     {
@@ -213,12 +223,11 @@ class SubscriptionManager {
         interval: NodeJS.Timeout;
         queue: Promise<void>[];
       };
-      subscriptionsById: Map<string, SubscriptionObject>;
+      subscription?: SubscriptionObject;
     }
   > = new Map();
 
   constructor(options: ApolloServerPluginSubscriptionCallbackOptions) {
-    this.heartbeatIntervalMs = options.heartbeatIntervalMs ?? 5000;
     this.maxConsecutiveHeartbeatFailures =
       options.maxConsecutiveHeartbeatFailures ?? 5;
     this.retryConfig = {
@@ -239,6 +248,7 @@ class SubscriptionManager {
     verifier,
     payload,
     errors,
+    headers,
   }: {
     url: string;
     action: 'check' | 'next' | 'complete';
@@ -246,6 +256,7 @@ class SubscriptionManager {
     verifier: string;
     payload?: ExecutionResult;
     errors?: readonly GraphQLError[];
+    headers?: Record<string, string>;
   }) {
     let response: Promise<Response> | undefined;
     try {
@@ -254,11 +265,14 @@ class SubscriptionManager {
         `Sending \`${action}\` request to router` + maybeWithErrors,
         id,
       );
-      return retry(
+      return retry<Response, Error>(
         async (bail) => {
           response = fetch(url, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'content-type': 'application/json',
+              ...headers,
+            },
             body: JSON.stringify({
               kind: 'subscription',
               action,
@@ -295,7 +309,7 @@ class SubscriptionManager {
                 this.logger?.debug(errMsg, id);
                 bail(new Error(errMsg));
               }
-              this.terminateSubscriptions([id], url);
+              this.terminateSubscription(id, url);
               return result;
             }
           }
@@ -335,6 +349,7 @@ class SubscriptionManager {
       action: 'check',
       id,
       verifier,
+      headers: { 'subscription-protocol': 'callback/1.0' },
     });
   }
 
@@ -346,23 +361,20 @@ class SubscriptionManager {
     callbackUrl,
     id,
     verifier,
+    heartbeatIntervalMs,
   }: {
     callbackUrl: string;
     id: string;
     verifier: string;
+    heartbeatIntervalMs: number;
   }) {
     if (!this.subscriptionInfoByCallbackUrl.has(callbackUrl)) {
-      this.subscriptionInfoByCallbackUrl.set(callbackUrl, {
-        subscriptionsById: new Map(),
-      });
+      this.subscriptionInfoByCallbackUrl.set(callbackUrl, {});
     }
 
-    // Skip interval creation if one already exists for this url
-    if (this.subscriptionInfoByCallbackUrl.get(callbackUrl)?.heartbeat) {
-      this.logger?.debug(
-        `Heartbeat interval already exists for ${callbackUrl}, reusing existing interval`,
-        id,
-      );
+    if (heartbeatIntervalMs === 0) {
+      // Heartbeat has been disabled on the router
+      this.logger?.debug(`Heartbeat disabled for ${callbackUrl}`, id);
       return;
     }
 
@@ -410,61 +422,41 @@ class SubscriptionManager {
 
       // Send the heartbeat request
       try {
-        const ids = Array.from(
-          existingSubscriptionInfo.subscriptionsById.keys() ?? [],
-        );
         this.logger?.debug(
-          `Sending \`heartbeat\` request to ${callbackUrl} for IDs: [${ids.join(
-            ',',
-          )}]`,
+          `Sending \`check\` request to ${callbackUrl} for ID: ${id}`,
         );
 
         heartbeatRequest = fetch(callbackUrl, {
           method: 'POST',
           body: JSON.stringify({
             kind: 'subscription',
-            action: 'heartbeat',
-            id: existingHeartbeat.id ?? id,
-            verifier: existingHeartbeat.verifier ?? verifier,
-            ids,
+            action: 'check',
+            id,
+            verifier,
           }),
-          headers: { 'Content-Type': 'application/json' },
+          headers: {
+            'content-type': 'application/json',
+            'subscription-protocol': 'callback/1.0',
+          },
         });
         this.requestsInFlight.add(heartbeatRequest);
 
-        // The heartbeat response might contain updates for us to act upon, so we
-        // need to await it
+        // heartbeat response might be a 4xx, in which case we'd need to
+        // terminate the subscription, so we need to await it
         const result = await heartbeatRequest;
 
-        this.logger?.debug(
-          `Heartbeat received response for IDs: [${ids.join(',')}]`,
-        );
-
+        this.logger?.debug(`Heartbeat received response for ID: ${id}`);
         if (result.ok) {
-          this.logger?.debug(
-            `Heartbeat request successful, IDs: [${ids.join(',')}]`,
-          );
+          this.logger?.debug(`Heartbeat request successful, ID: ${id}`);
         } else if (result.status === 400) {
-          const body = await result.json();
-          this.logger?.debug(
-            `Heartbeat request received invalid IDs: [${body.invalid_ids.join(
-              ',',
-            )}]`,
-          );
-          // Some of the IDs are invalid, so we need to update the id and
-          // verifier for future heartbeat requests (both provided by the router
-          // in the response body)
-          existingHeartbeat.id = body.id;
-          existingHeartbeat.verifier = body.verifier;
+          this.logger?.debug(`Heartbeat request received invalid ID: ${id}`);
 
-          this.terminateSubscriptions(body.invalid_ids, callbackUrl);
+          this.terminateSubscription(id, callbackUrl);
         } else if (result.status === 404) {
-          // all ids we sent are invalid
-          this.logger?.debug(
-            `Heartbeat request received invalid IDs: [${ids.join(',')}]`,
-          );
+          // the id we sent is invalid
+          this.logger?.debug(`Heartbeat request received invalid ID: ${id}`);
           // This will also handle cleaning up the heartbeat interval
-          this.terminateSubscriptions(ids, callbackUrl);
+          this.terminateSubscription(id, callbackUrl);
         } else {
           // We'll catch this below and log it with the expectation that we'll
           // retry this request some number of times before giving up
@@ -495,14 +487,7 @@ class SubscriptionManager {
           // If we've failed 5 times in a row, we should terminate all
           // subscriptions for this callback url. This will also handle
           // cleaning up the heartbeat interval.
-          this.terminateSubscriptions(
-            Array.from(
-              this.subscriptionInfoByCallbackUrl
-                .get(callbackUrl)
-                ?.subscriptionsById.keys() ?? [],
-            ),
-            callbackUrl,
-          );
+          this.terminateSubscription(id, callbackUrl);
         }
         return;
       } finally {
@@ -513,7 +498,7 @@ class SubscriptionManager {
         existingHeartbeat?.queue.shift();
         resolveHeartbeatPromise!();
       }
-    }, this.heartbeatIntervalMs);
+    }, heartbeatIntervalMs);
 
     // Add the heartbeat interval to the map of intervals
     const subscriptionInfo =
@@ -530,8 +515,8 @@ class SubscriptionManager {
   // there are no active subscriptions after this, we also clean up the
   // heartbeat interval. This does not handle sending the `complete` request to
   // the router.
-  private terminateSubscriptions(ids: string[], callbackUrl: string) {
-    this.logger?.debug(`Terminating subscriptions for IDs: [${ids.join(',')}]`);
+  private terminateSubscription(id: string, callbackUrl: string) {
+    this.logger?.debug(`Terminating subscriptions for ID: ${id}`);
     const subscriptionInfo =
       this.subscriptionInfoByCallbackUrl.get(callbackUrl);
     if (!subscriptionInfo) {
@@ -540,22 +525,17 @@ class SubscriptionManager {
       );
       return;
     }
-    const { subscriptionsById, heartbeat } = subscriptionInfo;
-    for (const id of ids) {
-      const subscription = subscriptionsById.get(id);
-      if (subscription) {
-        subscription.cancelled = true;
-      }
-      subscriptionsById.delete(id);
-      // if the list is empty now we can clean up everything for this callback url
-      if (subscriptionsById?.size === 0) {
-        this.logger?.debug(
-          `Terminating heartbeat interval, no more subscriptions for ${callbackUrl}`,
-        );
-        if (heartbeat) clearInterval(heartbeat.interval);
-        this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
-      }
+    const { subscription, heartbeat } = subscriptionInfo;
+    if (subscription) {
+      subscription.cancelled = true;
+      subscription.asyncIter?.return();
     }
+    // cleanup heartbeat for subscription
+    if (heartbeat) {
+      this.logger?.debug(`Terminating heartbeat interval for ${callbackUrl}`);
+      clearInterval(heartbeat.interval);
+    }
+    this.subscriptionInfoByCallbackUrl.delete(callbackUrl);
   }
 
   // Consumes the AsyncIterable returned by `graphql-js`'s `subscribe` function.
@@ -577,42 +557,52 @@ class SubscriptionManager {
     // allows us to break out of the `for await` and ignore future payloads.
     const self = this;
     const subscriptionObject = {
+      asyncIter: subscription,
       cancelled: false,
       async startConsumingSubscription() {
         self.logger?.debug(`Listening to graphql-js subscription`, id);
-        for await (const payload of subscription) {
-          if (this.cancelled) {
-            self.logger?.debug(
-              `Subscription already cancelled, ignoring current and future payloads`,
-              id,
-            );
-            // It's already been cancelled - something else has already handled
-            // sending the `complete` request so we don't want to `break` here
-            // and send it again after the loop.
-            return;
-          }
+        try {
+          for await (const payload of subscription) {
+            if (this.cancelled) {
+              self.logger?.debug(
+                `Subscription already cancelled, ignoring current and future payloads`,
+                id,
+              );
+              // It's already been cancelled - something else has already handled
+              // sending the `complete` request so we don't want to `break` here
+              // and send it again after the loop.
+              return;
+            }
 
-          try {
-            await self.retryFetch({
-              url: callbackUrl,
-              action: 'next',
-              id,
-              verifier,
-              payload,
-            });
-          } catch (e) {
-            const originalError = ensureError(e);
-            self.logger?.error(
-              `\`next\` request failed, terminating subscription: ${originalError.message}`,
-              id,
-            );
-            self.terminateSubscriptions([id], callbackUrl);
+            try {
+              await self.retryFetch({
+                url: callbackUrl,
+                action: 'next',
+                id,
+                verifier,
+                payload,
+              });
+            } catch (e) {
+              const originalError = ensureError(e);
+              self.logger?.error(
+                `\`next\` request failed, terminating subscription: ${originalError.message}`,
+                id,
+              );
+              self.terminateSubscription(id, callbackUrl);
+            }
           }
+          // The subscription ended without errors, send the `complete` request to
+          // the router
+          self.logger?.debug(`Subscription completed without errors`, id);
+          await this.completeSubscription();
+        } catch (e) {
+          const error = ensureGraphQLError(e);
+          self.logger?.error(
+            `Generator threw an error, terminating subscription: ${error.message}`,
+            id,
+          );
+          this.completeSubscription([error]);
         }
-        // The subscription ended without errors, send the `complete` request to
-        // the router
-        self.logger?.debug(`Subscription completed without errors`, id);
-        await this.completeSubscription();
       },
       async completeSubscription(errors?: readonly GraphQLError[]) {
         if (this.cancelled) return;
@@ -635,7 +625,7 @@ class SubscriptionManager {
             id,
           );
         } finally {
-          self.terminateSubscriptions([id], callbackUrl);
+          self.terminateSubscription(id, callbackUrl);
         }
       },
     };
@@ -647,8 +637,9 @@ class SubscriptionManager {
       this.logger?.error(
         `No existing heartbeat found for ${callbackUrl}, skipping subscription`,
       );
+    } else {
+      subscriptionInfo.subscription = subscriptionObject;
     }
-    subscriptionInfo?.subscriptionsById.set(id, subscriptionObject);
   }
 
   // Sends the `complete` request to the router.
@@ -674,8 +665,10 @@ class SubscriptionManager {
 
   collectAllSubscriptions() {
     return Array.from(this.subscriptionInfoByCallbackUrl.values()).reduce(
-      (subscriptions, { subscriptionsById }) => {
-        subscriptions.push(...Array.from(subscriptionsById.values()));
+      (subscriptions, { subscription }) => {
+        if (subscription) {
+          subscriptions.push(subscription);
+        }
         return subscriptions;
       },
       [] as SubscriptionObject[],

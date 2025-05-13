@@ -4,8 +4,8 @@
   ],
   "compilerOptions": {
     "outDir": "generated/tsc/variants/nodenext",
-    "module": "commonjs",
-    "moduleResolution": "nodenext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "target": "ES2015",
     "esModuleInterop": true,
     "strict": true,

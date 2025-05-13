@@ -1,22 +1,22 @@
-import { ApolloServer, HeaderMap } from '..';
-import type { ApolloServerOptions } from '..';
+import type { GatewayInterface } from '@apollo/server-gateway-interface';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import { describe, expect, it, jest } from '@jest/globals';
+import assert from 'assert';
 import {
   FormattedExecutionResult,
   GraphQLError,
   GraphQLSchema,
-  parse,
   TypedQueryDocumentNode,
+  parse,
 } from 'graphql';
+import gql from 'graphql-tag';
+import type { ApolloServerOptions } from '..';
+import { ApolloServer, HeaderMap } from '..';
 import type { ApolloServerPlugin, BaseContext } from '../externalTypes';
+import type { GraphQLResponseBody } from '../externalTypes/graphql';
 import { ApolloServerPluginCacheControlDisabled } from '../plugin/disabled/index.js';
 import { ApolloServerPluginUsageReporting } from '../plugin/usageReporting/index.js';
-import { makeExecutableSchema } from '@graphql-tools/schema';
 import { mockLogger } from './mockLogger.js';
-import gql from 'graphql-tag';
-import type { GatewayInterface } from '@apollo/server-gateway-interface';
-import { jest, describe, it, expect } from '@jest/globals';
-import type { GraphQLResponseBody } from '../externalTypes/graphql';
-import assert from 'assert';
 
 const typeDefs = gql`
   type Query {
@@ -176,6 +176,132 @@ describe('ApolloServer construction', () => {
       `);
       await server.stop();
     });
+
+    it('async stringifyResult', async () => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: async (value: FormattedExecutionResult) => {
+          let result = await Promise.resolve(
+            JSON.stringify(value, null, 10000),
+          );
+          result = result.replace('world', 'stringifyResults works!'); // replace text with something custom
+          return result;
+        },
+      });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ hello }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      const { body } = await server.executeHTTPGraphQLRequest(request);
+      assert(body.kind === 'complete');
+      expect(body.string).toMatchInlineSnapshot(`
+      "{
+                "data": {
+                          "hello": "stringifyResults works!"
+                }
+      }"
+      `);
+      await server.stop();
+    });
+
+    it('throws the custom parsed error from stringifyResult', async () => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: (_: FormattedExecutionResult) => {
+          throw new Error('A custom synchronous error');
+        },
+      });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ error }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      await expect(
+        server.executeHTTPGraphQLRequest(request),
+      ).rejects.toThrowErrorMatchingInlineSnapshot(
+        `"A custom synchronous error"`,
+      );
+
+      await server.stop();
+    });
+
+    it('throws the custom parsed error from async stringifyResult', async () => {
+      const server = new ApolloServer({
+        typeDefs,
+        resolvers,
+        stringifyResult: async (_: FormattedExecutionResult) =>
+          Promise.reject('A custom asynchronous error'),
+      });
+
+      await server.start();
+
+      const request = {
+        httpGraphQLRequest: {
+          method: 'POST',
+          headers: new HeaderMap([['content-type', 'application-json']]),
+          body: { query: '{ error }' },
+          search: '',
+        },
+        context: async () => ({}),
+      };
+
+      await expect(
+        server.executeHTTPGraphQLRequest(request),
+      ).rejects.toMatchInlineSnapshot(`"A custom asynchronous error"`);
+
+      await server.stop();
+    });
+  });
+
+  it('throws when an API key is not a valid header value', () => {
+    expect(() => {
+      new ApolloServer({
+        typeDefs,
+        resolvers,
+        apollo: {
+          key: 'bar▒baz▒',
+        },
+      });
+    }).toThrowErrorMatchingInlineSnapshot(
+      `"The API key provided to Apollo Server contains characters which are invalid as HTTP header values. The following characters found in the key are invalid: ▒, ▒. Valid header values may only contain ASCII visible characters. If you think there is an issue with your key, please contact Apollo support."`,
+    );
+  });
+
+  it('trims whitespace from incoming API keys and logs a warning', () => {
+    const logger = mockLogger();
+    expect(() => {
+      new ApolloServer({
+        typeDefs,
+        resolvers,
+        apollo: {
+          key: 'barbaz\n',
+        },
+        logger,
+      });
+    }).not.toThrow();
+    expect(logger.warn).toHaveBeenCalledWith(
+      'The provided API key has unexpected leading or trailing whitespace. ' +
+        'Apollo Server will trim the key value before use.',
+    );
   });
 });
 
@@ -488,7 +614,7 @@ describe('ApolloServer executeOperation', () => {
 
     const { body, http } = await server.executeOperation({
       query: `#graphql
-        query NeedsArg($arg: CompoundInput!) { needsCompoundArg(aCompound: $arg) }
+      query NeedsArg($arg: CompoundInput!) { needsCompoundArg(aCompound: $arg) }
       `,
       // @ts-expect-error for `null` case
       variables,

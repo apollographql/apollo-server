@@ -108,6 +108,8 @@ The name of a special **reference resolver** function you can define for every [
 
 The `__resolveReference` function enables your router's query planner to resolve a particular entity by whatever unique identifier your other subgraphs use to reference it. For details, see [Defining an entity](/federation/entities/#defining-an-entity).
 
+If the entity can be resolved,  `__resolveReference` returns the entity. Otherwise, it returns `null`.
+
 The function takes the parameters listed below.
 
 ### Parameters

@@ -41,8 +41,8 @@ export class DurationHistogram {
     return unboundedBucket <= 0 || Number.isNaN(unboundedBucket)
       ? 0
       : unboundedBucket >= DurationHistogram.BUCKET_COUNT
-      ? DurationHistogram.BUCKET_COUNT - 1
-      : unboundedBucket;
+        ? DurationHistogram.BUCKET_COUNT - 1
+        : unboundedBucket;
   }
 
   incrementDuration(durationNs: number, value = 1): DurationHistogram {

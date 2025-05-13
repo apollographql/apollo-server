@@ -1,5 +1,5 @@
 ---
-title: Health checks
+title: Health Checks
 description: Determining the health status of Apollo Server
 ---
 
@@ -39,7 +39,7 @@ const server = new ApolloServer({
 await server.start();
 app.use('/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server)
 );
 await new Promise<void>(resolve => app.listen({ port: 4000 }, resolve));

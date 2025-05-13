@@ -35,8 +35,7 @@ import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
-import resolvable, { Resolvable } from '@josephg/resolvable';
-
+import resolvable, { Resolvable } from '../../../utils/resolvable.js';
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;
 }
@@ -140,8 +139,8 @@ Object.keys(schemes).forEach((schemeName) => {
         // idle connections in these versions. However, `Stopper` _is_ still
         // useful for gracefully finishing in-flight requests within the timeout
         // (and aborting requests beyond the timeout).
-        const isNode20 = !!process.version.match(/^v20\./);
-        expect(closed).toBe(isNode20 ? 1 : 0);
+        const isNode20orGreater = !!process.version.match(/^v2\d\./);
+        expect(closed).toBe(isNode20orGreater ? 1 : 0);
       });
 
       // This test specifically added for Node 20 fails for Node 14. Just going

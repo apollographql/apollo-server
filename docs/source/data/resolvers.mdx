@@ -5,6 +5,8 @@ description: How Apollo Server processes GraphQL operations
 
 import TopLevelAwait from "../shared/top-level-await.mdx"
 
+> If you learn best by doing, check out the [tutorial on writing resolvers](https://www.apollographql.com/tutorials/lift-off-part2?referrer=docs-content).
+
 Apollo Server needs to know how to populate data for every field in your schema so that it can respond to requests for that data. To accomplish this, it uses resolvers.
 
 **A resolver is a function that's responsible for populating the data for a single field in your schema.** It can populate that data in any way you define, such as by fetching data from a back-end database or a third-party API.
@@ -483,4 +485,4 @@ See [Resolving Entities](https://www.apollographql.com/docs/federation/entities/
 
 As with all code, a resolver's performance depends on its logic. It's important to understand which of your schema's fields are computationally expensive or otherwise slow to resolve, so that you can either improve their performance or make sure you only query them when necessary.
 
-[Apollo Studio](https://www.apollographql.com/docs/studio/) integrates directly with Apollo Server to provide field-level metrics that help you understand the performance of your graph over time. For more information, see [Analyzing performance](https://www.apollographql.com/docs/studio/performance/).
+[Apollo Studio](https://studio.apollographql.com) integrates directly with Apollo Server to provide field-level metrics that help you understand the performance of your graph over time. For more information, see [Analyzing performance](https://www.apollographql.com/docs/graphos/platform/insights/field-usage).

@@ -247,9 +247,8 @@ export default function plugin<TContext extends BaseContext>(
           // check, so that we can still write the result to the cache even if
           // we are told not to read from the cache.
           if (options.shouldReadFromCache) {
-            const shouldReadFromCache = await options.shouldReadFromCache(
-              requestContext,
-            );
+            const shouldReadFromCache =
+              await options.shouldReadFromCache(requestContext);
             if (!shouldReadFromCache) return null;
           }
 
@@ -291,9 +290,8 @@ export default function plugin<TContext extends BaseContext>(
           }
 
           if (options.shouldWriteToCache) {
-            const shouldWriteToCache = await options.shouldWriteToCache(
-              requestContext,
-            );
+            const shouldWriteToCache =
+              await options.shouldWriteToCache(requestContext);
             if (!shouldWriteToCache) return;
           }
 

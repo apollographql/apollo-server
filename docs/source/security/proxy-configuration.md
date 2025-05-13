@@ -1,5 +1,5 @@
 ---
-title: Proxy configuration
+title: Proxy Configuration
 description: Configuring proxy settings for outgoing requests
 ---
 

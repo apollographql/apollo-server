@@ -1,0 +1,8 @@
+{
+  "name": "@apollo/server/plugin/disableSuggestions",
+  "type": "module",
+  "main": "../../dist/cjs/plugin/disableSuggestions/index.js",
+  "module": "../../dist/esm/plugin/disableSuggestions/index.js",
+  "types": "../../dist/esm/plugin/disableSuggestions/index.d.ts",
+  "sideEffects": false
+}

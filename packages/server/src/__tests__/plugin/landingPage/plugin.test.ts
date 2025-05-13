@@ -1,4 +1,5 @@
 import { ApolloServer, HeaderMap } from '@apollo/server';
+import { ApolloServerPluginLandingPageProductionDefault } from '@apollo/server/plugin/landingPage/default';
 import { describe, expect, test } from '@jest/globals';
 import assert from 'assert';
 
@@ -35,5 +36,17 @@ describe('ApolloServerPluginLandingPageDefault', () => {
 
     expect(nonce1).not.toEqual(nonce2);
     await server.stop();
+  });
+
+  test(`nonce exists in non-embedded landing page`, async () => {
+    const plugin = ApolloServerPluginLandingPageProductionDefault({
+      embed: false,
+    });
+
+    // @ts-ignore not passing things to `serverWillStart`
+    const { renderLandingPage } = await plugin.serverWillStart?.({});
+    const landingPageHtml = await (await renderLandingPage?.()).html();
+
+    expect(landingPageHtml).toMatch(/<script nonce=".*">window\.landingPage/);
   });
 });

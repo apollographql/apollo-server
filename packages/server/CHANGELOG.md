@@ -1,5 +1,165 @@
 # @apollo/server
 
+## 4.12.0
+
+### Minor Changes
+
+- [#8054](https://github.com/apollographql/apollo-server/pull/8054) [`89e3f84`](https://github.com/apollographql/apollo-server/commit/89e3f848e64590e15b08a07df498fe3fdb4f370d) Thanks [@clenfest](https://github.com/clenfest)! - Adds a new graphql-js validation rule to reject operations that recursively request selections above a specified maximum, which is disabled by default. Use configuration option `maxRecursiveSelections=true` to enable with a maximum of 10,000,000, or `maxRecursiveSelections=<number>` for a custom maximum. Enabling this validation can help avoid performance issues with configured validation rules or plugins.
+
+### Patch Changes
+
+- [#8031](https://github.com/apollographql/apollo-server/pull/8031) [`2550d9f`](https://github.com/apollographql/apollo-server/commit/2550d9fefe03069075e16141b043115170012e80) Thanks [@slagiewka](https://github.com/slagiewka)! - Add return after sending 400 response in doubly escaped JSON parser middleware
+
+## 4.11.3
+
+### Patch Changes
+
+- [#8010](https://github.com/apollographql/apollo-server/pull/8010) [`f4228e8`](https://github.com/apollographql/apollo-server/commit/f4228e88509b4cd2f50cf10bc6376d48488e03c1) Thanks [@glasser](https://github.com/glasser)! - Compatibility with Next.js Turbopack. Fixes #8004.
+
+## 4.11.2
+
+(No change; there is a change to the `@apollo/server-integration-testsuite` used to test integrations, and the two packages always have matching versions.)
+
+## 4.11.1
+
+### Patch Changes
+
+- [#7952](https://github.com/apollographql/apollo-server/pull/7952) [`bb81b2c`](https://github.com/apollographql/apollo-server/commit/bb81b2c6b794dcd98fea9d01e4e38c6450287f53) Thanks [@glasser](https://github.com/glasser)! - Upgrade dependencies so that automated scans don't detect a vulnerability.
+
+  `@apollo/server` depends on `express` which depends on `cookie`. Versions of `express` older than v4.21.1 depend on a version of `cookie` vulnerable to CVE-2024-47764. Users of older `express` versions who call `res.cookie()` or `res.clearCookie()` may be vulnerable to this issue.
+
+  However, Apollo Server does not call this function directly, and it does not expose any object to user code that allows TypeScript users to call this function without an unsafe cast.
+
+  The only way that this direct dependency can cause a vulnerability for users of Apollo Server is if you call `startStandaloneServer` with a context function that calls Express-specific methods such as `res.cookie()` or `res.clearCookies()` on the response object, which is a violation of the TypeScript types provided by `startStandaloneServer` (which only promise that the response object is a core Node.js `http.ServerResponse` rather than the Express-specific subclass). So this vulnerability can only affect Apollo Server users who use unsafe JavaScript or unsafe `as` typecasts in TypeScript.
+
+  However, this upgrade will at least prevent vulnerability scanners from alerting you to this dependency, and we encourage all Express users to upgrade their project's own `express` dependency to v4.21.1 or newer.
+
+## 4.11.0
+
+### Minor Changes
+
+- [#7916](https://github.com/apollographql/apollo-server/pull/7916) [`4686454`](https://github.com/apollographql/apollo-server/commit/46864546e131d0079785575f621d69862e635663) Thanks [@andrewmcgivery](https://github.com/andrewmcgivery)! - Add `hideSchemaDetailsFromClientErrors` option to ApolloServer to allow hiding 'did you mean' suggestions from validation errors.
+
+  Even with introspection disabled, it is possible to "fuzzy test" a graph manually or with automated tools to try to determine the shape of your schema. This is accomplished by taking advantage of the default behavior where a misspelt field in an operation
+  will be met with a validation error that includes a helpful "did you mean" as part of the error text.
+
+  For example, with this option set to `true`, an error would read `Cannot query field "help" on type "Query".` whereas with this option set to `false` it would read `Cannot query field "help" on type "Query". Did you mean "hello"?`.
+
+  We recommend enabling this option in production to avoid leaking information about your schema to malicious actors.
+
+  To enable, set this option to `true` in your `ApolloServer` options:
+
+  ```javascript
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    hideSchemaDetailsFromClientErrors: true,
+  });
+  ```
+
+## 4.10.5
+
+### Patch Changes
+
+- [#7821](https://github.com/apollographql/apollo-server/pull/7821) [`b2e15e7`](https://github.com/apollographql/apollo-server/commit/b2e15e7db6902769d02de2b06ff920ce74701c51) Thanks [@renovate](https://github.com/apps/renovate)! - Non-major dependency updates
+
+- [#7900](https://github.com/apollographql/apollo-server/pull/7900) [`86d7111`](https://github.com/apollographql/apollo-server/commit/86d711133f3746d094cfb3b39e21fdfa3723181b) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Inline a small dependency that was causing build issues for ESM projects
+
+## 4.10.4
+
+### Patch Changes
+
+- [#7871](https://github.com/apollographql/apollo-server/pull/7871) [`18a3827`](https://github.com/apollographql/apollo-server/commit/18a3827d63c3916f6aaccbc4bdef3e0d550d91a7) Thanks [@tninesling](https://github.com/tninesling)! - Subscription heartbeats are initialized prior to awaiting subscribe(). This allows long-running setup to happen in the returned Promise without the subscription being terminated prior to resolution.
+
+## 4.10.3
+
+### Patch Changes
+
+- [#7866](https://github.com/apollographql/apollo-server/pull/7866) [`5f335a5`](https://github.com/apollographql/apollo-server/commit/5f335a527b6549219366fa44f4bea829e7359aaf) Thanks [@tninesling](https://github.com/tninesling)! - Catch errors thrown by subscription generators, and gracefully clean up the subscription instead of crashing.
+
+## 4.10.2
+
+### Patch Changes
+
+- [#7849](https://github.com/apollographql/apollo-server/pull/7849) [`c7e514c`](https://github.com/apollographql/apollo-server/commit/c7e514cf67b05521c66d0561448b3c36b2facee6) Thanks [@TylerBloom](https://github.com/TylerBloom)! - In the subscription callback server plugin, terminating a subscription now immediately closes the internal async generator. This avoids that generator existing after termination and until the next message is received.
+
+## 4.10.1
+
+### Patch Changes
+
+- [#7843](https://github.com/apollographql/apollo-server/pull/7843) [`72f568e`](https://github.com/apollographql/apollo-server/commit/72f568edd512a865e37e4777bf16a319433ca5ba) Thanks [@bscherlein](https://github.com/bscherlein)! - Improves timing of the `willResolveField` end hook on fields which return Promises resolving to Arrays. This makes the use of the `setCacheHint` method more reliable.
+
+## 4.10.0
+
+### Minor Changes
+
+- [#7786](https://github.com/apollographql/apollo-server/pull/7786) [`869ec98`](https://github.com/apollographql/apollo-server/commit/869ec980458df3b22dcc2ed128cedc9d3a85c54b) Thanks [@ganemone](https://github.com/ganemone)! - Restore missing v1 `skipValidation` option as `dangerouslyDisableValidation`. Note that enabling this option exposes your server to potential security and unexpected runtime issues. Apollo will not support issues that arise as a result of using this option.
+
+- [#7803](https://github.com/apollographql/apollo-server/pull/7803) [`e9a0d6e`](https://github.com/apollographql/apollo-server/commit/e9a0d6ed035d1a4f509ce39f0558dc17dfb9ccd0) Thanks [@favna](https://github.com/favna)! - allow `stringifyResult` to return a `Promise<string>`
+
+  Users who implemented the `stringifyResult` hook can now expect error responses to be formatted with the hook as well. Please take care when updating to this version to ensure this is the desired behavior, or implement the desired behavior accordingly in your `stringifyResult` hook. This was considered a non-breaking change as we consider that it was an oversight in the original PR that introduced `stringifyResult` hook.
+
+### Patch Changes
+
+- [#7793](https://github.com/apollographql/apollo-server/pull/7793) [`9bd7748`](https://github.com/apollographql/apollo-server/commit/9bd7748565735e3e01cdce38674dbc7dcc44507b) Thanks [@bnjjj](https://github.com/bnjjj)! - General availability of subscription callback protocol
+
+- [#7799](https://github.com/apollographql/apollo-server/pull/7799) [`63dc50f`](https://github.com/apollographql/apollo-server/commit/63dc50fc65cd7b4a9df0e1de4ab6d6ee82dbeb5c) Thanks [@stijnbe](https://github.com/stijnbe)! - Fix type of ApolloServerPluginUsageReporting reportTimer
+
+- [#7740](https://github.com/apollographql/apollo-server/pull/7740) [`fe68c1b`](https://github.com/apollographql/apollo-server/commit/fe68c1b05323931d766a5e081061b70e305ac67e) Thanks [@barnisanov](https://github.com/barnisanov)! - Uninstalled `body-parser` and used `express` built-in `body-parser` functionality instead(mainly the json middleware)
+
+## 4.9.5
+
+### Patch Changes
+
+- [#7741](https://github.com/apollographql/apollo-server/pull/7741) [`07585fe39`](https://github.com/apollographql/apollo-server/commit/07585fe39751a5d4009664293b6e413078a9b827) Thanks [@mayakoneval](https://github.com/mayakoneval)! - Pin major releases of embeddable Explorer & Sandbox code.
+
+- [#7769](https://github.com/apollographql/apollo-server/pull/7769) [`4fac1628c`](https://github.com/apollographql/apollo-server/commit/4fac1628c5d92bb393ef757f65908129459ab045) Thanks [@cwikla](https://github.com/cwikla)! - Change SchemaReporter.pollTimer from being a NodeJS.Timer to a NodeJS.Timeout
+
+## 4.9.4
+
+### Patch Changes
+
+- [#7747](https://github.com/apollographql/apollo-server/pull/7747) [`ddce036e1`](https://github.com/apollographql/apollo-server/commit/ddce036e1b683adc636a7132e0c249690bf05ce0) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - The minimum version of `graphql` officially supported by Apollo Server 4 as a peer dependency, v16.6.0, contains a [serious bug that can crash your Node server](https://github.com/graphql/graphql-js/issues/3528). This bug is fixed in the immediate next version, `graphql@16.7.0`, and we **strongly encourage you to upgrade your installation of `graphql` to at least v16.7.0** to avoid this bug. (For backwards compatibility reasons, we cannot change Apollo Server 4's minimum peer dependency, but will change it when we release Apollo Server 5.)
+
+  Apollo Server 4 contained a particular line of code that makes triggering this crashing bug much more likely. This line was already removed in Apollo Server v3.8.2 (see #6398) but the fix was accidentally not included in Apollo Server 4. We are now including this change in Apollo Server 4, which will **reduce** the likelihood of hitting this crashing bug for users of `graphql` v16.6.0. That said, taking this `@apollo/server` upgrade **does not prevent** this bug from being triggered in other ways, and the real fix to this crashing bug is to upgrade `graphql`.
+
+## 4.9.3
+
+### Patch Changes
+
+- [`a1c725eaf`](https://github.com/apollographql/apollo-server/commit/a1c725eaf53c901e32a15057211bcb3eb6a6109b) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Ensure API keys are valid header values on startup
+
+  Apollo Server previously performed no sanitization or validation of API keys on startup. In the case that an API key was provided which contained characters that are invalid as header values, Apollo Server could inadvertently log the API key in cleartext.
+
+  This only affected users who:
+
+  - Provide an API key with characters that are invalid as header values
+  - Use either schema or usage reporting
+  - Use the default fetcher provided by Apollo Server or configure their own `node-fetch` fetcher
+
+  Apollo Server now trims whitespace from API keys and validates that they are valid header values. If an invalid API key is provided, Apollo Server will throw an error on startup.
+
+  For more details, see the security advisory:
+  https://github.com/apollographql/apollo-server/security/advisories/GHSA-j5g3-5c8r-7qfx
+
+## 4.9.2
+
+### Patch Changes
+
+- [#7699](https://github.com/apollographql/apollo-server/pull/7699) [`62e7d940d`](https://github.com/apollographql/apollo-server/commit/62e7d940de025f21e89c60404bce0dddac84ed6c) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Fix error path attachment for list items
+
+  Previously, when errors occurred while resolving a list item, the trace builder would fail to place the error at the correct path and just default to the root node with a warning message:
+
+  > `Could not find node with path x.y.1, defaulting to put errors on root node.`
+
+  This change places these errors at their correct paths and removes the log.
+
+## 4.9.1
+
+### Patch Changes
+
+- [#7672](https://github.com/apollographql/apollo-server/pull/7672) [`ebfde0007`](https://github.com/apollographql/apollo-server/commit/ebfde0007c647d9fb73e3aa24b968def3e307084) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Add missing `nonce` on `script` tag for non-embedded landing page
+
 ## 4.9.0
 
 ### Minor Changes
@@ -246,6 +406,8 @@
 - [#7136](https://github.com/apollographql/apollo-server/pull/7136) [`8c635d104`](https://github.com/apollographql/apollo-server/commit/8c635d104739c9d3fd9c15ac04f5d3a23b1c1917) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Errors reported by subgraphs (with no trace data in the response) are now accurately reflected in the numeric error stats.
 
   Operations that receive errors from subgraphs (with no trace data in the response) are no longer sent as incomplete, error-less traces.
+
+  If you are upgrading to or beyond this version, you may notice a change in your error stats in Apollo Studio. Previously, configuring `fieldLevelInstrumentation` inadvertently affected the counting of error stats in the usage reporting plugin (whenever `fieldLevelInstrumentation` was set to or resolved to 0, errors would not be counted). With this change, errors are counted accurately regardless of the `fieldLevelInstrumentation` setting.
 
   Note: in order for this fix to take effect, your `@apollo/gateway` version must be updated to v2.3.1 or later.
 

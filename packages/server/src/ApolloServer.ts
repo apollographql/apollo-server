@@ -1,27 +1,28 @@
+import type { GatewayExecutor } from '@apollo/server-gateway-interface';
 import { isNodeLike } from '@apollo/utils.isnodelike';
-import type { Logger } from '@apollo/utils.logger';
-import { makeExecutableSchema } from '@graphql-tools/schema';
-import resolvable, { type Resolvable } from '@josephg/resolvable';
 import {
-  assertValidSchema,
-  type DocumentNode,
+  InMemoryLRUCache,
+  PrefixingKeyValueCache,
+  type KeyValueCache,
+} from '@apollo/utils.keyvaluecache';
+import type { Logger } from '@apollo/utils.logger';
+import type { WithRequired } from '@apollo/utils.withrequired';
+import { makeExecutableSchema } from '@graphql-tools/schema';
+import resolvable, { type Resolvable } from './utils/resolvable.js';
+import {
   GraphQLError,
+  assertValidSchema,
+  print,
+  printSchema,
+  type DocumentNode,
+  type FormattedExecutionResult,
   type GraphQLFieldResolver,
   type GraphQLFormattedError,
   type GraphQLSchema,
   type ParseOptions,
-  print,
-  printSchema,
   type TypedQueryDocumentNode,
-  type ValidationContext,
   type ValidationRule,
-  type FormattedExecutionResult,
 } from 'graphql';
-import {
-  type KeyValueCache,
-  InMemoryLRUCache,
-  PrefixingKeyValueCache,
-} from '@apollo/utils.keyvaluecache';
 import loglevel from 'loglevel';
 import Negotiator from 'negotiator';
 import { newCachePolicy } from './cachePolicy.js';
@@ -31,68 +32,49 @@ import {
   ensureGraphQLError,
   normalizeAndFormatErrors,
 } from './errorNormalize.js';
-import {
-  ApolloServerErrorCode,
-  ApolloServerValidationErrorCode,
-} from './errors/index.js';
+import { ApolloServerErrorCode } from './errors/index.js';
+import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
+  ExecuteOperationOptions,
+  VariableValues,
+} from './externalTypes/graphql.js';
+import type {
+  ApolloConfig,
+  ApolloServerOptions,
   ApolloServerPlugin,
   BaseContext,
+  ContextThunk,
+  DocumentStore,
   GraphQLRequest,
+  GraphQLRequestContext,
   GraphQLResponse,
-  GraphQLServerListener,
   GraphQLServerContext,
+  GraphQLServerListener,
+  HTTPGraphQLHead,
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
   LandingPage,
-  ApolloConfig,
-  ApolloServerOptions,
-  DocumentStore,
   PersistedQueryOptions,
-  ContextThunk,
-  GraphQLRequestContext,
-  HTTPGraphQLHead,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import { type InternalPluginId, pluginIsInternal } from './internalPlugin.js';
+import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
   recommendedCsrfPreventionRequestHeaders,
 } from './preventCsrf.js';
 import { APQ_CACHE_PREFIX, processGraphQLRequest } from './requestPipeline.js';
 import { newHTTPGraphQLHead, prettyJSONStringify } from './runHttpQuery.js';
-import { SchemaManager } from './utils/schemaManager.js';
-import { isDefined } from './utils/isDefined.js';
+import { HeaderMap } from './utils/HeaderMap.js';
 import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
-import type { WithRequired } from '@apollo/utils.withrequired';
-import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
-import type { GatewayExecutor } from '@apollo/server-gateway-interface';
-import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
-import { HeaderMap } from './utils/HeaderMap.js';
-import type {
-  ExecuteOperationOptions,
-  VariableValues,
-} from './externalTypes/graphql.js';
-
-const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
-  Field(node) {
-    if (node.name.value === '__schema' || node.name.value === '__type') {
-      context.reportError(
-        new GraphQLError(
-          'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
-          {
-            nodes: [node],
-            extensions: {
-              validationErrorCode:
-                ApolloServerValidationErrorCode.INTROSPECTION_DISABLED,
-            },
-          },
-        ),
-      );
-    }
-  },
-});
+import { isDefined } from './utils/isDefined.js';
+import { SchemaManager } from './utils/schemaManager.js';
+import {
+  NoIntrospection,
+  createMaxRecursiveSelectionsRule,
+  DEFAULT_MAX_RECURSIVE_SELECTIONS,
+} from './validationRules/index.js';
 
 export type SchemaDerivedData = {
   schema: GraphQLSchema;
@@ -155,7 +137,7 @@ type ServerState =
 export interface ApolloServerInternals<TContext extends BaseContext> {
   state: ServerState;
   gatewayExecutor: GatewayExecutor | null;
-
+  dangerouslyDisableValidation?: boolean;
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
@@ -175,11 +157,15 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
 
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
+  laterValidationRules?: Array<ValidationRule>;
+  hideSchemaDetailsFromClientErrors: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS6): remove this option.
   status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
-  stringifyResult: (value: FormattedExecutionResult) => string;
+  stringifyResult: (
+    value: FormattedExecutionResult,
+  ) => string | Promise<string>;
 }
 
 function defaultLogger(): Logger {
@@ -220,7 +206,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
     this.logger = config.logger ?? defaultLogger();
 
-    const apolloConfig = determineApolloConfig(config.apollo);
+    const apolloConfig = determineApolloConfig(config.apollo, this.logger);
 
     const isDev = nodeEnv !== 'production';
 
@@ -278,6 +264,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         };
 
     const introspectionEnabled = config.introspection ?? isDev;
+    const hideSchemaDetailsFromClientErrors =
+      config.hideSchemaDetailsFromClientErrors ?? false;
 
     // We continue to allow 'bounded' for backwards-compatibility with the AS3.9
     // API.
@@ -286,15 +274,38 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ? new InMemoryLRUCache()
         : config.cache;
 
+    // Check whether the recursive selections limit has been enabled (off by
+    // default), or whether a custom limit has been specified.
+    const maxRecursiveSelectionsRule =
+      config.maxRecursiveSelections === true
+        ? [createMaxRecursiveSelectionsRule(DEFAULT_MAX_RECURSIVE_SELECTIONS)]
+        : typeof config.maxRecursiveSelections === 'number'
+          ? [createMaxRecursiveSelectionsRule(config.maxRecursiveSelections)]
+          : [];
+
+    // If the recursive selections rule has been enabled, then run configured
+    // validations in a later validate() pass.
+    const validationRules = [
+      ...(introspectionEnabled ? [] : [NoIntrospection]),
+      ...maxRecursiveSelectionsRule,
+    ];
+    let laterValidationRules;
+    if (maxRecursiveSelectionsRule.length > 0) {
+      laterValidationRules = config.validationRules;
+    } else {
+      validationRules.push(...(config.validationRules ?? []));
+    }
+
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
     this.internals = {
       formatError: config.formatError,
       rootValue: config.rootValue,
-      validationRules: [
-        ...(config.validationRules ?? []),
-        ...(introspectionEnabled ? [] : [NoIntrospection]),
-      ],
+      validationRules,
+      laterValidationRules,
+      hideSchemaDetailsFromClientErrors,
+      dangerouslyDisableValidation:
+        config.dangerouslyDisableValidation ?? false,
       fieldResolver: config.fieldResolver,
       includeStacktraceInErrorResponses:
         config.includeStacktraceInErrorResponses ??
@@ -326,9 +337,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         config.csrfPrevention === true || config.csrfPrevention === undefined
           ? recommendedCsrfPreventionRequestHeaders
           : config.csrfPrevention === false
-          ? null
-          : config.csrfPrevention.requestHeaders ??
-            recommendedCsrfPreventionRequestHeaders,
+            ? null
+            : (config.csrfPrevention.requestHeaders ??
+              recommendedCsrfPreventionRequestHeaders),
       status400ForVariableCoercionErrors:
         config.status400ForVariableCoercionErrors ?? true,
       __testing_incrementalExecutionResults:
@@ -498,8 +509,9 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       if (taggedServerListenersWithRenderLandingPage.length > 1) {
         throw Error('Only one plugin can implement renderLandingPage.');
       } else if (taggedServerListenersWithRenderLandingPage.length) {
-        landingPage = await taggedServerListenersWithRenderLandingPage[0]
-          .serverListener.renderLandingPage!();
+        landingPage =
+          await taggedServerListenersWithRenderLandingPage[0].serverListener
+            .renderLandingPage!();
       }
 
       const toDisposeLast = this.maybeRegisterTerminationSignalHandlers(
@@ -520,8 +532,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
 
       try {
         await Promise.all(
-          this.internals.plugins.map(
-            async (plugin) => plugin.startupDidFail?.({ error }),
+          this.internals.plugins.map(async (plugin) =>
+            plugin.startupDidFail?.({ error }),
           ),
         );
       } catch (pluginError) {
@@ -847,7 +859,12 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   }
 
   private async addDefaultPlugins() {
-    const { plugins, apolloConfig, nodeEnv } = this.internals;
+    const {
+      plugins,
+      apolloConfig,
+      nodeEnv,
+      hideSchemaDetailsFromClientErrors,
+    } = this.internals;
     const isDev = nodeEnv !== 'production';
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
@@ -1006,6 +1023,17 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       plugin.__internal_installed_implicitly__ = true;
       plugins.push(plugin);
     }
+
+    {
+      const alreadyHavePlugin =
+        alreadyHavePluginWithInternalId('DisableSuggestions');
+      if (hideSchemaDetailsFromClientErrors && !alreadyHavePlugin) {
+        const { ApolloServerPluginDisableSuggestions } = await import(
+          './plugin/disableSuggestions/index.js'
+        );
+        plugins.push(ApolloServerPluginDisableSuggestions());
+      }
+    }
   }
 
   public addPlugin(plugin: ApolloServerPlugin<TContext>) {
@@ -1030,7 +1058,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // This is typically either the masked error from when background startup
         // failed, or related to invoking this function before startup or
         // during/after shutdown (due to lack of draining).
-        return this.errorResponse(error, httpGraphQLRequest);
+        return await this.errorResponse(error, httpGraphQLRequest);
       }
 
       if (
@@ -1046,7 +1074,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           } catch (maybeError: unknown) {
             const error = ensureError(maybeError);
             this.logger.error(`Landing page \`html\` function threw: ${error}`);
-            return this.errorResponse(error, httpGraphQLRequest);
+            return await this.errorResponse(error, httpGraphQLRequest);
           }
         }
 
@@ -1075,11 +1103,10 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         const error = ensureError(maybeError);
         try {
           await Promise.all(
-            this.internals.plugins.map(
-              async (plugin) =>
-                plugin.contextCreationDidFail?.({
-                  error,
-                }),
+            this.internals.plugins.map(async (plugin) =>
+              plugin.contextCreationDidFail?.({
+                error,
+              }),
             ),
           );
         } catch (pluginError) {
@@ -1091,7 +1118,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // If some random function threw, add a helpful prefix when converting
         // to GraphQLError. If it was already a GraphQLError, trust that the
         // message was chosen thoughtfully and leave off the prefix.
-        return this.errorResponse(
+        return await this.errorResponse(
           ensureGraphQLError(error, 'Context creation failed: '),
           httpGraphQLRequest,
         );
@@ -1112,9 +1139,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ) {
         try {
           await Promise.all(
-            this.internals.plugins.map(
-              async (plugin) =>
-                plugin.invalidRequestWasReceived?.({ error: maybeError }),
+            this.internals.plugins.map(async (plugin) =>
+              plugin.invalidRequestWasReceived?.({ error: maybeError }),
             ),
           );
         } catch (pluginError) {
@@ -1123,14 +1149,14 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           );
         }
       }
-      return this.errorResponse(maybeError, httpGraphQLRequest);
+      return await this.errorResponse(maybeError, httpGraphQLRequest);
     }
   }
 
-  private errorResponse(
+  private async errorResponse(
     error: unknown,
     requestHead: HTTPGraphQLHead,
-  ): HTTPGraphQLResponse {
+  ): Promise<HTTPGraphQLResponse> {
     const { formattedErrors, httpFromErrors } = normalizeAndFormatErrors(
       [error],
       {
@@ -1159,7 +1185,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       ]),
       body: {
         kind: 'complete',
-        string: prettyJSONStringify({
+        string: await this.internals.stringifyResult({
           errors: formattedErrors,
         }),
       },
@@ -1336,12 +1362,11 @@ export async function internalExecuteOperation<TContext extends BaseContext>(
     // If *these* hooks throw then we'll still get a 500 but won't mask its
     // error.
     await Promise.all(
-      internals.plugins.map(
-        async (plugin) =>
-          plugin.unexpectedErrorProcessingRequest?.({
-            requestContext,
-            error,
-          }),
+      internals.plugins.map(async (plugin) =>
+        plugin.unexpectedErrorProcessingRequest?.({
+          requestContext,
+          error,
+        }),
       ),
     );
     // Mask unexpected error externally.
@@ -1369,6 +1394,8 @@ export function isImplicitlyInstallablePlugin<TContext extends BaseContext>(
 
 export const MEDIA_TYPES = {
   APPLICATION_JSON: 'application/json; charset=utf-8',
+  APPLICATION_JSON_GRAPHQL_CALLBACK:
+    'application/json; callbackSpec=1.0; charset=utf-8',
   APPLICATION_GRAPHQL_RESPONSE_JSON:
     'application/graphql-response+json; charset=utf-8',
   // We do *not* currently support this content-type; we will once incremental
@@ -1393,6 +1420,7 @@ export function chooseContentTypeForSingleResultResponse(
     }).mediaType([
       MEDIA_TYPES.APPLICATION_JSON,
       MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
+      MEDIA_TYPES.APPLICATION_JSON_GRAPHQL_CALLBACK,
     ]);
     if (preferred) {
       return preferred;

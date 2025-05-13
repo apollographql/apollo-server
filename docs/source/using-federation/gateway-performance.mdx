@@ -1,0 +1,111 @@
+---
+title: Improving Gateway Performance
+subtitle: Learn to adjust tracing, instrument middleware and plugins, and more
+description: Recommendations for improving your gateway's performance when using Apollo Server with the @apollo/gateway library.
+published: 2022-07-28
+id: TN0009
+redirectFrom:
+  - /technotes/TN0009-gateway-performance/
+---
+
+This article provides recommendations for improving your performance if your're using Apollo Server with the [`@apollo/gateway` library](./apollo-gateway-setup).
+
+For the highest performance gains, Apollo recommends migrating from `@apollo/gateway` to the GraphOS Router.
+The GraphOS Router is a high-throughput, low-latency GraphQL Federation gateway written in Rust. Its performance and consistency significantly exceed any Node.js-based gateway. See the [migration guide](/graphos/reference/migration/from-gateway).
+
+## Disable or reduce `ftv1` inline tracing
+
+Inline tracing (also known as federated tracing or `ftv1`) provides helpful field-level latency information in GraphOS Studio, however it comes at a cost: trace information can be expensive to calculate, and it's attached to subgraph responses, increasing payload size.
+
+In Apollo Server 3.6 and later, you can set the `fieldLevelInstrumentation` option to turn off inline tracing entirely, or limit tracing to a representative sample of all requests.
+
+- During load testing, we recommend disabling tracing entirely.
+- For regular production traffic, we recommend setting a low sample rate such as `0.01` (one percent of requests).
+
+[Usage Reporting plugin docs for `fieldLevelInstrumentation`](/apollo-server/api/plugin/usage-reporting#fieldlevelinstrumentation)
+
+## Change the default `maxSockets` setting
+
+The `maxSockets` setting controls the maximum number of connections that `@apollo/gateway`'s `fetch` implementation can create to each subgraph host and port. With higher values, fewer subgraph requests are queued in the gateway, but the event loop might become overloaded serializing responses from subgraphs.
+
+In `@apollo/gateway` versions prior to v0.51.0, the default `maxSockets` setting is `15`, which is too low for many systems. In later versions, the default is `Infinity`, which lends itself to the overload scenario.
+
+The following `ApolloGateway` constructor sets `maxSockets` to 50:
+
+```js
+import {ApolloGateway, RemoteGraphQLDataSource} from '@apollo/gateway';
+import fetcher from 'make-fetch-happen';
+
+const gateway = new ApolloGateway({
+  buildService({name, url}) {
+    return new RemoteGraphQLDataSource({
+      name,
+      url,
+      fetcher: fetcher.defaults({maxSockets: 50})
+    });
+  }
+});
+```
+
+[Configuring the subgraph fetcher](/apollo-server/using-federation/api/apollo-gateway/#configuring-the-subgraph-fetcher)
+
+## Instrument Gateway middleware and plugins
+
+If you've installed middleware (such as Express middleware) or Apollo Server plugins, it's worth using a code profiling tool such as [Clinic.js](https://clinicjs.org/) to investigate potential issues, such as synchronous code blocking the main thread or expensive plugin functions.
+
+## Use OpenTelemetry tracing
+
+OpenTelemetry is the Cloud Native Computing Foundation (CNCF) standard for instrumenting distributed systems. By tracing `@apollo/gateway`, subgraph services, data sources, and any other systems in the request path, you might discover that the cause of performance issues occurs outside of `@apollo/gateway`.
+
+[OpenTelemetry in `@apollo/gateway`](/federation/opentelemetry)
+
+## Investigate subgraph latency
+
+Try running load tests against the subgraphs directly. You can simulate requests from the Gateway by querying the `_entities` field:
+
+```graphql
+query MyQuery__subgraphA__0($representations: [_Any!]!) {
+  _entities(representations: $representations) {
+    ... on EntityA {
+      fieldA
+      fieldB
+    }
+    ... on EntityB {
+      fieldC
+      fieldD
+    }
+  }
+}
+```
+
+By testing `_entities` queries, you might discover that you need to implement a [DataLoader](https://github.com/graphql/dataloader) in your [reference resolvers](/federation/entities#2-define-a-reference-resolver).
+
+The slower your subgraphs, the more time the Gateway spends keeping track of concurrent in-flight requests. The Gateway's maximum requests per second drops linearly as subgraph latencies rise.
+
+## Tweak CPU and memory limits
+
+You might need to set higher CPU and memory limits on your `@apollo/gateway` pods. Determining the best limits for your system depends on a number of factors:
+
+- Size of operations
+- Cardinality of operations (number of unique shapes)
+- Complexity of query plans
+- Subgraph latency
+- Use of shared caches
+
+In general, look at increasing memory limits as Node.js is single-threaded and cannot use more than one CPU. That being said, we recommend keeping CPU utilization below 50%. At higher CPU utilization percentages, you may start to see event loop delays increase relative. Monitoring both memory usage and CPU usage metrics can help provide a clearer image of bottlenecks beyond just code profiling alone.
+
+If CPU throttling becomes a problem, consider removing the limits on your gateway pods as discussed in [this blog post on Kubernetes resource limits](https://erickhun.com/posts/kubernetes-faster-services-no-cpu-limits/).
+
+## Check query plans
+
+Query plans (the steps the Gateway takes to resolve an operation from multiple subgraphs) are almost always reasonable approximations of the original operation. They're also highly cacheable so they don't incur much of a performance penalty. But it's worth looking at them to make sure they're of an appropriate size and complexity. Fragment and abstract type usage may cause undesirable query plans in specific cases.
+
+```js
+const gateway = new ApolloGateway({
+  debug: true // print query plans to stdout
+});
+```
+
+## Add more instances
+
+`@apollo/gateway` is designed to scale horizontally. If you've tried the previous strategies and performance still isn't where it should be, distribute the load across more instances of the gateway.

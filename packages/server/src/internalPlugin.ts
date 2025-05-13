@@ -30,7 +30,8 @@ export type InternalPluginId =
   | 'LandingPageDisabled'
   | 'SchemaReporting'
   | 'InlineTrace'
-  | 'UsageReporting';
+  | 'UsageReporting'
+  | 'DisableSuggestions';
 
 export function pluginIsInternal<TContext extends BaseContext>(
   plugin: ApolloServerPlugin<TContext>,

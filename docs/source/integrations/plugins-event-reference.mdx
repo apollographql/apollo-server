@@ -1,5 +1,5 @@
 ---
-title: Apollo Server plugin event reference
+title: Apollo Server Plugin Event Reference
 ---
 
 > All plugin lifecycle methods are `async`, _except for [`willResolveField`](#willresolvefield) and [`schemaDidLoadOrUpdate`](#schemadidloadorupdate)_.
@@ -487,6 +487,8 @@ if the GraphQL operation encounters one or more errors.
 
 (If the operation uses [incremental delivery](../workflow/requests#incremental-delivery-experimental) directives such as `@defer`, `willSendResponse` is called before the *initial* payload is sent; you can use `willSendSubsequentPayload` to find out when more payloads will be sent.)
 
+The `willSendResponse` event is also where you can mutate the GraphQL response in-place. For example, you can add values to the `extensions` object or redact information in the `data` block. If you need to mutate the error responses, see the [`formatError` hook](https://www.apollographql.com/docs/apollo-server/data/errors/#for-client-responses).
+
 ```ts
 willSendResponse?(
   requestContext: WithRequired<
@@ -558,7 +560,7 @@ const server = new ApolloServer({
 
 The `unexpectedErrorProcessingRequest` event fires whenever an "unexpected" error is thrown during request execution. "Unexpected" errors don't include common client data errors such as validation, parsing, or GraphQL execution errors. Instead, an unexpected error indicates a _programming_ error, such as a plugin hook throwing unexpectedly or Apollo Server encountering a bug. No matter the cause, Apollo Server masks this type of error from a client.
 
-Note this hook is on the top level of the plugin rather than on the object returned from `requestWillStart`, because this hook triggers if `requestWillStart` throws.
+Note this hook is on the top level of the plugin rather than on the object returned from `requestDidStart`, because this hook triggers if `requestDidStart` throws.
 
 #### Example
 

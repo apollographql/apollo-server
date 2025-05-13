@@ -151,6 +151,27 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
+###### `hideSchemaDetailsFromClientErrors`
+
+`boolean`
+
+</td>
+
+<td>
+
+If `true`, Apollo Server strips out "did you mean" suggestions when an operation fails validation.
+
+For example, with this option set to `true`, an error would read `Cannot query field "help" on type "Query".`. With this option set to `false`, the same error would read `Cannot query field "help" on type "Query". Did you mean "hello"?`.
+
+The default value is `false`, but Apollo recommends enabling this option in production to avoid leaking information about your schema.
+
+</td>
+</tr>
+
+<tr>
+
+<td>
+
 ###### `fieldResolver`
 
 `GraphQLFieldResolver`
@@ -293,7 +314,7 @@ You can disable this recommended security feature by passing `false` to `csrfPre
 
 Provide this function to transform the structure of error objects before they're sent to a client.
 
-The `formatError` hook receives two arguments: the first is a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) (to be spent with the response), and the second is the original error [(wrapped in GraphQLError if thrown by a resolver)](../data/errors/#for-client-responses). This function should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) object.
+The `formatError` hook receives two arguments: the first is a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) (to be sent with the response), and the second is the original error [(wrapped in GraphQLError if thrown by a resolver)](../data/errors/#for-client-responses). This function should return a [`GraphQLFormattedError`](https://github.com/graphql/graphql-js/blob/29bf39faa670effd3c1561a1512ec7767658a63b/src/error/GraphQLError.ts#L215) object.
 
 </td>
 </tr>
@@ -492,6 +513,26 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 </tr>
 
+<tr>
+<td>
+
+##### `dangerouslyDisableValidation`
+
+`Boolean`
+</td>
+<td>
+⚠️ Caution: this option can lead to security vulnerabilities and unexpected
+behavior. Use of this option in production is not supported by Apollo.
+
+When set to `true`, disable validation of graphql operations entirely.
+
+You might find this option interesting for performance reasons if you handle
+operation validation at build time and enforce that only known, validated
+operations are allowed to be executed at runtime. Note that validation of
+operations is cached in Apollo Server's document store.
+</td>
+</tr>
+
 </tbody>
 </table>
 
@@ -519,7 +560,7 @@ await server.start();
 app.use(
   '/graphql',
   cors<cors.CorsRequest>(),
-  json(),
+  express.json(),
   expressMiddleware(server),
 );
 ```

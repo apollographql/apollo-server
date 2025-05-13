@@ -1,5 +1,145 @@
 # @apollo/server-integration-testsuite
 
+## 4.12.0
+
+### Patch Changes
+
+- Updated dependencies [[`89e3f84`](https://github.com/apollographql/apollo-server/commit/89e3f848e64590e15b08a07df498fe3fdb4f370d), [`2550d9f`](https://github.com/apollographql/apollo-server/commit/2550d9fefe03069075e16141b043115170012e80)]:
+  - @apollo/server@4.12.0
+
+## 4.11.3
+
+### Patch Changes
+
+- [#8010](https://github.com/apollographql/apollo-server/pull/8010) [`f4228e8`](https://github.com/apollographql/apollo-server/commit/f4228e88509b4cd2f50cf10bc6376d48488e03c1) Thanks [@glasser](https://github.com/glasser)! - Compatibility with Next.js Turbopack. Fixes #8004.
+
+- Updated dependencies [[`f4228e8`](https://github.com/apollographql/apollo-server/commit/f4228e88509b4cd2f50cf10bc6376d48488e03c1), [`70eecce`](https://github.com/apollographql/apollo-server/commit/70eecce69fb9c2b8a812713d1337fdc5c1578ef6)]:
+  - @apollo/server@4.11.3
+
+## 4.11.2
+
+### Patch Changes
+
+- [#7879](https://github.com/apollographql/apollo-server/pull/7879) [`b0fb33b`](https://github.com/apollographql/apollo-server/commit/b0fb33b1e22b18923d2e88fb6b30e23de3b664a1) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- [#7968](https://github.com/apollographql/apollo-server/pull/7968) [`68977e2`](https://github.com/apollographql/apollo-server/commit/68977e2b7fdf87197cd5c5cd7035c3b74298150a) Thanks [@glasser](https://github.com/glasser)! - Upgrade supertest and superagent dependencies
+
+- Updated dependencies []:
+  - @apollo/server@4.11.2
+
+## 4.11.1
+
+### Patch Changes
+
+- [#7952](https://github.com/apollographql/apollo-server/pull/7952) [`bb81b2c`](https://github.com/apollographql/apollo-server/commit/bb81b2c6b794dcd98fea9d01e4e38c6450287f53) Thanks [@glasser](https://github.com/glasser)! - Upgrade dependencies so that automated scans don't detect a vulnerability.
+
+  `@apollo/server` depends on `express` which depends on `cookie`. Versions of `express` older than v4.21.1 depend on a version of `cookie` vulnerable to CVE-2024-47764. Users of older `express` versions who call `res.cookie()` or `res.clearCookie()` may be vulnerable to this issue.
+
+  However, Apollo Server does not call this function directly, and it does not expose any object to user code that allows TypeScript users to call this function without an unsafe cast.
+
+  The only way that this direct dependency can cause a vulnerability for users of Apollo Server is if you call `startStandaloneServer` with a context function that calls Express-specific methods such as `res.cookie()` or `res.clearCookies()` on the response object, which is a violation of the TypeScript types provided by `startStandaloneServer` (which only promise that the response object is a core Node.js `http.ServerResponse` rather than the Express-specific subclass). So this vulnerability can only affect Apollo Server users who use unsafe JavaScript or unsafe `as` typecasts in TypeScript.
+
+  However, this upgrade will at least prevent vulnerability scanners from alerting you to this dependency, and we encourage all Express users to upgrade their project's own `express` dependency to v4.21.1 or newer.
+
+- Updated dependencies [[`bb81b2c`](https://github.com/apollographql/apollo-server/commit/bb81b2c6b794dcd98fea9d01e4e38c6450287f53)]:
+  - @apollo/server@4.11.1
+
+## 4.11.0
+
+### Patch Changes
+
+- Updated dependencies [[`4686454`](https://github.com/apollographql/apollo-server/commit/46864546e131d0079785575f621d69862e635663)]:
+  - @apollo/server@4.11.0
+
+## 4.10.5
+
+### Patch Changes
+
+- [#7821](https://github.com/apollographql/apollo-server/pull/7821) [`b2e15e7`](https://github.com/apollographql/apollo-server/commit/b2e15e7db6902769d02de2b06ff920ce74701c51) Thanks [@renovate](https://github.com/apps/renovate)! - Non-major dependency updates
+
+- [#7900](https://github.com/apollographql/apollo-server/pull/7900) [`86d7111`](https://github.com/apollographql/apollo-server/commit/86d711133f3746d094cfb3b39e21fdfa3723181b) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Inline a small dependency that was causing build issues for ESM projects
+
+- Updated dependencies [[`b2e15e7`](https://github.com/apollographql/apollo-server/commit/b2e15e7db6902769d02de2b06ff920ce74701c51), [`86d7111`](https://github.com/apollographql/apollo-server/commit/86d711133f3746d094cfb3b39e21fdfa3723181b)]:
+  - @apollo/server@4.10.5
+
+## 4.10.4
+
+### Patch Changes
+
+- Updated dependencies [[`18a3827`](https://github.com/apollographql/apollo-server/commit/18a3827d63c3916f6aaccbc4bdef3e0d550d91a7)]:
+  - @apollo/server@4.10.4
+
+## 4.10.3
+
+### Patch Changes
+
+- Updated dependencies [[`5f335a5`](https://github.com/apollographql/apollo-server/commit/5f335a527b6549219366fa44f4bea829e7359aaf)]:
+  - @apollo/server@4.10.3
+
+## 4.10.2
+
+### Patch Changes
+
+- Updated dependencies [[`c7e514c`](https://github.com/apollographql/apollo-server/commit/c7e514cf67b05521c66d0561448b3c36b2facee6)]:
+  - @apollo/server@4.10.2
+
+## 4.10.1
+
+### Patch Changes
+
+- Updated dependencies [[`72f568e`](https://github.com/apollographql/apollo-server/commit/72f568edd512a865e37e4777bf16a319433ca5ba)]:
+  - @apollo/server@4.10.1
+
+## 4.10.0
+
+### Minor Changes
+
+- [#7786](https://github.com/apollographql/apollo-server/pull/7786) [`869ec98`](https://github.com/apollographql/apollo-server/commit/869ec980458df3b22dcc2ed128cedc9d3a85c54b) Thanks [@ganemone](https://github.com/ganemone)! - Restore missing v1 `skipValidation` option as `dangerouslyDisableValidation`. Note that enabling this option exposes your server to potential security and unexpected runtime issues. Apollo will not support issues that arise as a result of using this option.
+
+### Patch Changes
+
+- [#7740](https://github.com/apollographql/apollo-server/pull/7740) [`fe68c1b`](https://github.com/apollographql/apollo-server/commit/fe68c1b05323931d766a5e081061b70e305ac67e) Thanks [@barnisanov](https://github.com/barnisanov)! - Uninstalled `body-parser` and used `express` built-in `body-parser` functionality instead(mainly the json middleware)
+
+- Updated dependencies [[`869ec98`](https://github.com/apollographql/apollo-server/commit/869ec980458df3b22dcc2ed128cedc9d3a85c54b), [`9bd7748`](https://github.com/apollographql/apollo-server/commit/9bd7748565735e3e01cdce38674dbc7dcc44507b), [`63dc50f`](https://github.com/apollographql/apollo-server/commit/63dc50fc65cd7b4a9df0e1de4ab6d6ee82dbeb5c), [`fe68c1b`](https://github.com/apollographql/apollo-server/commit/fe68c1b05323931d766a5e081061b70e305ac67e), [`e9a0d6e`](https://github.com/apollographql/apollo-server/commit/e9a0d6ed035d1a4f509ce39f0558dc17dfb9ccd0)]:
+  - @apollo/server@4.10.0
+
+## 4.9.5
+
+### Patch Changes
+
+- [#7717](https://github.com/apollographql/apollo-server/pull/7717) [`681bdd0dc`](https://github.com/apollographql/apollo-server/commit/681bdd0dc103cc855ae1c419b4fb0c526084ce5d) Thanks [@renovate](https://github.com/apps/renovate)! - Update graphql-http dependency
+
+- Updated dependencies [[`07585fe39`](https://github.com/apollographql/apollo-server/commit/07585fe39751a5d4009664293b6e413078a9b827), [`4fac1628c`](https://github.com/apollographql/apollo-server/commit/4fac1628c5d92bb393ef757f65908129459ab045)]:
+  - @apollo/server@4.9.5
+
+## 4.9.4
+
+### Patch Changes
+
+- Updated dependencies [[`ddce036e1`](https://github.com/apollographql/apollo-server/commit/ddce036e1b683adc636a7132e0c249690bf05ce0)]:
+  - @apollo/server@4.9.4
+
+## 4.9.3
+
+### Patch Changes
+
+- Updated dependencies [[`a1c725eaf`](https://github.com/apollographql/apollo-server/commit/a1c725eaf53c901e32a15057211bcb3eb6a6109b)]:
+  - @apollo/server@4.9.3
+
+## 4.9.2
+
+### Patch Changes
+
+- Updated dependencies [[`62e7d940d`](https://github.com/apollographql/apollo-server/commit/62e7d940de025f21e89c60404bce0dddac84ed6c)]:
+  - @apollo/server@4.9.2
+
+## 4.9.1
+
+### Patch Changes
+
+- Updated dependencies [[`ebfde0007`](https://github.com/apollographql/apollo-server/commit/ebfde0007c647d9fb73e3aa24b968def3e307084)]:
+  - @apollo/server@4.9.1
+
 ## 4.9.0
 
 ### Patch Changes

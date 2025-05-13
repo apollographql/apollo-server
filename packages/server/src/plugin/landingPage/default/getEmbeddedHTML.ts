@@ -138,7 +138,7 @@ export const getEmbeddedSandboxHTML = (
     runTelemetry: true,
     endpointIsEditable: false,
     initialState: {},
-    ...(typeof config.embed === 'boolean' ? {} : config.embed ?? {}),
+    ...(typeof config.embed === 'boolean' ? {} : (config.embed ?? {})),
   };
   const embeddedSandboxConfig = {
     target: '#embeddableSandbox',

@@ -89,14 +89,19 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   includeStacktraceInErrorResponses?: boolean;
   logger?: Logger;
   allowBatchedHttpRequests?: boolean;
-  stringifyResult?: (value: FormattedExecutionResult) => string;
+  stringifyResult?: (
+    value: FormattedExecutionResult,
+  ) => string | Promise<string>;
   introspection?: boolean;
+  maxRecursiveSelections?: boolean | number;
+  hideSchemaDetailsFromClientErrors?: boolean;
   plugins?: ApolloServerPlugin<TContext>[];
   persistedQueries?: PersistedQueryOptions | false;
   stopOnTerminationSignals?: boolean;
   apollo?: ApolloConfigInput;
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
+  dangerouslyDisableValidation?: boolean;
   csrfPrevention?: CSRFPreventionOptions | boolean;
 
   // Used for parsing operations; unlike in AS3, this is not also used for
