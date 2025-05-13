@@ -63,7 +63,7 @@ jobs:
       INCREMENTAL_DELIVERY_TESTS_ENABLED: t
     steps:
       - setup-node:
-          node-version: "18"
+          node-version: "20"
       # Install a prerelease of graphql-js 17 with incremental delivery support.
       # --legacy-peer-deps because nothing expects v17 yet.
       - run: npm i --legacy-peer-deps graphql@17.0.0-alpha.2
@@ -142,9 +142,9 @@ workflows:
           matrix:
             parameters:
               node-version:
-                - "18"
                 - "20"
                 - "22"
+                - "24"
       - "Check for FIXM\x45"
       - Prettier
       - ESLint

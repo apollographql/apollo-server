@@ -5,4 +5,4 @@
 '@apollo/server': major
 ---
 
-Drop support for Node 14 and Node 16
+Drop support for Node.JS v14, v16, and v20.

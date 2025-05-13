@@ -14,11 +14,11 @@ While Apollo Server v4 came with numerous breaking changes, the Apollo Server te
 
 ### Node.js
 
-Apollo Server 5 supports Node.js 18.0.0 and later. (Apollo Server 4 supports Node.js 14.16.0.) This includes all LTS and Current major versions at the time of release.
+Apollo Server 5 supports Node.js v20.0.0 and later. (Apollo Server 4 supports Node.js v14.16.0.) This includes all non-EOL major versions at the time of release.
 
-If you're using Node.js 14, upgrade your runtime before upgrading to Apollo Server 5.
+If you're using Node.js v14, v16, or v18, upgrade your runtime before upgrading to Apollo Server 5 to at least v20; we recommend upgrading all the way to the latest version.
 
-If you can't upgrade to Node.js 18, you can use Apollo Server 4 without issue.
+If you can't upgrade to a non-EOL version of Node.js, you can continue to use Apollo Server 4.
 
 ## Default behavior change
 
@@ -397,6 +397,8 @@ new ApolloServer({
 ## Bumped dependencies
 
 ### Node.js
+
+FIXME merge the sections or separate
 
 Apollo Server 4 supports Node.js 14.16.0 and later. (Apollo Server 3 supports Node.js 12.) This includes all [LTS and Current major versions at the time of release](https://nodejs.org/en/about/releases/).
 

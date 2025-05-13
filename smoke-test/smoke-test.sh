@@ -57,9 +57,11 @@ node generated/tsc/smoke-test.mjs
 #   would be better to pin a specific version and let Renovate update it so that
 #   the Renovate PRs fail instead of `main` but this is simpler for now.)
 #
-# `--no-engine-strict` is required for some of the older ones on Node 18,
+# `--no-engine-strict` is required for some of the older ones on Node 18+,
 # because we used to really like putting `<` engine constraints on all our
 # packages.
+#
+# FIXME stop running tests against Gateway v0
 #
 # This runs into some weird issues when we install the graphql@17 canary that
 # seems to just be about ending up with two copies of `graphql` installed at

@@ -34,7 +34,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=18",
+    "node": ">=20",
     "npm": ">=8.19.2"
   },
   "devDependencies": {
@@ -58,7 +58,7 @@
     "@types/lodash.sumby": "4.6.9",
     "@types/lodash.xorby": "4.7.9",
     "@types/negotiator": "0.6.3",
-    "@types/node": "18.17.1",
+    "@types/node": "20.14.8",
     "@types/node-fetch": "2.6.12",
     "@types/qs-middleware": "1.0.4",
     "@types/retry": "0.12.5",
