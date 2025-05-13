@@ -7,6 +7,10 @@ import TopLevelAwait from "../shared/top-level-await.mdx"
 
 This API reference documents Apollo Server 4's [Express](https://expressjs.com/) integration, the `expressMiddleware` function.
 
+Apollo maintains official integrations between Apollo Server and two major versions of Express: [`@as-integrations/express4`](https://www.npmjs.com/package/@as-integrations/express4) for Express v4, and [`@as-integrations/express5`](https://www.npmjs.com/package/@as-integrations/express5) for Express v5. Both packages export a function named `expressMiddleware` with the same API. You must install these packages with `npm install @as-integrations/express4` or `npm install @as-integrations/express5`, as well as installing Express itself.
+
+> The Express v4 integration is also bundled directly inside `@apollo/server`, exported from `@apollo/server/express4`; you do not need to install a separate package to use this. All documentation below of `@as-integrations/express4` applies to `@apollo/server/express4` as well. This "bundled" `expressMiddleware` does *not* support Express v5, and will be removed from a future major version of Apollo Server. Using the separate package now will make it easier to upgrade Apollo Server later.
+
 ## `expressMiddleware`
 
 <TopLevelAwait />
@@ -23,7 +27,7 @@ The `expressMiddleware` function accepts two arguments. The first **required** a
 
 ```ts
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import cors from 'cors';
 import express from 'express';
 
@@ -95,10 +99,10 @@ Below is a full example of setting up `expressMiddleware`:
 <MultiCodeBlock>
 
 ```ts
-// npm install @apollo/server express graphql cors
+// npm install @apollo/server @as-integrations/express5 express graphql cors
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';

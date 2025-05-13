@@ -139,8 +139,8 @@ A completed example of setting up subscriptions is shown below:
 
 ```ts title="index.ts"
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express5';
 import { createServer } from 'http';
 import express from 'express';
 import { makeExecutableSchema } from '@graphql-tools/schema';

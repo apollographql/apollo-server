@@ -124,7 +124,7 @@ The `startStandaloneServer` function is not right for every use case, particular
 
 In these cases, we recommend you swap out `startStandaloneServer` for `expressMiddleware` (unless you are confident that you want to use a different Node.js framework). This change requires only a few lines and has a minimal effect on your server's existing behavior (`startStandaloneServer` uses `expressMiddleware` under the hood).
 
-> We recommend Express because it's the most popular Node.js web framework, and it integrates well with many _other_ popular libraries. It does have its limitations (for example, Express async support is not built around `Promise`s and `async` functions), but backward incompatible changes to the framework are rarer than in newer libraries.
+> We recommend Express because it's the most popular Node.js web framework, and it integrates well with many _other_ popular libraries.
 
 ### Example
 
@@ -150,11 +150,13 @@ console.log(`🚀  Server ready at ${url}`);
 ```
 </MultiCodeBlock>
 
-To swap to using `expressMiddleware`, you'll first need to install the following packages so you'll be able to set up CORS for your server:
+To swap to using `expressMiddleware`, you'll first need to install the following packages: the Express library, Apollo's integration between Express and Apollo Server, and the CORS middleware for Express:
 
 ```bash
-npm install express cors
+npm install @as-integrations/express5 express cors
 ```
+
+Note that this should install v5 of Express.
 
 Next, we can modify our code to match the following:
 
@@ -163,7 +165,7 @@ Next, we can modify our code to match the following:
 ```ts
 // npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import express from 'express';
 import http from 'http';

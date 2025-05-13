@@ -11,7 +11,8 @@ Apollo Server 4 focuses on improving Apollo Server's extensibility and making it
 
 Apollo Server 4 provides the following features:
 * A well-defined API with a stable HTTP abstraction, enabling contributors to easily [build and maintain integrations](./integrations/building-integrations) in their preferred frameworks.
-* A new `@apollo/server` package, combining numerous [smaller packages](#packages-merged-into-apolloserver) and including the [`startStandaloneServer`](#migrate-from-apollo-server) and [`expressMiddleware`](#migrate-from-apollo-server-express) functions.
+* A new `@apollo/server` package, combining numerous [smaller packages](#packages-merged-into-apolloserver) and including the [`startStandaloneServer`](#migrate-from-apollo-server) function.
+* Apollo-maintained packages to integrate with the Express web framework via the [`expressMiddleware`](#migrate-from-apollo-server-express) function.
 * Packages that can be used as either ECMAScript or CJS modules.
 * Experimental support for [incremental delivery](./workflow/requests#incremental-delivery-experimental) when combined with a pre-release of `graphql-js`.
 
@@ -32,7 +33,6 @@ Apollo Server 4 takes a different approach to integrations by providing a stable
 The new `@apollo/server` package contains:
 
 - The `ApolloServer` class
-- An [Express 4 integration](#migrate-from-apollo-server-express) (similar to Apollo Server 3's `apollo-server-express` package)
 - A [standalone server](#migrate-from-apollo-server) (similar to Apollo Server 3's `apollo-server` package)
 - A set of [core plugins](#plugins-are-in-deep-imports) (similar to Apollo Server 3's `apollo-server-core` package)
 
@@ -53,9 +53,11 @@ graph TB;
 ```
 
 - If you're currently using the `apollo-server` package, you should use the [`startStandaloneServer`](#migrate-from-apollo-server) function.
-- If you're currently using the `apollo-server-express` package, you should use the [`expressMiddleware`](#migrate-from-apollo-server-express) function.
+- If you're currently using the `apollo-server-express` package, you should use the [`expressMiddleware`](#migrate-from-apollo-server-express) function in the `@as-integrations/express4` package.
 
 The [`@apollo/server` package](https://www.npmjs.com/package/@apollo/server) exports these functions alongside the  `ApolloServer` class.
+
+> In Apollo Server 4, `@apollo/server` also contains a copy of the same `expressMiddleware` function from `@as-integrations/express4` package. We recommend you use the separate integration package instead of the copy in `@apollo/server`, which will be removed in a future major version of Apollo Server.
 
 If you are using another Apollo Server 3 framework integration package (such as `apollo-server-koa` or `apollo-server-lambda`), check out our [list of integrations](./integrations/integration-index) to see if a community-maintained integration package exists for your framework of choice.
 
@@ -187,9 +189,11 @@ Similarly, if you used the `stopGracePeriodMillis` constructor option in Apollo 
 
 If you used the `apollo-server-express` package in Apollo Server 3, use the `expressMiddleware` function in Apollo Server 4 (i.e., instead of using `server.applyMiddleware` or `server.getMiddleware`).
 
+> The following assumes you are using Express v4. If you would like to use Express v5 (which was not supported by Apollo Server 3), you can follow the instructions below, but use the package `@as-integrations/express5` instead of `@as-integrations/express4`.
+
 To migrate from Apollo Server 3's `apollo-server-express` package to using the `expressMiddleware` function, do the following:
 
-1. Install the `@apollo/server` and `cors` packages.
+1. Install the `@apollo/server`, `@as-integrations/express4`, and `cors` packages.
 2. Import symbols from `@apollo/server` (i.e., instead of from `apollo-server-express` and `apollo-server-core`).
 3. Add `cors` to your server setup.
 4. Remove the Apollo Server 3 `apollo-server-express` and `apollo-server-core` packages.
@@ -234,8 +238,8 @@ looks like this in Apollo Server 4:
 ```ts title="apollo-server-4.ts"
 // npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express4';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
@@ -1923,7 +1927,7 @@ This section lists the TypeScript-only types (i.e., interfaces, not classes) tha
 
 Apollo Server 4 changes the name of the constructor options type from `Config` to `ApolloServerOptions`.  In Apollo Server 3, some integration packages export their own versions of this type (e.g., `ApolloServerExpressConfig`). In Apollo Server 4, there is only one `ApolloServer` type with only one constructor, so these additional types are no longer necessary.
 
-Two types in `apollo-server-express` now have more explicit names exported from `@apollo/server/express4`. `GetMiddlewareOptions` is now `ExpressMiddlewareOptions` and `ExpressContext` is now `ExpressContextFunctionArgument`.
+Two types in `apollo-server-express` now have more explicit names exported from `@as-integrations/express4`. `GetMiddlewareOptions` is now `ExpressMiddlewareOptions` and `ExpressContext` is now `ExpressContextFunctionArgument`.
 
 ### Removed types
 
