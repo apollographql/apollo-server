@@ -95,7 +95,7 @@ Apollo Server's Express middleware lets you run your GraphQL server as part of a
 First, install Apollo Server, its Express middleware, the JavaScript implementation of the core GraphQL algorithms, Express, and the standard Express middleware package for CORS headers:
 
 ```
-npm install @apollo/server @as-integrations/express4 graphql express cors
+npm install @apollo/server @as-integrations/express5 graphql express cors
 ```
 
 If using Typescript you may also need to install additional type declaration packages as development dependencies to avoid common errors when importing the above packages (i.e. Could not find a declaration file for module '`cors`'):
@@ -108,7 +108,7 @@ Then, write the following to `server.mjs`. (By using the `.mjs` extension, Node 
 
 ```js
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@as-integrations/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import express from 'express';
 import http from 'http';
