@@ -41,14 +41,6 @@ node generated/tsc/smoke-test.mjs
 
 # Ensure that we at least type-check against a variety of versions of Apollo
 # Gateway. Specifically:
-# - 0.50.1 is the oldest version that we try to support according to the
-#   migration guide
-# - 0.51.0 was the last version of 0.x before we converted it to use
-#   `@apollo/server-gateway-interface` instead of directly depending on Apollo
-#   Server packages
-# - 0.x lets us test against the latest released 0.x version. (Theoretically it
-#   would be better to pin a specific version and let Renovate update it so that
-#   the Renovate PRs fail instead of `main` but this is simpler for now.)
 # - 2.0.0 is the oldest supported version of v2.
 # - 2.0.5 was the last version of 2.x before we converted it to use
 #   `@apollo/server-gateway-interface` instead of directly depending on Apollo
@@ -61,7 +53,9 @@ node generated/tsc/smoke-test.mjs
 # because we used to really like putting `<` engine constraints on all our
 # packages.
 #
-# FIXME stop running tests against Gateway v0
+# Prior to Apollo Server 5, we also tested against various versions of Gateway
+# 0.x. However, Gateway 0.x has been EOL since September 2023, so we no longer
+# test against it.
 #
 # This runs into some weird issues when we install the graphql@17 canary that
 # seems to just be about ending up with two copies of `graphql` installed at
@@ -69,8 +63,8 @@ node generated/tsc/smoke-test.mjs
 # job. Once graphql@17.0.0 is out we should be able to de-conditional this.
 if [[ -z "${INCREMENTAL_DELIVERY_TESTS_ENABLED:-}" ]]; then
   pushd gateway-compatibility
-    for version in 0.50.1 0.51.0 0.x 2.0.0 2.0.5 2.x; do
-      npm i --no-save --legacy-peer-deps --no-engine-strict "@apollo/gateway@$version"
+    for version in 2.0.0 2.0.5 2.x; do
+      npm i --no-save --no-engine-strict "@apollo/gateway@$version"
       npx tsc --build tsconfig.json
     done
   popd
