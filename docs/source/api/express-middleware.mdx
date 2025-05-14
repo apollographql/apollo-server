@@ -7,9 +7,17 @@ import TopLevelAwait from "../shared/top-level-await.mdx"
 
 This API reference documents Apollo Server 4's [Express](https://expressjs.com/) integration, the `expressMiddleware` function.
 
-Apollo maintains official integrations between Apollo Server and two major versions of Express: [`@as-integrations/express4`](https://www.npmjs.com/package/@as-integrations/express4) for Express v4, and [`@as-integrations/express5`](https://www.npmjs.com/package/@as-integrations/express5) for Express v5. Both packages export a function named `expressMiddleware` with the same API. You must install these packages with `npm install @as-integrations/express4` or `npm install @as-integrations/express5`, as well as installing Express itself.
+Apollo Server integrates with these Express versions through official integrations:
+- [**Express v4**](https://www.npmjs.com/package/@as-integrations/express4): Install with `npm install @as-integrations/express4`
+- [**Express v5**](https://www.npmjs.com/package/@as-integrations/express5): Install with `npm install @as-integrations/express5`
 
-> The Express v4 integration is also bundled directly inside `@apollo/server`, exported from `@apollo/server/express4`; you do not need to install a separate package to use this. All documentation below of `@as-integrations/express4` applies to `@apollo/server/express4` as well. This "bundled" `expressMiddleware` does *not* support Express v5, and will be removed from a future major version of Apollo Server. Using the separate package now will make it easier to upgrade Apollo Server later.
+You must also install Express itself. Both packages export a function named `expressMiddleware` with the same API.
+
+<Note>
+
+The Express v4 integration is also bundled in `@apollo/server` at `@apollo/server/express4`. While you can use this bundled version now, we recommend installing the separate package. Express v5 requires the separate package, and future Apollo Server versions will remove the bundled integration.
+
+</Note>
 
 ## `expressMiddleware`
 
