@@ -90,30 +90,29 @@ Open the URL it prints in a web browser. It will show [Apollo Sandbox](https://w
 
 ## Getting started: Express middleware
 
-Apollo Server's built-in Express middleware lets you run your GraphQL server as part of an app built with [Express](https://expressjs.com/), the most popular web framework for Node.
+Apollo Server's Express middleware lets you run your GraphQL server as part of an app built with [Express](https://expressjs.com/), the most popular web framework for Node.
 
-First, install Apollo Server, the JavaScript implementation of the core GraphQL algorithms, Express, and two common Express middleware packages:
+First, install Apollo Server, its Express middleware, the JavaScript implementation of the core GraphQL algorithms, Express, and the standard Express middleware package for CORS headers:
 
 ```
-npm install @apollo/server graphql express cors body-parser
+npm install @apollo/server @as-integrations/express5 graphql express cors
 ```
 
 If using Typescript you may also need to install additional type declaration packages as development dependencies to avoid common errors when importing the above packages (i.e. Could not find a declaration file for module '`cors`'):
 
 ```
-npm install --save-dev @types/cors @types/express @types/body-parser
+npm install --save-dev @types/cors @types/express
 ```
 
 Then, write the following to `server.mjs`. (By using the `.mjs` extension, Node lets you use the `await` keyword at the top level.)
 
 ```js
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import express from 'express';
 import http from 'http';
 import cors from 'cors';
-import bodyParser from 'body-parser';
 
 // The GraphQL schema
 const typeDefs = `#graphql
@@ -142,7 +141,7 @@ await server.start();
 
 app.use(
   cors(),
-  bodyParser.json(),
+  express.json(),
   expressMiddleware(server),
 );
 

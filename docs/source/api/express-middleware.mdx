@@ -7,6 +7,18 @@ import TopLevelAwait from "../shared/top-level-await.mdx"
 
 This API reference documents Apollo Server's [Express](https://expressjs.com/) integration, the `expressMiddleware` function.
 
+Apollo Server integrates with these Express versions through official integrations:
+- [**Express v4**](https://www.npmjs.com/package/@as-integrations/express4): Install with `npm install @as-integrations/express4`
+- [**Express v5**](https://www.npmjs.com/package/@as-integrations/express5): Install with `npm install @as-integrations/express5`
+
+You must also install Express itself. Both packages export a function named `expressMiddleware` with the same API.
+
+<Note>
+
+The Express v4 integration is also bundled in `@apollo/server` at `@apollo/server/express4`. While you can use this bundled version now, we recommend installing the separate package. Express v5 requires the separate package, and future Apollo Server versions will remove the bundled integration.
+
+</Note>
+
 ## `expressMiddleware`
 
 <TopLevelAwait />
@@ -23,7 +35,7 @@ The `expressMiddleware` function accepts two arguments. The first **required** a
 
 ```ts
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import cors from 'cors';
 import express from 'express';
 
@@ -95,10 +107,10 @@ Below is a full example of setting up `expressMiddleware`:
 <MultiCodeBlock>
 
 ```ts
-// npm install @apollo/server express graphql cors
+// npm install @apollo/server @as-integrations/express5 express graphql cors
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';

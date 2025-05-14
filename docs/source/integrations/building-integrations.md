@@ -15,10 +15,9 @@ Server in their web framework of choice.
 ## Overview
 
 The primary responsibility of an Apollo Server integration is to translate
-requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollographql/apollo-server/blob/main/packages/server/src/express4/index.ts) (i.e.,`expressMiddleware`) as an example.
+requests and responses between a web framework's native format to the format used by `ApolloServer`. This article conceptually covers how to build an integration, using the [Express integration](https://github.com/apollo-server-integrations/apollo-server-integration-express5/blob/main/src/index.ts) (i.e.,`expressMiddleware`) as an example.
 
-FIXME: update repo
-> For more examples, see these Apollo Server 4 [integrations demos for Fastify and Lambda](https://github.com/apollographql/server-v4-integration-demos/tree/main/packages).
+> For more examples, see the source of the [community-maintained Apollo Server integrations](./integration-index).
 
 If you are building a serverless integration, we **strongly recommend** prepending your function name with the word `start` (e.g., `startServerAndCreateLambdaHandler(server)`). This naming convention helps maintain Apollo Server's standard that every server uses a function or method whose name contains the word `start` (such as `startStandaloneServer(server)`.
 
@@ -119,7 +118,7 @@ Apollo Server responds to a variety of requests via both `GET` and `POST` such a
 
 Integrations _are_ responsible for parsing a request's body and using the values to construct the `HTTPGraphQLRequest` that Apollo Server expects.
 
-In Apollo Server's Express integration, a user sets up the `body-parser` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
+In Apollo Server's Express integration, you set up the `express.json()` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
 
 For example, a correctly parsed body should have a shape resembling this:
 
