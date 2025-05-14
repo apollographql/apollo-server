@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 4.12.1
+
+### Patch Changes
+
+- [#8064](https://github.com/apollographql/apollo-server/pull/8064) [`41f98d4`](https://github.com/apollographql/apollo-server/commit/41f98d4f2c143aad0ddfb36d5a4dd4b47fb406d7) Thanks [@glasser](https://github.com/glasser)! - Update README.md to recommend Express v5 integration now that Express v5 is released.
+
 ## 4.12.0
 
 ### Minor Changes
