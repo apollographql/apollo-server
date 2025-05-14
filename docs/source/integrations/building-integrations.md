@@ -118,7 +118,7 @@ Apollo Server responds to a variety of requests via both `GET` and `POST` such a
 
 Integrations _are_ responsible for parsing a request's body and using the values to construct the `HTTPGraphQLRequest` that Apollo Server expects.
 
-In Apollo Server 4's Express integration, the user sets up the `express.json()` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
+In Apollo Server 4's Express integration, you set up the `express.json()` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
 
 For example, a correctly parsed body should have a shape resembling this:
 
