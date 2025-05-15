@@ -1,6 +1,7 @@
 import {
   ApolloGateway,
   IntrospectAndCompose,
+  RemoteGraphQLDataSource,
   ServiceEndpointDefinition,
 } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
@@ -558,6 +559,12 @@ function getGatewayServer(
         subgraphs,
       }),
       logger,
+      buildService({ url }) {
+        return new RemoteGraphQLDataSource({
+          url,
+          fetcher: fetch,
+        });
+      },
     }),
     apollo: { key: 'my-apollo-key', graphRef: 'my-graph@current' },
     logger,
