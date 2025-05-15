@@ -2100,10 +2100,13 @@ async function startSubscriptionServer(
 //   isn't done yet, so it's insufficient.
 // * while (!nock.isDone()) { await new Promise(...) } - isDone is true when the
 //   mock is consumed and before the reply is done, so also insufficient.
+// * without the setImmediate, the upgrade from Nock v13 to Nock v14 changed
+//   some subtlety of the timing so that this resolved a bit before our code
+//   that processes the response runs.
 function promisifyNock(nock: nock.Scope) {
   return new Promise<void>((resolve) => {
     nock.addListener('replied', () => {
-      resolve();
+      setImmediate(resolve);
     });
   });
 }

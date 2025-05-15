@@ -17,17 +17,17 @@ follow the pattern:
 {
   "name": "my-server-integration",
   "devDependencies": {
-    "@apollo/server": "4.1.0",
-    "@apollo/server-integration-testsuite": "4.1.0"
+    "@apollo/server": "5.0.0",
+    "@apollo/server-integration-testsuite": "5.0.0"
   },
   "peerDependencies": {
-    "@apollo/server": "^4.0.0"
+    "@apollo/server": "^4.0.0 || ^5.0.0"
   }
 }
 ```
 
 In the example above, the `peerDependencies` allow your configuration to be used
-with the full range of Apollo Server v4 packages. The `devDependencies` which
+with the full range of Apollo Server v4 - v5 packages. The `devDependencies` which
 your integration is built and tested against should stay up-to-date with the
 latest version of Apollo Server, and the server and testsuite packages should be
 in lockstep with each other.
@@ -35,7 +35,7 @@ in lockstep with each other.
 This package imposes dependency requirements on your project, however it should
 only require they be installed as `devDependencies`:
 * `@apollo/server`'s version must match the version of the test suite.
-* The test suite expects you to be running `jest@28`. It's possible that other
+* The test suite expects you to be running `jest@29`. It's possible that other
   versions of Jest may be compatible, but this use case is unsupported and might
   lead to unexpected behavior. It's fine for your project to use a testing
   framework other than Jest, but you'll still need to configure Jest in your
