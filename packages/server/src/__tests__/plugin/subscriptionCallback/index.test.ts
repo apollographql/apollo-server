@@ -1107,7 +1107,7 @@ describe('SubscriptionCallbackPlugin', () => {
 
     mockRouterCheckResponse();
     mockRouterCheckResponse();
-    mockRouterCompleteResponse({
+    const completeRequest = mockRouterCompleteResponse({
       errors: [{ message: "The subscription generator didn't catch this!" }],
     });
 
@@ -1132,6 +1132,8 @@ describe('SubscriptionCallbackPlugin', () => {
     expect(result.status).toEqual(200);
 
     jest.advanceTimersByTime(5000);
+
+    await completeRequest;
     await server.stop();
 
     expect(logger.orderOfOperations).toMatchInlineSnapshot(`
@@ -1147,12 +1149,12 @@ describe('SubscriptionCallbackPlugin', () => {
         "ERROR: SubscriptionManager[1234-cats]: Generator threw an error, terminating subscription: The subscription generator didn't catch this!",
         "SubscriptionManager[1234-cats]: Sending \`complete\` request to router with errors",
         "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-        "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
+        "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
+        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-        "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
-        "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+        "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
         "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
@@ -1295,9 +1297,9 @@ describe('SubscriptionCallbackPlugin', () => {
           "SubscriptionManager[1234-cats]: Sending \`complete\` request to router with errors",
           "SubscriptionCallback[1234-cats]: Responding to original subscription request",
           "SubscriptionManager: Sending \`check\` request to http://mock-router-url.com for ID: 1234-cats",
-          "SubscriptionManager[1234-cats]: \`complete\` request successful",
           "SubscriptionManager: Heartbeat received response for ID: 1234-cats",
           "SubscriptionManager: Heartbeat request successful, ID: 1234-cats",
+          "SubscriptionManager[1234-cats]: \`complete\` request successful",
           "SubscriptionCallback: Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals",
           "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         ]
