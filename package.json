@@ -74,7 +74,7 @@
     "codecov": "3.8.3",
     "compression": "1.8.0",
     "cors": "2.8.5",
-    "cspell": "6.31.3",
+    "cspell": "9.0.2",
     "eslint": "8.57.1",
     "eslint-plugin-import": "2.31.0",
     "express": "4.21.2",

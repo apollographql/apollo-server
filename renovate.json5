@@ -75,11 +75,6 @@
       matchPackageNames: ["/^@typescript-eslint/"],
       allowedVersions: "5.x"
     },
-    // cspell@7 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["cspell"],
-      allowedVersions: "6.x",
-    },
     // whatwg-mimetype@4 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["whatwg-mimetype"],
