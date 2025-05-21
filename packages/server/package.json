@@ -139,7 +139,7 @@
     "@apollo/utils.createhash": "^3.0.0",
     "@apollo/utils.fetcher": "^3.0.0",
     "@apollo/utils.isnodelike": "^3.0.0",
-    "@apollo/utils.keyvaluecache": "^3.0.0",
+    "@apollo/utils.keyvaluecache": "^4.0.0",
     "@apollo/utils.logger": "^3.0.0",
     "@apollo/utils.usagereporting": "^2.1.0",
     "@apollo/utils.withrequired": "^3.0.0",

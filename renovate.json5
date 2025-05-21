@@ -38,14 +38,6 @@
       matchPackageNames: ["typescript"],
       matchUpdateTypes: ["minor"],
     },
-    // Also, we're currently stuck at v5.4.x because v5.5 ships a lib.dom.d.ts
-    // that's incompatible with `@types/node@14` which we are pinning until we
-    // drop Node v14 support. See
-    // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/66617
-    {
-      matchPackageNames: ["typescript"],
-      allowedVersions: "5.4.x",
-    },
     // The testsuite depends directly on the tests in `graphql-http`.
     // Because of this, updates to `graphql-http` affect the contents of
     // published packages, require a changeset, and cannot be auto-merged.
