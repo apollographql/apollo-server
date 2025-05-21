@@ -78,11 +78,6 @@
       matchPackageNames: ["eslint"],
       allowedVersions: "8.x",
     },
-    // negotiator@1 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["negotiator"],
-      allowedVersions: "0.x",
-    },
     // ts-jest@29.3.0 adds a dependency on `type-fest` which drops support for node v14.
     // We can take this when we drop node v14 support.
     {
