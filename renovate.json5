@@ -150,5 +150,10 @@
       matchPackageNames: ["express", "@types/express", "@types/express-serve-static-core"],
       allowedVersions: "4.x",
     },
+    // Only needed until Jest supports prettier@3 for snapshots
+    {
+      "matchPackageNames": ["prettier-2"],
+      "allowedVersions": "2.x"
+    },
   ]
 }
