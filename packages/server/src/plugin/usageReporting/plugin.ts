@@ -8,7 +8,6 @@ import {
 import retry from 'async-retry';
 import { type GraphQLSchema, printSchema } from 'graphql';
 import type LRUCache from 'lru-cache';
-import fetch from 'node-fetch';
 import os from 'os';
 import { gzip } from 'zlib';
 import type {
@@ -60,8 +59,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             ? 1 / fieldLevelInstrumentationOption
             : 0
       : fieldLevelInstrumentationOption
-        ? fieldLevelInstrumentationOption
-        : async () => true;
+      ? fieldLevelInstrumentationOption
+      : async () => true;
 
   let requestDidStartHandler:
     | ((
@@ -435,8 +434,9 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
             includeOperationInUsageReporting = true;
             return;
           }
-          includeOperationInUsageReporting =
-            await options.includeRequest(requestContext);
+          includeOperationInUsageReporting = await options.includeRequest(
+            requestContext,
+          );
 
           // Help the user understand they've returned an unexpected value,
           // which might be a subtle mistake.
@@ -523,8 +523,9 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 // were executed and what their performance was, at the tradeoff of
                 // some overhead for tracking the trace (and transmitting it between
                 // subgraph and gateway).
-                const rawWeight =
-                  await fieldLevelInstrumentation(requestContext);
+                const rawWeight = await fieldLevelInstrumentation(
+                  requestContext,
+                );
                 treeBuilder.trace.fieldExecutionWeight =
                   typeof rawWeight === 'number' ? rawWeight : rawWeight ? 1 : 0;
 
@@ -611,8 +612,8 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
                 policyIfCacheable.scope === 'PRIVATE'
                   ? Trace.CachePolicy.Scope.PRIVATE
                   : policyIfCacheable.scope === 'PUBLIC'
-                    ? Trace.CachePolicy.Scope.PUBLIC
-                    : Trace.CachePolicy.Scope.UNKNOWN,
+                  ? Trace.CachePolicy.Scope.PUBLIC
+                  : Trace.CachePolicy.Scope.UNKNOWN,
               // Convert from seconds to ns.
               maxAgeNs: policyIfCacheable.maxAge * 1e9,
             });

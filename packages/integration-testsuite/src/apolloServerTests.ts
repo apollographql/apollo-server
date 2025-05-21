@@ -35,7 +35,6 @@ import {
   type ApolloServerPlugin,
   HeaderMap,
 } from '@apollo/server';
-import fetch, { type Headers } from 'node-fetch';
 
 import resolvable, { type Resolvable } from './resolvable.js';
 import type { AddressInfo } from 'net';
@@ -2371,13 +2370,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
             }
 
             let requestCount = 0;
-            const requestAgent = new http.Agent({ keepAlive: false });
-            const realCreateConnection = (requestAgent as any).createConnection;
-            (requestAgent as any).createConnection = function () {
-              requestCount++;
-              return realCreateConnection.apply(this, arguments);
-            };
-
             let reportErrorPromiseResolve: (error: Error) => void;
             const reportErrorPromise = new Promise<Error>(
               (resolve) => (reportErrorPromiseResolve = resolve),
@@ -2398,8 +2390,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   endpointUrl: fakeUsageReportingUrl,
                   reportIntervalMs: 1,
                   maxAttempts: 3,
-                  fetcher: (url, options) =>
-                    fetch(url, { ...options, agent: requestAgent }),
+                  fetcher: (url, options) => {
+                    requestCount++;
+                    return fetch(url, options);
+                  },
                   logger: quietLogger,
                   reportErrorFunction(error: Error) {
                     reportErrorPromiseResolve(error);
@@ -2431,13 +2425,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
             const sendingError = await reportErrorPromise;
             expect(sendingError).toBeTruthy();
             if (status === 'cannot-connect') {
-              expect(sendingError.message).toContain(
-                'Error sending report to Apollo servers',
+              expect(sendingError.message).toBe(
+                'Error sending report to Apollo servers: fetch failed',
               );
-              expect(sendingError.message).toContain('ECONNREFUSED');
             } else if (status === 'timeout') {
               expect(sendingError.message).toBe(
-                'Error sending report to Apollo servers: The user aborted a request.',
+                'Error sending report to Apollo servers: The operation was aborted due to timeout',
               );
             } else {
               expect(sendingError.message).toBe(

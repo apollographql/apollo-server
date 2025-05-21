@@ -85,15 +85,6 @@
       matchPackageNames: ["whatwg-mimetype"],
       allowedVersions: "3.x",
     },
-    // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
-    // ESM, so let's stay on v2.
-    // (Once we drop support for node older than v18, we can switch our default
-    // fetch implementation to be Node's built-in implementation and drop this
-    // very old node-fetch implementation.)
-    {
-      matchPackageNames: ["node-fetch", "@types/node-fetch"],
-      allowedVersions: "2.x"
-    },
     {
       // Major upgrade rollup plugins along with rollup itself.
       matchSourceUrls: ["https://github.com/rollup/{/,}**"],

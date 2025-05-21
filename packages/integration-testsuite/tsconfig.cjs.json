@@ -6,9 +6,7 @@
     "esModuleInterop": true,
     "rootDir": "./src",
     "outDir": "./dist",
-    // DOM types needed for @apollo/client
-    // Ref: https://github.com/apollographql/apollo-client/issues/6376
-    "lib": ["es2021", "dom"]
+    "lib": ["es2021"]
   },
   "include": ["src/**/*"],
   "references": [
