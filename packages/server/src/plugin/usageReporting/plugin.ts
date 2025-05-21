@@ -7,7 +7,7 @@ import {
 } from '@apollo/utils.usagereporting';
 import retry from 'async-retry';
 import { type GraphQLSchema, printSchema } from 'graphql';
-import type LRUCache from 'lru-cache';
+import { type LRUCache } from 'lru-cache';
 import os from 'os';
 import { gzip } from 'zlib';
 import type {
