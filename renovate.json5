@@ -78,14 +78,6 @@
       matchPackageNames: ["eslint"],
       allowedVersions: "8.x",
     },
-    // uuid@10 drops support for node v14. We can take this when we drop node
-    // v14 support. (This isn't in the engines property, but they made this
-    // change in https://github.com/uuidjs/uuid/pull/750 and then later started
-    // using the new-in-v16 `??=` operator.)
-    {
-      matchPackageNames: ["uuid", "@types/uuid"],
-      allowedVersions: "9.x",
-    },
     // negotiator@1 drops support for node v14. We can take this when we drop node v14 support.
     {
       matchPackageNames: ["negotiator"],
