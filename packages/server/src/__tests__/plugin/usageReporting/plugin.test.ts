@@ -28,10 +28,14 @@ import {
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginUsageReportingDisabled,
 } from '../../../plugin/disabled';
-import { describe, it, expect, afterEach } from '@jest/globals';
+import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
+import { nockAfterEach, nockBeforeEach } from '../../nockAssertions';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
+
+beforeEach(nockBeforeEach);
+afterEach(nockAfterEach);
 
 describe('end-to-end', () => {
   async function runTest({
