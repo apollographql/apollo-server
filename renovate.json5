@@ -67,11 +67,6 @@
       matchPackageNames: ["/^@typescript-eslint/"],
       allowedVersions: "5.x"
     },
-    // whatwg-mimetype@4 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["whatwg-mimetype"],
-      allowedVersions: "3.x",
-    },
     {
       // Major upgrade rollup plugins along with rollup itself.
       matchSourceUrls: ["https://github.com/rollup/{/,}**"],

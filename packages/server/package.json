@@ -153,7 +153,7 @@
     "lru-cache": "^11.1.0",
     "negotiator": "^0.6.3",
     "uuid": "^9.0.0",
-    "whatwg-mimetype": "^3.0.0"
+    "whatwg-mimetype": "^4.0.0"
   },
   "peerDependencies": {
     "graphql": "^16.6.0"
