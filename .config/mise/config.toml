@@ -3,7 +3,7 @@
 # It's what we use to set up tools in CI.
 
 [tools]
-node = "22.15.0"
+node = "22.15.1"
 
 [env]
 # Put binaries from npm-installed packages on PATH (eg `changeset`).
