@@ -35,7 +35,7 @@ import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
-import resolvable, { Resolvable } from '../../../utils/resolvable.js';
+import resolvable, { type Resolvable } from '../../../utils/resolvable.js';
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;
 }

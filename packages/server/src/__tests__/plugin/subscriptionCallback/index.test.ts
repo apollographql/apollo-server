@@ -1,12 +1,12 @@
 import {
   ApolloServer,
-  ApolloServerOptionsWithTypeDefs,
-  BaseContext,
-  HTTPGraphQLRequest,
+  type ApolloServerOptionsWithTypeDefs,
+  type BaseContext,
+  type HTTPGraphQLRequest,
   HeaderMap,
 } from '@apollo/server';
 import { ApolloServerPluginSubscriptionCallback } from '@apollo/server/plugin/subscriptionCallback';
-import { Logger } from '@apollo/utils.logger';
+import { type Logger } from '@apollo/utils.logger';
 import {
   afterAll,
   afterEach,

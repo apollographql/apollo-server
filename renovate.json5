@@ -62,21 +62,11 @@
       matchPackageNames: ["@types/node"],
       allowedVersions: "20.x"
     },
-    // @typescript-eslint@6 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["/^@typescript-eslint/"],
-      allowedVersions: "5.x"
-    },
     {
       // Major upgrade rollup plugins along with rollup itself.
       matchSourceUrls: ["https://github.com/rollup/{/,}**"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
-    },
-    // eslint@9 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["eslint"],
-      allowedVersions: "8.x",
     },
     // We specifically provide a first-party integration (`expressMiddleware`
     // imported from `@apollo/server/express4`) for Express v4 because it is the

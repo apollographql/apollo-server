@@ -2,10 +2,13 @@ import {
   ApolloGateway,
   IntrospectAndCompose,
   RemoteGraphQLDataSource,
-  ServiceEndpointDefinition,
+  type ServiceEndpointDefinition,
 } from '@apollo/gateway';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { IContextualizedStats, Report } from '@apollo/usage-reporting-protobuf';
+import {
+  type IContextualizedStats,
+  Report,
+} from '@apollo/usage-reporting-protobuf';
 import type { Logger } from '@apollo/utils.logger';
 import { afterEach, beforeEach, describe, expect, it } from '@jest/globals';
 import gql from 'graphql-tag';
@@ -16,7 +19,7 @@ import type { BaseContext } from '../../../externalTypes';
 import { ApolloServerPluginUsageReportingDisabled } from '../../../plugin/disabled';
 import {
   ApolloServerPluginUsageReporting,
-  ApolloServerPluginUsageReportingOptions,
+  type ApolloServerPluginUsageReportingOptions,
 } from '../../../plugin/usageReporting';
 import { startStandaloneServer } from '../../../standalone';
 import { HeaderMap } from '../../../utils/HeaderMap';

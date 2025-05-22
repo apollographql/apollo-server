@@ -48,6 +48,7 @@
     "@graphql-codegen/typescript-operations": "4.0.1",
     "@graphql-tools/mock": "9.0.0",
     "@graphql-tools/schema": "10.0.0",
+    "@jest/globals": "29.7.0",
     "@rollup/plugin-commonjs": "28.0.3",
     "@types/async-retry": "1.4.9",
     "@types/compression": "1.7.5",
@@ -66,15 +67,13 @@
     "@types/test-listen": "1.1.2",
     "@types/type-is": "1.6.7",
     "@types/whatwg-mimetype": "3.0.2",
-    "@typescript-eslint/eslint-plugin": "5.62.0",
-    "@typescript-eslint/parser": "5.62.0",
     "@vendia/serverless-express": "4.12.6",
     "awaiting": "3.0.0",
     "codecov": "3.8.3",
     "compression": "1.8.0",
     "cors": "2.8.5",
     "cspell": "9.0.2",
-    "eslint": "8.57.1",
+    "eslint": "9.27.0",
     "eslint-plugin-import": "2.31.0",
     "express": "4.21.2",
     "graphql": "16.11.0",
@@ -96,7 +95,8 @@
     "supertest": "7.1.1",
     "test-listen": "1.1.0",
     "ts-jest": "29.3.4",
-    "typescript": "5.8.3"
+    "typescript": "5.8.3",
+    "typescript-eslint": "8.32.1"
   },
   "jest": {
     "projects": [

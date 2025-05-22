@@ -5,9 +5,9 @@ import { makeHTTPRequestHeaders } from '../../../plugin/usageReporting/plugin';
 import {
   Trace,
   Report,
-  ITrace,
-  ITracesAndStats,
-  ContextualizedStats,
+  type ITrace,
+  type ITracesAndStats,
+  type ContextualizedStats,
 } from '@apollo/usage-reporting-protobuf';
 import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
@@ -16,12 +16,12 @@ import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
 import {
   ApolloServer,
-  GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestMetrics,
+  type GraphQLRequestContextDidResolveOperation,
+  type GraphQLRequestMetrics,
   HeaderMap,
 } from '../../..';
 import {
-  ApolloServerPluginUsageReportingOptions,
+  type ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting';
 import {

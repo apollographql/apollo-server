@@ -1,7 +1,7 @@
 import { describe, expect, it } from '@jest/globals';
 import commonjs from '@rollup/plugin-commonjs';
 import path from 'path';
-import { rollup, OutputOptions } from 'rollup';
+import { rollup, type OutputOptions } from 'rollup';
 
 describe('@rollup/plugin-commonjs', () => {
   it('bundles into es6 without circular dependencies issues', async () => {

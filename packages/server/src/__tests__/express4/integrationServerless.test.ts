@@ -1,12 +1,16 @@
 import cors from 'cors';
 import express, { json } from 'express';
 import http from 'http';
-import { ApolloServer, ApolloServerOptions, BaseContext } from '@apollo/server';
+import {
+  ApolloServer,
+  type ApolloServerOptions,
+  type BaseContext,
+} from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { urlForHttpServer } from '../../utils/urlForHttpServer';
 import {
   defineIntegrationTestSuite,
-  CreateServerForIntegrationTestsOptions,
+  type CreateServerForIntegrationTestsOptions,
 } from '@apollo/server-integration-testsuite';
 
 defineIntegrationTestSuite(

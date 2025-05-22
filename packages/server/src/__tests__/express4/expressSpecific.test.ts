@@ -1,7 +1,7 @@
 import express, { json } from 'express';
 import request from 'supertest';
 import compression, { filter as defaultFilter } from 'compression';
-import { ApolloServer, BaseContext } from '../../index.js';
+import { ApolloServer, type BaseContext } from '../../index.js';
 import { expressMiddleware } from '../../express4/index.js';
 import { it, expect } from '@jest/globals';
 import resolvable from '../../utils/resolvable.js';

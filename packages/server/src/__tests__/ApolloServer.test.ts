@@ -3,10 +3,10 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { describe, expect, it, jest } from '@jest/globals';
 import assert from 'assert';
 import {
-  FormattedExecutionResult,
+  type FormattedExecutionResult,
   GraphQLError,
-  GraphQLSchema,
-  TypedQueryDocumentNode,
+  type GraphQLSchema,
+  type TypedQueryDocumentNode,
   parse,
 } from 'graphql';
 import gql from 'graphql-tag';
