@@ -2,8 +2,8 @@
 
 This package serves as a set of Jest tests for Apollo Server integration
 authors. Any Node package which functions as the HTTP (or HTTP framework)
-binding and Apollo Server can run these tests to ensure parity with the 1st
-party Express integration.
+binding and Apollo Server can run these tests to ensure parity with built-in
+"standalone" implementation.
 
 > Note: this package is only intended for integration _authors_. If your project
 > _runs_ an Apollo Server instance, you probably shouldn't use this.

@@ -18,9 +18,10 @@ export interface ApolloServerPluginDrainHttpServerOptions {
 }
 
 /**
- * This plugin is used with apollo-server-express and other framework
- * integrations to drain your HTTP server on shutdown.
- * See https://www.apollographql.com/docs/apollo-server/api/plugin/drain-http-server/
+ * This plugin is used with frameworks built on Node's http.Server
+ * (`startStandaloneServer`, Express, etc) to drain your HTTP server on
+ * shutdown. See
+ * https://www.apollographql.com/docs/apollo-server/api/plugin/drain-http-server/
  * for details.
  */
 export function ApolloServerPluginDrainHttpServer(

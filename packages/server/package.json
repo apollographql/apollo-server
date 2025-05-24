@@ -23,14 +23,6 @@
       "import": "./dist/esm/errors/index.js",
       "require": "./dist/cjs/errors/index.js"
     },
-    "./express4": {
-      "types": {
-        "require": "./dist/cjs/express4/index.d.ts",
-        "default": "./dist/esm/express4/index.d.ts"
-      },
-      "import": "./dist/esm/express4/index.js",
-      "require": "./dist/cjs/express4/index.js"
-    },
     "./standalone": {
       "types": {
         "require": "./dist/cjs/standalone/index.d.ts",

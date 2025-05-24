@@ -1,6 +1,6 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
 import cors from 'cors';
-import { json } from 'body-parser';
+import bodyParser from 'body-parser';
 import http, { type IncomingMessage, type ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import { parse as urlParse } from 'url';
@@ -45,7 +45,7 @@ export async function startStandaloneServer<TContext extends BaseContext>(
 ): Promise<{ url: string }> {
   const context = options?.context ?? (async () => ({}) as TContext);
   const corsHandler = cors();
-  const jsonHandler = json({ limit: '50mb' });
+  const jsonHandler = bodyParser.json({ limit: '50mb' });
   const httpServer = http.createServer((req, res) => {
     const errorHandler = finalhandler(req, res, {
       // Use the same onerror as Express.

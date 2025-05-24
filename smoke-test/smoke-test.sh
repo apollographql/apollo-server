@@ -10,18 +10,19 @@ node smoke-test.cjs
 
 node smoke-test.mjs
 
-node smoke-test-no-express.mjs
+node smoke-test-no-standalone.mjs
 
 # Use rollup to bundle some ESM code. We want to see that the one that doesn't
-# use `@apollo/server/standalone` doesn't need to include `express`.
+# use `@apollo/server/standalone` doesn't need to include npm modules only used
+# by `startStandaloneServer` such as `body-parser`.
 ROLLUP_OUT_DIR=$(mktemp -d)
 npx rollup smoke-test.mjs --config rollup.config.mjs --silent --file "$ROLLUP_OUT_DIR"/bundle.mjs
-npx rollup smoke-test-no-express.mjs --config rollup.config.mjs --silent --file "$ROLLUP_OUT_DIR"/bundle-no-express.mjs
+npx rollup smoke-test-no-standalone.mjs --config rollup.config.mjs --silent --file "$ROLLUP_OUT_DIR"/bundle-no-standalone.mjs
 
-# Check that the bundle that uses startStandaloneServer has this string from express:
-grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle.mjs
+# Check that the bundle that uses startStandaloneServer has this string from body-parser:
+grep 'Create a middleware to parse JSON bodies' "$ROLLUP_OUT_DIR"/bundle.mjs
 # ... and that the one that doesn't, doesn't.
-! grep 'function createApplication' "$ROLLUP_OUT_DIR"/bundle-no-express.mjs
+! grep 'Create a middleware to parse JSON bodies' "$ROLLUP_OUT_DIR"/bundle-no-standalone.mjs
 
 # Nodenext needs its own special folder - for this test to exercise the case
 # we're after, we need a package.json using type: module and a bleeding edge
