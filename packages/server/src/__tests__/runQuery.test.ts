@@ -1,6 +1,6 @@
 import {
-  DocumentNode,
-  FormattedExecutionResult,
+  type DocumentNode,
+  type FormattedExecutionResult,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -11,16 +11,16 @@ import {
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import {
   ApolloServer,
-  ApolloServerOptions,
-  ApolloServerPlugin,
-  BaseContext,
-  GraphQLRequest,
-  GraphQLRequestExecutionListener,
-  GraphQLRequestListener,
-  GraphQLRequestListenerDidResolveField,
-  GraphQLRequestListenerExecutionDidEnd,
-  GraphQLRequestListenerParsingDidEnd,
-  GraphQLRequestListenerValidationDidEnd,
+  type ApolloServerOptions,
+  type ApolloServerPlugin,
+  type BaseContext,
+  type GraphQLRequest,
+  type GraphQLRequestExecutionListener,
+  type GraphQLRequestListener,
+  type GraphQLRequestListenerDidResolveField,
+  type GraphQLRequestListenerExecutionDidEnd,
+  type GraphQLRequestListenerParsingDidEnd,
+  type GraphQLRequestListenerValidationDidEnd,
   HeaderMap,
 } from '..';
 import { mockLogger } from './mockLogger';

@@ -6,6 +6,7 @@
     "outDir": "generated/tsc/variants/nodenext",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
+    "target": "ES2015",
     "esModuleInterop": true,
     "strict": true,
   },

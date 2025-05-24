@@ -15,20 +15,20 @@ import type { HeaderMap } from './HeaderMap';
 // Apollo Gateway's API included `GraphQLRequestContext` from AS2/AS3.
 // Specifically, a request context is passed to the main executor method, which
 // it then exposes to user-configurable `GraphQLDataSource`s.
-// `GraphQLRequestContext` has changed in incompatible ways in AS4; for example,
+// `GraphQLRequestContext` has changed in incompatible ways since AS4; for example,
 // we represent HTTP messages using our own data structures rather than Fetches,
 // and some fields have been removed because they relate to features that don't
 // exist any more.
 //
 // In general, the future of Apollo's development is in Apollo Router, not
 // Gateway. So rather than have a big transition where a new version of Gateway
-// supports AS4's GraphQLRequestContext instead of AS3's, we simply teach AS4
+// supports AS5's GraphQLRequestContext instead of AS3's, we simply teach AS5
 // how to produce AS3-style GraphQLRequestContext objects specifically for use
 // by Gateway. We have changed Gateway to get its TS type definitions from a new
 // package rather than from AS3 itself, so that Gateway no longer needs to
 // depend on Apollo Server.
 //
-// This function turn an AS4 GraphQLRequestContext into a
+// This function turns an AS5 GraphQLRequestContext into a
 // GatewayGraphQLRequestContext (which is basically an AS3
 // GraphQLRequestContext).
 //
@@ -49,10 +49,10 @@ import type { HeaderMap } from './HeaderMap';
 //  The only two fields not declared as readonly are `logger` and `debug`.
 //
 // Technically, a gateway implementation could set `requestContext.logger` to a
-// different Logger without breaking the TypeScript declarations. In AS4 we
+// different Logger without breaking the TypeScript declarations. In AS5 we
 // don't actually have a requestContext.logger; we have `readonly
 // requestContext.server` and `readonly server.logger`. So there's not an easy
-// way for us to carry out this change: AS4 just doesn't let gateway or plugins
+// way for us to carry out this change: AS5 just doesn't let gateway or plugins
 // override the server's logger (and generally doesn't allow the logger to
 // change after the server is created), which seems like a simpler model. If it
 // turns out there is a real use case for the gateway to be able to change the
@@ -63,14 +63,14 @@ import type { HeaderMap } from './HeaderMap';
 // `includeStacktraceInErrorResponses`. So perhaps this could be used to let you
 // decide whether or not to include the stacktrace on a per-operation basis...
 // but you can also use `formatError` or `didEncounterErrors` for this perhaps?
-// In any case, AS4 doesn't track `includeStacktraceInErrorResponses` on a
+// In any case, AS5 doesn't track `includeStacktraceInErrorResponses` on a
 // per-operation basis; if we find a use case for this we can add it later.
 //
 // So we'll just ignore changes to `logger` and `debug`.
 //
 // Next, there's `request`. We don't know of a use case for mutating the
 // *request* at execution time. If there was a real use case, we could add a
-// function that copies pieces back from the gateway `request` to the AS4
+// function that copies pieces back from the gateway `request` to the AS5
 // request, but we're not bothering to yet.
 //
 // Finally, there's `response`. Sure, the executor *could* mutate `response`.
@@ -83,48 +83,48 @@ import type { HeaderMap } from './HeaderMap';
 //
 // So all in all, it looks like it's OK for this to be a "one-way" conversion.
 export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
-  as4RequestContext: GraphQLRequestContextExecutionDidStart<TContext>,
+  newRequestContext: GraphQLRequestContextExecutionDidStart<TContext>,
   server: ApolloServer<TContext>,
   internals: ApolloServerInternals<TContext>,
 ): GatewayGraphQLRequestContext {
   const request: GatewayGraphQLRequest = {};
-  if ('query' in as4RequestContext.request) {
-    request.query = as4RequestContext.request.query;
+  if ('query' in newRequestContext.request) {
+    request.query = newRequestContext.request.query;
   }
-  if ('operationName' in as4RequestContext.request) {
-    request.operationName = as4RequestContext.request.operationName;
+  if ('operationName' in newRequestContext.request) {
+    request.operationName = newRequestContext.request.operationName;
   }
-  if ('variables' in as4RequestContext.request) {
-    request.variables = as4RequestContext.request.variables;
+  if ('variables' in newRequestContext.request) {
+    request.variables = newRequestContext.request.variables;
   }
-  if ('extensions' in as4RequestContext.request) {
-    request.extensions = as4RequestContext.request.extensions;
+  if ('extensions' in newRequestContext.request) {
+    request.extensions = newRequestContext.request.extensions;
   }
-  if (as4RequestContext.request.http) {
-    const as4http = as4RequestContext.request.http;
+  if (newRequestContext.request.http) {
+    const newHttp = newRequestContext.request.http;
     const needQuestion =
-      as4http.search !== '' && !as4http.search.startsWith('?');
+      newHttp.search !== '' && !newHttp.search.startsWith('?');
     request.http = {
-      method: as4http.method,
+      method: newHttp.method,
       // As of AS4, we no longer attempt to track complete URLs (just the search
       // parameters used in GET requests). So we have to fake them for Gateway.
       url: `https://unknown-url.invalid/${needQuestion ? '?' : ''}${
-        as4http.search
+        newHttp.search
       }`,
-      headers: new FetcherHeadersForHeaderMap(as4http.headers),
+      headers: new FetcherHeadersForHeaderMap(newHttp.headers),
     };
   }
 
   const response: GatewayGraphQLResponse = {
     http: {
       headers: new FetcherHeadersForHeaderMap(
-        as4RequestContext.response.http.headers,
+        newRequestContext.response.http.headers,
       ),
       get status() {
-        return as4RequestContext.response.http.status;
+        return newRequestContext.response.http.status;
       },
       set status(newStatus) {
-        as4RequestContext.response.http.status = newStatus;
+        newRequestContext.response.http.status = newStatus;
       },
     },
     // We leave off `body` because it hasn't been set yet.
@@ -134,31 +134,31 @@ export function makeGatewayGraphQLRequestContext<TContext extends BaseContext>(
     request,
     response,
     logger: server.logger,
-    schema: as4RequestContext.schema,
+    schema: newRequestContext.schema,
     // For the sake of typechecking, we still provide this field, but we don't
     // calculate it. If somebody really needs it in their gateway
     // implementation, they're welcome to copy
     // https://github.com/apollographql/apollo-server/blob/3f218e78/packages/apollo-server-core/src/utils/schemaHash.ts
     // into their code.
     schemaHash:
-      'schemaHash no longer exists in Apollo Server 4' as GatewaySchemaHash,
-    context: as4RequestContext.contextValue,
+      'schemaHash no longer exists since Apollo Server 4' as GatewaySchemaHash,
+    context: newRequestContext.contextValue,
     cache: server.cache,
-    queryHash: as4RequestContext.queryHash,
-    document: as4RequestContext.document,
-    source: as4RequestContext.source,
-    operationName: as4RequestContext.operationName,
-    operation: as4RequestContext.operation,
-    errors: as4RequestContext.errors,
-    metrics: as4RequestContext.metrics,
+    queryHash: newRequestContext.queryHash,
+    document: newRequestContext.document,
+    source: newRequestContext.source,
+    operationName: newRequestContext.operationName,
+    operation: newRequestContext.operation,
+    errors: newRequestContext.errors,
+    metrics: newRequestContext.metrics,
     debug: internals.includeStacktraceInErrorResponses,
-    overallCachePolicy: as4RequestContext.overallCachePolicy,
-    requestIsBatched: as4RequestContext.requestIsBatched,
+    overallCachePolicy: newRequestContext.overallCachePolicy,
+    requestIsBatched: newRequestContext.requestIsBatched,
   };
 }
 
 // An implementation of the W3C-style headers class used by Gateway (and AS3),
-// backed by AS4's HeaderMap. Changes are written directly to the HeaderMap, so
+// backed by AS5's HeaderMap. Changes are written directly to the HeaderMap, so
 // any concurrent writes to the underlying HeaderMap (eg from a plugin) can be
 // seen immediately by the gateway and vice versa.
 class FetcherHeadersForHeaderMap implements FetcherHeaders {

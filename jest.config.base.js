@@ -23,4 +23,5 @@ export default {
     // Ignore '.js' at the end of imports; part of ESM support.
     '^(\\.{1,2}/.*)\\.js$': '$1',
   },
+  prettierPath: createRequire(import.meta.url).resolve('prettier-2'),
 };

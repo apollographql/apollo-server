@@ -1,7 +1,6 @@
 import type { Logger } from '@apollo/utils.logger';
 import retry from 'async-retry';
 import { subscribe, type ExecutionResult, type GraphQLError } from 'graphql';
-import fetch, { type Response } from 'node-fetch';
 import { ensureError, ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import { HeaderMap } from '../../utils/HeaderMap.js';

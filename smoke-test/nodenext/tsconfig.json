@@ -4,8 +4,8 @@
     "outDir": "./dist",
     "module": "NodeNext",
     "moduleResolution": "nodenext",
-    "target": "es2020",
-    "lib": ["es2020"],
+    "target": "es2021",
+    "lib": ["es2021"],
     "types": ["node"]
   }
 }

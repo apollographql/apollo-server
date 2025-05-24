@@ -1,7 +1,7 @@
 import { buildSchema } from 'graphql';
 import {
   makeExecutableSchema,
-  IExecutableSchemaDefinition,
+  type IExecutableSchemaDefinition,
 } from '@graphql-tools/schema';
 import { addMocksToSchema } from '@graphql-tools/mock';
 
