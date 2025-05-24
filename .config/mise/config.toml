@@ -8,7 +8,7 @@
 # want to use a slightly more modern npm. Listing it before "node" means we'll
 # actually use it instead of the version that comes with node.
 "npm:npm" = "9.9.4"
-node = "22.15.1"
+node = "22.16.0"
 
 [env]
 # Put binaries from npm-installed packages on PATH (eg `changeset`).
