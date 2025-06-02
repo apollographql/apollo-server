@@ -15,26 +15,8 @@
   `@apollo/server-integration-testsuite`, causing the "lockstep versioning" test
   to fail.
 
-- Updated dependencies []:
+- Updated dependencies:
   - @apollo/server@4.12.2
-
-## 4.12.2-alpha.0
-
-### Patch Changes
-
-- [#8070](https://github.com/apollographql/apollo-server/pull/8070) [`0dee3c9`](https://github.com/apollographql/apollo-server/commit/0dee3c93254507190f2548dec52fd4101d2175d1) Thanks [@glasser](https://github.com/glasser)! - Provide dual-build CJS and ESM for `@apollo/server-integration-testsuite`.
-
-  We previously provided only a CJS build of this package, unlike `@apollo/server`
-  itself and the other helper packages that come with it. We may make all of
-  Apollo Server ESM-only in AS5; this is a step in that direction. Specifically,
-  only providing this package for CJS makes it challenging to run the tests in
-  `ts-jest` in some ESM-only setups, because the copy of `@apollo/server` fetched
-  directly in your ESM-based test may differ from the copy fetched indirectly via
-  `@apollo/server-integration-testsuite`, causing the "lockstep versioning" test
-  to fail.
-
-- Updated dependencies []:
-  - @apollo/server@4.12.2-alpha.0
 
 ## 4.12.1
 
