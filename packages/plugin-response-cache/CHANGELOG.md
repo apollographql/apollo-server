@@ -1,12 +1,5 @@
 # @apollo/server-plugin-response-cache
 
-## 4.1.5-alpha.0
-
-### Patch Changes
-
-- Updated dependencies []:
-  - @apollo/server@4.12.2-alpha.0
-
 ## 4.1.4
 
 ### Patch Changes

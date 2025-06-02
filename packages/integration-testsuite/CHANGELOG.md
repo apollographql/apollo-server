@@ -1,6 +1,6 @@
 # @apollo/server-integration-testsuite
 
-## 4.12.2-alpha.0
+## 4.12.2
 
 ### Patch Changes
 
@@ -15,8 +15,8 @@
   `@apollo/server-integration-testsuite`, causing the "lockstep versioning" test
   to fail.
 
-- Updated dependencies []:
-  - @apollo/server@4.12.2-alpha.0
+- Updated dependencies:
+  - @apollo/server@4.12.2
 
 ## 4.12.1
 
