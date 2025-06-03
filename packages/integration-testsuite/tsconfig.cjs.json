@@ -1,16 +1,7 @@
 {
-  "extends": "../../tsconfig.base",
+  "extends": ".",
   "compilerOptions": {
     "module": "commonjs",
-    "moduleResolution": "node",
-    "esModuleInterop": true,
-    "rootDir": "./src",
-    "outDir": "./dist",
-    "lib": ["es2021"]
-  },
-  "include": ["src/**/*"],
-  "references": [
-    { "path": "../cache-control-types"},
-    { "path": "../server" },
-  ],
+    "outDir": "./dist/cjs",
+  }
 }

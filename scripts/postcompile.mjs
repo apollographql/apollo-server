@@ -14,6 +14,7 @@ import { writeFileSync } from 'fs';
 const packages = [
   { dir: 'cache-control-types' },
   { dir: 'gateway-interface' },
+  { dir: 'integration-testsuite' },
   { dir: 'plugin-response-cache' },
   { dir: 'server' },
   { dir: 'usage-reporting-protobuf', outDir: 'generated' },
