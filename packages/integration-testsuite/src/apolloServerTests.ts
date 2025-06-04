@@ -360,9 +360,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
-            /got invalid value 2; String cannot represent a non string value: 2/,
-          );
+          expect([
+            // graphql v16
+            `Variable "$x" got invalid value 2; String cannot represent a non string value: 2`,
+            // graphql v17
+            'Variable "$x" has invalid value: String cannot represent a non string value: 2',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -382,9 +385,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of required type "String!" was not provided.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected a value of non-null type "String!" to be provided.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -404,9 +410,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of required type "[String]!" was not provided.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected a value of non-null type "[String]!" to be provided.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -427,9 +436,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of non-null type "String!" must not be null.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected value of non-null type "String!" not to be null.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -450,9 +462,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of non-null type "[String]!" must not be null.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected value of non-null type "[String]!" not to be null.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -473,10 +488,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toBe(
+          expect([
+            // graphql v16
             `Variable "$x" got invalid value null at "x[0]"; ` +
               `Expected non-nullable type "String!" not to be null.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value at [0]: Expected value of non-null type "String!" not to be null.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -509,23 +527,17 @@ export function defineIntegrationTestSuiteApolloServerTests(
             query: `query ($x:CustomScalar) {hello(x:$x)}`,
             variables: { x: 'foo' },
           });
-          expect(result).toMatchInlineSnapshot(`
+          expect(result.errors).toHaveLength(1);
+          expect([
+            // graphql v16
+            'Variable "$x" got invalid value "foo"; Something bad happened',
+            // graphql v17
+            'Variable "$x" has invalid value: Something bad happened',
+          ]).toContain(result.errors[0].message);
+          expect(result.errors[0].extensions).toMatchInlineSnapshot(`
             {
-              "errors": [
-                {
-                  "extensions": {
-                    "code": "BAD_USER_INPUT",
-                    "custom": "foo",
-                  },
-                  "locations": [
-                    {
-                      "column": 8,
-                      "line": 1,
-                    },
-                  ],
-                  "message": "Variable "$x" got invalid value "foo"; Something bad happened",
-                },
-              ],
+              "code": "BAD_USER_INPUT",
+              "custom": "foo",
             }
           `);
         });
@@ -559,23 +571,17 @@ export function defineIntegrationTestSuiteApolloServerTests(
             query: `query ($x:CustomScalar) {hello(x:$x)}`,
             variables: { x: 'foo' },
           });
-          expect(result).toMatchInlineSnapshot(`
+          expect(result.errors).toHaveLength(1);
+          expect([
+            // graphql v16
+            'Variable "$x" got invalid value "foo"; Something bad happened',
+            // graphql v17
+            'Variable "$x" has invalid value: Something bad happened',
+          ]).toContain(result.errors[0].message);
+          expect(result.errors[0].extensions).toMatchInlineSnapshot(`
             {
-              "errors": [
-                {
-                  "extensions": {
-                    "code": "CUSTOMIZED",
-                    "custom": "foo",
-                  },
-                  "locations": [
-                    {
-                      "column": 8,
-                      "line": 1,
-                    },
-                  ],
-                  "message": "Variable "$x" got invalid value "foo"; Something bad happened",
-                },
-              ],
+              "code": "CUSTOMIZED",
+              "custom": "foo",
             }
           `);
         });

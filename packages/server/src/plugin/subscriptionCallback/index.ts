@@ -1,5 +1,6 @@
 import type { Logger } from '@apollo/utils.logger';
 import retry from 'async-retry';
+import { setImmediate } from 'node:timers/promises';
 import { subscribe, type ExecutionResult, type GraphQLError } from 'graphql';
 import { ensureError, ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
@@ -185,6 +186,10 @@ export function ApolloServerPluginSubscriptionCallback(
             'Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals',
           );
           await subscriptionManager.cleanup();
+          // This setImmediate makes the precise timing of the log line below
+          // consistent between when we run our test suite with GraphQL.js v16
+          // and v17.0.0-alpha.8.
+          await setImmediate();
           logger?.debug(
             'Successfully cleaned up outstanding subscriptions and heartbeat intervals.',
           );

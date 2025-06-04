@@ -184,8 +184,8 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         "SubscriptionManager[1234-cats]: Subscription completed without errors",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
@@ -289,8 +289,8 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: Sending \`complete\` request to router",
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
-        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         "SubscriptionManager[1234-cats]: Subscription completed without errors",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
@@ -406,8 +406,8 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         "SubscriptionManager[1234-cats]: Subscription completed without errors",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
@@ -524,8 +524,8 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[1234-cats]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 1234-cats",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url.com",
-        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         "SubscriptionManager[1234-cats]: Subscription completed without errors",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
@@ -692,8 +692,8 @@ describe('SubscriptionCallbackPlugin', () => {
         "SubscriptionManager[5678-dogs]: \`complete\` request successful",
         "SubscriptionManager: Terminating subscriptions for ID: 5678-dogs",
         "SubscriptionManager: Terminating heartbeat interval for http://mock-router-url-2.com",
-        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
         "SubscriptionManager[5678-dogs]: Subscription completed without errors",
+        "SubscriptionCallback: Successfully cleaned up outstanding subscriptions and heartbeat intervals.",
       ]
     `);
   });
