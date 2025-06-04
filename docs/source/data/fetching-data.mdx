@@ -219,18 +219,18 @@ const resolvers = {
 
 Apollo Server 3 contained [an abstract class named `DataSource`](/apollo-server/v3/data/data-sources) that each of your data sources could subclass. You'd then initialize each of your `DataSource` subclasses using a special `dataSources` function, which attaches your data sources to your `context` behind the scenes.
 
-In Apollo Server 4, you can now create your data sources in the same `context` function as the rest of your per-request setup, **avoiding** the `DataSource` superclass entirely. We recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
+Since Apollo Server 4, you can now create your data sources in the same `context` function as the rest of your per-request setup, **avoiding** the `DataSource` superclass entirely. We recommend [making a custom class for each data source](#creating-data-source-classes), with each class best suited for that particular source of data.
 
 ### Modern data sources
 
-Apollo maintains the following open-source data source for Apollo Server 4:
+Apollo maintains the following open-source data source for Apollo Server 4+:
 
 <!-- prettier-ignore -->
 | Class | Examples | For Use With |
 | --- | --- | --- |
 | [`RESTDataSource`](https://github.com/apollographql/datasource-rest) | [See Fetching Rest](./fetching-rest)|  HTTP/REST APIs |
 
-The community maintains the following open-source data sources for Apollo Server 4:
+The community maintains the following open-source data sources for Apollo Server 4+:
 
 <!-- prettier-ignore -->
 | Class | Source | For Use With |
@@ -240,7 +240,7 @@ The community maintains the following open-source data sources for Apollo Server
 
 ### Legacy data source classes
 
-> ⚠️ **Note**: The community built each data source package below for use with Apollo Server 3. [As shown below](#using-datasource-subclasses), you can still use these packages in Apollo Server 4 with a bit of extra setup.
+> ⚠️ **Note**: The community built each data source package below for use with Apollo Server 3. [As shown below](#using-datasource-subclasses), you can still use these packages in Apollo Server 4+ with a bit of extra setup.
 
 The below data source implementations extend the generic [`DataSource` abstract class](https://github.com/apollographql/apollo-server/blob/main/packages/apollo-datasource/src/index.ts), from the deprecated `apollo-datasource` package. Subclasses of `DataSource` define the logic required to communicate with a particular store or API.
 
@@ -260,7 +260,7 @@ The larger community maintains the following open-source implementations:
 
 In Apollo Server 3, immediately after constructing each `DataSource` subclass, your server would invoke the `initialize({ cache, context })` method on each new `DataSource` behind the scenes.
 
-To replicate this in Apollo Sever 4, you can manually invoke the `initialize` method in the constructor function of each `DataSource` subclass, like so:
+To replicate this in Apollo Server 4+, you can manually invoke the `initialize` method in the constructor function of each `DataSource` subclass, like so:
 
 <MultiCodeBlock>
 

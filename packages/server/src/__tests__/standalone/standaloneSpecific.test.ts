@@ -1,5 +1,4 @@
 import { describe, expect, it } from '@jest/globals';
-import fetch from 'node-fetch';
 import { ApolloServer } from '../..';
 import { startStandaloneServer } from '../../standalone';
 
@@ -135,9 +134,16 @@ describe('Configuration', () => {
       },
       body: excessivelyLargeBody,
     });
-    const { data } = await result.json();
+    const body = await result.json();
+    if (typeof body !== 'object' || !body) {
+      throw Error(`body has wrong type ${typeof body}`);
+    }
+    if (!('data' in body)) {
+      throw Error('body lacks data');
+    }
 
-    expect(data.hello).toEqual('hello world!');
+    const { data } = body;
+    expect(data).toEqual({ hello: 'hello world!' });
 
     await server.stop();
   });

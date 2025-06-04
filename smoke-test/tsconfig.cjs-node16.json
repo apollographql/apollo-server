@@ -6,6 +6,7 @@
     "outDir": "generated/tsc/variants/node16",
     "module": "Node16",
     "moduleResolution": "Node16",
+    "target": "ES2015",
     "esModuleInterop": true,
     "strict": true,
   },

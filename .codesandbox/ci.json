@@ -9,5 +9,5 @@
     "packages/usage-reporting-protobuf"
   ],
   "sandboxes": ["apollo-server-typescript-3opde","apollo-server"],
-  "node": "18"
+  "node": "20"
 }

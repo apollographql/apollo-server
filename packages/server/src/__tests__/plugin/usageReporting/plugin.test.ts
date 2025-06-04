@@ -5,9 +5,9 @@ import { makeHTTPRequestHeaders } from '../../../plugin/usageReporting/plugin';
 import {
   Trace,
   Report,
-  ITrace,
-  ITracesAndStats,
-  ContextualizedStats,
+  type ITrace,
+  type ITracesAndStats,
+  type ContextualizedStats,
 } from '@apollo/usage-reporting-protobuf';
 import { pluginsEnabledForSchemaResolvers } from '../../../utils/schemaInstrumentation';
 import nock from 'nock';
@@ -16,22 +16,26 @@ import { mockRandom, resetMockRandom } from 'jest-mock-random';
 import { gunzipSync } from 'zlib';
 import {
   ApolloServer,
-  GraphQLRequestContextDidResolveOperation,
-  GraphQLRequestMetrics,
+  type GraphQLRequestContextDidResolveOperation,
+  type GraphQLRequestMetrics,
   HeaderMap,
 } from '../../..';
 import {
-  ApolloServerPluginUsageReportingOptions,
+  type ApolloServerPluginUsageReportingOptions,
   ApolloServerPluginUsageReporting,
 } from '../../../plugin/usageReporting';
 import {
   ApolloServerPluginCacheControlDisabled,
   ApolloServerPluginUsageReportingDisabled,
 } from '../../../plugin/disabled';
-import { describe, it, expect, afterEach } from '@jest/globals';
+import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
+import { nockAfterEach, nockBeforeEach } from '../../nockAssertions';
 
 const quietLogger = loglevel.getLogger('quiet');
 quietLogger.setLevel(loglevel.levels.WARN);
+
+beforeEach(nockBeforeEach);
+afterEach(nockAfterEach);
 
 describe('end-to-end', () => {
   async function runTest({
