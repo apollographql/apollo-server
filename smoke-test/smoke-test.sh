@@ -61,8 +61,8 @@ node generated/tsc/smoke-test.mjs
 # This runs into some weird issues when we install the graphql@17 canary that
 # seems to just be about ending up with two copies of `graphql` installed at
 # different levels. For simplicity, we skip this part of the test in the canary
-# job. Once graphql@17.0.0 is out we should be able to de-conditional this.
-if [[ -z "${INCREMENTAL_DELIVERY_TESTS_ENABLED:-}" ]]; then
+# jobs. Once graphql@17.0.0 is out we should be able to de-conditional this.
+if [[ -z "${GRAPHQL_JS_VERSION:-}" ]]; then
   pushd gateway-compatibility
     for version in 2.0.0 2.0.5 2.x; do
       npm i --no-save --no-engine-strict "@apollo/gateway@$version"

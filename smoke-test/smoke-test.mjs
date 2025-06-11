@@ -16,7 +16,11 @@ await import('@apollo/server/standalone');
 
 const s = new ApolloServer({
   typeDefs: `
-  directive @defer(if: Boolean! = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+  ${
+    process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED
+      ? 'directive @defer(if: Boolean! = true, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT'
+      : ''
+  }
   type Query {hello:String}
 `,
   resolvers: {

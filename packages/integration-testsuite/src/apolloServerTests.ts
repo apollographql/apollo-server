@@ -971,13 +971,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
             > = {},
             constructorOptions: Partial<CreateServerForIntegrationTests> = {},
             plugins: ApolloServerPlugin<BaseContext>[] = [],
+            includeDeferDirective: boolean = false,
           ) => {
             uri = await createServerAndGetUrl({
               typeDefs: gql`
-                directive @defer(
-                  if: Boolean! = true
-                  label: String
-                ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+                ${includeDeferDirective
+                  ? `
+                  directive @defer(
+                    if: Boolean! = true
+                    label: String
+                  ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+                `
+                  : ''}
 
                 enum CacheControlScope {
                   PUBLIC
@@ -1178,7 +1183,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
             'includes all fields with defer',
             async () => {
-              await setupApolloServerAndFetchPair();
+              await setupApolloServerAndFetchPair({}, {}, [], true);
               const response = await fetch(uri, {
                 method: 'POST',
                 headers: {
