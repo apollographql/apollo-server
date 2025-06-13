@@ -18,10 +18,10 @@ npm i
 
 # Now install the tarballs we made (but don't write their paths to package.json).
 # And also install a graphql prerelease if we need to.
-if [[ -n "${INCREMENTAL_DELIVERY_TESTS_ENABLED:-}" ]]; then
+if [[ -n "${GRAPHQL_JS_VERSION:-}" ]]; then
   npm i --no-save --legacy-peer-deps \
     "$TARBALL_DIR"/*.tgz \
-    graphql@17.0.0-alpha.2
+    "graphql@${GRAPHQL_JS_VERSION}"
 else
   npm i --no-save "$TARBALL_DIR"/*.tgz
 fi

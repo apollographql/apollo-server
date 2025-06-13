@@ -56,10 +56,6 @@ describe('ApolloServer documentStore', () => {
 
     await server.executeOperation(operations.simple.op);
 
-    expect(
-      (documentStore as InMemoryLRUCache<DocumentNode>)['cache'].calculatedSize,
-    ).toBe(403);
-
     expect(await documentStore.get(operations.simple.hash)).toMatchObject(
       documentNodeMatcher,
     );

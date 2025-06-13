@@ -4,7 +4,6 @@ import type {
 } from './index.js';
 import { afterAll, beforeAll, describe, test } from '@jest/globals';
 import { serverAudits } from 'graphql-http';
-import fetch from 'node-fetch';
 
 export function defineIntegrationTestSuiteHttpSpecTests(
   createServer: CreateServerForIntegrationTests,

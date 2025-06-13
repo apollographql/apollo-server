@@ -8,6 +8,7 @@ import type {
   SchemaReportMutationVariables,
 } from '../../../plugin/schemaReporting/generated/operations';
 import { describe, it, expect, beforeEach, afterEach } from '@jest/globals';
+import { nockAfterEach, nockBeforeEach } from '../../nockAssertions';
 
 function mockReporterRequest(
   url: any,
@@ -27,15 +28,8 @@ function mockReporterRequest(
   return request.reply(status, { data: { reportSchema } });
 }
 
-beforeEach(() => {
-  if (!nock.isActive()) nock.activate();
-});
-
-afterEach(() => {
-  expect(nock.isDone()).toBeTruthy();
-  nock.cleanAll();
-  nock.restore();
-});
+beforeEach(nockBeforeEach);
+afterEach(nockAfterEach);
 
 const schemaReport = {
   bootId: 'string',
