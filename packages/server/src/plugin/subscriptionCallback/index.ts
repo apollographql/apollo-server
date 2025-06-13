@@ -1,7 +1,8 @@
+import { type FetcherResponse, type Fetcher } from '@apollo/utils.fetcher';
 import type { Logger } from '@apollo/utils.logger';
 import retry from 'async-retry';
-import { setImmediate } from 'node:timers/promises';
 import { subscribe, type ExecutionResult, type GraphQLError } from 'graphql';
+import { setImmediate } from 'node:timers/promises';
 import { ensureError, ensureGraphQLError } from '../../errorNormalize.js';
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import { HeaderMap } from '../../utils/HeaderMap.js';
@@ -10,6 +11,10 @@ export interface ApolloServerPluginSubscriptionCallbackOptions {
   maxConsecutiveHeartbeatFailures?: number;
   logger?: Logger;
   retry?: retry.Options;
+  /**
+   * Specifies which Fetch API implementation to use for the callback URL.
+   */
+  fetcher?: Fetcher;
 }
 
 export function ApolloServerPluginSubscriptionCallback(
@@ -230,6 +235,7 @@ class SubscriptionManager {
       subscription?: SubscriptionObject;
     }
   > = new Map();
+  private fetcher: Fetcher;
 
   constructor(options: ApolloServerPluginSubscriptionCallbackOptions) {
     this.maxConsecutiveHeartbeatFailures =
@@ -243,6 +249,7 @@ class SubscriptionManager {
     this.logger = options.logger
       ? prefixedLogger(options.logger, 'SubscriptionManager')
       : undefined;
+    this.fetcher = options.fetcher ?? fetch;
   }
 
   async retryFetch({
@@ -262,16 +269,16 @@ class SubscriptionManager {
     errors?: readonly GraphQLError[];
     headers?: Record<string, string>;
   }) {
-    let response: Promise<Response> | undefined;
+    let response: Promise<FetcherResponse> | undefined;
     try {
       const maybeWithErrors = errors?.length ? ` with errors` : '';
       this.logger?.debug(
         `Sending \`${action}\` request to router` + maybeWithErrors,
         id,
       );
-      return retry<Response, Error>(
+      return retry<FetcherResponse, Error>(
         async (bail) => {
-          response = fetch(url, {
+          response = this.fetcher(url, {
             method: 'POST',
             headers: {
               'content-type': 'application/json',
@@ -390,7 +397,7 @@ class SubscriptionManager {
 
     let consecutiveHeartbeatFailureCount = 0;
     const heartbeatInterval = setInterval(async () => {
-      let heartbeatRequest: Promise<Response> | undefined;
+      let heartbeatRequest: Promise<FetcherResponse> | undefined;
 
       // XXX since we're on an interval, it's possible a heartbeat goes out
       // before the previous heartbeat has finished. It seems reasonable to
@@ -430,7 +437,7 @@ class SubscriptionManager {
           `Sending \`check\` request to ${callbackUrl} for ID: ${id}`,
         );
 
-        heartbeatRequest = fetch(callbackUrl, {
+        heartbeatRequest = this.fetcher(callbackUrl, {
           method: 'POST',
           body: JSON.stringify({
             kind: 'subscription',
