@@ -365,7 +365,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ? { ttl: internals.persistedQueries?.ttl }
           : undefined,
       ),
-    ).catch(server.logger.warn);
+    ).catch(server.logger.warn.bind(server.logger));
   }
 
   const responseFromPlugin = await invokeHooksUntilDefinedAndNonNull(
