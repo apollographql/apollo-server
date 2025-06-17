@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist/esm",
-    "lib": ["es2021"],
+    "lib": ["es2023"],
   },
   "include": ["src/**/*"],
   "references": [
