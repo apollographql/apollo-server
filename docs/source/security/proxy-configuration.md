@@ -19,11 +19,13 @@ You can use the following environment variables to configure the proxy:
 
 - `HTTPS_PROXY`
 
-  Defines where HTTPS traffic (i.e. encrypted SSL/TLS traffic) is proxied. If this is not set, HTTPS traffic will route through the HTTP proxy.
+  The URL where HTTPS traffic (i.e. encrypted SSL/TLS traffic) is proxied. If this is not set, HTTPS traffic will route through the HTTP proxy.
 
 - `NO_PROXY`
 
-  A list of domains that should be excluded from being proxied.
+  A comma-separated list of domains that should be excluded from being proxied. For example `'*.foo.com,10.0.1.100,baz.com'
+
+If you are using AS4, the environment variables need to be prefixed with `GLOBAL_AGENT_` (for example, `GLOBAL_AGENT_HTTP_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY` and `GLOBAL_AGENT_NO_PROXY`).
 
 To enable the use of these environment variables, refer to the sections below for instructions specific to your Apollo Server and Node.js versions.
 
@@ -88,7 +90,7 @@ const server = new ApolloServer({
 });
 ```
 
-You can configure the proxy with the `GLOBAL_AGENT_HTTP_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY`, and `GLOBAL_AGENT_NO_PROXY` environment variables, which work identically to the environment variables defined above, _without_ the `GLOBAL_AGENT_` prefix.
+You can configure the proxy with the `GLOBAL_AGENT_HTTP_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY`, and `GLOBAL_AGENT_NO_PROXY` environment variables, which work identically to the environment variables defined above.
 
 If you would prefer to use environment variable names without the `GLOBAL_AGENT_` prefix (e.g., if `HTTP_PROXY` is already set in your environment), you can set the `GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE` environment variable to an empty string.
 
