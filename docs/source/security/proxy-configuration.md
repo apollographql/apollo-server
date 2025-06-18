@@ -7,21 +7,11 @@ Certain features require Apollo Server to make outgoing requests to Apollo Graph
 
 You can override the `fetcher` function these plugins use to make HTTP requests. This page assumes you're using the default fetcher. If you're overriding the fetcher, check the documentation for the implementation of `fetch` you've selected to learn how it supports HTTP proxies.
 
-We recommend using environment variables to configure Node.js and HTTP proxy settings. See the sections below for instructions specific to your Apollo Server and Node.js versions.
+We recommend using environment variables to configure Node.js and HTTP proxy settings.
 
-## Configuring AS5 with Node.js v24+ (recommended)
+## Proxy configuration variables
 
-By default, Apollo Server v5 uses [the Node.js built-in `fetch` implementation](https://nodejs.org/api/globals.html#fetch) to make outgoing requests to Apollo GraphOS (for Usage Reporting and Schema Reporting) and to your GraphOS Router (for Subscription Callback).
-
- If you are using Node.js v24 or newer, this implementation has built-in support for configuring your HTTP proxy via environment variables. You can enable this using the [`NODE_USE_ENV_PROXY` environment variable](https://nodejs.org/api/cli.html#node_use_env_proxy1).
-
-```bash
-NODE_USE_ENV_PROXY=1
-```
-
-### Environment variables to configure the proxy
-
-You can use these standard environment variables to configure the proxy:
+You can use the following environment variables to configure the proxy:
 
 - `HTTP_PROXY`
 
@@ -35,6 +25,19 @@ You can use these standard environment variables to configure the proxy:
 
   A list of domains that should be excluded from being proxied.
 
+To enable the use of these environment variables, refer to the sections below for instructions specific to your Apollo Server and Node.js versions.
+
+## Configuring AS5 with Node.js v24+ (recommended)
+
+By default, Apollo Server v5 uses [the Node.js built-in `fetch` implementation](https://nodejs.org/api/globals.html#fetch).
+
+If you are using Node.js v24 or newer, this implementation has built-in support for configuring your HTTP proxy via environment variables. You can enable this using the [`NODE_USE_ENV_PROXY` environment variable](https://nodejs.org/api/cli.html#node_use_env_proxy1).
+
+```bash
+NODE_USE_ENV_PROXY=1
+```
+
+You can now use the proxy configuration variables defined above.
 
 ## Configuring AS5 with Node.js v20 or v22
 
@@ -54,8 +57,7 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 setGlobalDispatcher(new EnvHttpProxyAgent());
 ```
 
-You can now configure Apollo Server with the `HTTP_PROXY`, `HTTPS_PROXY`, and `NO_PROXY` environment variables, as documented above. You do not have to set `NODE_USE_ENV_PROXY`.
-
+You can now use the proxy configuration variables defined above.
 
 ## Configuring AS4
 
@@ -86,9 +88,15 @@ const server = new ApolloServer({
 });
 ```
 
-You can configure the proxy with the `GLOBAL_AGENT_HTTP_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY`, and `GLOBAL_AGENT_NO_PROXY` environment variables, which work identically to the environment variables documented above without the `GLOBAL_AGENT_` prefix.
+You can configure the proxy with the `GLOBAL_AGENT_HTTP_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY`, and `GLOBAL_AGENT_NO_PROXY` environment variables, which work identically to the environment variables defined above, _without_ the `GLOBAL_AGENT_` prefix.
 
 If you would prefer to use environment variable names without the `GLOBAL_AGENT_` prefix (e.g., if `HTTP_PROXY` is already set in your environment), you can set the `GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE` environment variable to an empty string.
+
+```
+GLOBAL_AGENT_ENVIRONMENT_VARIABLE_NAMESPACE=""
+```
+
+You can now use the proxy configuration variables defined above.
 
 ## Specifying a custom SSL/TLS certificate
 
@@ -97,7 +105,7 @@ Depending on the proxy communication, it may be necessary to extend the default 
 This can be done [via Node.js' `NODE_EXTRA_CA_CERTS` environment variable](https://nodejs.org/api/cli.html#cli_node_extra_ca_certs_file):
 
 1. The appropriate certificate (i.e. PEM file) must be present on the file-system where the server is running.
-2. Start the server with the `NODE_EXTRA_CA_CERTS` environment variable set to that path, combined with the existing proxy configuration variables defined above:
+2. Start the server with the `NODE_EXTRA_CA_CERTS` environment variable set to that path, combined with the proxy configuration variables defined above.
 
 ```shell
 $ NODE_EXTRA_CA_CERTS=/full/path/to/certificate.pem \
