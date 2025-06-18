@@ -23,7 +23,7 @@ You can use the following environment variables to configure the proxy:
 
 - `NO_PROXY`
 
-  A comma-separated list of domains that should be excluded from being proxied. For example `'*.foo.com,10.0.1.100,baz.com'
+  A comma-separated list of domains that should be excluded from being proxied. For example `'*.foo.com,10.0.1.100,baz.com'`
 
 If you are using AS4, the environment variables need to be prefixed with `GLOBAL_AGENT_` (for example, `GLOBAL_AGENT_HTTP_PROXY`, `GLOBAL_AGENT_HTTPS_PROXY` and `GLOBAL_AGENT_NO_PROXY`).
 
