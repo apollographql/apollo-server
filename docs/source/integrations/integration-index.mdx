@@ -12,8 +12,6 @@ If you need more control over how your GraphQL server speaks HTTP, you should in
 
 Apollo maintains an [integration](../api/express-middleware) between Apollo Server and [Express](https://expressjs.com/), the most popular Node.js web framework. The integration with Express v4 is published as [`@as-integrations/express4`](https://www.npmjs.com/package/@as-integrations/express), and the integration with Express v5 is published as [`@as-integrations/express5`](https://www.npmjs.com/package/@as-integrations/express5). Both packages export the function [`expressMiddleware`](../api/express-middleware).
 
-> The Express v4 integration is also included in the main `@apollo/server` package, exported from `@apollo/server/express4`. Its behavior is identical to the `@as-integrations/express4`. Express v5 is only supported by the external package. (A future major version of Apollo Server will remove `@apollo/server/express4`.) FIXME this and friends
-
 > Have you built, or are you maintaining, an Apollo Server integration that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/integrations/integration-index.mdx) to be added to this list!
 
 The larger community maintains the following open-source integrations for Apollo Server:
