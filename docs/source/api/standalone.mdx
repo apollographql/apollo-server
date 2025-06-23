@@ -9,7 +9,7 @@ This API reference documents the `startStandaloneServer` function.
 
 ## Overview
 
-This `startStandaloneServer` function helps you get started with Apollo Server quickly. This function is recommended for all projects that don't require serverless support or a particular Node.js framework (such as Fastify). Under the hood, the `startStandaloneServer` function uses Apollo Server 4's Express integration (i.e., [`expressMiddleware`](./express-middleware)). FIXME no it doesn't
+This `startStandaloneServer` function helps you get started with Apollo Server quickly. This function is recommended for all projects that don't require serverless support or a particular Node.js framework (such as Fastify).
 
 Because it sets helpful defaults, this function is less configurable than other Apollo Server integrations. Complex projects might eventually need to [swap to using `expressMiddleware`](#swapping-to-expressmiddleware) (this process is straightforward).
 
@@ -98,7 +98,6 @@ Below is a full example of setting up `startStandaloneServer`:
 <MultiCodeBlock>
 
 ```ts
-// npm install @apollo/server graphql
 import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import { typeDefs, resolvers } from './schema';
@@ -163,7 +162,6 @@ Next, we can modify our code to match the following:
 <MultiCodeBlock>
 
 ```ts
-// npm install @apollo/server express graphql cors
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@as-integrations/express5';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
