@@ -8,6 +8,7 @@ Apollo Server 5 is a small upgrade focused largely on adjusting which versions o
 
 Most users will only have to:
 - Confirm that you are running a non-EOL version of Node.js
+- Maybe do a backwards-compatible upgrade of GraphQL.js
 - If using Express, adjust how you import `expressMiddleware`
 - If using an [HTTP proxy](./security/proxy-configuration/) to make HTTP requests, adjust how you configure it
 
@@ -23,6 +24,12 @@ If you're using Node.js v14, v16, or v18, upgrade your runtime before upgrading 
 If your server requires you to use an [HTTP proxy](./security/proxy-configuration/) to make external connections, we strongly recommend running Node.js v24 or newer, which has built-in support for communicating through HTTP proxies.
 
 If you can't upgrade to a non-EOL version of Node.js, you can continue to use Apollo Server 4.
+
+## Require GraphQL.js v16.11.0
+
+Apollo Server 5 supports GraphQL.js v16.11.0 and later, as a peer dependency. (Apollo Server 4 supports GraphQL.js v16.6.0 and later.)
+
+Before upgrading to Apollo Server 5, make sure the version of `graphql` in your server is at least v16.11.0. There are no backward-incompatible changes between v16.6.0 and v16.11.0 (but there are several nice improvements, including a fix to a [serious bug that can crash your Node server](https://github.com/graphql/graphql-js/issues/3528).)
 
 
 ## Separate package for the Express integration
@@ -50,10 +57,6 @@ You can make this change while you're still running Apollo Server 4 before upgra
 
 (You may then wish to upgrade Express to v5. If you do, use `@as-integrations/express5` instead; it has the same API as `@as-integrations/express4`.)
 
-
-## FIXME we should actually bump the graphql-js
-
-to the latest v16! which pulls in 16.7 major bug fix
 
 
 ## Plugins use built-in Node.js fetch to make HTTP requests
