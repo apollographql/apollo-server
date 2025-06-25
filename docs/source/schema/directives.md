@@ -118,7 +118,7 @@ Before you use custom directives in a federated graph, make sure to consider the
 #### Transformer functions
 
 FIXME: update repo
-[As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/custom-directives/upper-case-directive/src/index.ts), in Apollo Server 3 and 4 you can define a **transformer function** for each of your subgraph schema's custom directives.
+[As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/custom-directives/upper-case-directive/src/index.ts), you can define a **transformer function** for each of your subgraph schema's custom directives.
 
 To apply transformer functions to your executable subgraph schema, you first _generate_ the subgraph schema with `buildSubgraphSchema` as usual:
 
