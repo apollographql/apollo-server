@@ -59,11 +59,11 @@ The `startStandaloneServer` function's second optional argument is an object for
 
 <td>
 
-An optional asynchronous [`context` initialization function](../data/context/#the-context-function).
+An optional asynchronous [`context` initialization function](../data/context/#the-context-function).<br/>
 
-The `context` function should return an object that all your server's resolvers share during an operation's execution. This enables resolvers to share helpful context values, such as a database connection.
+The `context` function should return an object that all your server's resolvers share during an operation's execution. This enables resolvers to share helpful context values, such as a database connection.<br/>
 
-The `context` function receives `req` and `res` options which are `http.IncomingMessage` and `http.ServerResponse` types.
+The `context` function receives `req` and `res` options which are `http.IncomingMessage` and `http.ServerResponse` types. (In Apollo Server 4, these happen to be implemented using Express's subclasses which have some extra Express-provided functionality, though this was an undocumented fact that users should not have relied on. In Apollo Server 5, the standalone server is not built on Express; if you need to use Express-specific request/response functionality, [swap to `expressMiddleware`](#swapping-to-expressmiddleware).)
 
 </td>
 
@@ -81,7 +81,7 @@ The `context` function receives `req` and `res` options which are `http.Incoming
 
 <td>
 
-An optional `listen` configuration object. The `listen` option accepts an object with the same properties as the [`net.Server.listen` _options object_](https://nodejs.org/api/net.html#serverlistenoptions-callback).
+An optional `listen` configuration object. The `listen` option accepts an object with the same properties as the [`net.Server.listen` _options object_](https://nodejs.org/api/net.html#serverlistenoptions-callback).<br/>
 
 If no `port` is specified, this defaults to using `{port: 4000}`.
 </td>

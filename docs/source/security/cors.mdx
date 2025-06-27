@@ -86,7 +86,7 @@ If you create a public API or an API to embed in websites you don't control your
 If your application doesn't fit into any of the above categories, [`startStandaloneServer`](../api/standalone)'s CORS behavior should suit your use case. You can always choose to swap to another Apollo Server integration later to [customize your CORS configuration](#configuring-cors-options-for-apollo-server).
 
 ## Configuring CORS options for Apollo Server
-> 📣 **New since Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration#http-body-parsing-and-cors).
+> 📣 **New since Apollo Server 4**: if you are using an Apollo Server integration (e.g., [`expressMiddleware`](../api/express-middleware)), you are responsible for [setting up CORS for your web framework](../migration-from-v3#http-body-parsing-and-cors).
 
 Apollo Server's standalone server (i.e., [`startStandaloneServer`](../api/standalone)) serves the `Access-Control-Allow-Origin` HTTP header with the wildcard value (`*`). This allows scripts on any origin to make requests, _without cookies_, to the server and read its responses.
 
@@ -223,7 +223,7 @@ Note that Apollo Server does not permit executing mutations in `GET` requests (j
 
 ### `graphql-upload`
 
-> ⚠️ The [`graphql-upload`](https://www.npmjs.com/package/graphql-upload) package has a known CSRF vulnerability and is turned on by default in version of Apollo Server 2.25.4 and below. If you are using Apollo Server 2 and do not use uploads, you can disable them by passing `uploads: false` to the `ApolloServer` constructor. If you do use uploads, you must update to Apollo Server 3.7 or later and ensure CSRF prevention is enabled to use this feature safely.
+> ⚠️ The [`graphql-upload`](https://www.npmjs.com/package/graphql-upload) package has a known CSRF vulnerability. Apollo Server's default behavior fixes the vulnerability by preventing `graphql-upload` from working. **Don't disable Apollo Server's protection**: fix your client to work with it instead.
 
 The [third-party `graphql-upload` package](/apollo-server/v3/data/file-uploads) has a known CSRF vulnerability.
 
@@ -232,5 +232,7 @@ The `graphql-upload` package adds a special middleware that parses `POST` reques
 Apollo Server 4's default [CSRF prevention feature](#preventing-cross-site-request-forgery-csrf) blocks those attempting to use the `graphql-upload` package.  **If you use `graphql-upload` you should keep the CSRF prevention feature enabled**, and configure your upload clients to send a non-empty `Apollo-Require-Preflight` header.
 
 For example, if you use the [`apollo-upload-client`](https://github.com/jaydenseric/apollo-upload-client) package with Apollo Client Web, pass  `{headers: {'Apollo-Require-Preflight': 'true'}}` to `createUploadLink`.
+
+(Note that `graphql-upload` was included automatically in Apollo Server 2 and enabled by default, meaning that Apollo Server 2 was vulnerable to this exploit, and CSRF protection was only added to Apollo Server in v3.7.0. Apollo Server 2 has been [end-of-life](../previous-versions/) since October 2023 and Apollo Server 3 has been [end-of-life](../previous-versions/) since October 2024, so all non-EOL versions of Apollo Server have this protection enabled.)
 
 For more information about file upload best practices, see [our blog post](https://www.apollographql.com/blog/backend/file-uploads/file-upload-best-practices/).

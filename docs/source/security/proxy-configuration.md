@@ -59,7 +59,7 @@ import { setGlobalDispatcher, EnvHttpProxyAgent } from 'undici'
 setGlobalDispatcher(new EnvHttpProxyAgent());
 ```
 
-You can now use the proxy configuration variables defined above.
+You can now use the proxy configuration variables defined above. (You don't need to set `NODE_USE_ENV_PROXY`.)
 
 ## Configuring AS4
 

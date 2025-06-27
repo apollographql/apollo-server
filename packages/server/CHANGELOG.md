@@ -571,7 +571,7 @@ This version has no changes; `@apollo/server` and `@apollo/server-integration-te
 
 ### BREAKING CHANGES
 
-Apollo Server contains quite a few breaking changes: most notably, a brand new package name! Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for more details on how to update your app.
+Apollo Server contains quite a few breaking changes: most notably, a brand new package name! Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration-from-v3/) for more details on how to update your app.
 
 #### Bumped dependencies
 
@@ -607,7 +607,7 @@ Apollo Server's support for the Express web framework no longer also supports it
 
 #### Removed constructor options
 
-- The `dataSources` constructor option essentially added a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your context value. This meant the TypeScript type the `context` function returns was _different_ from the context type your resolvers and plugins receive. Additionally, this design obfuscated that `DataSource` objects are created once per request (i.e., like the rest of the context object). Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object. See the [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for details on how to move your `dataSources` function into your `context` function.
+- The `dataSources` constructor option essentially added a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your context value. This meant the TypeScript type the `context` function returns was _different_ from the context type your resolvers and plugins receive. Additionally, this design obfuscated that `DataSource` objects are created once per request (i.e., like the rest of the context object). Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object. See the [migration guide](https://www.apollographql.com/docs/apollo-server/migration-from-v3/) for details on how to move your `dataSources` function into your `context` function.
 - The `modules` constructor option was just a slightly different way of writing `typeDefs` and `resolvers` (although it surprisingly used entirely different logic under the hood). This option has been removed.
 - The `mocks` and `mockEntireSchema` constructor options wrapped an outdated version of the [`@graphql-tools/mocks`](https://www.npmjs.com/package/@graphql-tools/mock) library to provide mocking functionality. These constructor options have been removed; you can instead directly incorporate the `@graphql-tools/mock` package into your app, enabling you to get the most up-to-date mocking features.
 - The `debug` constructor option (which defaulted to `true` unless the `NODE_ENV` environment variable is either `production` or `test`) mostly controlled whether GraphQL errors responses included stack traces, but it also affected the default log level on the default logger. The `debug` constructor option has been removed and is replaced with `includeStacktraceInErrorResponses`, which does exactly what it says it does.
@@ -635,7 +635,7 @@ Apollo Server's support for the Express web framework no longer also supports it
 - The `formatError` hook now receives the original thrown error in addition to the formatted error.
 - Formatted errors no longer contain the `extensions.exception` field containing all enumerable properties of the originally thrown error. If you want to include more information in an error, specify them as `extensions` when creating a `GraphQLError`. The `stacktrace` field is provided directly on `extensions` rather than nested under `exception`.
 - All errors responses are consistently rendered as `application/json` JSON responses, and the `formatError` hook is used consistently.
-- Other [changes to error handling outside of resolvers](https://www.apollographql.com/docs/apollo-server/migration/#improvements-to-error-handling-outside-of-resolvers) are described in the migration guide.
+- Other [changes to error handling outside of resolvers](https://www.apollographql.com/docs/apollo-server/migration-from-v3/#improvements-to-error-handling-outside-of-resolvers) are described in the migration guide.
 - The `parseOptions` constructor option only affects the parsing of incoming operations, not the parsing of `typeDefs`.
 
 #### Plugin API changes
@@ -645,10 +645,10 @@ Apollo Server's support for the Express web framework no longer also supports it
 - The fields `GraphQLRequestContext.schemaHash` and `GraphQLRequestContext.debug` have been removed.
 - The type `GraphQLServiceContext` has been renamed to `GraphQLServerContext`, and the fields `schemaHash`, `persistedQueries`, and `serverlessFramework` have been removed; the latter has been semi-replaced by `startedInBackground`.
 - The `http` field on the `GraphQLRequest` object (available to plugins as `requestContext.request` and as an argument to `server.executeOperation`) is no longer based on the Fetch API's `Request` object. It no longer contains an URL path, and its `headers` field is a `Map` rather than a `Headers` object.
-- The structure of the `GraphQLResponse` object (available to plugins as `requestContext.response` and as the return value from `server.executeOperation`) has [changed in several ways](https://www.apollographql.com/docs/apollo-server/migration/#graphqlresponse).
+- The structure of the `GraphQLResponse` object (available to plugins as `requestContext.response` and as the return value from `server.executeOperation`) has [changed in several ways](https://www.apollographql.com/docs/apollo-server/migration-from-v3/#graphqlresponse).
 - The `plugins` constructor argument does not take factory functions.
 - `requestDidStart` hooks are called in parallel rather than in series.
-- A few changes have been made which may affect [custom `gateway` and `GraphQLDataSource` implementations](https://www.apollographql.com/docs/apollo-server/migration/#custom-gateway-and-graphqldatasource-implementations).
+- A few changes have been made which may affect [custom `gateway` and `GraphQLDataSource` implementations](https://www.apollographql.com/docs/apollo-server/migration-from-v3/#custom-gateway-and-graphqldatasource-implementations).
 
 #### Changes to defaults
 
