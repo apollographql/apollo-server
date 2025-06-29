@@ -541,35 +541,36 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
     if (internals.__testing_incrementalExecutionResults) {
       return internals.__testing_incrementalExecutionResults;
-    } else if (internals.gatewayExecutor) {
+    }
+    if (internals.gatewayExecutor) {
       const result = await internals.gatewayExecutor(
         makeGatewayGraphQLRequestContext(requestContext, server, internals),
       );
       return { singleResult: result };
-    } else {
-      const resultOrResults = await executeIncrementally({
-        schema: schemaDerivedData.schema,
-        document,
-        rootValue:
-          typeof internals.rootValue === 'function'
-            ? internals.rootValue(document)
-            : internals.rootValue,
-        contextValue: requestContext.contextValue,
-        variableValues: request.variables,
-        operationName: request.operationName,
-        fieldResolver: internals.fieldResolver,
-      });
-      if ('initialResult' in resultOrResults) {
-        return {
-          initialResult: resultOrResults.initialResult,
-          subsequentResults: formatErrorsInSubsequentResults(
-            resultOrResults.subsequentResults,
-          ),
-        };
-      } else {
-        return { singleResult: resultOrResults };
-      }
     }
+
+    const resultOrResults = await executeIncrementally({
+      schema: schemaDerivedData.schema,
+      document,
+      rootValue:
+        typeof internals.rootValue === 'function'
+          ? internals.rootValue(document)
+          : internals.rootValue,
+      contextValue: requestContext.contextValue,
+      variableValues: request.variables,
+      operationName: request.operationName,
+      fieldResolver: internals.fieldResolver,
+      options: internals.executionOptions,
+    });
+    if ('initialResult' in resultOrResults) {
+      return {
+        initialResult: resultOrResults.initialResult,
+        subsequentResults: formatErrorsInSubsequentResults(
+          resultOrResults.subsequentResults,
+        ),
+      };
+    }
+    return { singleResult: resultOrResults };
   }
 
   async function* formatErrorsInSubsequentResults(
