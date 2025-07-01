@@ -3,8 +3,11 @@ title: "API Reference: Usage Reporting Plugin"
 api_reference: true
 ---
 
-> Sending metrics from Apollo Server to GraphOS requires an [Enterprise plan](https://www.apollographql.com/pricing).
-> If your organization doesn't have an Enterprise plan, you can test out this functionality by signing up for a free [GraphOS trial](https://studio.apollographql.com/signup?referrer=docs-content). FIXME check in about this
+<PlanRequired plans={["Free", "Developer", "Standard", "Enterprise"]}>
+
+While Insights are available on all GraphOS plans, metrics retention varies by [plan](https://www.apollographql.com/pricing?referrer=docs-content).
+
+</PlanRequired>
 
 Apollo Server's built-in usage reporting plugin gathers data on how your clients use the operations and fields in your GraphQL schema. The plugin also handles pushing this usage data to [GraphOS](/graphos/), as described in [Metrics and logging](../../monitoring/metrics/).
 
