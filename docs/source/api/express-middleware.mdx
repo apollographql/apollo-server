@@ -5,7 +5,7 @@ api_reference: true
 
 import TopLevelAwait from "../shared/top-level-await.mdx"
 
-This API reference documents Apollo Server 4's [Express](https://expressjs.com/) integration, the `expressMiddleware` function.
+This API reference documents Apollo Server's [Express](https://expressjs.com/) integration, the `expressMiddleware` function.
 
 Apollo Server integrates with these Express versions through official integrations:
 - [**Express v4**](https://www.npmjs.com/package/@as-integrations/express4): Install with `npm install @as-integrations/express4`
@@ -15,7 +15,7 @@ You must also install Express itself. Both packages export a function named `exp
 
 <Note>
 
-The Express v4 integration is also bundled in `@apollo/server` at `@apollo/server/express4`. While you can use this bundled version now, we recommend installing the separate package. Express v5 requires the separate package, and future Apollo Server versions will remove the bundled integration.
+In Apollo Server 4, you can also import the Express v4 integration from `@apollo/server/express` without installing a second package. This does not support Express v5, and it was removed in Apollo Server 5. We recommend installing the separate package to make upgrading Apollo Server and Express easier.
 
 </Note>
 

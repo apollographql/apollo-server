@@ -7,8 +7,8 @@ description: ""
 > building a new integration, we recommend seeing if there's
 > [an integration for your framework of choice](./integration-index) that suits your needs.
 
-One of the driving forces behind Apollo Server 4 is the creation of a stable,
-well-defined API for processing HTTP requests and responses. Apollo Server 4's
+One of the driving forces behind Apollo Server 4+ was the creation of a stable,
+well-defined API for processing HTTP requests and responses. Apollo Server's
 API enables external collaborators, like you, to build integrations with Apollo
 Server in their web framework of choice.
 
@@ -118,7 +118,7 @@ Apollo Server responds to a variety of requests via both `GET` and `POST` such a
 
 Integrations _are_ responsible for parsing a request's body and using the values to construct the `HTTPGraphQLRequest` that Apollo Server expects.
 
-In Apollo Server 4's Express integration, you set up the `express.json()` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
+In Apollo Server's Express integration, you set up the `express.json()` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
 
 For example, a correctly parsed body should have a shape resembling this:
 
@@ -135,7 +135,7 @@ Your integration should pass along whatever it parses to Apollo Server; Apollo S
 
 Apollo Server also accepts GraphQL queries [sent using `GET`](../workflow/requests) with query string parameters. Apollo Server expects a raw query string for these types of HTTP requests. Apollo Server is indifferent to whether or not the `?` is included at the beginning of your query string. Fragments (starting with `#`) at the end of a URL should not be included.
 
-Apollo Server 4's Express integration computes the query string using the request's full URL, like so:
+Apollo Server's Express integration computes the query string using the request's full URL, like so:
 ```ts
 import { parse } from 'url';
 

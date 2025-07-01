@@ -3,10 +3,10 @@ import { makeExecutableSchema } from '@graphql-tools/schema';
 import { describe, expect, it, jest } from '@jest/globals';
 import assert from 'assert';
 import {
-  FormattedExecutionResult,
+  type FormattedExecutionResult,
   GraphQLError,
-  GraphQLSchema,
-  TypedQueryDocumentNode,
+  type GraphQLSchema,
+  type TypedQueryDocumentNode,
   parse,
 } from 'graphql';
 import gql from 'graphql-tag';
@@ -551,18 +551,38 @@ describe('ApolloServer executeOperation', () => {
     await server.stop();
   });
 
-  // TODO(AS5): expect an update here when default flips
+  // `status400ForVariableCoercionErrors` has no effect in v5
+  // TODO(AS6): remove this
   it.each([
-    { status400ForVariableCoercionErrors: false, expectedStatus: undefined },
-    { status400ForVariableCoercionErrors: true, expectedStatus: 400 },
+    {
+      status400ForVariableCoercionErrors: false,
+      expectedStatus: undefined,
+      expectedWarning:
+        'The `status400ForVariableCoercionErrors: false` configuration option is deprecated and will be removed in Apollo Server v6. Apollo recommends removing any dependency on this behavior.',
+    },
+    {
+      status400ForVariableCoercionErrors: true,
+      expectedStatus: 400,
+      expectedWarning:
+        'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5. You can safely remove this option from your configuration.',
+    },
   ])(
     'variable coercion errors',
-    async ({ status400ForVariableCoercionErrors, expectedStatus }) => {
+    async ({
+      status400ForVariableCoercionErrors,
+      expectedStatus,
+      expectedWarning,
+    }) => {
+      const logger = mockLogger();
       const server = new ApolloServer({
         typeDefs,
         resolvers,
+        logger,
         status400ForVariableCoercionErrors,
       });
+
+      expect(logger.warn).toBeCalledWith(expectedWarning);
+
       await server.start();
 
       const { body, http } = await server.executeOperation({
@@ -589,7 +609,6 @@ describe('ApolloServer executeOperation', () => {
     const server = new ApolloServer({
       typeDefs,
       resolvers,
-      status400ForVariableCoercionErrors: true,
     });
     await server.start();
 

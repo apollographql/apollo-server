@@ -77,13 +77,21 @@ function computeQueryHash(query: string) {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
+// Once GraphQL-JS v17 is released and we make a version of Apollo Server that
+// requires it, we can drop this hack, because it lets us break the `execute`
+// API into two steps and validate user input explicitly first.
 function isBadUserInputGraphQLError(error: GraphQLError): boolean {
   return (
     error.nodes?.length === 1 &&
     error.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
+    // GraphQL-JS v17 alpha wording
     (error.message.startsWith(
-      `Variable "$${error.nodes[0].variable.name.value}" got invalid value `,
+      `Variable "$${error.nodes[0].variable.name.value}" has invalid value`,
     ) ||
+      // GraphQL-JS v16 wording
+      error.message.startsWith(
+        `Variable "$${error.nodes[0].variable.name.value}" got invalid value `,
+      ) ||
       error.message.startsWith(
         `Variable "$${error.nodes[0].variable.name.value}" of required type `,
       ) ||
@@ -484,9 +492,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
-      // TODO(AS5) This becomes the default behavior and the
-      // `status400ForVariableCoercionErrors` configuration option is removed /
-      // ignored.
+      // TODO(AS6): remove `status400ForVariableCoercionErrors`
       if (
         internals.status400ForVariableCoercionErrors &&
         resultErrors?.length &&

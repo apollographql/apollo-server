@@ -3,13 +3,17 @@ title: Subscriptions in Apollo Server
 description: Persistent GraphQL read operations
 ---
 
-<blockquote>
+<Note>
 
-**Apollo Server does not provide built-in support for subscriptions.** You can enable support for subscriptions as [described below](#enabling-subscriptions).
+**Apollo Server does not provide built-in support for subscriptions in non-federated graphs.**<br/><br/>
 
-This article uses the `graphql-ws` library to add support for subscriptions to Apollo Server 4. We no longer recommend using the previously documented `subscriptions-transport-ws`, because this library is not actively maintained. For more information about the differences between the two libraries, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+If your Apollo Server is a subgraph running behind GraphOS Router, you can use the [subscription callback plugin](../api/plugin/subscription-callback) to allow your server to respond to subscription operations.<br/><br/>
 
-</blockquote>
+For non-federated graphs, you can enable support for subscriptions as [described below](#enabling-subscriptions) by adding the third-party `graphql-ws` library to your server.<br/><br/>
+
+(We previously documented how to use the library `subscriptions-transport-ws`, which is no longer actively maintained. For help migrating from `subscriptions-transport-ws`, see [the Apollo Server 3 docs](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws).)
+
+</Note>
 
 **Subscriptions** are long-lasting GraphQL read operations that can update their result whenever a particular server-side event occurs. Most commonly, updated results are _pushed_ from the server to subscribing clients. For example, a chat application's server might use a subscription to push newly received messages to all clients in a particular chat room.
 
@@ -44,7 +48,7 @@ subscription PostFeed {
 
 ## Enabling subscriptions
 
-> Subscriptions are **not** supported by Apollo Server 4's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](../api/express-middleware) (or any other Apollo Server integration package that supports subscriptions).
+> Subscriptions are **not** supported by Apollo Server's `startStandaloneServer` function. To enable subscriptions, you must first [swap to using the `expressMiddleware` function](../api/express-middleware) (or any other Apollo Server integration package that supports subscriptions).
 >
 > The following steps assume you've already swapped to [`expressMiddleware`](../api/express-middleware).
 
@@ -206,7 +210,7 @@ httpServer.listen(PORT, () => {
 
 </ExpansionPanel>
 
-> ⚠️ **Running into an error?** If you're using the `graphql-ws` library, your specified subscription protocol must be consistent across your backend, frontend, and **every other tool** you use (including [Apollo Sandbox](/graphos/explorer/subscriptions-explorer)). For more information, see [Switching from `subscriptions-transport-ws`](#switching-from-subscriptions-transport-ws).
+> ⚠️ **Running into an error?** If you're using the `graphql-ws` library, your specified subscription protocol must be consistent across your backend, frontend, and **every other tool** you use (including [Apollo Sandbox](/graphos/explorer/subscriptions-explorer)). For more information, see [Switching from `subscriptions-transport-ws`](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws) in the Apollo Server 3 docs.
 
 ## Resolving a subscription
 
@@ -507,7 +511,7 @@ For more examples of using `onConnect` and `onDisconnect`, see the [`graphql-ws`
 
 ### Example: Authentication with Apollo Client
 
-> If you plan to use subscriptions with Apollo Client, ensure **[both your client and server subscription protocols are consistent](#switching-from-subscriptions-transport-ws)** for the subscription library you're using (this example uses the `graphql-ws` library).
+> If you plan to use subscriptions with Apollo Client, ensure **[both your client and server subscription protocols are consistent](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws)** for the subscription library you're using (this example uses the `graphql-ws` library).
 
 In Apollo Client, the `GraphQLWsLink` constructor supports adding information to `connectionParams` ([example](/react/data/subscriptions/#5-authenticate-over-websocket-optional)). Those `connectionParams` are sent to your server when it connects, allowing you to extract information from the client request by accessing `Context.connectionParams`.
 
@@ -589,115 +593,3 @@ The following are community-created `PubSub` libraries for popular event-publish
 - [MongoDB](https://github.com/mjwheatley/graphql-mongodb-subscriptions)
 
 If none of these libraries fits your use case, you can also create your own `PubSubEngine` subclass. If you create a new open-source library, click **Edit on GitHub** to let us know about it!
-
-## Switching from `subscriptions-transport-ws`
-
-> If you use subscriptions with Apollo Client you must ensure **[both your client and server subscription protocols are consistent](/react/data/subscriptions/#supported-subscription-protocols)** for the subscription library you're using.
-
-This article previously demonstrated using the `subscriptions-transport-ws` library to set up subscriptions. However, this library is no longer actively maintained. You can still use it with Apollo Server, but we strongly recommend using [`graphql-ws`](https://www.npmjs.com/package/graphql-ws) instead.
-
-For details on how to switch from `subscriptions-transport-ws` to `graphql-ws`, follow the steps in the [Apollo Server 3 docs](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws).
-
-### Updating subscription clients
-
-If you intend to [switch from `subscriptions-transport-ws` to `graphql-ws`](/apollo-server/v3/data/subscriptions/#switching-to-graphql-ws) you will need to update the following clients:
-
-<table>
-  <thead>
-    <tr>
-      <th>Client Name</th>
-      <th>To use graphql-ws (RECOMMENDED)</th>
-      <th>To use subscriptions-transport-ws</th>
-    </tr>
-  </thead>
-
-<tbody>
-<tr>
-<td>
-
-[Apollo Studio Explorer](/graphos/explorer/)
-
-</td>
-
-<td>
-
-[`graphql-ws`](/graphos/explorer/subscriptions-explorer)
-
-</td>
-
-<td>
-
-[`subscriptions-transport-ws`](/graphos/explorer/subscriptions-explorer)
-
-</td>
-
-</tr>
-
-<tr>
-<td>
-
-[Apollo Client Web](/react/data/subscriptions)
-
-</td>
-
-<td>
-
-Use [`GraphQLWsLink`](/react/api/link/apollo-link-subscriptions/)<br/>
-(Requires v3.5.10 or later)
-
-</td>
-
-<td>
-
-Use [`WebSocketLink`](/react/api/link/apollo-link-ws/)
-
-</td>
-
-</tr>
-
-<tr>
-<td>
-
-[Apollo iOS](/ios/fetching/subscriptions/)
-
-</td>
-
-<td>
-
-[`graphql_transport_ws`](/ios/api/ApolloWebSocket/enums/WebSocket.WSProtocol/#graphql_transport_ws)<br/>
-(Requires v0.51.0 or later)
-
-</td>
-
-<td>
-
-[`graphql_ws`](/ios/api/ApolloWebSocket/enums/WebSocket.WSProtocol/#graphql_ws)
-
-</td>
-
-</tr>
-
-<tr>
-<td>
-
-[Apollo Kotlin](/kotlin/essentials/subscriptions/)
-
-</td>
-
-<td>
-
-[`GraphQLWsProtocol`](/kotlin/essentials/subscriptions/#customizing-your-websocket-protocol)<br/>
-(Requires v3.0.0 or later)
-
-</td>
-
-<td>
-
-[`SubscriptionWsProtocol`](/kotlin/essentials/subscriptions/#customizing-your-websocket-protocol)
-
-</td>
-
-</tr>
-
-</tbody>
-</table>

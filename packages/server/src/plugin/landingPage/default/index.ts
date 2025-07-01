@@ -115,21 +115,14 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
 
   return {
     __internal_installed_implicitly__: false,
-    async serverWillStart(server) {
-      if (config.precomputedNonce) {
-        server.logger.warn(
-          "The `precomputedNonce` landing page configuration option is deprecated. Removing this option is strictly an improvement to Apollo Server's landing page Content Security Policy (CSP) implementation for preventing XSS attacks.",
-        );
-      }
+    async serverWillStart() {
       return {
         async renderLandingPage() {
           const encodedASLandingPageVersion = encodeURIComponent(
             apolloServerLandingPageVersion,
           );
           async function html() {
-            const nonce =
-              config.precomputedNonce ??
-              createHash('sha256').update(uuidv4()).digest('hex');
+            const nonce = createHash('sha256').update(uuidv4()).digest('hex');
             const scriptCsp = `script-src 'self' 'nonce-${nonce}' ${scriptSafeList}`;
             const styleCsp = `style-src 'nonce-${nonce}' ${styleSafeList}`;
             const imageCsp = `img-src https://apollo-server-landing-page.cdn.apollographql.com`;

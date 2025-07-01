@@ -160,8 +160,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   laterValidationRules?: Array<ValidationRule>;
   hideSchemaDetailsFromClientErrors: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
-  // flip default behavior.
+  // TODO(AS6): remove this option.
   status400ForVariableCoercionErrors?: boolean;
   __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
   stringifyResult: (
@@ -342,11 +341,30 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
             : (config.csrfPrevention.requestHeaders ??
               recommendedCsrfPreventionRequestHeaders),
       status400ForVariableCoercionErrors:
-        config.status400ForVariableCoercionErrors ?? false,
+        config.status400ForVariableCoercionErrors ?? true,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
       stringifyResult: config.stringifyResult ?? prettyJSONStringify,
     };
+
+    this.warnAgainstDeprecatedConfigOptions(config);
+  }
+
+  private warnAgainstDeprecatedConfigOptions(
+    config: ApolloServerOptions<TContext>,
+  ) {
+    // TODO(AS6): this option goes away altogether. We should either update or remove this warning.
+    if ('status400ForVariableCoercionErrors' in config) {
+      if (config.status400ForVariableCoercionErrors === true) {
+        this.logger.warn(
+          'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5. You can safely remove this option from your configuration.',
+        );
+      } else {
+        this.logger.warn(
+          'The `status400ForVariableCoercionErrors: false` configuration option is deprecated and will be removed in Apollo Server v6. Apollo recommends removing any dependency on this behavior.',
+        );
+      }
+    }
   }
 
   // Awaiting a call to `start` ensures that a schema has been loaded and that

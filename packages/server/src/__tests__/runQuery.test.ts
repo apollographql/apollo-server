@@ -1,6 +1,6 @@
 import {
-  DocumentNode,
-  FormattedExecutionResult,
+  type DocumentNode,
+  type FormattedExecutionResult,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -11,16 +11,16 @@ import {
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import {
   ApolloServer,
-  ApolloServerOptions,
-  ApolloServerPlugin,
-  BaseContext,
-  GraphQLRequest,
-  GraphQLRequestExecutionListener,
-  GraphQLRequestListener,
-  GraphQLRequestListenerDidResolveField,
-  GraphQLRequestListenerExecutionDidEnd,
-  GraphQLRequestListenerParsingDidEnd,
-  GraphQLRequestListenerValidationDidEnd,
+  type ApolloServerOptions,
+  type ApolloServerPlugin,
+  type BaseContext,
+  type GraphQLRequest,
+  type GraphQLRequestExecutionListener,
+  type GraphQLRequestListener,
+  type GraphQLRequestListenerDidResolveField,
+  type GraphQLRequestListenerExecutionDidEnd,
+  type GraphQLRequestListenerParsingDidEnd,
+  type GraphQLRequestListenerValidationDidEnd,
   HeaderMap,
 } from '..';
 import { mockLogger } from './mockLogger';
@@ -227,9 +227,13 @@ it('correctly passes in variables (and arguments)', async () => {
 
 it('throws an error if there are missing variables', async () => {
   const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
-  const expected = 'Variable "$base" of required type "Int!" was not provided.';
   const res = await runQuery({ schema }, { query });
-  expect(res.errors![0].message).toEqual(expected);
+  expect([
+    // graphql 16
+    'Variable "$base" of required type "Int!" was not provided.',
+    // graphql 17
+    'Variable "$base" has invalid value: Expected a value of non-null type "Int!" to be provided.',
+  ]).toContain(res.errors![0].message);
 });
 
 it('supports yielding resolver functions', async () => {

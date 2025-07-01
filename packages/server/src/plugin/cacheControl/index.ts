@@ -11,7 +11,7 @@ import {
 } from 'graphql';
 import { newCachePolicy } from '../../cachePolicy.js';
 import { internalPlugin } from '../../internalPlugin.js';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import type {
   CacheHint,
   CacheScope,
