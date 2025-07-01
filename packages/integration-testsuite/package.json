@@ -51,8 +51,8 @@
     "supertest": "^7.0.0"
   },
   "peerDependencies": {
-    "@jest/globals": "29.x",
+    "@jest/globals": "29.x || 30.x",
     "graphql": "^16.11.0",
-    "jest": "29.x"
+    "jest": "29.x || 30.x"
   }
 }
