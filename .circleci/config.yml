@@ -4,11 +4,6 @@ orbs:
   node: circleci/node@5.0.0
   secops: apollo/circleci-secops-orb@2.0.7
 
-parameters:
-  mise_version:
-    type: string
-    default: "v2025.5.1"
-
 commands:
   setup-node:
     parameters:
@@ -22,7 +17,7 @@ commands:
       - run:
           name: Install Mise
           command: |
-            curl https://mise.run | MISE_VERSION=<< pipeline.parameters.mise_version >> sh
+            curl https://mise.run | MISE_VERSION=v2025.5.1 sh
       - when:
           condition: << parameters.node-version >>
           steps:
