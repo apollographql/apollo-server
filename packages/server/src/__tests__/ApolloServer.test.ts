@@ -581,7 +581,7 @@ describe('ApolloServer executeOperation', () => {
         status400ForVariableCoercionErrors,
       });
 
-      expect(logger.warn).toBeCalledWith(expectedWarning);
+      expect(logger.warn).toHaveBeenCalledWith(expectedWarning);
 
       await server.start();
 

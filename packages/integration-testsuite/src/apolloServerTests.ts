@@ -675,9 +675,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             );
           } else {
             // createServer awaits start() so should throw.
-            await expect(createServer({ gateway })).rejects.toThrowError(
-              loadError,
-            );
+            await expect(createServer({ gateway })).rejects.toThrow(loadError);
           }
         });
       });
@@ -1594,7 +1592,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
         );
         const logger = mockLogger();
-        const unexpectedErrorProcessingRequest = jest.fn<() => Promise<void>>();
+        const unexpectedErrorProcessingRequest =
+          jest.fn<
+            NonNullable<ApolloServerPlugin['unexpectedErrorProcessingRequest']>
+          >();
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
@@ -1613,7 +1614,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 return {
                   async willSendResponse() {
                     // formatError should be called after plugins
-                    expect(formatError).not.toBeCalled();
+                    expect(formatError).not.toHaveBeenCalled();
                     pluginCalled();
                   },
                 };
@@ -1687,7 +1688,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
           const apolloFetch = createApolloFetch({ uri });
 
-          expect(spy).not.toBeCalled();
+          expect(spy).not.toHaveBeenCalled();
 
           await apolloFetch({ query: '{hello}' });
           expect(spy).toHaveBeenCalledTimes(1);
@@ -1725,7 +1726,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             const apolloFetch = createApolloFetch({ uri });
 
-            expect(spy).not.toBeCalled();
+            expect(spy).not.toHaveBeenCalled();
 
             await apolloFetch({ query: '{hello}' });
             expect(spy).toHaveBeenCalledTimes(1);
@@ -1756,7 +1757,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               resolvers,
             });
 
-            expect(spy).not.toBeCalled();
+            expect(spy).not.toHaveBeenCalled();
 
             await server.executeOperation(
               { query: '{hello}' },
@@ -1814,7 +1815,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             const apolloFetch = createApolloFetch({ uri });
 
-            expect(spy).not.toBeCalled();
+            expect(spy).not.toHaveBeenCalled();
             await apolloFetch({ query: '{hello}' });
             expect(spy).toHaveBeenCalledTimes(1);
           });
