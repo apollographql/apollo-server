@@ -45,7 +45,7 @@ jobs:
       - setup-node:
           node-version: <<parameters.node-version>>
       - run: npm run test:ci
-      - run: npm run coverage:upload
+      - run: codecov-cli upload-process
       - store_test_results:
           path: junit.xml
 
@@ -69,6 +69,7 @@ jobs:
       # --legacy-peer-deps because nothing expects v17 yet.
       - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}"
       - run: npm run test:ci
+      - run: codecov-cli upload-process
       - run: npm run test:smoke
 
   Test with recent graphql-js alpha:
