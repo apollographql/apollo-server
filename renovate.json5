@@ -9,7 +9,7 @@
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
   // Disable circleci manager; see apollographql/federation's renovate file for details.
-  enabledManagers: ["npm", "mise"],
+  enabledManagers: ["npm", "mise", "custom.regex"],
   dependencyDashboard: true,
   // It seems like a nice idea to let Renovate use GitHub's native "automerge" since PRs
   // can get merged between Renovate runs. The downsides are:
