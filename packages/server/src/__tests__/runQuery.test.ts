@@ -311,10 +311,10 @@ describe('request pipeline life-cycle hooks', () => {
       );
 
     await runOnce();
-    expect(requestDidStart).toBeCalledTimes(1);
+    expect(requestDidStart).toHaveBeenCalledTimes(1);
     expect(requestDidStart.mock.calls[0][0]).toHaveProperty('schema', schema);
     await runOnce();
-    expect(requestDidStart).toBeCalledTimes(2);
+    expect(requestDidStart).toHaveBeenCalledTimes(2);
   });
 
   /**
@@ -369,7 +369,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testStringWithParseError: }' },
       );
 
-      expect(parsingDidStart).toBeCalled();
+      expect(parsingDidStart).toHaveBeenCalled();
     });
 
     it('called when a successful parse happens', async () => {
@@ -381,7 +381,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testString }' },
       );
 
-      expect(parsingDidStart).toBeCalled();
+      expect(parsingDidStart).toHaveBeenCalled();
     });
   });
 
@@ -466,7 +466,7 @@ describe('request pipeline life-cycle hooks', () => {
             },
             { query: '{ testString }' },
           ),
-        ).rejects.toThrowError(/Internal server error/);
+        ).rejects.toThrow(/Internal server error/);
 
         expect(executionDidEnd).toHaveBeenCalledTimes(1);
         expect(logger.error).toHaveBeenCalledWith(
@@ -816,7 +816,9 @@ describe('request pipeline life-cycle hooks', () => {
   });
 
   describe('didEncounterErrors', () => {
-    const didEncounterErrors = jest.fn(async () => {});
+    const didEncounterErrors = jest.fn<
+      NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
+    >(async () => {});
     const plugins: ApolloServerPlugin<BaseContext>[] = [
       {
         async requestDidStart() {
@@ -834,7 +836,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testStringWithParseError: }' },
       );
 
-      expect(didEncounterErrors).toBeCalledWith(
+      expect(didEncounterErrors).toHaveBeenCalledWith(
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
@@ -858,7 +860,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testStringWithParseError }' },
       );
 
-      expect(didEncounterErrors).toBeCalledWith(
+      expect(didEncounterErrors).toHaveBeenCalledWith(
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
@@ -889,7 +891,7 @@ describe('request pipeline life-cycle hooks', () => {
       );
       expect(response).toHaveProperty('data.testError', null);
 
-      expect(didEncounterErrors).toBeCalledWith(
+      expect(didEncounterErrors).toHaveBeenCalledWith(
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
@@ -909,7 +911,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testString }' },
       );
 
-      expect(didEncounterErrors).not.toBeCalled();
+      expect(didEncounterErrors).not.toHaveBeenCalled();
     });
   });
 

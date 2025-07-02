@@ -49,7 +49,7 @@ import {
   beforeEach,
   afterEach,
 } from '@jest/globals';
-import type { Mock, SpyInstance } from 'jest-mock';
+import type { Mock, Spied } from 'jest-mock';
 import { cacheControlFromInfo } from '@apollo/cache-control-types';
 import {
   ApolloServerErrorCode,
@@ -696,7 +696,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           `);
         });
 
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -752,7 +752,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           `);
         });
 
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -979,19 +979,19 @@ export function defineIntegrationTestSuiteHttpServerTests(
               .send([{ query: '{twenty}' }, { query: '{ten}' }]);
             expect(res.status).toEqual(200);
             expect(res.body).toMatchInlineSnapshot(`
-            [
-              {
-                "data": {
-                  "twenty": null,
-                },
-              },
-              {
-                "data": {
-                  "ten": null,
-                },
-              },
-            ]
-          `);
+                          [
+                            {
+                              "data": {
+                                "twenty": null,
+                              },
+                            },
+                            {
+                              "data": {
+                                "ten": null,
+                              },
+                            },
+                          ]
+                      `);
             expect(res.headers['cache-control']).toEqual('max-age=10, private');
           }
           {
@@ -1000,19 +1000,19 @@ export function defineIntegrationTestSuiteHttpServerTests(
               .send([{ query: '{uncached}' }, { query: '{ten}' }]);
             expect(res.status).toEqual(200);
             expect(res.body).toMatchInlineSnapshot(`
-            [
-              {
-                "data": {
-                  "uncached": null,
-                },
-              },
-              {
-                "data": {
-                  "ten": null,
-                },
-              },
-            ]
-          `);
+                          [
+                            {
+                              "data": {
+                                "uncached": null,
+                              },
+                            },
+                            {
+                              "data": {
+                                "ten": null,
+                              },
+                            },
+                          ]
+                      `);
             expect(res.headers['cache-control']).toEqual('no-store');
           }
           {
@@ -1021,19 +1021,19 @@ export function defineIntegrationTestSuiteHttpServerTests(
               .send([{ query: '{ten}' }, { query: '{uncached}' }]);
             expect(res.status).toEqual(200);
             expect(res.body).toMatchInlineSnapshot(`
-            [
-              {
-                "data": {
-                  "ten": null,
-                },
-              },
-              {
-                "data": {
-                  "uncached": null,
-                },
-              },
-            ]
-          `);
+                          [
+                            {
+                              "data": {
+                                "ten": null,
+                              },
+                            },
+                            {
+                              "data": {
+                                "uncached": null,
+                              },
+                            },
+                          ]
+                      `);
             expect(res.headers['cache-control']).toEqual('no-store');
           }
         });
@@ -2476,7 +2476,7 @@ content-type: application/json; charset=utf-8\r
       }
 
       let cache: KeyValueCache<string>;
-      let setSpy: SpyInstance<typeof cache.set>;
+      let setSpy: Spied<typeof cache.set>;
       beforeEach(async () => {
         cache = new InMemoryLRUCache();
         setSpy = jest.spyOn(cache, 'set');
@@ -2543,7 +2543,7 @@ content-type: application/json; charset=utf-8\r
           }),
         });
 
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -2580,7 +2580,7 @@ content-type: application/json; charset=utf-8\r
           }),
         });
 
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -2617,7 +2617,7 @@ content-type: application/json; charset=utf-8\r
           }),
         });
 
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -2644,7 +2644,7 @@ content-type: application/json; charset=utf-8\r
           'PERSISTED_QUERY_NOT_FOUND',
         );
 
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
@@ -2666,7 +2666,7 @@ content-type: application/json; charset=utf-8\r
 
         // Only the first request should result in an error.
         expect(didEncounterErrors).toHaveBeenCalledTimes(1);
-        expect(didEncounterErrors).toBeCalledWith(
+        expect(didEncounterErrors).toHaveBeenCalledWith(
           expect.objectContaining({
             errors: expect.arrayContaining([
               expect.objectContaining({
