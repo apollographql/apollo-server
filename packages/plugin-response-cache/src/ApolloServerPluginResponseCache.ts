@@ -348,7 +348,7 @@ export default function plugin<TContext extends BaseContext>(
             // InMemoryLRUCache synchronously).
             cache
               .set(key, serializedValue, { ttl: policyIfCacheable.maxAge })
-              .catch(logger.warn);
+              .catch(logger.warn.bind(logger));
           };
 
           const isPrivate = policyIfCacheable.scope === 'PRIVATE';

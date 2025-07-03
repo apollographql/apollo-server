@@ -630,7 +630,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           // logger is preferred since this is very much coupled directly to a
           // client-triggered action which might be more granularly tagged by
           // logging implementations.
-          addTrace().catch(logger.error);
+          addTrace().catch(logger.error.bind(logger));
 
           async function addTrace(): Promise<void> {
             // Ignore traces that come in after stop().
