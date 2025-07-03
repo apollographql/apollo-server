@@ -28,6 +28,15 @@ commands:
       - node/install-packages:
           cache-version: node-v<< parameters.node-version >>
 
+  # Forked PRs don't get the token, so skip the upload for them.
+  maybe-upload-coverage:
+    steps:
+      - run:
+          name: "Maybe upload coverage to Codecov"
+          command: |
+              if [ -n "$CODECOV_TOKEN" ]; then
+                codecov-cli upload-process
+              fi
 
 jobs:
   NodeJS:
@@ -40,7 +49,7 @@ jobs:
       - setup-node:
           node-version: <<parameters.node-version>>
       - run: npm run test:ci
-      - run: codecov-cli upload-process
+      - maybe-upload-coverage
       - store_test_results:
           path: junit.xml
 
@@ -64,7 +73,7 @@ jobs:
       # --legacy-peer-deps because nothing expects v17 yet.
       - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}"
       - run: npm run test:ci
-      - run: codecov-cli upload-process
+      - maybe-upload-coverage
       - run: npm run test:smoke
 
   Test with recent graphql-js alpha:
