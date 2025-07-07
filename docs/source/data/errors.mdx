@@ -7,7 +7,7 @@ import TopLevelAwait from "../shared/top-level-await.mdx"
 
 > Apollo Server v4 introduced a regression where providing invalid variables yields a 200 status code instead of 400. To mitigate this regression, provide the `status400ForVariableCoercionErrors: true` option to your `ApolloServer` constructor. For more information, see the [migration guide](../migration/#known-regressions).
 
-You can also configure how many variable coercion errors are allowed before execution is terminated using the [`executionOptions`](../api/apollo-server#executionoptions) field.
+You can also configure how many variable coercion errors are allowed before execution terminates using the [<code>executionOptions</code>](../api/apollo-server#executionoptions) field.
 
 <!-- cSpell:ignore typenam -->
 
