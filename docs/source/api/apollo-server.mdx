@@ -525,9 +525,9 @@ const server = new ApolloServer({
 });
 ```
 
-When variable coercion encounters more errors than the specified limit, GraphQL execution will be terminated with an error message indicating that the error limit was reached. This is useful for preventing potentially expensive operations when many input variables are malformed.
+When variable coercion encounters more errors than the specified limit, GraphQL execution terminates with an error message indicating that the error limit was reached. This is useful for preventing potentially expensive operations when many input variables are malformed.
 
-**Note:** This option works in conjunction with [`status400ForVariableCoercionErrors`](#status400forvariablecoercionerrors) to provide appropriate HTTP status codes for variable coercion errors.
+Note: This option works in conjunction with [<code>status400ForVariableCoercionErrors</code>](#status400forvariablecoercionerrors) to provide appropriate HTTP status codes for variable coercion errors.
 
 </td>
 </tr>
