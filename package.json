@@ -78,10 +78,10 @@
     "prettier": "3.6.2",
     "requisition": "1.7.0",
     "rollup": "4.44.2",
-    "supertest": "7.1.1",
+    "supertest": "7.1.2",
     "ts-jest": "29.4.0",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.35.1"
+    "typescript-eslint": "8.36.0"
   },
   "jest": {
     "projects": [
