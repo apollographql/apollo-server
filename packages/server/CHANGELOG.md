@@ -1,5 +1,34 @@
 # @apollo/server
 
+## 5.0.0-rc.0
+
+### BREAKING CHANGES
+
+Apollo Server v5 has very few breaking API changes. It is a small upgrade focused largely on adjusting which versions of Node.js and Express are supported.
+
+Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for more details on how to update your app.
+
+- Dropped support for Node.js v14, v16, and v18, which are no longer under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation. Apollo Server 5 supports Node.js v20 and later; v24 is recommended. Ensure you are on a non-EOL version of Node.js before upgrading Apollo Server.
+- Dropped support for versions of the `graphql` library older than `v16.11.0`. (Apollo Server 4 supports `graphql` `v16.6.0` or later.) Upgrade `graphql` before upgrading Apollo Server.
+- Express integration requires a separate package. In Apollo Server 4, you could import the Express 4 middleware from `@apollo/server/express4`, or you could import it from the separate package `@as-integrations/express4`. In Apollo Server 5, you must import it from the separate package. You can migrate your server to the new package before upgrading to Apollo Server 5. (You can also use `@as-integrations/express5` for a middleware that works with Express 5.)
+- Usage Reporting, Schema Reporting, and Subscription Callback plugins now use the Node.js built-in `fetch` implementation for HTTP requests by default, instead of the `node-fetch` npm package. If your server uses an HTTP proxy to make HTTP requests, you need to configure it in a slightly different way. See the [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for details.
+- The server started with `startStandaloneServer` no longer uses Express. This is mostly invisible, but it does set slightly fewer headers. If you rely on the fact that this server is based on Express, you should explicitly use the Express middleware.
+- The experimental support for incremental delivery directives `@defer` and `@stream` (which requires using a pre-release version of `graphql` v17) now explicitly only works with version `17.0.0-alpha.2` of `graphql`. Note that this supports the same incremental delivery protocol implemented by Apollo Server 4, which is not the same protocol in the latest alpha version of `graphql`. As this support is experimental, we may switch over from "only `alpha.2` is supported" to "only a newer alpha or final release is supported, with a different protocol" during the lifetime of Apollo Server 5.
+- Apollo Server is now compiled by the TypeScript compiler targeting the ES2023 standard rather than the ES2020 standard.
+- Apollo Server 5 responds to requests with variable coercion errors (eg, if a number is passed in the `variables` map for a variable declared in the operation as a `String`) with a 400 status code, indicating a client error. This is also the behavior of Apollo Server 3. Apollo Server 4 mistakenly responds to these requests with a 200 status code by default; we recommended the use of the `status400ForVariableCoercionErrors: true` option to restore the intended behavior. That option now defaults to true.
+- The unsafe `precomputedNonce` option to landing page plugins (which was only non-deprecated for 8 days) has been removed.
+
+### Patch Changes
+
+There are a few other small changes in v5:
+
+- [#8076](https://github.com/apollographql/apollo-server/pull/8076) [`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6) Thanks [@valters](https://github.com/valters)! - Fix some error logs to properly call `logger.error` or `logger.warn` with `this` set. This fixes errors or crashes from logger implementations that expect `this` to be set properly in their methods.
+
+- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - ApolloServerPluginSubscriptionCallback now takes a `fetcher` argument, like the usage and schema reporting plugins. The default value is Node's built-in fetch.
+
+- Updated dependencies [[`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
+  - @apollo/server-gateway-interface@2.0.0-rc.0
+
 ## 4.12.2
 
 (No change; there is a change to the `@apollo/server-integration-testsuite` used to test integrations, and the two packages always have matching versions.)
@@ -142,7 +171,6 @@
   Apollo Server previously performed no sanitization or validation of API keys on startup. In the case that an API key was provided which contained characters that are invalid as header values, Apollo Server could inadvertently log the API key in cleartext.
 
   This only affected users who:
-
   - Provide an API key with characters that are invalid as header values
   - Use either schema or usage reporting
   - Use the default fetcher provided by Apollo Server or configure their own `node-fetch` fetcher

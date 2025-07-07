@@ -9,5 +9,15 @@
     "@apollo/server": "4.12.2",
     "@apollo/usage-reporting-protobuf": "4.1.1"
   },
-  "changesets": []
+  "changesets": [
+    "clear-dryers-eat",
+    "curvy-crabs-play",
+    "five-tips-matter",
+    "large-lines-burn",
+    "light-symbols-swim",
+    "many-shirts-kneel",
+    "orange-plants-change",
+    "silver-cities-serve",
+    "smart-impalas-pump"
+  ]
 }
