@@ -4,7 +4,9 @@
 
 ### Major Changes
 
-- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Drop support for Node.JS v14, v16, and v20.
+- Drop support for Node.JS v14, v16, and v20.
+
+- The integration test suite no longer uses `lib: ["dom"]` to tell TypeScript to assume DOM-related symbols are in the global namespace. If your integration library's test suite relied on this behavior, you may need to add `lib: ["dom"]` to the `compilerOptions` section of your test suite's `tsconfig.json`.
 
 ### Patch Changes
 
