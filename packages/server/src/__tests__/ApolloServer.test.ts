@@ -425,7 +425,9 @@ describe('ApolloServer start', () => {
   });
 });
 
-function singleResult(body: GraphQLResponseBody): FormattedExecutionResult {
+export function singleResult(
+  body: GraphQLResponseBody,
+): FormattedExecutionResult {
   if (body.kind === 'single') {
     return body.singleResult;
   }
