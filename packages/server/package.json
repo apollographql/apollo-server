@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server",
-  "version": "5.0.0-rc.0",
+  "version": "5.0.0",
   "description": "Core engine for Apollo GraphQL server",
   "type": "module",
   "main": "dist/cjs/index.js",
@@ -126,7 +126,7 @@
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
-    "@apollo/server-gateway-interface": "^2.0.0-rc.0",
+    "@apollo/server-gateway-interface": "^2.0.0",
     "@apollo/usage-reporting-protobuf": "^4.1.1",
     "@apollo/utils.createhash": "^3.0.0",
     "@apollo/utils.fetcher": "^3.0.0",

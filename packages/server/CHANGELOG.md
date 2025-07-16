@@ -1,5 +1,26 @@
 # @apollo/server
 
+## 5.0.0
+
+### Major Changes
+
+- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Drop support for Node.JS v14, v16, and v20.
+
+- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Remove `precomputedNonce` landing page configuration option
+
+  This option was introduced and subsequently deprecated in v4. Removing this configuration in v4 is strictly an improvement to the security of your landing page, and no longer exists in v5.
+
+- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Remove `status400ForVariableCoercionErrors` configuration option; this regression mitigation is now the default behavior in Apollo Server v5.
+
+### Patch Changes
+
+- [#8076](https://github.com/apollographql/apollo-server/pull/8076) [`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6) Thanks [@valters](https://github.com/valters)! - Fix some error logs to properly call `logger.error` or `logger.warn` with `this` set. This fixes errors or crashes from logger implementations that expect `this` to be set properly in their methods.
+
+- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - ApolloServerPluginSubscriptionCallback now takes a `fetcher` argument, like the usage and schema reporting plugins. The default value is Node's built-in fetch.
+
+- Updated dependencies [[`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
+  - @apollo/server-gateway-interface@2.0.0
+
 ## 5.0.0-rc.0
 
 ### BREAKING CHANGES
