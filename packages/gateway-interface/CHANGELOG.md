@@ -4,12 +4,6 @@
 
 ### Major Changes
 
-- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Drop support for Node.JS v14, v16, and v20.
-
-## 2.0.0-rc.0
-
-### Major Changes
-
 - Drop support for Node.JS v14, v16, and v20.
 
 ## 1.1.1

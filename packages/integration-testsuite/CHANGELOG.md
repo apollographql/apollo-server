@@ -4,19 +4,6 @@
 
 ### Major Changes
 
-- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - Drop support for Node.JS v14, v16, and v20.
-
-### Patch Changes
-
-- [#8078](https://github.com/apollographql/apollo-server/pull/8078) [`dabe7ba`](https://github.com/apollographql/apollo-server/commit/dabe7ba60b4661a4b2e72c57d082acf04b32186a) Thanks [@renovate](https://github.com/apps/renovate)! - Support Jest v30 as well as Jest v29.
-
-- Updated dependencies [[`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
-  - @apollo/server@5.0.0
-
-## 5.0.0-rc.0
-
-### Major Changes
-
 - Drop support for Node.JS v14, v16, and v20.
 
 - The integration test suite no longer uses `lib: ["dom"]` to tell TypeScript to assume DOM-related symbols are in the global namespace. If your integration library's test suite relied on this behavior, you may need to add `lib: ["dom"]` to the `compilerOptions` section of your test suite's `tsconfig.json`.
@@ -26,7 +13,7 @@
 - [#8078](https://github.com/apollographql/apollo-server/pull/8078) [`dabe7ba`](https://github.com/apollographql/apollo-server/commit/dabe7ba60b4661a4b2e72c57d082acf04b32186a) Thanks [@renovate](https://github.com/apps/renovate)! - Support Jest v30 as well as Jest v29.
 
 - Updated dependencies [[`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
-  - @apollo/server@5.0.0-rc.0
+  - @apollo/server@5.0.0
 
 ## 4.12.2
 

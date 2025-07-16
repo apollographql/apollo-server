@@ -36,7 +36,7 @@
     "@apollo/utils.keyvaluecache": "^4.0.0"
   },
   "peerDependencies": {
-    "@apollo/server": "^5.0.0-rc.0",
+    "@apollo/server": "^5.0.0",
     "graphql": "^16.11.0"
   }
 }
