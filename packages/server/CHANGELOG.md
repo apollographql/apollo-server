@@ -1,6 +1,6 @@
 # @apollo/server
 
-## 5.0.0-rc.0
+## 5.0.0
 
 ### BREAKING CHANGES
 
@@ -27,7 +27,7 @@ There are a few other small changes in v5:
 - [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - ApolloServerPluginSubscriptionCallback now takes a `fetcher` argument, like the usage and schema reporting plugins. The default value is Node's built-in fetch.
 
 - Updated dependencies [[`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
-  - @apollo/server-gateway-interface@2.0.0-rc.0
+  - @apollo/server-gateway-interface@2.0.0
 
 ## 4.12.2
 

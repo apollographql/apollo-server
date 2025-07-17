@@ -1,6 +1,6 @@
 # @apollo/server-plugin-response-cache
 
-## 5.0.0-rc.0
+## 5.0.0
 
 ### Major Changes
 
@@ -11,7 +11,7 @@
 - [#8076](https://github.com/apollographql/apollo-server/pull/8076) [`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6) Thanks [@valters](https://github.com/valters)! - Fix some error logs to properly call `logger.error` or `logger.warn` with `this` set. This fixes errors or crashes from logger implementations that expect `this` to be set properly in their methods.
 
 - Updated dependencies [[`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
-  - @apollo/server@5.0.0-rc.0
+  - @apollo/server@5.0.0
 
 ## 4.1.4
 

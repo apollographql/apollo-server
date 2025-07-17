@@ -1,6 +1,6 @@
 # @apollo/server-gateway-interface
 
-## 2.0.0-rc.0
+## 2.0.0
 
 ### Major Changes
 
