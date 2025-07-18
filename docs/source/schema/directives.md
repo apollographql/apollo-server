@@ -101,7 +101,7 @@ type Query {
 }
 ```
 
-If you want to define a custom schema directive to _transform_ your executable schema's behavior before providing that schema to Apollo Server, we recommend using the [`@graphql-tools`](https://www.the-guild.dev/graphql/tools/docs/schema-directives) library. See our [example of using a custom directive to transform a schema.](https://github.com/apollographql/docs-examples/tree/main/apollo-server/v4/custom-directives/upper-case-directive)
+If you want to define a custom schema directive to _transform_ your executable schema's behavior before providing that schema to Apollo Server, we recommend using the [`@graphql-tools`](https://www.the-guild.dev/graphql/tools/docs/schema-directives) library. See our [example of using a custom directive to transform a schema.](https://github.com/apollographql/docs-examples/tree/main/apollo-server/v5/custom-directives/upper-case-directive)
 
 ### In subgraphs
 
@@ -116,7 +116,7 @@ Before you use custom directives in a federated graph, make sure to consider the
 
 #### Transformer functions
 
-[As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/custom-directives/upper-case-directive/src/index.ts), you can define a **transformer function** for each of your subgraph schema's custom directives.
+[As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v5/custom-directives/upper-case-directive/src/index.ts), you can define a **transformer function** for each of your subgraph schema's custom directives.
 
 To apply transformer functions to your executable subgraph schema, you first _generate_ the subgraph schema with `buildSubgraphSchema` as usual:
 
