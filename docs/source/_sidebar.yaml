@@ -97,6 +97,8 @@ items:
         href: './deployment/lambda'
       - label: Heroku
         href: './deployment/heroku'
+      - label: Sevalla
+        href: './deployment/sevalla'
   - label: Monitoring
     children:
       - label: Metrics and logging
