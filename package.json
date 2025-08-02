@@ -74,7 +74,7 @@
     "jest-mock-random": "1.1.1",
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
-    "nock": "14.0.7",
+    "nock": "14.0.8",
     "prettier": "3.6.2",
     "requisition": "1.7.0",
     "rollup": "4.46.2",
