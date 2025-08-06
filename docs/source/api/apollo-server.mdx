@@ -151,6 +151,26 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
+###### `maxRecursiveSelections`
+
+`boolean` or `number`
+
+</td>
+
+<td>
+
+If `true`, enables a validation rule that computes how many selections would be in the operation if its named fragment definitions were recursively inlined (without actually inlining) and errors if the count exceeds 10,000,000. If `number`, it instead errors if the count exceeds this number.
+
+This rule is executed before any provided `validationRules`, and can be useful to avoid performance issues with those rules or any downstream plugins.
+
+The default value is `false`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `hideSchemaDetailsFromClientErrors`
 
 `boolean`
