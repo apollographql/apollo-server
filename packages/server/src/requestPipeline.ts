@@ -489,7 +489,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       }
 
       const { formattedErrors, httpFromErrors } = resultErrors
-        ? formatErrors(resultErrors)
+        ? await formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
       // TODO(AS6): remove `status400ForVariableCoercionErrors`
@@ -605,7 +605,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
                       // Note that any `http` extensions in errors have no
                       // effect, because we've already sent the status code
                       // and response headers.
-                      errors: formatErrors(errors).formattedErrors,
+                      errors: (await formatErrors(errors)).formattedErrors,
                     };
                   }
                   return incrementalResult;
@@ -667,7 +667,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   ): Promise<GraphQLResponse> {
     await didEncounterErrors(errors);
 
-    const { formattedErrors, httpFromErrors } = formatErrors(errors);
+    const { formattedErrors, httpFromErrors } = await formatErrors(errors);
 
     requestContext.response.body = {
       kind: 'single',
