@@ -14,6 +14,7 @@ import {
   assertValidSchema,
   print,
   printSchema,
+  type validate,
   type DocumentNode,
   type FormattedExecutionResult,
   type GraphQLFieldResolver,
@@ -134,6 +135,8 @@ type ServerState =
       stopError: Error | null;
     };
 
+export type ValidateOptions = NonNullable<Parameters<typeof validate>[3]>;
+
 export interface ApolloServerInternals<TContext extends BaseContext> {
   state: ServerState;
   gatewayExecutor: GatewayExecutor | null;
@@ -149,6 +152,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
+  validationOptions: ValidateOptions;
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version
   // of start).
@@ -306,6 +310,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       hideSchemaDetailsFromClientErrors,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,
+      validationOptions: config.validationOptions ?? {},
       fieldResolver: config.fieldResolver,
       includeStacktraceInErrorResponses:
         config.includeStacktraceInErrorResponses ??
