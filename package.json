@@ -55,7 +55,7 @@
     "@types/finalhandler": "1.2.4",
     "@types/lodash.sumby": "4.6.9",
     "@types/negotiator": "0.6.4",
-    "@types/node": "20.19.10",
+    "@types/node": "20.19.11",
     "@types/superagent": "8.1.9",
     "@types/supertest": "6.0.3",
     "@types/whatwg-mimetype": "3.0.2",
@@ -74,14 +74,14 @@
     "jest-mock-random": "1.1.1",
     "jest-serializer-html": "7.1.0",
     "lodash.sumby": "4.6.0",
-    "nock": "14.0.9",
+    "nock": "14.0.10",
     "prettier": "3.6.2",
     "requisition": "1.7.0",
     "rollup": "4.46.2",
     "supertest": "7.1.4",
     "ts-jest": "29.4.1",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.39.0"
+    "typescript-eslint": "8.39.1"
   },
   "jest": {
     "projects": [
