@@ -36,7 +36,7 @@
     "npm": ">=8.19.2"
   },
   "devDependencies": {
-    "@apollo/client": "3.13.9",
+    "@apollo/client": "3.14.0",
     "@apollo/gateway": "2.11.2",
     "@apollo/subgraph": "2.11.2",
     "@apollo/utils.createhash": "3.0.1",
@@ -62,7 +62,7 @@
     "awaiting": "3.0.0",
     "cors": "2.8.5",
     "cspell": "9.2.0",
-    "eslint": "9.33.0",
+    "eslint": "9.34.0",
     "eslint-plugin-import": "2.32.0",
     "graphql": "16.11.0",
     "graphql-subscriptions": "3.0.0",
@@ -77,11 +77,11 @@
     "nock": "14.0.10",
     "prettier": "3.6.2",
     "requisition": "1.7.0",
-    "rollup": "4.46.2",
+    "rollup": "4.47.1",
     "supertest": "7.1.4",
     "ts-jest": "29.4.1",
     "typescript": "5.8.3",
-    "typescript-eslint": "8.39.1"
+    "typescript-eslint": "8.40.0"
   },
   "jest": {
     "projects": [
