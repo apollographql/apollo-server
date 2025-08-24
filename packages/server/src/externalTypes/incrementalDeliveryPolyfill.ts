@@ -19,7 +19,16 @@ export interface GraphQLExperimentalFormattedInitialIncrementalExecutionResult<
   incremental?: ReadonlyArray<
     GraphQLExperimentalFormattedIncrementalResult<TData, TExtensions>
   >;
+  pending?: ReadonlyArray<GraphQLExperimentalFormattedPendingIncrementalResult>;
   extensions?: TExtensions;
+}
+
+// This was introduced in a revision of the incremental delivery format:
+// https://github.com/graphql/defer-stream-wg/discussions/69
+export interface GraphQLExperimentalFormattedPendingIncrementalResult {
+  path?: ReadonlyArray<string | number>;
+  id?: string;
+  label?: string;
 }
 
 export interface GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult<
@@ -31,6 +40,7 @@ export interface GraphQLExperimentalFormattedSubsequentIncrementalExecutionResul
     GraphQLExperimentalFormattedIncrementalResult<TData, TExtensions>
   >;
   extensions?: TExtensions;
+  completed?: ReadonlyArray<{ id: string }>;
 }
 
 export type GraphQLExperimentalFormattedIncrementalResult<
@@ -45,6 +55,8 @@ export interface GraphQLExperimentalFormattedIncrementalDeferResult<
   TExtensions = ObjMap<unknown>,
 > extends FormattedExecutionResult<TData, TExtensions> {
   path?: ReadonlyArray<string | number>;
+  subPath?: ReadonlyArray<string | number>;
+  id?: string;
   label?: string;
 }
 
@@ -55,6 +67,7 @@ export interface GraphQLExperimentalFormattedIncrementalStreamResult<
   errors?: ReadonlyArray<GraphQLFormattedError>;
   items?: TData | null;
   path?: ReadonlyArray<string | number>;
+  id?: string;
   label?: string;
   extensions?: TExtensions;
 }

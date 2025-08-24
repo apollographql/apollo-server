@@ -357,6 +357,7 @@ function orderInitialIncrementalExecutionResultFields(
     hasNext: result.hasNext,
     errors: result.errors,
     data: result.data,
+    pending: result.pending,
     incremental: orderIncrementalResultFields(result.incremental),
     extensions: result.extensions,
   };
@@ -368,6 +369,7 @@ function orderSubsequentIncrementalExecutionResultFields(
     hasNext: result.hasNext,
     incremental: orderIncrementalResultFields(result.incremental),
     extensions: result.extensions,
+    completed: result.completed,
   };
 }
 
@@ -378,6 +380,8 @@ function orderIncrementalResultFields(
     hasNext: i.hasNext,
     errors: i.errors,
     path: i.path,
+    id: i.id,
+    subPath: i.subPath,
     label: i.label,
     data: i.data,
     items: i.items,
