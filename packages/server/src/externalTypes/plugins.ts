@@ -23,6 +23,7 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextWillSendSubsequentPayload,
 } from './requestPipeline.js';
+import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9 } from './incrementalDeliveryPolyfillAlpha9.js';
 
 export interface GraphQLServerContext {
   readonly logger: Logger;
@@ -180,7 +181,9 @@ export interface GraphQLRequestListener<TContext extends BaseContext> {
   // You can use hasNext to tell if this is the end or not.
   willSendSubsequentPayload?(
     requestContext: GraphQLRequestContextWillSendSubsequentPayload<TContext>,
-    payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+    payload:
+      | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
+      | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
   ): Promise<void>;
 }
 
