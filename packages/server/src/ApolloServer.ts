@@ -57,7 +57,10 @@ import type {
   PersistedQueryOptions,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import type {
+  GraphQLExperimentalIncrementalExecutionResultsAlpha2,
+  GraphQLExperimentalIncrementalExecutionResultsAlpha9,
+} from './incrementalDeliveryPolyfill.js';
 import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
@@ -162,7 +165,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS6): remove this option.
   status400ForVariableCoercionErrors?: boolean;
-  __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+  __testing_incrementalExecutionResults?:
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha9;
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
