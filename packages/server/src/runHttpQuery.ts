@@ -1,7 +1,9 @@
 import type {
   BaseContext,
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
   GraphQLRequest,
   HTTPGraphQLHead,
   HTTPGraphQLRequest,
@@ -313,8 +315,13 @@ export async function runHttpQuery<TContext extends BaseContext>({
 }
 
 async function* writeMultipartBody(
-  initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
-  subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2>,
+  initialResult:
+    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2
+    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+  subsequentResults: AsyncIterable<
+    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
+    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9
+  >,
 ): AsyncGenerator<string> {
   // Note: we assume in this function that every result other than the last has
   // hasNext=true and the last has hasNext=false. That is, we choose which kind
