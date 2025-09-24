@@ -41,6 +41,7 @@ import type {
   BaseContext,
   GraphQLResponse,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
 } from './externalTypes/index.js';
 
 import {
@@ -64,8 +65,10 @@ import type {
 } from './externalTypes/requestPipeline.js';
 import {
   executeIncrementally,
-  type GraphQLExperimentalInitialIncrementalExecutionResult,
-  type GraphQLExperimentalSubsequentIncrementalExecutionResult,
+  type GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha9,
+  type GraphQLExperimentalInitialIncrementalExecutionResultAlpha2,
+  type GraphQLExperimentalInitialIncrementalExecutionResultAlpha9,
+  type GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha2,
 } from './incrementalDeliveryPolyfill.js';
 import { HeaderMap } from './utils/HeaderMap.js';
 
@@ -109,8 +112,12 @@ type SemiFormattedExecuteIncrementallyResults =
       singleResult: ExecutionResult;
     }
   | {
-      initialResult: GraphQLExperimentalInitialIncrementalExecutionResult;
+      initialResult: GraphQLExperimentalInitialIncrementalExecutionResultAlpha2;
       subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2>;
+    }
+  | {
+      initialResult: GraphQLExperimentalInitialIncrementalExecutionResultAlpha9;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9>;
     };
 
 export async function processGraphQLRequest<TContext extends BaseContext>(
@@ -568,9 +575,14 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       if ('initialResult' in resultOrResults) {
         return {
           initialResult: resultOrResults.initialResult,
-          subsequentResults: formatErrorsInSubsequentResults(
-            resultOrResults.subsequentResults,
-          ),
+          subsequentResults:
+            'pending' in resultOrResults.initialResult
+              ? formatErrorsInSubsequentResultsAlpha9(
+                  resultOrResults.subsequentResults as AsyncIterable<GraphQLExperimentalInitialIncrementalExecutionResultAlpha9>,
+                )
+              : formatErrorsInSubsequentResultsAlpha2(
+                  resultOrResults.subsequentResults,
+                ),
         };
       } else {
         return { singleResult: resultOrResults };
@@ -578,8 +590,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
   }
 
-  async function* formatErrorsInSubsequentResults(
-    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResult>,
+  async function* formatErrorsInSubsequentResultsAlpha2(
+    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha2>,
   ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2> {
     for await (const result of results) {
       const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 =
@@ -613,6 +625,86 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
               ),
             }
           : result;
+
+      // Invoke hook, which is allowed to mutate payload if it really wants to.
+      await Promise.all(
+        requestListeners.map((l) =>
+          l.willSendSubsequentPayload?.(
+            requestContext as GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+            payload,
+          ),
+        ),
+      );
+
+      yield payload;
+    }
+  }
+
+  async function* formatErrorsInSubsequentResultsAlpha9(
+    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha9>,
+  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9> {
+    for await (const result of results) {
+      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9 =
+        result.incremental
+          ? {
+              ...result,
+              incremental: await seriesAsyncMap(
+                result.incremental,
+                async (incrementalResult) => {
+                  const { errors } = incrementalResult;
+                  if (errors) {
+                    await Promise.all(
+                      requestListeners.map((l) =>
+                        l.didEncounterSubsequentErrors?.(
+                          requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+                          errors,
+                        ),
+                      ),
+                    );
+
+                    return {
+                      ...incrementalResult,
+                      // Note that any `http` extensions in errors have no
+                      // effect, because we've already sent the status code
+                      // and response headers.
+                      errors: formatErrors(errors).formattedErrors,
+                    };
+                  }
+                  return incrementalResult;
+                },
+              ),
+            }
+          : result;
+
+      if (result.completed) {
+        payload.completed = await seriesAsyncMap(
+          result.completed,
+          async (completedResult) => {
+            const { errors } = completedResult;
+
+            if (errors) {
+              await Promise.all(
+                requestListeners.map((l) =>
+                  l.didEncounterSubsequentErrors?.(
+                    requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+                    errors,
+                  ),
+                ),
+              );
+
+              return {
+                ...completedResult,
+                // Note that any `http` extensions in errors have no
+                // effect, because we've already sent the status code
+                // and response headers.
+                errors: formatErrors(errors).formattedErrors,
+              };
+            }
+
+            return completedResult;
+          },
+        );
+      }
 
       // Invoke hook, which is allowed to mutate payload if it really wants to.
       await Promise.all(
