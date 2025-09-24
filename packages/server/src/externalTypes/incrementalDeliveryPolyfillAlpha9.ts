@@ -66,7 +66,7 @@ export interface GraphQLExperimentalFormattedIncrementalStreamResultAlpha9<
   extensions?: TExtensions;
 }
 
-interface GraphQLExperimentalPendingResultAlpha9 {
+export interface GraphQLExperimentalPendingResultAlpha9 {
   id: string;
   path: ReadonlyArray<string | number>;
   label?: string;
