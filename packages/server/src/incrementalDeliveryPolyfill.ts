@@ -184,7 +184,9 @@ let graphqlExperimentalExecuteIncrementally:
   | ((
       args: ExecutionArgs,
     ) => PromiseOrValue<
-      ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+      | ExecutionResult
+      | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+      | GraphQLExperimentalIncrementalExecutionResultsAlpha9
     >)
   | null
   | undefined = undefined;
@@ -214,7 +216,9 @@ async function tryToLoadGraphQL17() {
 export async function executeIncrementally(
   args: ExecutionArgs,
 ): Promise<
-  ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+  | ExecutionResult
+  | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+  | GraphQLExperimentalIncrementalExecutionResultsAlpha9
 > {
   await tryToLoadGraphQL17();
   if (graphqlExperimentalExecuteIncrementally) {
