@@ -1,8 +1,8 @@
 import type {
   BaseContext,
-  GraphQLExperimentalFormattedIncrementalResult,
-  GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  GraphQLExperimentalFormattedIncrementalResultAlpha2,
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
   GraphQLRequest,
   HTTPGraphQLHead,
   HTTPGraphQLRequest,
@@ -314,8 +314,8 @@ export async function runHttpQuery<TContext extends BaseContext>({
 }
 
 async function* writeMultipartBody(
-  initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-  subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>,
+  initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+  subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2>,
 ): AsyncGenerator<string> {
   // Note: we assume in this function that every result other than the last has
   // hasNext=true and the last has hasNext=false. That is, we choose which kind
@@ -348,8 +348,8 @@ function orderExecutionResultFields(
   };
 }
 function orderInitialIncrementalExecutionResultFields(
-  result: GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-): GraphQLExperimentalFormattedInitialIncrementalExecutionResult {
+  result: GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+): GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2 {
   return {
     hasNext: result.hasNext,
     errors: result.errors,
@@ -359,8 +359,8 @@ function orderInitialIncrementalExecutionResultFields(
   };
 }
 function orderSubsequentIncrementalExecutionResultFields(
-  result: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
-): GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult {
+  result: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+): GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 {
   return {
     hasNext: result.hasNext,
     incremental: orderIncrementalResultFields(result.incremental),
@@ -369,8 +369,8 @@ function orderSubsequentIncrementalExecutionResultFields(
 }
 
 function orderIncrementalResultFields(
-  incremental?: readonly GraphQLExperimentalFormattedIncrementalResult[],
-): undefined | GraphQLExperimentalFormattedIncrementalResult[] {
+  incremental?: readonly GraphQLExperimentalFormattedIncrementalResultAlpha2[],
+): undefined | GraphQLExperimentalFormattedIncrementalResultAlpha2[] {
   return incremental?.map((i: any) => ({
     hasNext: i.hasNext,
     errors: i.errors,

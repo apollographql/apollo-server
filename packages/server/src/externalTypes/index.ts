@@ -51,9 +51,9 @@ export type {
 } from './constructor.js';
 
 export type {
-  GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
-  GraphQLExperimentalFormattedIncrementalResult,
-  GraphQLExperimentalFormattedIncrementalDeferResult,
-  GraphQLExperimentalFormattedIncrementalStreamResult,
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalDeferResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalStreamResultAlpha2,
 } from './incrementalDeliveryPolyfill.js';

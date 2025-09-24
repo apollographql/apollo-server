@@ -40,7 +40,7 @@ import type {
   GraphQLRequestExecutionListener,
   BaseContext,
   GraphQLResponse,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
 } from './externalTypes/index.js';
 
 import {
@@ -110,7 +110,7 @@ type SemiFormattedExecuteIncrementallyResults =
     }
   | {
       initialResult: GraphQLExperimentalInitialIncrementalExecutionResult;
-      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2>;
     };
 
 export async function processGraphQLRequest<TContext extends BaseContext>(
@@ -580,9 +580,9 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
   async function* formatErrorsInSubsequentResults(
     results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResult>,
-  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult> {
+  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2> {
     for await (const result of results) {
-      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult =
+      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 =
         result.incremental
           ? {
               ...result,
