@@ -56,4 +56,4 @@ export type {
   GraphQLExperimentalFormattedIncrementalResultAlpha2,
   GraphQLExperimentalFormattedIncrementalDeferResultAlpha2,
   GraphQLExperimentalFormattedIncrementalStreamResultAlpha2,
-} from './incrementalDeliveryPolyfill.js';
+} from './incrementalDeliveryPolyfillAlpha2.js';

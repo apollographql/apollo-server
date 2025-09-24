@@ -9,7 +9,7 @@ import type { GraphQLError, GraphQLResolveInfo, GraphQLSchema } from 'graphql';
 import type { ApolloConfig } from './constructor.js';
 import type { BaseContext } from './context.js';
 import type { GraphQLResponse } from './graphql.js';
-import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 } from './incrementalDeliveryPolyfill.js';
+import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 } from './incrementalDeliveryPolyfillAlpha2.js';
 import type {
   GraphQLRequestContext,
   GraphQLRequestContextDidEncounterErrors,

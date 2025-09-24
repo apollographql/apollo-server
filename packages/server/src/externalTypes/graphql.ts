@@ -11,7 +11,7 @@ import type { WithRequired } from '@apollo/utils.withrequired';
 import type {
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
-} from './incrementalDeliveryPolyfill.js';
+} from './incrementalDeliveryPolyfillAlpha2.js';
 
 export interface GraphQLRequest<
   TVariables extends VariableValues = VariableValues,
