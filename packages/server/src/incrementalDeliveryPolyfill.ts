@@ -102,6 +102,12 @@ async function tryToLoadGraphQL17() {
   ) {
     graphqlExperimentalExecuteIncrementally = (graphql as any)
       .experimentalExecuteIncrementally;
+  } else if (
+    graphql.version === '17.0.0-alpha.9' &&
+    'experimentalExecuteIncrementally' in graphql
+  ) {
+    graphqlExperimentalExecuteIncrementally = (graphql as any)
+      .experimentalExecuteIncrementally;
   } else {
     graphqlExperimentalExecuteIncrementally = null;
   }
