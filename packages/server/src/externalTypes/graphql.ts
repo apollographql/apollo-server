@@ -12,6 +12,10 @@ import type {
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
 } from './incrementalDeliveryPolyfillAlpha2.js';
+import type {
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+} from './incrementalDeliveryPolyfillAlpha9.js';
 
 export interface GraphQLRequest<
   TVariables extends VariableValues = VariableValues,
@@ -39,6 +43,11 @@ export type GraphQLResponseBody<TData = Record<string, unknown>> =
       kind: 'incremental';
       initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2;
       subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2>;
+    }
+  | {
+      kind: 'incremental';
+      initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9>;
     };
 
 export type GraphQLInProgressResponse<TData = Record<string, unknown>> = {
