@@ -1205,6 +1205,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // by the order in the list we provide, so we put text/html last.
         MEDIA_TYPES.APPLICATION_JSON,
         MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023,
         MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
         MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
         MEDIA_TYPES.TEXT_HTML,
@@ -1402,6 +1403,8 @@ export const MEDIA_TYPES = {
   // delivery is part of the official GraphQL spec.
   MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
   MULTIPART_MIXED_EXPERIMENTAL: 'multipart/mixed; deferSpec=20220824',
+  MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023:
+    'multipart/mixed; incrementalDeliverySpec=20230621',
   TEXT_HTML: 'text/html',
 };
 

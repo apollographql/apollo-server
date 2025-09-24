@@ -282,6 +282,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
       // which isn't good enough.
       MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
       MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
+      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023,
     ]) === MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
