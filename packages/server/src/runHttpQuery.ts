@@ -1,6 +1,5 @@
 import type {
   BaseContext,
-  GraphQLExperimentalFormattedIncrementalResultAlpha2,
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
   GraphQLRequest,
@@ -326,12 +325,12 @@ async function* writeMultipartBody(
   // iterator is finished until we do async work.
 
   yield `\r\n---\r\ncontent-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
-    orderInitialIncrementalExecutionResultFields(initialResult),
+    initialResult,
   )}\r\n---${initialResult.hasNext ? '' : '--'}\r\n`;
 
   for await (const result of subsequentResults) {
     yield `content-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
-      orderSubsequentIncrementalExecutionResultFields(result),
+      result,
     )}\r\n---${result.hasNext ? '' : '--'}\r\n`;
   }
 }
@@ -346,40 +345,6 @@ function orderExecutionResultFields(
     data: result.data,
     extensions: result.extensions,
   };
-}
-function orderInitialIncrementalExecutionResultFields(
-  result: GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
-): GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2 {
-  return {
-    hasNext: result.hasNext,
-    errors: result.errors,
-    data: result.data,
-    incremental: orderIncrementalResultFields(result.incremental),
-    extensions: result.extensions,
-  };
-}
-function orderSubsequentIncrementalExecutionResultFields(
-  result: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
-): GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 {
-  return {
-    hasNext: result.hasNext,
-    incremental: orderIncrementalResultFields(result.incremental),
-    extensions: result.extensions,
-  };
-}
-
-function orderIncrementalResultFields(
-  incremental?: readonly GraphQLExperimentalFormattedIncrementalResultAlpha2[],
-): undefined | GraphQLExperimentalFormattedIncrementalResultAlpha2[] {
-  return incremental?.map((i: any) => ({
-    hasNext: i.hasNext,
-    errors: i.errors,
-    path: i.path,
-    label: i.label,
-    data: i.data,
-    items: i.items,
-    extensions: i.extensions,
-  }));
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
