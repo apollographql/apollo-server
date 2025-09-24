@@ -275,18 +275,14 @@ export async function runHttpQuery<TContext extends BaseContext>({
   // anything has changed).
   const acceptHeader = httpRequest.headers.get('accept');
   if (
-    !(
-      acceptHeader &&
-      new Negotiator({
-        headers: { accept: httpRequest.headers.get('accept') },
-      }).mediaType([
-        // mediaType() will return the first one that matches, so if the client
-        // doesn't include the deferSpec parameter it will match this one here,
-        // which isn't good enough.
-        MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
-      ]) === MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL
-    )
+    !acceptHeader ||
+    new Negotiator({ headers: { accept: acceptHeader } }).mediaType([
+      // mediaType() will return the first one that matches, so if the client
+      // doesn't include the deferSpec parameter it will match this one here,
+      // which isn't good enough.
+      MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
+      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
+    ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
     // specify `accept: multipart/mixed`. We return an error.
