@@ -2,7 +2,7 @@
 '@apollo/server': minor
 ---
 
-Add `graphql@17.0-0-alpha.9` incremental delivery types and rename the existing incremental delievery types by adding an `Alpha2` suffix. If you import these types in your code, you will need to add the `Alpha2` suffix.
+Add `graphql@17.0-0-alpha.9` incremental delivery types and rename the existing incremental delivery types by adding an `Alpha2` suffix. If you import these types in your code, you will need to add the `Alpha2` suffix.
 
 ```diff
 import type {
