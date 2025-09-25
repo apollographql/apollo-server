@@ -1,9 +1,13 @@
 import type {
   BaseContext,
+  GraphQLExperimentalFormattedCompletedResultAlpha9,
+  GraphQLExperimentalFormattedIncrementalResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalResultAlpha9,
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+  GraphQLExperimentalPendingResultAlpha9,
   GraphQLRequest,
   HTTPGraphQLHead,
   HTTPGraphQLRequest,
@@ -370,12 +374,12 @@ async function* writeMultipartBody(
   // iterator is finished until we do async work.
 
   yield `\r\n---\r\ncontent-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
-    initialResult,
+    orderInitialIncrementalExecutionResultFields(initialResult),
   )}\r\n---${initialResult.hasNext ? '' : '--'}\r\n`;
 
   for await (const result of subsequentResults) {
     yield `content-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
-      result,
+      orderSubsequentIncrementalExecutionResultFields(result),
     )}\r\n---${result.hasNext ? '' : '--'}\r\n`;
   }
 }
@@ -390,6 +394,99 @@ function orderExecutionResultFields(
     data: result.data,
     extensions: result.extensions,
   };
+}
+
+function orderInitialIncrementalExecutionResultFields(
+  result:
+    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2
+    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+):
+  | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2
+  | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9 {
+  if ('pending' in result) {
+    return {
+      hasNext: result.hasNext,
+      errors: result.errors,
+      data: result.data,
+      pending: orderPendingResultFields(result.pending),
+      extensions: result.extensions,
+    };
+  }
+
+  return {
+    hasNext: result.hasNext,
+    errors: result.errors,
+    data: result.data,
+    incremental: orderIncrementalResultFields(result.incremental),
+    extensions: result.extensions,
+  };
+}
+
+function orderPendingResultFields(
+  pending: readonly GraphQLExperimentalPendingResultAlpha9[] | undefined,
+): GraphQLExperimentalPendingResultAlpha9[] | undefined {
+  return pending?.map((p) => ({
+    id: p.id,
+    path: p.path,
+    label: p.label,
+  }));
+}
+
+function orderSubsequentIncrementalExecutionResultFields(
+  result:
+    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
+    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+):
+  | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
+  | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9 {
+  if ('pending' in result || 'completed' in result) {
+    return {
+      hasNext: result.hasNext,
+      pending: orderPendingResultFields(result.pending),
+      incremental: orderIncrementalResultFields(result.incremental),
+      completed: orderCompletedResultFields(result.completed),
+      extensions: result.extensions,
+    };
+  }
+
+  return {
+    hasNext: result.hasNext,
+    incremental: orderIncrementalResultFields(result.incremental),
+    extensions: result.extensions,
+  };
+}
+
+function orderCompletedResultFields(
+  result:
+    | readonly GraphQLExperimentalFormattedCompletedResultAlpha9[]
+    | undefined,
+): GraphQLExperimentalFormattedCompletedResultAlpha9[] | undefined {
+  return result?.map((c) => ({
+    errors: c.errors,
+    id: c.id,
+  }));
+}
+
+function orderIncrementalResultFields(
+  incremental?:
+    | readonly GraphQLExperimentalFormattedIncrementalResultAlpha2[]
+    | readonly GraphQLExperimentalFormattedIncrementalResultAlpha9[],
+):
+  | undefined
+  | GraphQLExperimentalFormattedIncrementalResultAlpha2[]
+  | GraphQLExperimentalFormattedIncrementalResultAlpha9[] {
+  return incremental?.map((i: any) => {
+    return {
+      errors: i.errors,
+      path: i.path,
+      subPath: i.subPath,
+      label: i.label,
+      id: i.id,
+      data: i.data,
+      items: i.items,
+      extensions: i.extensions,
+    };
+  });
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
