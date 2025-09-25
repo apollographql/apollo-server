@@ -2312,23 +2312,27 @@ export function defineIntegrationTestSuiteHttpServerTests(
             },
           };
 
-          if (IS_GRAPHQL_17_ALPHA2) {
-            it.each([
-              [undefined],
-              ['application/json'],
-              ['multipart/mixed'],
-              ['multipart/mixed; deferSpec=12345'],
-            ])('errors when @defer is used with accept: %s', async (accept) => {
-              const app = await createApp({ typeDefs, resolvers });
-              const req = request(app).post('/');
-              if (accept) {
-                req.set('accept', accept);
-              }
-              const res = await req.send({
-                query: '{ ... @defer { testString } }',
-              });
-              expect(res.status).toEqual(406);
-              expect(res.body).toMatchInlineSnapshot(`
+          (IS_GRAPHQL_17_ALPHA2 ? describe : describe.skip)(
+            'tests that require graphql@17.0.0-alpha.2',
+            () => {
+              it.each([
+                [undefined],
+                ['application/json'],
+                ['multipart/mixed'],
+                ['multipart/mixed; deferSpec=12345'],
+              ])(
+                'errors when @defer is used with accept: %s',
+                async (accept) => {
+                  const app = await createApp({ typeDefs, resolvers });
+                  const req = request(app).post('/');
+                  if (accept) {
+                    req.set('accept', accept);
+                  }
+                  const res = await req.send({
+                    query: '{ ... @defer { testString } }',
+                  });
+                  expect(res.status).toEqual(406);
+                  expect(res.body).toMatchInlineSnapshot(`
                       {
                         "errors": [
                           {
@@ -2340,21 +2344,22 @@ export function defineIntegrationTestSuiteHttpServerTests(
                         ],
                       }
                   `);
-            });
+                },
+              );
 
-            it('errors if incompatible with installed graphql.js version', async () => {
-              const app = await createApp({ typeDefs, resolvers });
-              const req = request(app)
-                .post('/')
-                .set(
-                  'accept',
-                  'multipart/mixed; incrementalDeliverySpec=3283f8a',
-                );
-              const res = await req.send({
-                query: '{ ... @defer { testString } }',
-              });
-              expect(res.status).toEqual(406);
-              expect(res.body).toMatchInlineSnapshot(`
+              it('errors if incompatible with installed graphql.js version', async () => {
+                const app = await createApp({ typeDefs, resolvers });
+                const req = request(app)
+                  .post('/')
+                  .set(
+                    'accept',
+                    'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                  );
+                const res = await req.send({
+                  query: '{ ... @defer { testString } }',
+                });
+                expect(res.status).toEqual(406);
+                expect(res.body).toMatchInlineSnapshot(`
                 {
                   "errors": [
                     {
@@ -2366,27 +2371,27 @@ export function defineIntegrationTestSuiteHttpServerTests(
                   ],
                 }
               `);
-            });
+              });
 
-            it.each([
-              ['multipart/mixed; deferSpec=20220824'],
-              ['multipart/mixed; deferSpec=20220824, application/json'],
-              ['application/json, multipart/mixed; deferSpec=20220824'],
-            ])('basic @defer working with accept: %s', async (accept) => {
-              const app = await createApp({ typeDefs, resolvers });
-              const res = await request(app)
-                .post('/')
-                .set('accept', accept)
-                // disables supertest's use of formidable for multipart
-                .parse(superagent.parse.text)
-                .send({
-                  query: '{ first: testString ... @defer { testString } }',
-                });
-              expect(res.status).toEqual(200);
-              expect(res.header['content-type']).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-              );
-              expect(res.text).toEqual(`\r
+              it.each([
+                ['multipart/mixed; deferSpec=20220824'],
+                ['multipart/mixed; deferSpec=20220824, application/json'],
+                ['application/json, multipart/mixed; deferSpec=20220824'],
+              ])('basic @defer working with accept: %s', async (accept) => {
+                const app = await createApp({ typeDefs, resolvers });
+                const res = await request(app)
+                  .post('/')
+                  .set('accept', accept)
+                  // disables supertest's use of formidable for multipart
+                  .parse(superagent.parse.text)
+                  .send({
+                    query: '{ first: testString ... @defer { testString } }',
+                  });
+                expect(res.status).toEqual(200);
+                expect(res.header['content-type']).toMatchInlineSnapshot(
+                  `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+                );
+                expect(res.text).toEqual(`\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
@@ -2397,46 +2402,48 @@ content-type: application/json; charset=utf-8\r
 {"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}\r
 -----\r
 `);
-            });
+              });
 
-            it('first payload sent while deferred field is blocking', async () => {
-              const app = await createApp({ typeDefs, resolvers });
-              const gotFirstChunkBarrier = resolvable();
-              const resPromise = request(app)
-                .post('/')
-                .set(
-                  'accept',
-                  'multipart/mixed; deferSpec=20220824, application/json',
-                )
-                .parse((res, fn) => {
-                  res.text = '';
-                  res.setEncoding('utf8');
-                  res.on('data', (chunk) => {
-                    res.text += chunk;
-                    if (
-                      res.text.includes('it works') &&
-                      res.text.endsWith('---\r\n')
-                    ) {
-                      gotFirstChunkBarrier.resolve();
-                    }
-                  });
-                  res.on('end', fn);
-                })
-                .send({ query: '{ testString ... @defer { barrierString } }' })
-                // believe it or not, superagent uses `.then` to decide to actually send the request
-                .then((r) => r);
+              it('first payload sent while deferred field is blocking', async () => {
+                const app = await createApp({ typeDefs, resolvers });
+                const gotFirstChunkBarrier = resolvable();
+                const resPromise = request(app)
+                  .post('/')
+                  .set(
+                    'accept',
+                    'multipart/mixed; deferSpec=20220824, application/json',
+                  )
+                  .parse((res, fn) => {
+                    res.text = '';
+                    res.setEncoding('utf8');
+                    res.on('data', (chunk) => {
+                      res.text += chunk;
+                      if (
+                        res.text.includes('it works') &&
+                        res.text.endsWith('---\r\n')
+                      ) {
+                        gotFirstChunkBarrier.resolve();
+                      }
+                    });
+                    res.on('end', fn);
+                  })
+                  .send({
+                    query: '{ testString ... @defer { barrierString } }',
+                  })
+                  // believe it or not, superagent uses `.then` to decide to actually send the request
+                  .then((r) => r);
 
-              // We ensure that the `barrierString` resolver isn't allowed to resolve
-              // until after we've gotten back a chunk containing the value of testString.
-              await gotFirstChunkBarrier;
-              barrierStringBarrier.resolve();
+                // We ensure that the `barrierString` resolver isn't allowed to resolve
+                // until after we've gotten back a chunk containing the value of testString.
+                await gotFirstChunkBarrier;
+                barrierStringBarrier.resolve();
 
-              const res = await resPromise;
-              expect(res.status).toEqual(200);
-              expect(res.header['content-type']).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-              );
-              expect(res.text).toMatchInlineSnapshot(`
+                const res = await resPromise;
+                expect(res.status).toEqual(200);
+                expect(res.header['content-type']).toMatchInlineSnapshot(
+                  `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+                );
+                expect(res.text).toMatchInlineSnapshot(`
                               "
                               ---
                               content-type: application/json; charset=utf-8
@@ -2449,8 +2456,9 @@ content-type: application/json; charset=utf-8\r
                               -----
                               "
                           `);
-            });
-          }
+              });
+            },
+          );
         });
       },
     );
