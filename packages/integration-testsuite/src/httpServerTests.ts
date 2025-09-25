@@ -2301,7 +2301,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
                 .post('/')
                 .set(
                   'accept',
-                  `multipart/mixed; deferSpec=20220824, application/json`,
+                  'multipart/mixed; deferSpec=20220824, application/json',
                 )
                 .parse((res, fn) => {
                   res.text = '';
