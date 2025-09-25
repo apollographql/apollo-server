@@ -1210,8 +1210,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // by the order in the list we provide, so we put text/html last.
         MEDIA_TYPES.APPLICATION_JSON,
         MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
         MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
         MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
         MEDIA_TYPES.TEXT_HTML,
       ]) === MEDIA_TYPES.TEXT_HTML
