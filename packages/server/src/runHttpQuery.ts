@@ -298,12 +298,9 @@ export async function runHttpQuery<TContext extends BaseContext>({
   ]);
 
   if (
-    !(
-      acceptHeader &&
-      (preferredMediaType ===
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 ||
-        preferredMediaType === MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9)
-    )
+    !acceptHeader ||
+    (preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 &&
+      preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9)
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
     // specify `accept: multipart/mixed`. We return an error.
