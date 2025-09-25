@@ -16,6 +16,7 @@ import {
   type FieldNode,
   type GraphQLFormattedError,
   GraphQLScalarType,
+  version as graphqlVersion,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -1178,52 +1179,101 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
 
-          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
-            'includes all fields with defer',
-            async () => {
-              await setupApolloServerAndFetchPair({}, {}, [], true);
-              const response = await fetch(uri, {
-                method: 'POST',
-                headers: {
-                  'content-type': 'application/json',
-                  accept: 'multipart/mixed; deferSpec=20220824',
-                },
-                body: JSON.stringify({
-                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
-                }),
-              });
-              expect(response.status).toBe(200);
-              expect(
-                response.headers.get('content-type'),
-              ).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-              );
-              expect(await response.text()).toMatchInlineSnapshot(`
-                "
-                ---
-                content-type: application/json; charset=utf-8
+          if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
+            (graphqlVersion === '17.0.0-alpha.2' ? it : it.skip)(
+              'includes all fields with defer',
+              async () => {
+                await setupApolloServerAndFetchPair({}, {}, [], true);
+                const response = await fetch(uri, {
+                  method: 'POST',
+                  headers: {
+                    'content-type': 'application/json',
+                    accept: 'multipart/mixed; deferSpec=20220824',
+                  },
+                  body: JSON.stringify({
+                    query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                  }),
+                });
+                expect(response.status).toBe(200);
+                expect(
+                  response.headers.get('content-type'),
+                ).toMatchInlineSnapshot(
+                  `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+                );
+                expect(await response.text()).toMatchInlineSnapshot(`
+                                  "
+                                  ---
+                                  content-type: application/json; charset=utf-8
 
-                {"hasNext":true,"data":{"justAField":"a string"}}
-                ---
-                content-type: application/json; charset=utf-8
+                                  {"hasNext":true,"data":{"justAField":"a string"}}
+                                  ---
+                                  content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"path":[],"data":{"delayedFoo":{"bar":"hi"}}}]}
-                -----
-                "
-              `);
-              const reports = await reportIngress.promiseOfReports;
-              expect(reports.length).toBe(1);
-              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
-              const trace = Object.values(reports[0].tracesPerQuery)[0]
-                .trace?.[0] as Trace;
-              expect(trace).toBeDefined();
-              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
-              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
-              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
-                'bar',
-              );
-            },
-          );
+                                  {"hasNext":false,"incremental":[{"path":[],"data":{"delayedFoo":{"bar":"hi"}}}]}
+                                  -----
+                                  "
+                              `);
+                const reports = await reportIngress.promiseOfReports;
+                expect(reports.length).toBe(1);
+                expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace?.[0] as Trace;
+                expect(trace).toBeDefined();
+                expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+                expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+                expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                  'bar',
+                );
+              },
+            );
+
+            (graphqlVersion === '17.0.0-alpha.9' ? it : it.skip)(
+              'includes all fields with defer',
+              async () => {
+                await setupApolloServerAndFetchPair({}, {}, [], true);
+                const response = await fetch(uri, {
+                  method: 'POST',
+                  headers: {
+                    'content-type': 'application/json',
+                    accept: 'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                  },
+                  body: JSON.stringify({
+                    query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                  }),
+                });
+                expect(response.status).toBe(200);
+                expect(
+                  response.headers.get('content-type'),
+                ).toMatchInlineSnapshot(
+                  `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+                );
+                expect(await response.text()).toMatchInlineSnapshot(`
+                  "
+                  ---
+                  content-type: application/json; charset=utf-8
+
+                  {"hasNext":true,"data":{"justAField":"a string"},"pending":[{"id":"0","path":[]}]}
+                  ---
+                  content-type: application/json; charset=utf-8
+
+                  {"hasNext":false,"incremental":[{"id":"0","data":{"delayedFoo":{"bar":"hi"}}}],"completed":[{"id":"0"}]}
+                  -----
+                  "
+                `);
+                const reports = await reportIngress.promiseOfReports;
+                expect(reports.length).toBe(1);
+                expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+                const trace = Object.values(reports[0].tracesPerQuery)[0]
+                  .trace?.[0] as Trace;
+                expect(trace).toBeDefined();
+                expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+                expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+                expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                  'bar',
+                );
+              },
+            );
+          }
 
           it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
             await setupApolloServerAndFetchPair({}, {}, [
