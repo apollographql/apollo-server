@@ -2375,32 +2375,25 @@ content-type: application/json; charset=utf-8\r
 
             it('errors if incompatible with installed graphql.js version', async () => {
               const app = await createApp({ typeDefs, resolvers });
-              const res = await request(app)
+              const req = request(app)
                 .post('/')
-                .set(
-                  'accept',
-                  'multipart/mixed; incrementalDeliverySpec=3283f8a',
-                )
-                // disables supertest's use of formidable for multipart
-                .parse(superagent.parse.text)
-                .send({
-                  query: '{ first: testString ... @defer { testString } }',
-                });
-              expect(res.status).toEqual(200);
-              expect(res.header['content-type']).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-              );
-              expect(res.text).toEqual(`\r
----\r
-content-type: application/json; charset=utf-8\r
-\r
-{"hasNext":true,"data":{"first":"it works"}}\r
----\r
-content-type: application/json; charset=utf-8\r
-\r
-{"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}\r
------\r
-`);
+                .set('accept', 'incrementalDeliverySpec=3283f8a');
+              const res = await req.send({
+                query: '{ ... @defer { testString } }',
+              });
+              expect(res.status).toEqual(406);
+              expect(res.body).toMatchInlineSnapshot(`
+                {
+                  "errors": [
+                    {
+                      "extensions": {
+                        "code": "BAD_REQUEST",
+                      },
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with the the installed version of graphql.js. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
+                    },
+                  ],
+                }
+              `);
             });
 
             it('first payload sent while deferred field is blocking', async () => {
@@ -2441,18 +2434,18 @@ content-type: application/json; charset=utf-8\r
                 `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
               );
               expect(res.text).toMatchInlineSnapshot(`
-              "
-              ---
-              content-type: application/json; charset=utf-8
+                              "
+                              ---
+                              content-type: application/json; charset=utf-8
 
-              {"hasNext":true,"data":{"testString":"it works"}}
-              ---
-              content-type: application/json; charset=utf-8
+                              {"hasNext":true,"data":{"testString":"it works"}}
+                              ---
+                              content-type: application/json; charset=utf-8
 
-              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
-              -----
-              "
-            `);
+                              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
+                              -----
+                              "
+                          `);
             });
           }
         });
