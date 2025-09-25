@@ -2361,7 +2361,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
                       "extensions": {
                         "code": "BAD_REQUEST",
                       },
-                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with the the installed version of graphql.js. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with this server. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
                     },
                   ],
                 }

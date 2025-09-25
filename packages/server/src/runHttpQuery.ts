@@ -319,8 +319,8 @@ export async function runHttpQuery<TContext extends BaseContext>({
     // specified the wrong version. We return an error
     throw new BadRequestError(
       'Apollo server received an operation that uses incremental delivery ' +
-        '(@defer or @stream) with a spec version incompatible with the ' +
-        `installed version of graphql.js. Please use the HTTP header 'Accept: ${validMediaType}'.`,
+        '(@defer or @stream) with a spec version incompatible with this server. ' +
+        `Please use the HTTP header 'Accept: ${validMediaType}'.`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
