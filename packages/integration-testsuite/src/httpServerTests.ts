@@ -2170,53 +2170,109 @@ export function defineIntegrationTestSuiteHttpServerTests(
         // These tests mock out execution, so that we can test the incremental
         // delivery transport even if we're built against graphql@16.
         describe('mocked execution', () => {
-          it('basic @defer working', async () => {
-            const app = await createApp({
-              typeDefs,
-              __testing_incrementalExecutionResults: {
-                initialResult: {
-                  hasNext: true,
-                  data: { first: 'it works' },
+          (IS_GRAPHQL_17_ALPHA2 ? it : it.skip)(
+            'basic @defer working graphql@17.0.0-alpha.2',
+            async () => {
+              const app = await createApp({
+                typeDefs,
+                __testing_incrementalExecutionResults: {
+                  initialResult: {
+                    hasNext: true,
+                    data: { first: 'it works' },
+                  },
+                  subsequentResults: (async function* () {
+                    yield {
+                      hasNext: false,
+                      incremental: [
+                        { path: [], data: { testString: 'it works' } },
+                      ],
+                    };
+                  })(),
                 },
-                subsequentResults: (async function* () {
-                  yield {
-                    hasNext: false,
-                    incremental: [
-                      { path: [], data: { testString: 'it works' } },
-                    ],
-                  };
-                })(),
-              },
-            });
-            const res = await request(app)
-              .post('/')
-              .set(
-                'accept',
-                'multipart/mixed; deferSpec=20220824, application/json',
-              )
-              // disables supertest's use of formidable for multipart
-              .parse(superagent.parse.text)
-              .send({
-                query: '{ first: testString ... @defer { testString } }',
               });
-            expect(res.status).toEqual(200);
-            expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-            );
-            expect(res.text).toMatchInlineSnapshot(`
-              "
-              ---
-              content-type: application/json; charset=utf-8
+              const res = await request(app)
+                .post('/')
+                .set(
+                  'accept',
+                  'multipart/mixed; deferSpec=20220824, application/json',
+                )
+                // disables supertest's use of formidable for multipart
+                .parse(superagent.parse.text)
+                .send({
+                  query: '{ first: testString ... @defer { testString } }',
+                });
+              expect(res.status).toEqual(200);
+              expect(res.header['content-type']).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              );
+              expect(res.text).toMatchInlineSnapshot(`
+                              "
+                              ---
+                              content-type: application/json; charset=utf-8
 
-              {"hasNext":true,"data":{"first":"it works"}}
-              ---
-              content-type: application/json; charset=utf-8
+                              {"hasNext":true,"data":{"first":"it works"}}
+                              ---
+                              content-type: application/json; charset=utf-8
 
-              {"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}
-              -----
-              "
-            `);
-          });
+                              {"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}
+                              -----
+                              "
+                          `);
+            },
+          );
+
+          (IS_GRAPHQL_17_ALPHA9 ? it : it.skip)(
+            'basic @defer working graphql@17.0.0-alpha.9',
+            async () => {
+              const app = await createApp({
+                typeDefs,
+                __testing_incrementalExecutionResults: {
+                  initialResult: {
+                    hasNext: true,
+                    pending: [{ id: '0', path: [] }],
+                    data: { first: 'it works' },
+                  },
+                  subsequentResults: (async function* () {
+                    yield {
+                      hasNext: false,
+                      incremental: [
+                        { id: '0', data: { testString: 'it works' } },
+                      ],
+                      completed: [{ id: '0' }],
+                    };
+                  })(),
+                },
+              });
+              const res = await request(app)
+                .post('/')
+                .set(
+                  'accept',
+                  'multipart/mixed; incrementalDeliverySpec=3283f8a, application/json',
+                )
+                // disables supertest's use of formidable for multipart
+                .parse(superagent.parse.text)
+                .send({
+                  query: '{ first: testString ... @defer { testString } }',
+                });
+              expect(res.status).toEqual(200);
+              expect(res.header['content-type']).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+              );
+              expect(res.text).toMatchInlineSnapshot(`
+                "
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":true,"data":{"first":"it works"},"pending":[{"id":"0","path":[]}]}
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}
+                -----
+                "
+              `);
+            },
+          );
 
           (IS_GRAPHQL_17_ALPHA2 ? it : it.skip)(
             'first payload sent while deferred field is blocking graphql@17.0.0-alpha.2',
