@@ -296,7 +296,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream), but the client does not accept multipart/mixed ' +
         'HTTP responses. To enable incremental delivery support, add the HTTP ' +
-        `header 'Accept: ${graphqlVersion === '17.0.0-alpha.2' ? MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 : MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}'.`,
+        `header 'Accept: ${graphqlVersion === '17.0.0-alpha.9' ? MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9 : MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2}'.`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
@@ -338,7 +338,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
   graphQLResponse.http.headers.set(
     'content-type',
-    `multipart/mixed; boundary="-"; ${graphqlVersion === '17.0.0-alpha.2' ? 'deferSpec=20220824' : 'incrementalDeliverySpec=3283f8a'}`,
+    `multipart/mixed; boundary="-"; ${graphqlVersion === '17.0.0-alpha.9' ? 'incrementalDeliverySpec=3283f8a' : 'deferSpec=20220824'}`,
   );
   return {
     ...graphQLResponse.http,
