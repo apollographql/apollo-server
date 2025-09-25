@@ -2377,7 +2377,10 @@ content-type: application/json; charset=utf-8\r
               const app = await createApp({ typeDefs, resolvers });
               const req = request(app)
                 .post('/')
-                .set('accept', 'incrementalDeliverySpec=3283f8a');
+                .set(
+                  'accept',
+                  'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                );
               const res = await req.send({
                 query: '{ ... @defer { testString } }',
               });
