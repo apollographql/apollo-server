@@ -2486,7 +2486,10 @@ export function defineIntegrationTestSuiteHttpServerTests(
                 const app = await createApp({ typeDefs, resolvers });
                 const req = request(app)
                   .post('/')
-                  .set('accept', 'multipart/mixed; deferSpec=20220824');
+                  .set(
+                    'accept',
+                    'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                  );
                 const res = await req.send({
                   query: '{ ... @defer { testString } }',
                 });
