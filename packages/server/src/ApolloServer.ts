@@ -1408,8 +1408,9 @@ export const MEDIA_TYPES = {
   // delivery is part of the official GraphQL spec.
   MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
   MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2: 'multipart/mixed; deferSpec=20220824',
+  // spec version represents the commit hash of 17.0.0-alpha.9
   MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9:
-    'multipart/mixed; incrementalDeliverySpec=20230621',
+    'multipart/mixed; incrementalDeliverySpec=3283f8a',
   TEXT_HTML: 'text/html',
 };
 
