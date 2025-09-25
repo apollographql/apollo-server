@@ -1181,7 +1181,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
           if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
             (graphqlVersion === '17.0.0-alpha.2' ? it : it.skip)(
-              'includes all fields with defer',
+              'includes all fields with defer graphql@17.0.0-alpha.2',
               async () => {
                 await setupApolloServerAndFetchPair({}, {}, [], true);
                 const response = await fetch(uri, {
@@ -1228,7 +1228,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             );
 
             (graphqlVersion === '17.0.0-alpha.9' ? it : it.skip)(
-              'includes all fields with defer',
+              'includes all fields with defer graphql@17.0.0-alpha.9',
               async () => {
                 await setupApolloServerAndFetchPair({}, {}, [], true);
                 const response = await fetch(uri, {
