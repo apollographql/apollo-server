@@ -306,7 +306,6 @@ export async function runHttpQuery<TContext extends BaseContext>({
     graphqlVersion === '17.0.0-alpha.2' &&
     new Negotiator({ headers: { accept: acceptHeader } }).mediaType([
       MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
-      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023,
     ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL
   ) {
     // The client ran an operation that would yield multiple parts, but
@@ -323,7 +322,6 @@ export async function runHttpQuery<TContext extends BaseContext>({
   if (
     graphqlVersion === '17.0.0-alpha.9' &&
     new Negotiator({ headers: { accept: acceptHeader } }).mediaType([
-      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
       MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023,
     ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023
   ) {
