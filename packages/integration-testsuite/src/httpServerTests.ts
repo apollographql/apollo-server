@@ -18,6 +18,7 @@ import {
   GraphQLSchema,
   GraphQLString,
   type ValidationContext,
+  version as graphqlVersion,
 } from 'graphql';
 import gql from 'graphql-tag';
 import {
@@ -55,6 +56,8 @@ import {
   ApolloServerErrorCode,
   unwrapResolverError,
 } from '@apollo/server/errors';
+const IS_GRAPHQL_17_ALPHA2 = graphqlVersion === '17.0.0-alpha.2';
+
 
 const QueryRootType = new GraphQLObjectType({
   name: 'QueryRoot',
