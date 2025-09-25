@@ -331,7 +331,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
   graphQLResponse.http.headers.set(
     'content-type',
-    `multipart/mixed; boundary="-"; ${graphqlVersion === '17.0.0-alpha.9' ? 'incrementalDeliverySpec=3283f8a' : 'deferSpec=20220824'}`,
+    `multipart/mixed; boundary="-"; ${validMediaType.replace('multipart/mixed; ', '')}`,
   );
   return {
     ...graphQLResponse.http,
