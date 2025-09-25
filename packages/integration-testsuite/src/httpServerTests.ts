@@ -2352,26 +2352,23 @@ export function defineIntegrationTestSuiteHttpServerTests(
                 const app = await createApp({ typeDefs, resolvers });
                 const req = request(app)
                   .post('/')
-                  .set(
-                    'accept',
-                    'multipart/mixed; incrementalDeliverySpec=3283f8a',
-                  );
+                  .set('accept', 'multipart/mixed; deferSpec=20220824');
                 const res = await req.send({
                   query: '{ ... @defer { testString } }',
                 });
                 expect(res.status).toEqual(406);
                 expect(res.body).toMatchInlineSnapshot(`
-                {
-                  "errors": [
-                    {
-                      "extensions": {
-                        "code": "BAD_REQUEST",
-                      },
-                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with this server. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
-                    },
-                  ],
-                }
-              `);
+                                  {
+                                    "errors": [
+                                      {
+                                        "extensions": {
+                                          "code": "BAD_REQUEST",
+                                        },
+                                        "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with this server. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
+                                      },
+                                    ],
+                                  }
+                              `);
               });
 
               it.each([
@@ -2500,26 +2497,23 @@ content-type: application/json; charset=utf-8\r
                 const app = await createApp({ typeDefs, resolvers });
                 const req = request(app)
                   .post('/')
-                  .set(
-                    'accept',
-                    'multipart/mixed; incrementalDeliverySpec=3283f8a',
-                  );
+                  .set('accept', 'multipart/mixed; deferSpec=20220824');
                 const res = await req.send({
                   query: '{ ... @defer { testString } }',
                 });
                 expect(res.status).toEqual(406);
                 expect(res.body).toMatchInlineSnapshot(`
-                {
-                  "errors": [
-                    {
-                      "extensions": {
-                        "code": "BAD_REQUEST",
-                      },
-                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with this server. Please use the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a'.",
-                    },
-                  ],
-                }
-              `);
+                                  {
+                                    "errors": [
+                                      {
+                                        "extensions": {
+                                          "code": "BAD_REQUEST",
+                                        },
+                                        "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with this server. Please use the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a'.",
+                                      },
+                                    ],
+                                  }
+                              `);
               });
 
               it.each([
@@ -2548,11 +2542,11 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"data":{"first":"it works"}}\r
+{"hasNext":true,"data":{"first":"it works"},"pending":[{"id":"0","path":[]}]}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}\r
+{"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}\r
 -----\r
 `);
               });
@@ -2597,17 +2591,17 @@ content-type: application/json; charset=utf-8\r
                   `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
                 );
                 expect(res.text).toMatchInlineSnapshot(`
-                    "
-                    ---
-                    content-type: application/json; charset=utf-8
+                  "
+                  ---
+                  content-type: application/json; charset=utf-8
 
-                    {"hasNext":true,"data":{"testString":"it works"}}
-                    ---
-                    content-type: application/json; charset=utf-8
+                  {"hasNext":true,"data":{"testString":"it works"},"pending":[{"id":"0","path":[]}]}
+                  ---
+                  content-type: application/json; charset=utf-8
 
-                    {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
-                    -----
-                    "
+                  {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
+                  -----
+                  "
                 `);
               });
             },
