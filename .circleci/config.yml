@@ -80,6 +80,7 @@ jobs:
     docker:
     - image: cimg/base:stable
     environment:
+      INCREMENTAL_DELIVERY_TESTS_ENABLED: t
       GRAPHQL_JS_VERSION: 17.0.0-alpha.9
     steps:
       - setup-node:
