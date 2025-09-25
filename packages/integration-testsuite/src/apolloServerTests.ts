@@ -1179,28 +1179,30 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
 
-          if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
-            (graphqlVersion === '17.0.0-alpha.2' ? it : it.skip)(
-              'includes all fields with defer graphql@17.0.0-alpha.2',
-              async () => {
-                await setupApolloServerAndFetchPair({}, {}, [], true);
-                const response = await fetch(uri, {
-                  method: 'POST',
-                  headers: {
-                    'content-type': 'application/json',
-                    accept: 'multipart/mixed; deferSpec=20220824',
-                  },
-                  body: JSON.stringify({
-                    query: '{ justAField ...@defer { delayedFoo { bar} } }',
-                  }),
-                });
-                expect(response.status).toBe(200);
-                expect(
-                  response.headers.get('content-type'),
-                ).toMatchInlineSnapshot(
-                  `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-                );
-                expect(await response.text()).toMatchInlineSnapshot(`
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED &&
+            graphqlVersion === '17.0.0-alpha.2'
+            ? it
+            : it.skip)(
+            'includes all fields with defer graphql@17.0.0-alpha.2',
+            async () => {
+              await setupApolloServerAndFetchPair({}, {}, [], true);
+              const response = await fetch(uri, {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                  accept: 'multipart/mixed; deferSpec=20220824',
+                },
+                body: JSON.stringify({
+                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                }),
+              });
+              expect(response.status).toBe(200);
+              expect(
+                response.headers.get('content-type'),
+              ).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              );
+              expect(await response.text()).toMatchInlineSnapshot(`
                                   "
                                   ---
                                   content-type: application/json; charset=utf-8
@@ -1213,41 +1215,44 @@ export function defineIntegrationTestSuiteApolloServerTests(
                                   -----
                                   "
                               `);
-                const reports = await reportIngress.promiseOfReports;
-                expect(reports.length).toBe(1);
-                expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
-                const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace?.[0] as Trace;
-                expect(trace).toBeDefined();
-                expect(trace?.root?.child?.[0].responseName).toBe('justAField');
-                expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
-                expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
-                  'bar',
-                );
-              },
-            );
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace?.[0] as Trace;
+              expect(trace).toBeDefined();
+              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                'bar',
+              );
+            },
+          );
 
-            (graphqlVersion === '17.0.0-alpha.9' ? it : it.skip)(
-              'includes all fields with defer graphql@17.0.0-alpha.9',
-              async () => {
-                await setupApolloServerAndFetchPair({}, {}, [], true);
-                const response = await fetch(uri, {
-                  method: 'POST',
-                  headers: {
-                    'content-type': 'application/json',
-                    accept: 'multipart/mixed; incrementalDeliverySpec=3283f8a',
-                  },
-                  body: JSON.stringify({
-                    query: '{ justAField ...@defer { delayedFoo { bar} } }',
-                  }),
-                });
-                expect(response.status).toBe(200);
-                expect(
-                  response.headers.get('content-type'),
-                ).toMatchInlineSnapshot(
-                  `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
-                );
-                expect(await response.text()).toMatchInlineSnapshot(`
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED &&
+            graphqlVersion === '17.0.0-alpha.9'
+            ? it
+            : it.skip)(
+            'includes all fields with defer graphql@17.0.0-alpha.9',
+            async () => {
+              await setupApolloServerAndFetchPair({}, {}, [], true);
+              const response = await fetch(uri, {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                  accept: 'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                },
+                body: JSON.stringify({
+                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                }),
+              });
+              expect(response.status).toBe(200);
+              expect(
+                response.headers.get('content-type'),
+              ).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+              );
+              expect(await response.text()).toMatchInlineSnapshot(`
                   "
                   ---
                   content-type: application/json; charset=utf-8
@@ -1260,20 +1265,19 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   -----
                   "
                 `);
-                const reports = await reportIngress.promiseOfReports;
-                expect(reports.length).toBe(1);
-                expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
-                const trace = Object.values(reports[0].tracesPerQuery)[0]
-                  .trace?.[0] as Trace;
-                expect(trace).toBeDefined();
-                expect(trace?.root?.child?.[0].responseName).toBe('justAField');
-                expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
-                expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
-                  'bar',
-                );
-              },
-            );
-          }
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace?.[0] as Trace;
+              expect(trace).toBeDefined();
+              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                'bar',
+              );
+            },
+          );
 
           it("doesn't resort to query body signature on `didResolveOperation` error", async () => {
             await setupApolloServerAndFetchPair({}, {}, [
