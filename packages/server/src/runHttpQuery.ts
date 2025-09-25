@@ -284,17 +284,25 @@ export async function runHttpQuery<TContext extends BaseContext>({
   // anything has changed).
   const acceptHeader = httpRequest.headers.get('accept');
   const negotiator = new Negotiator({ headers: { accept: acceptHeader } });
+  const validMediaType =
+    graphqlVersion === '17.0.0-alpha.9'
+      ? MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9
+      : MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2;
+  const preferredMediaType = negotiator.mediaType([
+    // mediaType() will return the first one that matches, so if the client
+    // doesn't include the deferSpec parameter it will match this one here,
+    // which isn't good enough.
+    MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
+    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
+  ]);
+
   if (
     !(
       acceptHeader &&
-      negotiator.mediaType([
-        // mediaType() will return the first one that matches, so if the client
-        // doesn't include the deferSpec parameter it will match this one here,
-        // which isn't good enough.
-        MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
-      ]) !== MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC
+      (preferredMediaType ===
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 ||
+        preferredMediaType === MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9)
     )
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
