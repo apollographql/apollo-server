@@ -2218,75 +2218,153 @@ export function defineIntegrationTestSuiteHttpServerTests(
             `);
           });
 
-          it('first payload sent while deferred field is blocking', async () => {
-            const gotFirstChunkBarrier = resolvable();
-            const sendSecondChunkBarrier = resolvable();
-            const app = await createApp({
-              typeDefs,
-              __testing_incrementalExecutionResults: {
-                initialResult: {
-                  hasNext: true,
-                  data: { testString: 'it works' },
+          (IS_GRAPHQL_17_ALPHA2 ? it : it.skip)(
+            'first payload sent while deferred field is blocking graphql@17.0.0-alpha.2',
+            async () => {
+              const gotFirstChunkBarrier = resolvable();
+              const sendSecondChunkBarrier = resolvable();
+              const app = await createApp({
+                typeDefs,
+                __testing_incrementalExecutionResults: {
+                  initialResult: {
+                    hasNext: true,
+                    data: { testString: 'it works' },
+                  },
+                  subsequentResults: (async function* () {
+                    await sendSecondChunkBarrier;
+                    yield {
+                      hasNext: false,
+                      incremental: [
+                        { path: [], data: { barrierString: 'we waited' } },
+                      ],
+                    };
+                  })(),
                 },
-                subsequentResults: (async function* () {
-                  await sendSecondChunkBarrier;
-                  yield {
-                    hasNext: false,
-                    incremental: [
-                      { path: [], data: { barrierString: 'we waited' } },
-                    ],
-                  };
-                })(),
-              },
-            });
-            const resPromise = request(app)
-              .post('/')
-              .set(
-                'accept',
-                'multipart/mixed; deferSpec=20220824, application/json',
-              )
-              .parse((res, fn) => {
-                res.text = '';
-                res.setEncoding('utf8');
-                res.on('data', (chunk) => {
-                  res.text += chunk;
-                  if (
-                    res.text.includes('it works') &&
-                    res.text.endsWith('---\r\n')
-                  ) {
-                    gotFirstChunkBarrier.resolve();
-                  }
-                });
-                res.on('end', fn);
-              })
-              .send({ query: '{ testString ... @defer { barrierString } }' })
-              // believe it or not, superagent uses `.then` to decide to actually send the request
-              .then((r) => r);
+              });
+              const resPromise = request(app)
+                .post('/')
+                .set(
+                  'accept',
+                  `multipart/mixed; deferSpec=20220824, application/json`,
+                )
+                .parse((res, fn) => {
+                  res.text = '';
+                  res.setEncoding('utf8');
+                  res.on('data', (chunk) => {
+                    res.text += chunk;
+                    if (
+                      res.text.includes('it works') &&
+                      res.text.endsWith('---\r\n')
+                    ) {
+                      gotFirstChunkBarrier.resolve();
+                    }
+                  });
+                  res.on('end', fn);
+                })
+                .send({ query: '{ testString ... @defer { barrierString } }' })
+                // believe it or not, superagent uses `.then` to decide to actually send the request
+                .then((r) => r);
 
-            // We ensure that the second chunk can't be sent until after we've
-            // gotten back a chunk containing the value of testString.
-            await gotFirstChunkBarrier;
-            sendSecondChunkBarrier.resolve();
+              // We ensure that the second chunk can't be sent until after we've
+              // gotten back a chunk containing the value of testString.
+              await gotFirstChunkBarrier;
+              sendSecondChunkBarrier.resolve();
 
-            const res = await resPromise;
-            expect(res.status).toEqual(200);
-            expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-            );
-            expect(res.text).toMatchInlineSnapshot(`
-              "
-              ---
-              content-type: application/json; charset=utf-8
+              const res = await resPromise;
+              expect(res.status).toEqual(200);
+              expect(res.header['content-type']).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+              );
+              expect(res.text).toMatchInlineSnapshot(`
+                              "
+                              ---
+                              content-type: application/json; charset=utf-8
 
-              {"hasNext":true,"data":{"testString":"it works"}}
-              ---
-              content-type: application/json; charset=utf-8
+                              {"hasNext":true,"data":{"testString":"it works"}}
+                              ---
+                              content-type: application/json; charset=utf-8
 
-              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
-              -----
-              "
-            `);
-          });
+                              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
+                              -----
+                              "
+                          `);
+            },
+          );
+
+          (IS_GRAPHQL_17_ALPHA9 ? it : it.skip)(
+            'first payload sent while deferred field is blocking graphql@17.0.0-alpha.9',
+            async () => {
+              const gotFirstChunkBarrier = resolvable();
+              const sendSecondChunkBarrier = resolvable();
+              const app = await createApp({
+                typeDefs,
+                __testing_incrementalExecutionResults: {
+                  initialResult: {
+                    hasNext: true,
+                    pending: [{ id: '0', path: [] }],
+                    data: { testString: 'it works' },
+                  },
+                  subsequentResults: (async function* () {
+                    await sendSecondChunkBarrier;
+                    yield {
+                      hasNext: false,
+                      incremental: [
+                        { id: '0', data: { barrierString: 'we waited' } },
+                      ],
+                      completed: [{ id: '0' }],
+                    };
+                  })(),
+                },
+              });
+              const resPromise = request(app)
+                .post('/')
+                .set(
+                  'accept',
+                  `multipart/mixed; incrementalDeliverySpec=3283f8a, application/json`,
+                )
+                .parse((res, fn) => {
+                  res.text = '';
+                  res.setEncoding('utf8');
+                  res.on('data', (chunk) => {
+                    res.text += chunk;
+                    if (
+                      res.text.includes('it works') &&
+                      res.text.endsWith('---\r\n')
+                    ) {
+                      gotFirstChunkBarrier.resolve();
+                    }
+                  });
+                  res.on('end', fn);
+                })
+                .send({ query: '{ testString ... @defer { barrierString } }' })
+                // believe it or not, superagent uses `.then` to decide to actually send the request
+                .then((r) => r);
+
+              // We ensure that the second chunk can't be sent until after we've
+              // gotten back a chunk containing the value of testString.
+              await gotFirstChunkBarrier;
+              sendSecondChunkBarrier.resolve();
+
+              const res = await resPromise;
+              expect(res.status).toEqual(200);
+              expect(res.header['content-type']).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+              );
+              expect(res.text).toMatchInlineSnapshot(`
+                "
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":true,"data":{"testString":"it works"},"pending":[{"id":"0","path":[]}]}
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
+                -----
+                "
+              `);
+            },
+          );
         });
 
         // These tests actually execute incremental delivery operations with
