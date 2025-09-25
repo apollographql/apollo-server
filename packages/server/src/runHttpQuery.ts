@@ -286,8 +286,8 @@ export async function runHttpQuery<TContext extends BaseContext>({
       // doesn't include the deferSpec parameter it will match this one here,
       // which isn't good enough.
       MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
-      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
-      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023,
+      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
     ]) === MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
@@ -296,7 +296,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream), but the client does not accept multipart/mixed ' +
         'HTTP responses. To enable incremental delivery support, add the HTTP ' +
-        `header 'Accept: ${graphqlVersion === '17.0.0-alpha.2' ? MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL : MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023}'.`,
+        `header 'Accept: ${graphqlVersion === '17.0.0-alpha.2' ? MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 : MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}'.`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
@@ -305,15 +305,15 @@ export async function runHttpQuery<TContext extends BaseContext>({
   if (
     graphqlVersion === '17.0.0-alpha.2' &&
     new Negotiator({ headers: { accept: acceptHeader } }).mediaType([
-      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
-    ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL
+      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+    ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2
   ) {
     // The client ran an operation that would yield multiple parts, but
     // specified the wrong version. We return an error
     throw new BadRequestError(
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream) with a spec version incompatible with the the ' +
-        `installed version of graphql.js. Please use the HTTP header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL}'.`,
+        `installed version of graphql.js. Please use the HTTP header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2}'.`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
@@ -322,15 +322,15 @@ export async function runHttpQuery<TContext extends BaseContext>({
   if (
     graphqlVersion === '17.0.0-alpha.9' &&
     new Negotiator({ headers: { accept: acceptHeader } }).mediaType([
-      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023,
-    ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023
+      MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
+    ]) !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9
   ) {
     // The client ran an operation that would yield multiple parts, but
     // specified the wrong version. We return an error
     throw new BadRequestError(
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream) with a spec version incompatible with the the ' +
-        `installed version of graphql.js. Please use the HTTP header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_JUNE_2023}'.`,
+        `installed version of graphql.js. Please use the HTTP header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}'.`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
