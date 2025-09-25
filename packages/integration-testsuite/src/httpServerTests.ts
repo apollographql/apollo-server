@@ -2342,6 +2342,32 @@ export function defineIntegrationTestSuiteHttpServerTests(
                   `);
             });
 
+            it('errors if incompatible with installed graphql.js version', async () => {
+              const app = await createApp({ typeDefs, resolvers });
+              const req = request(app)
+                .post('/')
+                .set(
+                  'accept',
+                  'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                );
+              const res = await req.send({
+                query: '{ ... @defer { testString } }',
+              });
+              expect(res.status).toEqual(406);
+              expect(res.body).toMatchInlineSnapshot(`
+                {
+                  "errors": [
+                    {
+                      "extensions": {
+                        "code": "BAD_REQUEST",
+                      },
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with the the installed version of graphql.js. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
+                    },
+                  ],
+                }
+              `);
+            });
+
             it.each([
               ['multipart/mixed; deferSpec=20220824'],
               ['multipart/mixed; deferSpec=20220824, application/json'],
@@ -2371,32 +2397,6 @@ content-type: application/json; charset=utf-8\r
 {"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}\r
 -----\r
 `);
-            });
-
-            it('errors if incompatible with installed graphql.js version', async () => {
-              const app = await createApp({ typeDefs, resolvers });
-              const req = request(app)
-                .post('/')
-                .set(
-                  'accept',
-                  'multipart/mixed; incrementalDeliverySpec=3283f8a',
-                );
-              const res = await req.send({
-                query: '{ ... @defer { testString } }',
-              });
-              expect(res.status).toEqual(406);
-              expect(res.body).toMatchInlineSnapshot(`
-                {
-                  "errors": [
-                    {
-                      "extensions": {
-                        "code": "BAD_REQUEST",
-                      },
-                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream) with a spec version incompatible with the the installed version of graphql.js. Please use the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
-                    },
-                  ],
-                }
-              `);
             });
 
             it('first payload sent while deferred field is blocking', async () => {
