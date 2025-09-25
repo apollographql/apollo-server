@@ -2539,6 +2539,70 @@ content-type: application/json; charset=utf-8\r
 `);
               });
 
+              it.each([
+                ['multipart/mixed; deferSpec=20220824'],
+                ['multipart/mixed; deferSpec=20220824, application/json'],
+                ['application/json, multipart/mixed; deferSpec=20220824'],
+              ])('basic @stream working with accept: %s', async (accept) => {
+                const app = await createApp({
+                  typeDefs: `#graphql
+                    directive @stream(if: Boolean! = true, label: String, initialCount: Int! = 0) on FIELD
+                    type Query {
+                      testStrings: [String]
+                    }
+                  `,
+                  resolvers: {
+                    Query: {
+                      testStrings: async function* () {
+                        await new Promise((r) => setTimeout(r, 10));
+                        yield 'it works';
+
+                        await new Promise((r) => setTimeout(r, 10));
+                        yield 'it works again';
+
+                        await new Promise((r) => setTimeout(r, 10));
+                        yield 'it works again again';
+                      },
+                    },
+                  },
+                });
+                const res = await request(app)
+                  .post('/')
+                  .set('accept', accept)
+                  // disables supertest's use of formidable for multipart
+                  .parse(superagent.parse.text)
+                  .send({
+                    query: '{ testStrings @stream }',
+                  });
+                expect(res.status).toEqual(200);
+                expect(res.header['content-type']).toMatchInlineSnapshot(
+                  `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+                );
+                expect(res.text).toEqual(`\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"data":{"testStrings":[]}}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"incremental":[{"path":["testStrings",0],"items":["it works"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"incremental":[{"path":["testStrings",1],"items":["it works again"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"incremental":[{"path":["testStrings",2],"items":["it works again again"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":false}\r
+-----\r
+`);
+              });
+
               it('first payload sent while deferred field is blocking', async () => {
                 const app = await createApp({ typeDefs, resolvers });
                 const gotFirstChunkBarrier = resolvable();
@@ -2684,6 +2748,74 @@ content-type: application/json; charset=utf-8\r
 content-type: application/json; charset=utf-8\r
 \r
 {"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}\r
+-----\r
+`);
+              });
+
+              it.each([
+                ['multipart/mixed; incrementalDeliverySpec=3283f8a'],
+                [
+                  'multipart/mixed; incrementalDeliverySpec=3283f8a, application/json',
+                ],
+                [
+                  'application/json, multipart/mixed; incrementalDeliverySpec=3283f8a',
+                ],
+              ])('basic @stream working with accept: %s', async (accept) => {
+                const app = await createApp({
+                  typeDefs: `#graphql
+                    directive @stream(if: Boolean! = true, label: String, initialCount: Int! = 0) on FIELD
+                    type Query {
+                      testStrings: [String]
+                    }
+                  `,
+                  resolvers: {
+                    Query: {
+                      testStrings: async function* () {
+                        await new Promise((r) => setTimeout(r, 10));
+                        yield 'it works';
+
+                        await new Promise((r) => setTimeout(r, 10));
+                        yield 'it works again';
+
+                        await new Promise((r) => setTimeout(r, 10));
+                        yield 'it works again again';
+                      },
+                    },
+                  },
+                });
+                const res = await request(app)
+                  .post('/')
+                  .set('accept', accept)
+                  // disables supertest's use of formidable for multipart
+                  .parse(superagent.parse.text)
+                  .send({
+                    query: '{ testStrings @stream }',
+                  });
+                expect(res.status).toEqual(200);
+                expect(res.header['content-type']).toMatchInlineSnapshot(
+                  `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+                );
+                expect(res.text).toEqual(`\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"data":{"testStrings":[]},"pending":[{"id":"0","path":["testStrings"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"incremental":[{"id":"0","items":["it works"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"incremental":[{"id":"0","items":["it works again"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":true,"incremental":[{"id":"0","items":["it works again again"]}]}\r
+---\r
+content-type: application/json; charset=utf-8\r
+\r
+{"hasNext":false,"completed":[{"id":"0"}]}\r
 -----\r
 `);
               });
