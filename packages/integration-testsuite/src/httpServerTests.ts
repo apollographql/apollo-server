@@ -2448,17 +2448,17 @@ export function defineIntegrationTestSuiteHttpServerTests(
               });
               expect(res.status).toEqual(406);
               expect(res.body).toMatchInlineSnapshot(`
-                      {
-                        "errors": [
-                          {
-                            "extensions": {
-                              "code": "BAD_REQUEST",
-                            },
-                            "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; deferSpec=20220824'.",
-                          },
-                        ],
-                      }
-                  `);
+                {
+                  "errors": [
+                    {
+                      "extensions": {
+                        "code": "BAD_REQUEST",
+                      },
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a' if your client supports the modern incremental format or 'Accept: multipart/mixed; deferSpec=20220824' if your client supports the legacy incremental format",
+                    },
+                  ],
+                }
+              `);
             });
 
             it.each([
@@ -2628,17 +2628,17 @@ content-type: application/json; charset=utf-8\r
               });
               expect(res.status).toEqual(406);
               expect(res.body).toMatchInlineSnapshot(`
-                      {
-                        "errors": [
-                          {
-                            "extensions": {
-                              "code": "BAD_REQUEST",
-                            },
-                            "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a'.",
-                          },
-                        ],
-                      }
-                  `);
+                {
+                  "errors": [
+                    {
+                      "extensions": {
+                        "code": "BAD_REQUEST",
+                      },
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a' if your client supports the modern incremental format or 'Accept: multipart/mixed; deferSpec=20220824' if your client supports the legacy incremental format",
+                    },
+                  ],
+                }
+              `);
             });
 
             it.each([
