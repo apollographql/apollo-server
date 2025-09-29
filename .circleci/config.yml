@@ -157,8 +157,7 @@ workflows:
       - Spell check
       - Codegen check
       - Smoke test built package
-      - Full incremental delivery tests with graphql 17 alpha 2
-      - Test with recent graphql-js alpha
+      - Full incremental delivery tests with graphql 17 alpha 9
       - Changesets
   security-scans:
     jobs:
