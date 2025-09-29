@@ -21,7 +21,8 @@ npm i
 if [[ -n "${GRAPHQL_JS_VERSION:-}" ]]; then
   npm i --no-save --legacy-peer-deps \
     "$TARBALL_DIR"/*.tgz \
-    "graphql@${GRAPHQL_JS_VERSION}"
+    "graphql@${GRAPHQL_JS_VERSION}" \
+    "@yaacovcr/transform"
 else
   npm i --no-save "$TARBALL_DIR"/*.tgz
 fi
