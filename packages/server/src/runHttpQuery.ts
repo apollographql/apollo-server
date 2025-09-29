@@ -293,8 +293,8 @@ export async function runHttpQuery<TContext extends BaseContext>({
     // doesn't include the deferSpec parameter it will match this one here,
     // which isn't good enough.
     MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
-    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
     MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
+    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
   ]);
 
   if (
