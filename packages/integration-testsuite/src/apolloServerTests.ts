@@ -16,7 +16,6 @@ import {
   type FieldNode,
   type GraphQLFormattedError,
   GraphQLScalarType,
-  version as graphqlVersion,
 } from 'graphql';
 
 // Note that by doing deep imports here we don't need to install React.
@@ -1179,11 +1178,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
 
-          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED &&
-            graphqlVersion === '17.0.0-alpha.2'
-            ? it
-            : it.skip)(
-            'includes all fields with defer graphql@17.0.0-alpha.2',
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
+            'includes all fields with defer legacy',
             async () => {
               await setupApolloServerAndFetchPair({}, {}, [], true);
               const response = await fetch(uri, {
@@ -1229,11 +1225,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
             },
           );
 
-          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED &&
-            graphqlVersion === '17.0.0-alpha.9'
-            ? it
-            : it.skip)(
-            'includes all fields with defer graphql@17.0.0-alpha.9',
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
+            'includes all fields with defer modern',
             async () => {
               await setupApolloServerAndFetchPair({}, {}, [], true);
               const response = await fetch(uri, {
