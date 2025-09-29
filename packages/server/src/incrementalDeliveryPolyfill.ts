@@ -191,6 +191,15 @@ let graphqlExperimentalExecuteIncrementally:
   | null
   | undefined = undefined;
 
+async function tryToLoadLegacyExecuteIncrementally() {
+  try {
+    const { legacyExecuteIncrementally } = await import('@yaacovcr/transform');
+    graphqlExperimentalExecuteIncrementally = legacyExecuteIncrementally;
+  } catch {
+    return;
+  }
+}
+
 async function tryToLoadGraphQL17() {
   if (graphqlExperimentalExecuteIncrementally !== undefined) {
     return;
@@ -213,13 +222,17 @@ async function tryToLoadGraphQL17() {
   }
 }
 
-export async function executeIncrementally(
-  args: ExecutionArgs,
-): Promise<
+export async function executeIncrementally({
+  useLegacyIncremental,
+  ...args
+}: ExecutionArgs & { useLegacyIncremental?: boolean }): Promise<
   | ExecutionResult
   | GraphQLExperimentalIncrementalExecutionResultsAlpha2
   | GraphQLExperimentalIncrementalExecutionResultsAlpha9
 > {
+  if (useLegacyIncremental) {
+    await tryToLoadLegacyExecuteIncrementally();
+  }
   await tryToLoadGraphQL17();
   if (graphqlExperimentalExecuteIncrementally) {
     return graphqlExperimentalExecuteIncrementally(args);
