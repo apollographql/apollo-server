@@ -137,7 +137,7 @@ Apollo Server 5.1 changed the required pre-release `graphql` version from `17.0.
 
 </MinVersion>
 
-Clients may request the legacy incremental delivery protocol by specifing an `accept` header with a value of `multipart/mixed; deferSpec=20220824`. Apollo Server does not support the legacy incremental delivery protocol by default and an error will be returned to the client.
+Clients may request the legacy incremental delivery protocol by specifying an `accept` header with a value of `multipart/mixed; deferSpec=20220824`. Apollo Server does not support the legacy incremental delivery protocol by default and an error will be returned to the client.
 
 You may choose to support the legacy incremental delivery protocol by installing the [`@yaacovcr/transform` package](https://github.com/yaacovCR/transform) which provides the needed utilities to format the incremental result using the legacy protocol.
 
