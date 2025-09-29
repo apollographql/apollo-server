@@ -212,7 +212,7 @@ async function tryToLoadLegacyExecuteIncrementally() {
 
 async function tryToLoadGraphQL17() {
   if (
-    graphqlExperimentalExecuteIncrementally !== undefined ||
+    graphqlExperimentalExecuteIncrementally !== undefined &&
     legacyExecuteIncrementally !== undefined
   ) {
     return;
