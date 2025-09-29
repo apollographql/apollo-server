@@ -4,6 +4,8 @@ import {
   type ExecutionResult,
   type GraphQLError,
 } from 'graphql';
+import { BadRequestError } from './internalErrorClasses.js';
+import { MEDIA_TYPES } from './ApolloServer.js';
 
 // This file "polyfills" graphql@17's experimentalExecuteIncrementally (by
 // returning a function that does not understand incremental directives if
@@ -240,8 +242,25 @@ export async function executeIncrementally({
 > {
   await tryToLoadGraphQL17();
 
-  if (useLegacyIncremental && legacyExecuteIncrementally) {
-    return legacyExecuteIncrementally(args);
+  if (useLegacyIncremental) {
+    if (legacyExecuteIncrementally) {
+      return legacyExecuteIncrementally(args);
+    }
+
+    // Only throw if the server supports incremental delivery with the new
+    // format, but not the legacy foramt. We don't want to accidentally send
+    // alpha.9 format when the client requested the legacy format.
+    if (graphqlExperimentalExecuteIncrementally) {
+      throw new BadRequestError(
+        'Apollo Server received an operation that uses incremental delivery ' +
+          '(@defer or @stream) with the legacy incremental format, but the server ' +
+          'does not support the legacy incremental delivery format. Add the HTTP ' +
+          `header: 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}' ` +
+          'to use the modern incremental delivery format',
+        // Use 406 Not Accepted
+        { extensions: { http: { status: 406 } } },
+      );
+    }
   }
 
   if (graphqlExperimentalExecuteIncrementally) {
