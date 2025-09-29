@@ -2431,7 +2431,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             },
           };
 
-          describe('tests that require graphql@17.0.0-alpha.2', () => {
+          describe('tests that require legacy incremental format', () => {
             it.each([
               [undefined],
               ['application/json'],
@@ -2611,7 +2611,7 @@ content-type: application/json; charset=utf-8\r
             });
           });
 
-          describe('tests that require graphql@17.0.0-alpha.9', () => {
+          describe('tests that require modern incremental format', () => {
             it.each([
               [undefined],
               ['application/json'],
