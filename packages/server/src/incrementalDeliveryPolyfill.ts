@@ -184,31 +184,44 @@ let graphqlExperimentalExecuteIncrementally:
   | ((
       args: ExecutionArgs,
     ) => PromiseOrValue<
-      | ExecutionResult
-      | GraphQLExperimentalIncrementalExecutionResultsAlpha2
-      | GraphQLExperimentalIncrementalExecutionResultsAlpha9
+      ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha9
     >)
   | null
   | undefined = undefined;
 
+let legacyExecuteIncrementally:
+  | ((
+      args: ExecutionArgs,
+    ) => PromiseOrValue<
+      ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+    >)
+  | null
+  | undefined;
+
 async function tryToLoadLegacyExecuteIncrementally() {
   try {
-    const { legacyExecuteIncrementally } = await import('@yaacovcr/transform');
-    graphqlExperimentalExecuteIncrementally = legacyExecuteIncrementally;
+    const transform = await import('@yaacovcr/transform');
+    legacyExecuteIncrementally = transform.legacyExecuteIncrementally;
   } catch {
-    return;
+    legacyExecuteIncrementally = null;
   }
 }
 
 async function tryToLoadGraphQL17() {
-  if (graphqlExperimentalExecuteIncrementally !== undefined) {
+  if (
+    graphqlExperimentalExecuteIncrementally !== undefined ||
+    legacyExecuteIncrementally !== undefined
+  ) {
     return;
   }
+
   const graphql = await import('graphql');
   if (
     graphql.version === '17.0.0-alpha.9' &&
     'experimentalExecuteIncrementally' in graphql
   ) {
+    await tryToLoadLegacyExecuteIncrementally();
+
     graphqlExperimentalExecuteIncrementally = (graphql as any)
       .experimentalExecuteIncrementally;
   } else {
@@ -224,10 +237,12 @@ export async function executeIncrementally({
   | GraphQLExperimentalIncrementalExecutionResultsAlpha2
   | GraphQLExperimentalIncrementalExecutionResultsAlpha9
 > {
-  if (useLegacyIncremental) {
-    await tryToLoadLegacyExecuteIncrementally();
-  }
   await tryToLoadGraphQL17();
+
+  if (useLegacyIncremental && legacyExecuteIncrementally) {
+    return legacyExecuteIncrementally(args);
+  }
+
   if (graphqlExperimentalExecuteIncrementally) {
     return graphqlExperimentalExecuteIncrementally(args);
   }
