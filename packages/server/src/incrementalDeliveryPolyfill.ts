@@ -200,6 +200,7 @@ let legacyExecuteIncrementally:
 
 async function tryToLoadLegacyExecuteIncrementally() {
   try {
+    // @ts-ignore `@yaacovcr/transform` is an optional peer dependency
     const transform = await import('@yaacovcr/transform');
     legacyExecuteIncrementally = transform.legacyExecuteIncrementally;
   } catch {
