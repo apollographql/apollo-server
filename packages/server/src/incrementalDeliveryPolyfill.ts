@@ -248,7 +248,7 @@ export async function executeIncrementally({
     }
 
     // Only throw if the server supports incremental delivery with the new
-    // format, but not the legacy foramt. We don't want to accidentally send
+    // format, but not the legacy format. We don't want to accidentally send
     // alpha.9 format when the client requested the legacy format.
     if (graphqlExperimentalExecuteIncrementally) {
       throw new BadRequestError(
