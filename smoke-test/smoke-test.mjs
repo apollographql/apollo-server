@@ -2,7 +2,6 @@ import { ApolloServer } from '@apollo/server';
 import { startStandaloneServer } from '@apollo/server/standalone';
 import fetch from 'make-fetch-happen';
 import assert from 'assert';
-import { version as graphqlVersion } from 'graphql';
 
 // validate all deep imports
 await import('@apollo/server');
@@ -46,27 +45,23 @@ const { url } = await startStandaloneServer(s, { listen: { port: 0 } });
 }
 
 if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
-  const specVersion =
-    graphqlVersion === '17.0.0-alpha.9'
-      ? 'incrementalDeliverySpec=3283f8a'
-      : 'deferSpec=20220824';
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      accept: `multipart/mixed; ${specVersion}, application/json`,
-    },
-    body: JSON.stringify({ query: '{h1: hello ...@defer{ h2: hello }}' }),
-  });
+  {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: `multipart/mixed; deferSpec=20220824, application/json`,
+      },
+      body: JSON.stringify({ query: '{h1: hello ...@defer{ h2: hello }}' }),
+    });
 
-  assert.strictEqual(
-    response.headers.get('content-type'),
-    `multipart/mixed; boundary="-"; ${specVersion}`,
-  );
+    assert.strictEqual(
+      response.headers.get('content-type'),
+      `multipart/mixed; boundary="-"; deferSpec=20220824`,
+    );
 
-  const body = await response.text();
+    const body = await response.text();
 
-  if (graphqlVersion === '17.0.0-alpha.2') {
     assert.strictEqual(
       body,
       '\r\n' +
@@ -80,7 +75,25 @@ if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
         '{"hasNext":false,"incremental":[{"path":[],"data":{"h2":"world"}}]}\r\n' +
         '-----\r\n',
     );
-  } else {
+  }
+
+  {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json',
+        accept: `multipart/mixed; incrementalDeliverySpec=3283f8a, application/json`,
+      },
+      body: JSON.stringify({ query: '{h1: hello ...@defer{ h2: hello }}' }),
+    });
+
+    assert.strictEqual(
+      response.headers.get('content-type'),
+      `multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a`,
+    );
+
+    const body = await response.text();
+
     assert.strictEqual(
       body,
       '\r\n' +
@@ -96,6 +109,7 @@ if (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED) {
     );
   }
 }
+
 await s.stop();
 
 console.log('ESM smoke test passed!');
