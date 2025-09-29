@@ -21,11 +21,7 @@ import {
   MEDIA_TYPES,
   type SchemaDerivedData,
 } from './ApolloServer.js';
-import {
-  type FormattedExecutionResult,
-  Kind,
-  version as graphqlVersion,
-} from 'graphql';
+import { type FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';
@@ -284,10 +280,6 @@ export async function runHttpQuery<TContext extends BaseContext>({
   // anything has changed).
   const acceptHeader = httpRequest.headers.get('accept');
   const negotiator = new Negotiator({ headers: { accept: acceptHeader } });
-  const validMediaType =
-    graphqlVersion === '17.0.0-alpha.9'
-      ? MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9
-      : MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2;
   const preferredMediaType = negotiator.mediaType([
     // mediaType() will return the first one that matches, so if the client
     // doesn't include the deferSpec parameter it will match this one here,
@@ -308,19 +300,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream), but the client does not accept multipart/mixed ' +
         'HTTP responses. To enable incremental delivery support, add the HTTP ' +
-        `header 'Accept: ${validMediaType}'.`,
-      // Use 406 Not Accepted
-      { extensions: { http: { status: 406 } } },
-    );
-  }
-
-  if (negotiator.mediaType([validMediaType]) !== validMediaType) {
-    // The client ran an operation that would yield multiple parts, but
-    // specified the wrong version. We return an error
-    throw new BadRequestError(
-      'Apollo server received an operation that uses incremental delivery ' +
-        '(@defer or @stream) with a spec version incompatible with this server. ' +
-        `Please use the HTTP header 'Accept: ${validMediaType}'.`,
+        `header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}'.`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
@@ -328,7 +308,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
   graphQLResponse.http.headers.set(
     'content-type',
-    `multipart/mixed; boundary="-"; ${validMediaType.replace('multipart/mixed; ', '')}`,
+    `multipart/mixed; boundary="-"; ${preferredMediaType.replace('multipart/mixed; ', '')}`,
   );
   return {
     ...graphQLResponse.http,
