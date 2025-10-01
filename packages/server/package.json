@@ -147,12 +147,6 @@
     "whatwg-mimetype": "^4.0.0"
   },
   "peerDependencies": {
-    "graphql": "^16.11.0 || 17.0.0-alpha.9",
-    "@yaacovcr/transform": "^0.0.8"
-  },
-  "peerDependenciesMeta": {
-    "@yaacovcr/transform": {
-      "optional": true
-    }
+    "graphql": "^16.11.0"
   }
 }
