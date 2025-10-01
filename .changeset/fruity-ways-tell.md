@@ -2,7 +2,7 @@
 '@apollo/server': minor
 ---
 
-Apollo Server now supports the modern incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the modern protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=3283f8a`.
+Apollo Server now supports the incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the current protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=3283f8a`.
 
 Upgrading to 5.1 will depend on what version of `graphql` you have installed and whether you already support the incremental delivery protocol.
 
@@ -39,7 +39,7 @@ import type {
 } from '@apollo/server';
 ```
 
-Incremental delivery types for the more modern `graphql@17.0.0-alpha.9` version are now available using the `Alpha9` suffix:
+Incremental delivery types for the `graphql@17.0.0-alpha.9` version are now available using the `Alpha9` suffix:
 
 ```ts
 import type {
