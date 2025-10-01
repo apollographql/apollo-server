@@ -146,13 +146,13 @@ type GraphQLExperimentalIncrementalResultAlpha9<
   | GraphQLExperimentalIncrementalDeferResultAlpha9<TData, TExtensions>
   | GraphQLExperimentalIncrementalStreamResultAlpha9<TData, TExtensions>;
 
-export interface GraphQLExperimentalPendingResultAlpha9 {
+interface GraphQLExperimentalPendingResultAlpha9 {
   id: string;
   path: ReadonlyArray<string | number>;
   label?: string;
 }
 
-export interface GraphQLExperimentalCompletedResultAlpha9 {
+interface GraphQLExperimentalCompletedResultAlpha9 {
   id: string;
   errors?: ReadonlyArray<GraphQLError>;
 }
