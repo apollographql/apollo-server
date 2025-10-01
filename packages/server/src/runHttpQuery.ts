@@ -297,7 +297,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
         '(@defer or @stream), but the client does not accept multipart/mixed ' +
         'HTTP responses. To enable incremental delivery support, add the HTTP ' +
         `header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}' ` +
-        'if your client supports the modern incremental format or ' +
+        'if your client supports the current incremental format or ' +
         `'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2}' if your ` +
         'client supports the legacy incremental format',
       // Use 406 Not Accepted

@@ -256,7 +256,7 @@ export async function executeIncrementally({
           '(@defer or @stream) with the legacy incremental format, but the server ' +
           'does not support the legacy incremental delivery format. Add the HTTP ' +
           `header: 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}' ` +
-          'to use the modern incremental delivery format',
+          'to use the current incremental delivery format',
         // Use 406 Not Accepted
         { extensions: { http: { status: 406 } } },
       );
