@@ -72,11 +72,11 @@ async function smokeTest() {
           '---\r\n' +
           'content-type: application/json; charset=utf-8\r\n' +
           '\r\n' +
-          '{"hasNext":true,"data":{"h1":"world"}}\r\n' +
+          '{"data":{"h1":"world"},"hasNext":true}\r\n' +
           '---\r\n' +
           'content-type: application/json; charset=utf-8\r\n' +
           '\r\n' +
-          '{"hasNext":false,"incremental":[{"path":[],"data":{"h2":"world"}}]}\r\n' +
+          '{"hasNext":false,"incremental":[{"data":{"h2":"world"},"path":[]}]}\r\n' +
           '-----\r\n',
       );
     }
@@ -104,11 +104,11 @@ async function smokeTest() {
           '---\r\n' +
           'content-type: application/json; charset=utf-8\r\n' +
           '\r\n' +
-          '{"hasNext":true,"data":{"h1":"world"},"pending":[{"id":"0","path":[]}]}\r\n' +
+          '{"data":{"h1":"world"},"pending":[{"id":"0","path":[]}],"hasNext":true}\r\n' +
           '---\r\n' +
           'content-type: application/json; charset=utf-8\r\n' +
           '\r\n' +
-          '{"hasNext":false,"incremental":[{"id":"0","data":{"h2":"world"}}],"completed":[{"id":"0"}]}\r\n' +
+          '{"hasNext":false,"incremental":[{"data":{"h2":"world"},"id":"0"}],"completed":[{"id":"0"}]}\r\n' +
           '-----\r\n',
       );
     }

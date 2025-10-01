@@ -958,19 +958,19 @@ export function defineIntegrationTestSuiteHttpServerTests(
               .send([{ query: '{ten}' }, { query: '{twenty}' }]);
             expect(res.status).toEqual(200);
             expect(res.body).toMatchInlineSnapshot(`
-            [
-              {
-                "data": {
-                  "ten": null,
-                },
-              },
-              {
-                "data": {
-                  "twenty": null,
-                },
-              },
-            ]
-          `);
+                          [
+                            {
+                              "data": {
+                                "ten": null,
+                              },
+                            },
+                            {
+                              "data": {
+                                "twenty": null,
+                              },
+                            },
+                          ]
+                      `);
             expect(res.headers['cache-control']).toEqual('max-age=10, private');
           }
           {
@@ -2250,18 +2250,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
               `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
             );
             expect(res.text).toMatchInlineSnapshot(`
-                "
-                ---
-                content-type: application/json; charset=utf-8
+              "
+              ---
+              content-type: application/json; charset=utf-8
 
-                {"hasNext":true,"data":{"first":"it works"},"pending":[{"id":"0","path":[]}]}
-                ---
-                content-type: application/json; charset=utf-8
+              {"hasNext":true,"pending":[{"id":"0","path":[]}],"data":{"first":"it works"}}
+              ---
+              content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}
-                -----
-                "
-              `);
+              {"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}
+              -----
+              "
+            `);
           });
 
           it('first payload sent while deferred field is blocking legacy incremental', async () => {
@@ -2392,18 +2392,18 @@ export function defineIntegrationTestSuiteHttpServerTests(
               `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
             );
             expect(res.text).toMatchInlineSnapshot(`
-                "
-                ---
-                content-type: application/json; charset=utf-8
+              "
+              ---
+              content-type: application/json; charset=utf-8
 
-                {"hasNext":true,"data":{"testString":"it works"},"pending":[{"id":"0","path":[]}]}
-                ---
-                content-type: application/json; charset=utf-8
+              {"hasNext":true,"pending":[{"id":"0","path":[]}],"data":{"testString":"it works"}}
+              ---
+              content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
-                -----
-                "
-              `);
+              {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
+              -----
+              "
+            `);
           });
         });
 
@@ -2483,11 +2483,11 @@ export function defineIntegrationTestSuiteHttpServerTests(
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"data":{"first":"it works"}}\r
+{"data":{"first":"it works"},"hasNext":true}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":false,"incremental":[{"path":[],"data":{"testString":"it works"}}]}\r
+{"hasNext":false,"incremental":[{"data":{"testString":"it works"},"path":[]}]}\r
 -----\r
 `);
             });
@@ -2535,19 +2535,19 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"data":{"testStrings":[]}}\r
+{"data":{"testStrings":[]},"hasNext":true}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"incremental":[{"path":["testStrings",0],"items":["it works"]}]}\r
+{"hasNext":true,"incremental":[{"items":["it works"],"path":["testStrings",0]}]}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"incremental":[{"path":["testStrings",1],"items":["it works again"]}]}\r
+{"hasNext":true,"incremental":[{"items":["it works again"],"path":["testStrings",1]}]}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"incremental":[{"path":["testStrings",2],"items":["it works again again"]}]}\r
+{"hasNext":true,"incremental":[{"items":["it works again again"],"path":["testStrings",2]}]}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
@@ -2596,18 +2596,18 @@ content-type: application/json; charset=utf-8\r
                 `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
               );
               expect(res.text).toMatchInlineSnapshot(`
-                              "
-                              ---
-                              content-type: application/json; charset=utf-8
+                "
+                ---
+                content-type: application/json; charset=utf-8
 
-                              {"hasNext":true,"data":{"testString":"it works"}}
-                              ---
-                              content-type: application/json; charset=utf-8
+                {"data":{"testString":"it works"},"hasNext":true}
+                ---
+                content-type: application/json; charset=utf-8
 
-                              {"hasNext":false,"incremental":[{"path":[],"data":{"barrierString":"we waited"}}]}
-                              -----
-                              "
-                          `);
+                {"hasNext":false,"incremental":[{"data":{"barrierString":"we waited"},"path":[]}]}
+                -----
+                "
+              `);
             });
           });
 
@@ -2667,11 +2667,11 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"data":{"first":"it works"},"pending":[{"id":"0","path":[]}]}\r
+{"data":{"first":"it works"},"pending":[{"id":"0","path":[]}],"hasNext":true}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}\r
+{"hasNext":false,"incremental":[{"data":{"testString":"it works"},"id":"0"}],"completed":[{"id":"0"}]}\r
 -----\r
 `);
             });
@@ -2723,7 +2723,7 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"data":{"testStrings":[]},"pending":[{"id":"0","path":["testStrings"]}]}\r
+{"data":{"testStrings":[]},"pending":[{"id":"0","path":["testStrings"]}],"hasNext":true}\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
@@ -2784,18 +2784,18 @@ content-type: application/json; charset=utf-8\r
                 `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
               );
               expect(res.text).toMatchInlineSnapshot(`
-                  "
-                  ---
-                  content-type: application/json; charset=utf-8
+                "
+                ---
+                content-type: application/json; charset=utf-8
 
-                  {"hasNext":true,"data":{"testString":"it works"},"pending":[{"id":"0","path":[]}]}
-                  ---
-                  content-type: application/json; charset=utf-8
+                {"data":{"testString":"it works"},"pending":[{"id":"0","path":[]}],"hasNext":true}
+                ---
+                content-type: application/json; charset=utf-8
 
-                  {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
-                  -----
-                  "
-                `);
+                {"hasNext":false,"incremental":[{"data":{"barrierString":"we waited"},"id":"0"}],"completed":[{"id":"0"}]}
+                -----
+                "
+              `);
             });
           });
         });

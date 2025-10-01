@@ -1199,18 +1199,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
               );
               expect(await response.text()).toMatchInlineSnapshot(`
-                                  "
-                                  ---
-                                  content-type: application/json; charset=utf-8
+                "
+                ---
+                content-type: application/json; charset=utf-8
 
-                                  {"hasNext":true,"data":{"justAField":"a string"}}
-                                  ---
-                                  content-type: application/json; charset=utf-8
+                {"data":{"justAField":"a string"},"hasNext":true}
+                ---
+                content-type: application/json; charset=utf-8
 
-                                  {"hasNext":false,"incremental":[{"path":[],"data":{"delayedFoo":{"bar":"hi"}}}]}
-                                  -----
-                                  "
-                              `);
+                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"path":[]}]}
+                -----
+                "
+              `);
               const reports = await reportIngress.promiseOfReports;
               expect(reports.length).toBe(1);
               expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
@@ -1246,18 +1246,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
               );
               expect(await response.text()).toMatchInlineSnapshot(`
-                  "
-                  ---
-                  content-type: application/json; charset=utf-8
+                "
+                ---
+                content-type: application/json; charset=utf-8
 
-                  {"hasNext":true,"data":{"justAField":"a string"},"pending":[{"id":"0","path":[]}]}
-                  ---
-                  content-type: application/json; charset=utf-8
+                {"data":{"justAField":"a string"},"pending":[{"id":"0","path":[]}],"hasNext":true}
+                ---
+                content-type: application/json; charset=utf-8
 
-                  {"hasNext":false,"incremental":[{"id":"0","data":{"delayedFoo":{"bar":"hi"}}}],"completed":[{"id":"0"}]}
-                  -----
-                  "
-                `);
+                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"id":"0"}],"completed":[{"id":"0"}]}
+                -----
+                "
+              `);
               const reports = await reportIngress.promiseOfReports;
               expect(reports.length).toBe(1);
               expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
