@@ -4,7 +4,7 @@
 
 Apollo Server now supports the modern incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the modern protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=3283f8a`.
 
-To upgrade to 5.1 will depend on what version of `graphql` you have installed and whether you already support the incremental delivery protocol.
+Upgrading to 5.1 will depend on what version of `graphql` you have installed and whether you already support the incremental delivery protocol.
 
 ## I use `graphql@16` without incremental delivery
 
