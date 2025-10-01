@@ -127,7 +127,7 @@ You cannot combine [batching](#batching) with incremental delivery in the same r
 
 <Note>
 
-Apollo Server 5.1 changed the required pre-release `graphql` version from `17.0.0-alpha-2` to `17.0.0-alpha.9`. If you are using 5.0 or below, use `graphql` version `17.0.0-alpha.2` instead.
+Apollo Server 5.1 changed the required pre-release `graphql` version from `17.0.0-alpha.2` to `17.0.0-alpha.9`. If you are using 5.0 or below, use `graphql` version `17.0.0-alpha.2` instead.
 
 </Note>
 
