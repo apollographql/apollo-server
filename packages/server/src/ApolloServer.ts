@@ -1408,9 +1408,10 @@ export const MEDIA_TYPES = {
   // delivery is part of the official GraphQL spec.
   MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
   MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2: 'multipart/mixed; deferSpec=20220824',
-  // spec version represents the commit hash of 17.0.0-alpha.9
+  // This references the spec stored at
+  // https://github.com/apollographql/specs/pull/67
   MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9:
-    'multipart/mixed; incrementalDeliverySpec=3283f8a',
+    'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
   TEXT_HTML: 'text/html',
 };
 

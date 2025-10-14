@@ -2238,7 +2238,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
               .post('/')
               .set(
                 'accept',
-                'multipart/mixed; incrementalDeliverySpec=3283f8a, application/json',
+                'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1, application/json',
               )
               // disables supertest's use of formidable for multipart
               .parse(superagent.parse.text)
@@ -2247,7 +2247,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
               });
             expect(res.status).toEqual(200);
             expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+              `"multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1"`,
             );
             expect(res.text).toMatchInlineSnapshot(`
               "
@@ -2361,7 +2361,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
               .post('/')
               .set(
                 'accept',
-                `multipart/mixed; incrementalDeliverySpec=3283f8a, application/json`,
+                `multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1, application/json`,
               )
               .parse((res, fn) => {
                 res.text = '';
@@ -2389,7 +2389,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             const res = await resPromise;
             expect(res.status).toEqual(200);
             expect(res.header['content-type']).toMatchInlineSnapshot(
-              `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+              `"multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1"`,
             );
             expect(res.text).toMatchInlineSnapshot(`
               "
@@ -2454,7 +2454,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
                       "extensions": {
                         "code": "BAD_REQUEST",
                       },
-                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a' if your client supports the current incremental format or 'Accept: multipart/mixed; deferSpec=20220824' if your client supports the legacy incremental format",
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1' if your client supports the current incremental format or 'Accept: multipart/mixed; deferSpec=20220824' if your client supports the legacy incremental format",
                     },
                   ],
                 }
@@ -2634,7 +2634,7 @@ content-type: application/json; charset=utf-8\r
                       "extensions": {
                         "code": "BAD_REQUEST",
                       },
-                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=3283f8a' if your client supports the current incremental format or 'Accept: multipart/mixed; deferSpec=20220824' if your client supports the legacy incremental format",
+                      "message": "Apollo server received an operation that uses incremental delivery (@defer or @stream), but the client does not accept multipart/mixed HTTP responses. To enable incremental delivery support, add the HTTP header 'Accept: multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1' if your client supports the current incremental format or 'Accept: multipart/mixed; deferSpec=20220824' if your client supports the legacy incremental format",
                     },
                   ],
                 }
@@ -2642,12 +2642,14 @@ content-type: application/json; charset=utf-8\r
             });
 
             it.each([
-              ['multipart/mixed; incrementalDeliverySpec=3283f8a'],
               [
-                'multipart/mixed; incrementalDeliverySpec=3283f8a, application/json',
+                'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
               ],
               [
-                'application/json, multipart/mixed; incrementalDeliverySpec=3283f8a',
+                'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1, application/json',
+              ],
+              [
+                'application/json, multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
               ],
             ])('basic @defer working with accept: %s', async (accept) => {
               const app = await createApp({ typeDefs, resolvers });
@@ -2661,7 +2663,7 @@ content-type: application/json; charset=utf-8\r
                 });
               expect(res.status).toEqual(200);
               expect(res.header['content-type']).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1"`,
               );
               expect(res.text).toEqual(`\r
 ---\r
@@ -2677,12 +2679,14 @@ content-type: application/json; charset=utf-8\r
             });
 
             it.each([
-              ['multipart/mixed; incrementalDeliverySpec=3283f8a'],
               [
-                'multipart/mixed; incrementalDeliverySpec=3283f8a, application/json',
+                'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
               ],
               [
-                'application/json, multipart/mixed; incrementalDeliverySpec=3283f8a',
+                'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1, application/json',
+              ],
+              [
+                'application/json, multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
               ],
             ])('basic @stream working with accept: %s', async (accept) => {
               const app = await createApp({
@@ -2717,7 +2721,7 @@ content-type: application/json; charset=utf-8\r
                 });
               expect(res.status).toEqual(200);
               expect(res.header['content-type']).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1"`,
               );
               expect(res.text).toEqual(`\r
 ---\r
@@ -2751,7 +2755,7 @@ content-type: application/json; charset=utf-8\r
                 .post('/')
                 .set(
                   'accept',
-                  'multipart/mixed; incrementalDeliverySpec=3283f8a, application/json',
+                  'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1, application/json',
                 )
                 .parse((res, fn) => {
                   res.text = '';
@@ -2781,7 +2785,7 @@ content-type: application/json; charset=utf-8\r
               const res = await resPromise;
               expect(res.status).toEqual(200);
               expect(res.header['content-type']).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1"`,
               );
               expect(res.text).toMatchInlineSnapshot(`
                 "

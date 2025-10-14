@@ -1233,7 +1233,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 method: 'POST',
                 headers: {
                   'content-type': 'application/json',
-                  accept: 'multipart/mixed; incrementalDeliverySpec=3283f8a',
+                  accept:
+                    'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
                 },
                 body: JSON.stringify({
                   query: '{ justAField ...@defer { delayedFoo { bar} } }',
@@ -1243,7 +1244,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               expect(
                 response.headers.get('content-type'),
               ).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=3283f8a"`,
+                `"multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1"`,
               );
               expect(await response.text()).toMatchInlineSnapshot(`
                 "

@@ -2,7 +2,7 @@
 '@apollo/server': minor
 ---
 
-Apollo Server now supports the incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the current protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=3283f8a`.
+Apollo Server now supports the incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the current protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1`.
 
 Upgrading to 5.1 will depend on what version of `graphql` you have installed and whether you already support the incremental delivery protocol.
 
@@ -12,7 +12,7 @@ Continue using `graphql` v16 with no additional changes. Incremental delivery wo
 
 ## I use `graphql@16` but would like to add support for incremental delivery
 
-Install `graphql@17.0.0-alpha.9` and follow the ["Incremental delivery" guide](https://www.apollographql.com/docs/apollo-server/workflow/requests#incremental-delivery-experimental) to add the `@defer` and `@stream` directives to your schema. Clients should send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=3283f8a` to get multipart responses.
+Install `graphql@17.0.0-alpha.9` and follow the ["Incremental delivery" guide](https://www.apollographql.com/docs/apollo-server/workflow/requests#incremental-delivery-experimental) to add the `@defer` and `@stream` directives to your schema. Clients should send the `Accept` header with a value of `multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1` to get multipart responses.
 
 ## I use `graphql@17.0.0-alpha.2` and use incremental delivery
 
