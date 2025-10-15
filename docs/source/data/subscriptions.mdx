@@ -67,7 +67,7 @@ To run both an Express app _and_ a separate WebSocket server for subscriptions, 
    import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
    import { makeExecutableSchema } from '@graphql-tools/schema';
    import { WebSocketServer } from 'ws';
-   import { useServer } from 'graphql-ws/lib/use/ws';
+   import { useServer } from 'graphql-ws/use/ws';
    ```
 
 3. Next, in order to set up both the HTTP and subscription servers, we need to first create an `http.Server`. Do this by passing your Express `app` to the `createServer` function, which we imported from the `http` module:
@@ -149,7 +149,7 @@ import { createServer } from 'http';
 import express from 'express';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 import { WebSocketServer } from 'ws';
-import { useServer } from 'graphql-ws/lib/use/ws';
+import { useServer } from 'graphql-ws/use/ws';
 import cors from 'cors';
 import resolvers from './resolvers';
 import typeDefs from './typeDefs';
