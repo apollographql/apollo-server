@@ -19,7 +19,10 @@ import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
 import type { BaseContext } from './index.js';
-import type { GraphQLExperimentalIncrementalExecutionResults } from '../incrementalDeliveryPolyfill.js';
+import type {
+  GraphQLExperimentalIncrementalExecutionResultsAlpha2,
+  GraphQLExperimentalIncrementalExecutionResultsAlpha9,
+} from '../incrementalDeliveryPolyfill.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -119,7 +122,9 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   status400ForVariableCoercionErrors?: boolean;
 
   // For testing only.
-  __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+  __testing_incrementalExecutionResults?:
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha9;
 }
 
 export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>

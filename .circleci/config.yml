@@ -60,35 +60,20 @@ jobs:
       - setup-node
       - run: npm run test:smoke
 
-  Full incremental delivery tests with graphql 17 alpha 2:
+  Full incremental delivery tests with graphql 17 alpha 9:
     docker:
     - image: cimg/base:stable
     environment:
       INCREMENTAL_DELIVERY_TESTS_ENABLED: t
-      GRAPHQL_JS_VERSION: 17.0.0-alpha.2
+      GRAPHQL_JS_VERSION: 17.0.0-alpha.9
     steps:
       - setup-node:
           node-version: "20"
       # Install a prerelease of graphql-js 17 with incremental delivery support.
       # --legacy-peer-deps because nothing expects v17 yet.
-      - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}"
+      - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}" @yaacovcr/transform
       - run: npm run test:ci
       - maybe-upload-coverage
-      - run: npm run test:smoke
-
-  Test with recent graphql-js alpha:
-    docker:
-    - image: cimg/base:stable
-    environment:
-      GRAPHQL_JS_VERSION: 17.0.0-alpha.9
-    steps:
-      - setup-node:
-          node-version: "20"
-      # Install a newer prerelease of graphql-js 17; we do not yet support
-      # its incremental delivery format.
-      # --legacy-peer-deps because nothing expects v17 yet.
-      - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}"
-      - run: npm run test:ci
       - run: npm run test:smoke
 
   Prettier:
@@ -172,8 +157,7 @@ workflows:
       - Spell check
       - Codegen check
       - Smoke test built package
-      - Full incremental delivery tests with graphql 17 alpha 2
-      - Test with recent graphql-js alpha
+      - Full incremental delivery tests with graphql 17 alpha 9
       - Changesets
   security-scans:
     jobs:

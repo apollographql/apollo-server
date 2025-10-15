@@ -11,36 +11,39 @@ interface ObjMap<T> {
   [key: string]: T;
 }
 
-export interface GraphQLExperimentalFormattedInitialIncrementalExecutionResult<
+export interface GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > extends FormattedExecutionResult<TData, TExtensions> {
   hasNext: boolean;
   incremental?: ReadonlyArray<
-    GraphQLExperimentalFormattedIncrementalResult<TData, TExtensions>
+    GraphQLExperimentalFormattedIncrementalResultAlpha2<TData, TExtensions>
   >;
   extensions?: TExtensions;
 }
 
-export interface GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult<
+export interface GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
   hasNext: boolean;
   incremental?: ReadonlyArray<
-    GraphQLExperimentalFormattedIncrementalResult<TData, TExtensions>
+    GraphQLExperimentalFormattedIncrementalResultAlpha2<TData, TExtensions>
   >;
   extensions?: TExtensions;
 }
 
-export type GraphQLExperimentalFormattedIncrementalResult<
+export type GraphQLExperimentalFormattedIncrementalResultAlpha2<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > =
-  | GraphQLExperimentalFormattedIncrementalDeferResult<TData, TExtensions>
-  | GraphQLExperimentalFormattedIncrementalStreamResult<TData, TExtensions>;
+  | GraphQLExperimentalFormattedIncrementalDeferResultAlpha2<TData, TExtensions>
+  | GraphQLExperimentalFormattedIncrementalStreamResultAlpha2<
+      TData,
+      TExtensions
+    >;
 
-export interface GraphQLExperimentalFormattedIncrementalDeferResult<
+export interface GraphQLExperimentalFormattedIncrementalDeferResultAlpha2<
   TData = ObjMap<unknown>,
   TExtensions = ObjMap<unknown>,
 > extends FormattedExecutionResult<TData, TExtensions> {
@@ -48,7 +51,7 @@ export interface GraphQLExperimentalFormattedIncrementalDeferResult<
   label?: string;
 }
 
-export interface GraphQLExperimentalFormattedIncrementalStreamResult<
+export interface GraphQLExperimentalFormattedIncrementalStreamResultAlpha2<
   TData = Array<unknown>,
   TExtensions = ObjMap<unknown>,
 > {
