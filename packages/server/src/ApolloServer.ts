@@ -57,7 +57,10 @@ import type {
   PersistedQueryOptions,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import type {
+  GraphQLExperimentalIncrementalExecutionResultsAlpha2,
+  GraphQLExperimentalIncrementalExecutionResultsAlpha9,
+} from './incrementalDeliveryPolyfill.js';
 import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
@@ -162,7 +165,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS6): remove this option.
   status400ForVariableCoercionErrors?: boolean;
-  __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+  __testing_incrementalExecutionResults?:
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha9;
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
@@ -1205,7 +1210,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // by the order in the list we provide, so we put text/html last.
         MEDIA_TYPES.APPLICATION_JSON,
         MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
         MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
         MEDIA_TYPES.TEXT_HTML,
       ]) === MEDIA_TYPES.TEXT_HTML
@@ -1401,7 +1407,10 @@ export const MEDIA_TYPES = {
   // We do *not* currently support this content-type; we will once incremental
   // delivery is part of the official GraphQL spec.
   MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
-  MULTIPART_MIXED_EXPERIMENTAL: 'multipart/mixed; deferSpec=20220824',
+  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2: 'multipart/mixed; deferSpec=20220824',
+  // This references the spec stored at
+  // https://specs.apollo.dev/incremental/v0.2/
+  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9: 'multipart/mixed; incrementalSpec=v0.2',
   TEXT_HTML: 'text/html',
 };
 

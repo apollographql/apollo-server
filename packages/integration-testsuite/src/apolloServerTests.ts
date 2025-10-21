@@ -1179,7 +1179,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
 
           (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
-            'includes all fields with defer',
+            'includes all fields with defer legacy',
             async () => {
               await setupApolloServerAndFetchPair({}, {}, [], true);
               const response = await fetch(uri, {
@@ -1203,11 +1203,58 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":true,"data":{"justAField":"a string"}}
+                {"data":{"justAField":"a string"},"hasNext":true}
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"path":[],"data":{"delayedFoo":{"bar":"hi"}}}]}
+                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"path":[]}]}
+                -----
+                "
+              `);
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace?.[0] as Trace;
+              expect(trace).toBeDefined();
+              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                'bar',
+              );
+            },
+          );
+
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
+            'includes all fields with defer modern',
+            async () => {
+              await setupApolloServerAndFetchPair({}, {}, [], true);
+              const response = await fetch(uri, {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                  accept: 'multipart/mixed; incrementalSpec=v0.2',
+                },
+                body: JSON.stringify({
+                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                }),
+              });
+              expect(response.status).toBe(200);
+              expect(
+                response.headers.get('content-type'),
+              ).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; incrementalSpec=v0.2"`,
+              );
+              expect(await response.text()).toMatchInlineSnapshot(`
+                "
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"data":{"justAField":"a string"},"pending":[{"id":"0","path":[]}],"hasNext":true}
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"id":"0"}],"completed":[{"id":"0"}]}
                 -----
                 "
               `);

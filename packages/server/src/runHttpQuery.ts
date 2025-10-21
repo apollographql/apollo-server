@@ -1,8 +1,9 @@
 import type {
   BaseContext,
-  GraphQLExperimentalFormattedIncrementalResult,
-  GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
   GraphQLRequest,
   HTTPGraphQLHead,
   HTTPGraphQLRequest,
@@ -274,19 +275,20 @@ export async function runHttpQuery<TContext extends BaseContext>({
   // without `deferSpec` as well (perhaps with slightly different behavior if
   // anything has changed).
   const acceptHeader = httpRequest.headers.get('accept');
+  const negotiator = new Negotiator({ headers: { accept: acceptHeader } });
+  const preferredMediaType = negotiator.mediaType([
+    // mediaType() will return the first one that matches, so if the client
+    // doesn't include the deferSpec parameter it will match this one here,
+    // which isn't good enough.
+    MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
+    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
+    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+  ]);
+
   if (
-    !(
-      acceptHeader &&
-      new Negotiator({
-        headers: { accept: httpRequest.headers.get('accept') },
-      }).mediaType([
-        // mediaType() will return the first one that matches, so if the client
-        // doesn't include the deferSpec parameter it will match this one here,
-        // which isn't good enough.
-        MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
-      ]) === MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL
-    )
+    !acceptHeader ||
+    (preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 &&
+      preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9)
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
     // specify `accept: multipart/mixed`. We return an error.
@@ -294,7 +296,10 @@ export async function runHttpQuery<TContext extends BaseContext>({
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream), but the client does not accept multipart/mixed ' +
         'HTTP responses. To enable incremental delivery support, add the HTTP ' +
-        "header 'Accept: multipart/mixed; deferSpec=20220824'.",
+        `header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}' ` +
+        'if your client supports the current incremental format or ' +
+        `'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2}' if your ` +
+        'client supports the legacy incremental format',
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
@@ -302,7 +307,7 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
   graphQLResponse.http.headers.set(
     'content-type',
-    'multipart/mixed; boundary="-"; deferSpec=20220824',
+    `multipart/mixed; boundary="-"; ${preferredMediaType.replace('multipart/mixed; ', '')}`,
   );
   return {
     ...graphQLResponse.http,
@@ -317,8 +322,13 @@ export async function runHttpQuery<TContext extends BaseContext>({
 }
 
 async function* writeMultipartBody(
-  initialResult: GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-  subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>,
+  initialResult:
+    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2
+    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+  subsequentResults: AsyncIterable<
+    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
+    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9
+  >,
 ): AsyncGenerator<string> {
   // Note: we assume in this function that every result other than the last has
   // hasNext=true and the last has hasNext=false. That is, we choose which kind
@@ -329,12 +339,12 @@ async function* writeMultipartBody(
   // iterator is finished until we do async work.
 
   yield `\r\n---\r\ncontent-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
-    orderInitialIncrementalExecutionResultFields(initialResult),
+    initialResult,
   )}\r\n---${initialResult.hasNext ? '' : '--'}\r\n`;
 
   for await (const result of subsequentResults) {
     yield `content-type: application/json; charset=utf-8\r\n\r\n${JSON.stringify(
-      orderSubsequentIncrementalExecutionResultFields(result),
+      result,
     )}\r\n---${result.hasNext ? '' : '--'}\r\n`;
   }
 }
@@ -349,40 +359,6 @@ function orderExecutionResultFields(
     data: result.data,
     extensions: result.extensions,
   };
-}
-function orderInitialIncrementalExecutionResultFields(
-  result: GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-): GraphQLExperimentalFormattedInitialIncrementalExecutionResult {
-  return {
-    hasNext: result.hasNext,
-    errors: result.errors,
-    data: result.data,
-    incremental: orderIncrementalResultFields(result.incremental),
-    extensions: result.extensions,
-  };
-}
-function orderSubsequentIncrementalExecutionResultFields(
-  result: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
-): GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult {
-  return {
-    hasNext: result.hasNext,
-    incremental: orderIncrementalResultFields(result.incremental),
-    extensions: result.extensions,
-  };
-}
-
-function orderIncrementalResultFields(
-  incremental?: readonly GraphQLExperimentalFormattedIncrementalResult[],
-): undefined | GraphQLExperimentalFormattedIncrementalResult[] {
-  return incremental?.map((i: any) => ({
-    hasNext: i.hasNext,
-    errors: i.errors,
-    path: i.path,
-    label: i.label,
-    data: i.data,
-    items: i.items,
-    extensions: i.extensions,
-  }));
 }
 
 // The result of a curl does not appear well in the terminal, so we add an extra new line
