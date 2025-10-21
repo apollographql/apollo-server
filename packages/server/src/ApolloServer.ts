@@ -1409,9 +1409,8 @@ export const MEDIA_TYPES = {
   MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
   MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2: 'multipart/mixed; deferSpec=20220824',
   // This references the spec stored at
-  // https://github.com/apollographql/specs/pull/67
-  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9:
-    'multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1',
+  // https://specs.apollo.dev/incremental/v0.2/
+  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9: 'multipart/mixed; incrementalSpec=v0.2',
   TEXT_HTML: 'text/html',
 };
 

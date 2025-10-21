@@ -86,14 +86,14 @@ async function smokeTest() {
         method: 'POST',
         headers: {
           'content-type': 'application/json',
-          accept: `multipart/mixed; incrementalDeliverySpec=graphql/incremental/v0.1, application/json`,
+          accept: `multipart/mixed; incrementalSpec=v0.2, application/json`,
         },
         body: JSON.stringify({ query: '{h1: hello ...@defer{ h2: hello }}' }),
       });
 
       assert.strictEqual(
         response.headers.get('content-type'),
-        `multipart/mixed; boundary="-"; incrementalDeliverySpec=graphql/incremental/v0.1`,
+        `multipart/mixed; boundary="-"; incrementalSpec=v0.2`,
       );
 
       const body = await response.text();
