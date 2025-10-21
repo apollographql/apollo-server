@@ -9,5 +9,7 @@
     "@apollo/server": "5.0.0",
     "@apollo/usage-reporting-protobuf": "4.1.1"
   },
-  "changesets": []
+  "changesets": [
+    "fruity-ways-tell"
+  ]
 }
