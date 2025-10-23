@@ -566,8 +566,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
 
     if (internals.__testing_incrementalExecutionResults) {
       return internals.__testing_incrementalExecutionResults;
-    }
-    if (internals.gatewayExecutor) {
+    } else if (internals.gatewayExecutor) {
       const result = await internals.gatewayExecutor(
         makeGatewayGraphQLRequestContext(requestContext, server, internals),
       );
