@@ -1,5 +1,7 @@
 # @apollo/server-plugin-response-cache
 
+## 5.0.1
+
 ## 5.0.1-rc.0
 
 ### Patch Changes
