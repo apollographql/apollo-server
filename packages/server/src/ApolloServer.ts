@@ -15,6 +15,7 @@ import {
   print,
   printSchema,
   type DocumentNode,
+  type ExecutionArgs,
   type FormattedExecutionResult,
   type GraphQLFieldResolver,
   type GraphQLFormattedError,
@@ -152,6 +153,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
+  executionOptions?: ExecutionArgs['options'];
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version
   // of start).
@@ -333,6 +335,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       // `start()` will call `addDefaultPlugins` to add default plugins.
       plugins: config.plugins ?? [],
       parseOptions: config.parseOptions ?? {},
+      executionOptions: config.executionOptions ?? {},
       state,
       stopOnTerminationSignals: config.stopOnTerminationSignals,
 
