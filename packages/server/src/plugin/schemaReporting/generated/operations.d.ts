@@ -2417,7 +2417,7 @@ export type AuditLogExport = {
   bigqueryTriggeredAt?: Maybe<Scalars['Timestamp']['output']>;
   /** The time when the audit export was completed */
   completedAt?: Maybe<Scalars['Timestamp']['output']>;
-  /** The time when the audit export was reqeusted */
+  /** The time when the audit export was requested */
   createdAt: Scalars['Timestamp']['output'];
   /** List of URLs to download the audits for the requested range */
   downloadUrls?: Maybe<Array<Scalars['String']['output']>>;
@@ -3726,7 +3726,7 @@ export type CheckConfiguration = {
 
 /** Filter options available when listing checks. */
 export type CheckFilterInput = {
-  /** A list of git commiters. For cli triggered checks, this is the author. */
+  /** A list of git committers. For cli triggered checks, this is the author. */
   authors?: InputMaybe<Array<Scalars['String']['input']>>;
   branches?: InputMaybe<Array<Scalars['String']['input']>>;
   /** A list of actors triggering this check. For non cli triggered checks, this is the Studio User / author. */
@@ -12253,7 +12253,7 @@ export type Router = {
   nextRouterVersion?: Maybe<RouterVersion>;
   /**
    * The next scheduled router status, useful for telling when a router will be transitioning in
-   * the near future to another staus. If no change in status is scheduled, this field will be
+   * the near future to another status. If no change in status is scheduled, this field will be
    * null
    */
   nextStatus?: Maybe<RouterStatus>;
