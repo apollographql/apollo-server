@@ -18,7 +18,10 @@ import type {
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
-import type { BaseContext } from './index.js';
+import type {
+  BaseContext,
+  LegacyExperimentalExecuteIncrementally,
+} from './index.js';
 import type {
   GraphQLExperimentalIncrementalExecutionResultsAlpha2,
   GraphQLExperimentalIncrementalExecutionResultsAlpha9,
@@ -120,6 +123,8 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
    * supported in AS6 since this option will be removed.
    */
   status400ForVariableCoercionErrors?: boolean;
+
+  legacyExperimentalExecuteIncrementally?: LegacyExperimentalExecuteIncrementally;
 
   // For testing only.
   __testing_incrementalExecutionResults?:
