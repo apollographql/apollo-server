@@ -2466,8 +2466,8 @@ export function defineIntegrationTestSuiteHttpServerTests(
               ['multipart/mixed; deferSpec=20220824, application/json'],
               ['application/json, multipart/mixed; deferSpec=20220824'],
             ])('basic @defer working with accept: %s', async (accept) => {
-              // eslint-disable-next-line import/no-extraneous-dependencies
               const { legacyExecuteIncrementally } = await import(
+                // @ts-ignore might not be installed
                 '@yaacovcr/transform'
               );
               const app = await createApp({
@@ -2506,8 +2506,8 @@ content-type: application/json; charset=utf-8\r
               ['multipart/mixed; deferSpec=20220824, application/json'],
               ['application/json, multipart/mixed; deferSpec=20220824'],
             ])('basic @stream working with accept: %s', async (accept) => {
-              // eslint-disable-next-line import/no-extraneous-dependencies
               const { legacyExecuteIncrementally } = await import(
+                // @ts-ignore might not be installed
                 '@yaacovcr/transform'
               );
               const app = await createApp({
@@ -2572,8 +2572,8 @@ content-type: application/json; charset=utf-8\r
             });
 
             it('first payload sent while deferred field is blocking', async () => {
-              // eslint-disable-next-line import/no-extraneous-dependencies
               const { legacyExecuteIncrementally } = await import(
+                // @ts-ignore might not be installed
                 '@yaacovcr/transform'
               );
               const app = await createApp({

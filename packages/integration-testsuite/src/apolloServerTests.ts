@@ -1181,8 +1181,8 @@ export function defineIntegrationTestSuiteApolloServerTests(
           (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
             'includes all fields with defer legacy',
             async () => {
-              // eslint-disable-next-line import/no-extraneous-dependencies
               const { legacyExecuteIncrementally } = await import(
+                // @ts-ignore might not be installed
                 '@yaacovcr/transform'
               );
               await setupApolloServerAndFetchPair(
