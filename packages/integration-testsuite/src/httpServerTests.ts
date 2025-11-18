@@ -2466,7 +2466,16 @@ export function defineIntegrationTestSuiteHttpServerTests(
               ['multipart/mixed; deferSpec=20220824, application/json'],
               ['application/json, multipart/mixed; deferSpec=20220824'],
             ])('basic @defer working with accept: %s', async (accept) => {
-              const app = await createApp({ typeDefs, resolvers });
+              // eslint-disable-next-line import/no-extraneous-dependencies
+              const { legacyExecuteIncrementally } = await import(
+                '@yaacovcr/transform'
+              );
+              const app = await createApp({
+                typeDefs,
+                resolvers,
+                legacyExperimentalExecuteIncrementally:
+                  legacyExecuteIncrementally,
+              });
               const res = await request(app)
                 .post('/')
                 .set('accept', accept)
@@ -2497,6 +2506,10 @@ content-type: application/json; charset=utf-8\r
               ['multipart/mixed; deferSpec=20220824, application/json'],
               ['application/json, multipart/mixed; deferSpec=20220824'],
             ])('basic @stream working with accept: %s', async (accept) => {
+              // eslint-disable-next-line import/no-extraneous-dependencies
+              const { legacyExecuteIncrementally } = await import(
+                '@yaacovcr/transform'
+              );
               const app = await createApp({
                 typeDefs: `#graphql
                     directive @stream(if: Boolean! = true, label: String, initialCount: Int! = 0) on FIELD
@@ -2518,6 +2531,8 @@ content-type: application/json; charset=utf-8\r
                     },
                   },
                 },
+                legacyExperimentalExecuteIncrementally:
+                  legacyExecuteIncrementally,
               });
               const res = await request(app)
                 .post('/')
@@ -2557,7 +2572,16 @@ content-type: application/json; charset=utf-8\r
             });
 
             it('first payload sent while deferred field is blocking', async () => {
-              const app = await createApp({ typeDefs, resolvers });
+              // eslint-disable-next-line import/no-extraneous-dependencies
+              const { legacyExecuteIncrementally } = await import(
+                '@yaacovcr/transform'
+              );
+              const app = await createApp({
+                typeDefs,
+                resolvers,
+                legacyExperimentalExecuteIncrementally:
+                  legacyExecuteIncrementally,
+              });
               const gotFirstChunkBarrier = resolvable();
               const resPromise = request(app)
                 .post('/')
