@@ -6,6 +6,7 @@ import {
 } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import { MEDIA_TYPES } from './ApolloServer.js';
+import { type LegacyExperimentalExecuteIncrementally } from './externalTypes/graphql.js';
 
 // This file "polyfills" graphql@17's experimentalExecuteIncrementally (by
 // returning a function that does not understand incremental directives if
@@ -191,30 +192,8 @@ let graphqlExperimentalExecuteIncrementally:
   | null
   | undefined = undefined;
 
-let legacyExecuteIncrementally:
-  | ((
-      args: ExecutionArgs,
-    ) => PromiseOrValue<
-      ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha2
-    >)
-  | null
-  | undefined;
-
-async function tryToLoadLegacyExecuteIncrementally() {
-  try {
-    // @ts-ignore `@yaacovcr/transform` is an optional peer dependency
-    const transform = await import('@yaacovcr/transform');
-    legacyExecuteIncrementally = transform.legacyExecuteIncrementally;
-  } catch {
-    legacyExecuteIncrementally = null;
-  }
-}
-
 async function tryToLoadGraphQL17() {
-  if (
-    graphqlExperimentalExecuteIncrementally !== undefined &&
-    legacyExecuteIncrementally !== undefined
-  ) {
+  if (graphqlExperimentalExecuteIncrementally !== undefined) {
     return;
   }
 
@@ -223,8 +202,6 @@ async function tryToLoadGraphQL17() {
     graphql.version === '17.0.0-alpha.9' &&
     'experimentalExecuteIncrementally' in graphql
   ) {
-    await tryToLoadLegacyExecuteIncrementally();
-
     graphqlExperimentalExecuteIncrementally = (graphql as any)
       .experimentalExecuteIncrementally;
   } else {
@@ -234,8 +211,14 @@ async function tryToLoadGraphQL17() {
 
 export async function executeIncrementally({
   useLegacyIncremental,
+  legacyExperimentalExecuteIncrementally,
   ...args
-}: ExecutionArgs & { useLegacyIncremental?: boolean }): Promise<
+}: ExecutionArgs & {
+  useLegacyIncremental?: boolean;
+  legacyExperimentalExecuteIncrementally:
+    | LegacyExperimentalExecuteIncrementally
+    | undefined;
+}): Promise<
   | ExecutionResult
   | GraphQLExperimentalIncrementalExecutionResultsAlpha2
   | GraphQLExperimentalIncrementalExecutionResultsAlpha9
@@ -243,8 +226,8 @@ export async function executeIncrementally({
   await tryToLoadGraphQL17();
 
   if (useLegacyIncremental) {
-    if (legacyExecuteIncrementally) {
-      return legacyExecuteIncrementally(args);
+    if (legacyExperimentalExecuteIncrementally) {
+      return legacyExperimentalExecuteIncrementally(args);
     }
 
     // Only throw if the server supports incremental delivery with the new
