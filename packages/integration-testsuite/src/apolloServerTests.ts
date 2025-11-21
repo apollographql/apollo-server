@@ -1181,7 +1181,19 @@ export function defineIntegrationTestSuiteApolloServerTests(
           (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
             'includes all fields with defer legacy',
             async () => {
-              await setupApolloServerAndFetchPair({}, {}, [], true);
+              const { legacyExecuteIncrementally } = await import(
+                // @ts-ignore might not be installed
+                '@yaacovcr/transform'
+              );
+              await setupApolloServerAndFetchPair(
+                {},
+                {
+                  legacyExperimentalExecuteIncrementally:
+                    legacyExecuteIncrementally,
+                },
+                [],
+                true,
+              );
               const response = await fetch(uri, {
                 method: 'POST',
                 headers: {

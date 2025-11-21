@@ -584,6 +584,8 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         operationName: request.operationName,
         fieldResolver: internals.fieldResolver,
         useLegacyIncremental,
+        legacyExperimentalExecuteIncrementally:
+          internals.legacyExperimentalExecuteIncrementally,
       });
       if ('initialResult' in resultOrResults) {
         return {

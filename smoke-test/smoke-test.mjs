@@ -14,6 +14,11 @@ await import('@apollo/server/plugin/schemaReporting');
 await import('@apollo/server/plugin/usageReporting');
 await import('@apollo/server/standalone');
 
+const legacyExperimentalExecuteIncrementally = process.env
+  .INCREMENTAL_DELIVERY_TESTS_ENABLED
+  ? (await import('@yaacovcr/transform')).legacyExecuteIncrementally
+  : undefined;
+
 const s = new ApolloServer({
   typeDefs: `
   ${
@@ -30,6 +35,7 @@ const s = new ApolloServer({
       },
     },
   },
+  legacyExperimentalExecuteIncrementally,
 });
 const { url } = await startStandaloneServer(s, { listen: { port: 0 } });
 

@@ -18,6 +18,11 @@ async function validateAllImports() {
 async function smokeTest() {
   await validateAllImports();
 
+  const legacyExperimentalExecuteIncrementally = process.env
+    .INCREMENTAL_DELIVERY_TESTS_ENABLED
+    ? require('@yaacovcr/transform').legacyExecuteIncrementally
+    : undefined;
+
   const s = new ApolloServer({
     typeDefs: `
       ${
@@ -34,6 +39,7 @@ async function smokeTest() {
         },
       },
     },
+    legacyExperimentalExecuteIncrementally,
   });
   const { url } = await startStandaloneServer(s, { listen: { port: 0 } });
 

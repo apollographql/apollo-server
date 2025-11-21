@@ -131,7 +131,7 @@ Apollo Server 5.1 changed the required pre-release `graphql` version from `17.0.
 
 </Note>
 
-<MinVersion version="5.1.0">
+<MinVersion version="5.2.0">
 
 ### Add support for the legacy incremental delivery protocol
 
@@ -145,4 +145,13 @@ You may choose to support the legacy incremental delivery protocol by installing
 npm install @yaacovcr/transform
 ```
 
-There is nothing else to configure. Apollo Server will load the necessary utility if this package is installed.
+You will then need to configure Apollo Server with the `legacyExperimentalExecuteIncrementally` option in order to provide support for the legacy incremental format.
+
+```ts
+import { legacyExecuteIncrementally } from '@yaacovcr/transform';
+
+const server = new ApolloServer({
+  // ...
+  legacyExperimentalExecuteIncrementally: legacyExecuteIncrementally
+})
+```

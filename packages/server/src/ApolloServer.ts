@@ -36,6 +36,7 @@ import { ApolloServerErrorCode } from './errors/index.js';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
   ExecuteOperationOptions,
+  LegacyExperimentalExecuteIncrementally,
   VariableValues,
 } from './externalTypes/graphql.js';
 import type {
@@ -171,6 +172,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
+  legacyExperimentalExecuteIncrementally?: LegacyExperimentalExecuteIncrementally;
 }
 
 function defaultLogger(): Logger {
@@ -350,6 +352,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
       stringifyResult: config.stringifyResult ?? prettyJSONStringify,
+      legacyExperimentalExecuteIncrementally:
+        config.legacyExperimentalExecuteIncrementally,
     };
 
     this.warnAgainstDeprecatedConfigOptions(config);
