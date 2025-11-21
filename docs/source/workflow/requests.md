@@ -131,7 +131,7 @@ Apollo Server 5.1 changed the required pre-release `graphql` version from `17.0.
 
 </Note>
 
-<MinVersion version="5.1.1">
+<MinVersion version="5.2.0">
 
 ### Add support for the legacy incremental delivery protocol
 
