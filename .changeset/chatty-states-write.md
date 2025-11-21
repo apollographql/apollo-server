@@ -1,5 +1,5 @@
 ---
-'@apollo/server': patch
+'@apollo/server': minor
 ---
 
 Fix an issue where some bundlers would fail to build because of the dynamic import for the optional peer dependency on `@yaacovcr/transform` introduced in `@apollo/server` 5.1.0. To provide support for the legacy incremental format, you must now provide the `legacyExperimentalExecuteIncrementally` option to the `ApolloServer` constructor.
