@@ -50,20 +50,6 @@ The subscription plugin implementation inherently bypasses Apollo Server's reque
 <tr>
 <td>
 
-###### `heartbeatIntervalMs`
-
-`number`
-</td>
-<td>
-
-Optionally configure the heartbeat interval in milliseconds. The default is 5 seconds, which is the interval that GraphOS Router expects. Lengthening this interval may cause GraphOS Router to invalidate existing subscriptions frequently and is not recommended. You may want to shorten this interval if you have latency issues between your GraphQL Server and GraphOS Router.
-
-</td>
-</tr>
-
-<tr>
-<td>
-
 ###### `logger`
 
 [`Logger`](https://www.npmjs.com/package/@apollo/utils.logger)
