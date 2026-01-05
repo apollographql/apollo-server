@@ -73,7 +73,9 @@ Usually, a given directive appears _exclusively_ in GraphQL type system document
 
 For example, among the [default directives](#default-directives), `@deprecated` is a type-system directive and `@skip` and `@include` are executable directives.
 
-The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives) lists all possible directive locations. Schema locations are listed under `TypeSystemDirectiveLocation`, and operation locations are listed under `ExecutableDirectiveLocation`.
+The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives) lists all possible directive locations. Type-system locations are listed under `TypeSystemDirectiveLocation`, and executable locations are listed under `ExecutableDirectiveLocation`.
+
+(The term "operation directive" is ambiguous, and so discouraged in favor of "executable directive". Similarly "type-system directive" is preferred over "schema directive".)
 
 ## Default directives
 
