@@ -67,11 +67,11 @@ If `@deprecated` appears elsewhere in a GraphQL document, it produces an error.
 
 > If you create a [custom directive](#custom-directives), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
 
-### Schema directives vs. operation directives
+### Type system vs. executable directives
 
-Usually, a given directive appears _exclusively_ in GraphQL schemas or _exclusively_ in GraphQL operations (rarely both, although the spec allows this).
+Usually, a given directive appears _exclusively_ in GraphQL type system documents (schemas) or _exclusively_ in GraphQL executable documents (operations and fragments). They rarely appear in both, although the spec allows this.
 
-For example, among the [default directives](#default-directives), `@deprecated` is a schema-exclusive directive and `@skip` and `@include` are operation-exclusive directives.
+For example, among the [default directives](#default-directives), `@deprecated` is a type-system directive and `@skip` and `@include` are executable directives.
 
 The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives) lists all possible directive locations. Schema locations are listed under `TypeSystemDirectiveLocation`, and operation locations are listed under `ExecutableDirectiveLocation`.
 
