@@ -629,7 +629,6 @@ describe('ApolloServer executeOperation', () => {
     const server = new ApolloServer({
       typeDefs,
       resolvers,
-      status400ForVariableCoercionErrors: true,
       executionOptions: {
         maxCoercionErrors: 1,
       },
