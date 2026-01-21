@@ -1,5 +1,33 @@
 # @apollo/server
 
+## 5.3.0
+
+### Minor Changes
+
+- [#8062](https://github.com/apollographql/apollo-server/pull/8062) [`8e54e58`](https://github.com/apollographql/apollo-server/commit/8e54e5827791666e36082ad49d19c77f050355ac) Thanks [@cristunaranjo](https://github.com/cristunaranjo)! - Allow configuration of graphql execution options (maxCoercionErrors)
+
+  ```js
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    executionOptions: {
+      maxCoercionErrors: 50,
+    },
+  });
+  ```
+
+- [#8014](https://github.com/apollographql/apollo-server/pull/8014) [`26320bc`](https://github.com/apollographql/apollo-server/commit/26320bccd77c6074d4a38119294f153f64e52d96) Thanks [@mo4islona](https://github.com/mo4islona)! - Expose `graphql` validation options.
+
+  ```js
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    validationOptions: {
+      maxErrors: 10,
+    },
+  });
+  ```
+
 ## 5.2.0
 
 ### Minor Changes
