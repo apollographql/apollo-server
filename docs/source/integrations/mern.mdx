@@ -10,7 +10,7 @@ Apollo Server is designed to work seamlessly with MERN stack (MongoDB, Express, 
 ## Prerequisites
 
 This tutorial assumes that you're familiar with the command line and JavaScript. Additionally, it requires the following:
-- You've installed a recent Node.js version (`v14.16.0+`).
+- You've installed a recent Node.js version (`v20+`).
 - You've completed MongoDB's [MERN stack tutorial](https://www.mongodb.com/languages/mern-stack-tutorial) or have your own existing MERN stack application.
     - The tutorial's code examples build off the tutorial, but you can adapt them to your application's requirements.
 - You have a MongoDB database with a `records` collection that has `name`, `position`, and `level` columns.
@@ -133,7 +133,7 @@ import records from "./routes/record.js";
 import gql from "graphql-tag";
 import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
-import { expressMiddleware } from '@apollo/server/express4';
+import { expressMiddleware } from '@as-integrations/express5';
 import resolvers from "./resolvers.js";
 import { readFileSync } from "fs";
 //highlight-end
@@ -239,7 +239,7 @@ You should see your records appear in the **Response** panel.
 You can view and fork the complete server example on CodeSandbox:
 
 <ButtonLink
-  href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v4/mern-stack?fontsize=14&hidenavigation=1&theme=dark"
+  href="https://codesandbox.io/s/github/apollographql/docs-examples/tree/main/apollo-server/v5/mern-stack?fontsize=14&hidenavigation=1&theme=dark"
   size="lg"
 >
   Edit in CodeSandbox

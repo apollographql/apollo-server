@@ -67,13 +67,15 @@ If `@deprecated` appears elsewhere in a GraphQL document, it produces an error.
 
 > If you create a [custom directive](#custom-directives), you need to define it (and its valid locations) in your schema. You don't need to define [default directives](#default-directives) like `@deprecated`.
 
-### Schema directives vs. operation directives
+### Type system vs. executable directives
 
-Usually, a given directive appears _exclusively_ in GraphQL schemas or _exclusively_ in GraphQL operations (rarely both, although the spec allows this).
+Usually, a given directive appears _exclusively_ in GraphQL type system documents (schemas) or _exclusively_ in GraphQL executable documents (operations and fragments). They rarely appear in both, although the spec allows this.
 
-For example, among the [default directives](#default-directives), `@deprecated` is a schema-exclusive directive and `@skip` and `@include` are operation-exclusive directives.
+For example, among the [default directives](#default-directives), `@deprecated` is a type-system directive and `@skip` and `@include` are executable directives.
 
-The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives) lists all possible directive locations. Schema locations are listed under `TypeSystemDirectiveLocation`, and operation locations are listed under `ExecutableDirectiveLocation`.
+The [GraphQL spec](https://spec.graphql.org/June2018/#sec-Type-System.Directives) lists all possible directive locations. Type-system locations are listed under `TypeSystemDirectiveLocation`, and executable locations are listed under `ExecutableDirectiveLocation`.
+
+(The term "operation directive" is ambiguous, and so discouraged in favor of "executable directive". Similarly "type-system directive" is preferred over "schema directive".)
 
 ## Default directives
 
@@ -85,9 +87,9 @@ The [GraphQL specification](http://spec.graphql.org/June2018/#sec-Type-System.Di
 | `@skip(if: Boolean!)` | If `true`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
 | `@include(if: Boolean!)` | If `false`, the decorated field or fragment in an operation is _not_ resolved by the GraphQL server. |
 
-## Custom directives 
+## Custom directives
 
-> ⚠️ Apollo Server does not provide _built-in_ support for custom directives that transform a schema. 
+> ⚠️ Apollo Server does not provide _built-in_ support for custom directives that transform a schema.
 
 Your schema can define custom directives that can then decorate other parts of your schema:
 
@@ -101,7 +103,7 @@ type Query {
 }
 ```
 
-If you want to define a custom schema directive to _transform_ your executable schema's behavior before providing that schema to Apollo Server, we recommend using the [`@graphql-tools`](https://www.the-guild.dev/graphql/tools/docs/schema-directives) library. See our [example of using a custom directive to transform a schema.](https://github.com/apollographql/docs-examples/tree/main/apollo-server/v4/custom-directives/upper-case-directive)
+If you want to define a custom schema directive to _transform_ your executable schema's behavior before providing that schema to Apollo Server, we recommend using the [`@graphql-tools`](https://www.the-guild.dev/graphql/tools/docs/schema-directives) library. See our [example of using a custom directive to transform a schema.](https://github.com/apollographql/docs-examples/tree/main/apollo-server/v5/custom-directives/upper-case-directive)
 
 ### In subgraphs
 
@@ -110,13 +112,13 @@ Before you use custom directives in a federated graph, make sure to consider the
 - Because directives are specific to individual subgraphs, it's technically valid for different subgraphs to define the _same_ directive with _different_ logic. As stated in the previous point, if a custom directive is used in multiple subgraphs to resolve a particular field, you should define the same directive with the same logic across subgraphs. _Composition does not detect or warn about such inconsistencies._
 - The composition process treats [executable (client-side)](/federation/federated-types/composition/#executable-directives) and [type system (server-side) directives](/federation/federated-types/composition/#type-system-directives) differently:
   - An executable directive is composed into the supergraph schema if:
-      - All subgraphs define the directive identically 
+      - All subgraphs define the directive identically
       - The directive is not included in any [`@composeDirective`](/federation/federated-types/federated-directives/#composedirective) directives
   - Type system directives are not composed into the supergraph schema, but they can provide information to the router via the [`@composeDirective`](/federation/federated-types/federated-directives/#composedirective) directive.
 
 #### Transformer functions
 
-[As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v4/custom-directives/upper-case-directive/src/index.ts), in Apollo Server 3 and 4 you can define a **transformer function** for each of your subgraph schema's custom directives.
+[As our example shows](https://github.com/apollographql/docs-examples/blob/main/apollo-server/v5/custom-directives/upper-case-directive/src/index.ts), you can define a **transformer function** for each of your subgraph schema's custom directives.
 
 To apply transformer functions to your executable subgraph schema, you first _generate_ the subgraph schema with `buildSubgraphSchema` as usual:
 

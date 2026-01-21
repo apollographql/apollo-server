@@ -16,8 +16,8 @@ Here's an example that uses HTTPS in production and HTTP in development:
 
 ```ts title="index.ts"
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express5';
 import typeDefs from './graphql/schema';
 import resolvers from './graphql/resolvers';
 import cors from 'cors';

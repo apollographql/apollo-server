@@ -3,7 +3,7 @@ import type { GraphQLSchema } from 'graphql';
 import { ApolloServer } from '../../..';
 import {
   ApolloServerPluginCacheControl,
-  ApolloServerPluginCacheControlOptions,
+  type ApolloServerPluginCacheControlOptions,
 } from '../../../plugin/cacheControl';
 import { expect } from '@jest/globals';
 

@@ -16,13 +16,13 @@ import {
   printSchema,
   type validate,
   type DocumentNode,
+  type ExecutionArgs,
   type FormattedExecutionResult,
   type GraphQLFieldResolver,
   type GraphQLFormattedError,
   type GraphQLSchema,
   type ParseOptions,
   type TypedQueryDocumentNode,
-  type ValidationContext,
   type ValidationRule,
 } from 'graphql';
 import loglevel from 'loglevel';
@@ -34,13 +34,11 @@ import {
   ensureGraphQLError,
   normalizeAndFormatErrors,
 } from './errorNormalize.js';
-import {
-  ApolloServerErrorCode,
-  ApolloServerValidationErrorCode,
-} from './errors/index.js';
+import { ApolloServerErrorCode } from './errors/index.js';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
   ExecuteOperationOptions,
+  LegacyExperimentalExecuteIncrementally,
   VariableValues,
 } from './externalTypes/graphql.js';
 import type {
@@ -62,7 +60,10 @@ import type {
   PersistedQueryOptions,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import type { GraphQLExperimentalIncrementalExecutionResults } from './incrementalDeliveryPolyfill.js';
+import type {
+  GraphQLExperimentalIncrementalExecutionResultsAlpha2,
+  GraphQLExperimentalIncrementalExecutionResultsAlpha9,
+} from './incrementalDeliveryPolyfill.js';
 import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
@@ -75,25 +76,11 @@ import { UnreachableCaseError } from './utils/UnreachableCaseError.js';
 import { computeCoreSchemaHash } from './utils/computeCoreSchemaHash.js';
 import { isDefined } from './utils/isDefined.js';
 import { SchemaManager } from './utils/schemaManager.js';
-
-const NoIntrospection: ValidationRule = (context: ValidationContext) => ({
-  Field(node) {
-    if (node.name.value === '__schema' || node.name.value === '__type') {
-      context.reportError(
-        new GraphQLError(
-          'GraphQL introspection is not allowed by Apollo Server, but the query contained __schema or __type. To enable introspection, pass introspection: true to ApolloServer in production',
-          {
-            nodes: [node],
-            extensions: {
-              validationErrorCode:
-                ApolloServerValidationErrorCode.INTROSPECTION_DISABLED,
-            },
-          },
-        ),
-      );
-    }
-  },
-});
+import {
+  NoIntrospection,
+  createMaxRecursiveSelectionsRule,
+  DEFAULT_MAX_RECURSIVE_SELECTIONS,
+} from './validationRules/index.js';
 
 export type SchemaDerivedData = {
   schema: GraphQLSchema;
@@ -171,6 +158,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
   validationOptions: ValidateOptions;
+  executionOptions?: ExecutionArgs['options'];
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version
   // of start).
@@ -179,15 +167,18 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
 
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules: Array<ValidationRule>;
+  laterValidationRules?: Array<ValidationRule>;
   hideSchemaDetailsFromClientErrors: boolean;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
-  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
-  // flip default behavior.
+  // TODO(AS6): remove this option.
   status400ForVariableCoercionErrors?: boolean;
-  __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+  __testing_incrementalExecutionResults?:
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha9;
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
+  legacyExperimentalExecuteIncrementally?: LegacyExperimentalExecuteIncrementally;
 }
 
 function defaultLogger(): Logger {
@@ -296,15 +287,35 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         ? new InMemoryLRUCache()
         : config.cache;
 
+    // Check whether the recursive selections limit has been enabled (off by
+    // default), or whether a custom limit has been specified.
+    const maxRecursiveSelectionsRule =
+      config.maxRecursiveSelections === true
+        ? [createMaxRecursiveSelectionsRule(DEFAULT_MAX_RECURSIVE_SELECTIONS)]
+        : typeof config.maxRecursiveSelections === 'number'
+          ? [createMaxRecursiveSelectionsRule(config.maxRecursiveSelections)]
+          : [];
+
+    // If the recursive selections rule has been enabled, then run configured
+    // validations in a later validate() pass.
+    const validationRules = [
+      ...(introspectionEnabled ? [] : [NoIntrospection]),
+      ...maxRecursiveSelectionsRule,
+    ];
+    let laterValidationRules;
+    if (maxRecursiveSelectionsRule.length > 0) {
+      laterValidationRules = config.validationRules;
+    } else {
+      validationRules.push(...(config.validationRules ?? []));
+    }
+
     // Note that we avoid calling methods on `this` before `this.internals` is assigned
     // (thus a bunch of things being static methods above).
     this.internals = {
       formatError: config.formatError,
       rootValue: config.rootValue,
-      validationRules: [
-        ...(config.validationRules ?? []),
-        ...(introspectionEnabled ? [] : [NoIntrospection]),
-      ],
+      validationRules,
+      laterValidationRules,
       hideSchemaDetailsFromClientErrors,
       dangerouslyDisableValidation:
         config.dangerouslyDisableValidation ?? false,
@@ -331,6 +342,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       // `start()` will call `addDefaultPlugins` to add default plugins.
       plugins: config.plugins ?? [],
       parseOptions: config.parseOptions ?? {},
+      executionOptions: config.executionOptions ?? {},
       state,
       stopOnTerminationSignals: config.stopOnTerminationSignals,
 
@@ -344,11 +356,32 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
             : (config.csrfPrevention.requestHeaders ??
               recommendedCsrfPreventionRequestHeaders),
       status400ForVariableCoercionErrors:
-        config.status400ForVariableCoercionErrors ?? false,
+        config.status400ForVariableCoercionErrors ?? true,
       __testing_incrementalExecutionResults:
         config.__testing_incrementalExecutionResults,
       stringifyResult: config.stringifyResult ?? prettyJSONStringify,
+      legacyExperimentalExecuteIncrementally:
+        config.legacyExperimentalExecuteIncrementally,
     };
+
+    this.warnAgainstDeprecatedConfigOptions(config);
+  }
+
+  private warnAgainstDeprecatedConfigOptions(
+    config: ApolloServerOptions<TContext>,
+  ) {
+    // TODO(AS6): this option goes away altogether. We should either update or remove this warning.
+    if ('status400ForVariableCoercionErrors' in config) {
+      if (config.status400ForVariableCoercionErrors === true) {
+        this.logger.warn(
+          'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5. You can safely remove this option from your configuration.',
+        );
+      } else {
+        this.logger.warn(
+          'The `status400ForVariableCoercionErrors: false` configuration option is deprecated and will be removed in Apollo Server v6. Apollo recommends removing any dependency on this behavior.',
+        );
+      }
+    }
   }
 
   // Awaiting a call to `start` ensures that a schema has been loaded and that
@@ -1189,7 +1222,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // by the order in the list we provide, so we put text/html last.
         MEDIA_TYPES.APPLICATION_JSON,
         MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
         MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
         MEDIA_TYPES.TEXT_HTML,
       ]) === MEDIA_TYPES.TEXT_HTML
@@ -1385,7 +1419,10 @@ export const MEDIA_TYPES = {
   // We do *not* currently support this content-type; we will once incremental
   // delivery is part of the official GraphQL spec.
   MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
-  MULTIPART_MIXED_EXPERIMENTAL: 'multipart/mixed; deferSpec=20220824',
+  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2: 'multipart/mixed; deferSpec=20220824',
+  // This references the spec stored at
+  // https://specs.apollo.dev/incremental/v0.2/
+  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9: 'multipart/mixed; incrementalSpec=v0.2',
   TEXT_HTML: 'text/html',
 };
 

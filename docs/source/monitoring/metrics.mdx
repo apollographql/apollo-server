@@ -3,8 +3,11 @@ title: Metrics and Logging
 description: How to monitor Apollo Server's performance
 ---
 
-> Sending metrics from Apollo Server to GraphOS requires an [Enterprise plan](https://www.apollographql.com/pricing).
-> If your organization doesn't have an Enterprise plan, you can test out this functionality by signing up for a free [GraphOS trial](https://studio.apollographql.com/signup?referrer=docs-content).
+<PlanRequired plans={["Free", "Developer", "Standard", "Enterprise"]}>
+
+While Insights are available on all GraphOS plans, metrics retention varies by [plan](https://www.apollographql.com/pricing?referrer=docs-content).
+
+</PlanRequired>
 
 Apollo Server integrates seamlessly with [Apollo GraphOS](/graphos/) to help you monitor the execution of your GraphQL operations. Apollo Server additionally provides configurable mechanisms for logging each phase of a GraphQL operation.
 

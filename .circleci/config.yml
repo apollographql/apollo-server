@@ -5,32 +5,38 @@ orbs:
   secops: apollo/circleci-secops-orb@2.0.7
 
 commands:
-  install-volta:
-    description: Install volta to manage Node/npm versions
-    steps:
-      - run:
-          name: Install volta
-          # Teach the volta installer to update Circle's special env
-          # file instead of the default.
-          command: |
-            curl https://get.volta.sh | PROFILE="$BASH_ENV" bash
-
   setup-node:
     parameters:
       node-version:
         type: string
         default: ''
     steps:
-      - install-volta
       - checkout
+      # We can consider using the CircleCI cache to cache Mise and Node, but it tends
+      # to be pretty fast to install.
+      - run:
+          name: Install Mise
+          command: |
+            curl https://mise.run | MISE_VERSION=v2025.8.20 sh
       - when:
           condition: << parameters.node-version >>
           steps:
-          - run: volta pin node@<< parameters.node-version >>
-      - run: node --version
-      - run: npm --version
-      - node/install-packages
+          - run: mise use node@<< parameters.node-version >>
+      - run:
+          name: Use Mise to configure the environment
+          command: stty cols 80 && ~/.local/bin/mise install --verbose && mise ls && mise env --shell bash >> "$BASH_ENV" && cat "$BASH_ENV"
+      - node/install-packages:
+          cache-version: node-v<< parameters.node-version >>
 
+  # Forked PRs don't get the token, so skip the upload for them.
+  maybe-upload-coverage:
+    steps:
+      - run:
+          name: "Maybe upload coverage to Codecov"
+          command: |
+              if [ -n "$CODECOV_TOKEN" ]; then
+                codecov-cli upload-process
+              fi
 
 jobs:
   NodeJS:
@@ -43,7 +49,7 @@ jobs:
       - setup-node:
           node-version: <<parameters.node-version>>
       - run: npm run test:ci
-      - run: npm run coverage:upload
+      - maybe-upload-coverage
       - store_test_results:
           path: junit.xml
 
@@ -54,18 +60,20 @@ jobs:
       - setup-node
       - run: npm run test:smoke
 
-  Full incremental delivery tests with graphql-js 17 canary:
+  Full incremental delivery tests with graphql 17 alpha 9:
     docker:
     - image: cimg/base:stable
     environment:
       INCREMENTAL_DELIVERY_TESTS_ENABLED: t
+      GRAPHQL_JS_VERSION: 17.0.0-alpha.9
     steps:
       - setup-node:
-          node-version: "18"
+          node-version: "20"
       # Install a prerelease of graphql-js 17 with incremental delivery support.
       # --legacy-peer-deps because nothing expects v17 yet.
-      - run: npm i --legacy-peer-deps graphql@17.0.0-alpha.2
+      - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}" @yaacovcr/transform
       - run: npm run test:ci
+      - maybe-upload-coverage
       - run: npm run test:smoke
 
   Prettier:
@@ -140,18 +148,16 @@ workflows:
           matrix:
             parameters:
               node-version:
-                - "14"
-                - "16"
-                - "18"
                 - "20"
                 - "22"
+                - "24"
       - "Check for FIXM\x45"
       - Prettier
       - ESLint
       - Spell check
       - Codegen check
       - Smoke test built package
-      - Full incremental delivery tests with graphql-js 17 canary
+      - Full incremental delivery tests with graphql 17 alpha 9
       - Changesets
   security-scans:
     jobs:

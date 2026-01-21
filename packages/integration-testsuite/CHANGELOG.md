@@ -1,5 +1,73 @@
 # @apollo/server-integration-testsuite
 
+## 5.2.0
+
+### Patch Changes
+
+- Updated dependencies [[`51acbeb`](https://github.com/apollographql/apollo-server/commit/51acbebde7cc2759efacaa9eccb10aa3fee6b368)]:
+  - @apollo/server@5.2.0
+
+## 5.1.0
+
+### Patch Changes
+
+- Updated dependencies [[`80a1a1a`](https://github.com/apollographql/apollo-server/commit/80a1a1af12b326d8c0f900bd85a25e14ee9cd9c0)]:
+  - @apollo/server@5.1.0
+
+## 5.1.0-rc.0
+
+### Patch Changes
+
+- Updated dependencies [[`80a1a1a`](https://github.com/apollographql/apollo-server/commit/80a1a1af12b326d8c0f900bd85a25e14ee9cd9c0)]:
+  - @apollo/server@5.1.0-rc.0
+
+## 5.0.0
+
+### Major Changes
+
+- Drop support for Node.JS v14, v16, and v20.
+
+- The integration test suite no longer uses `lib: ["dom"]` to tell TypeScript to assume DOM-related symbols are in the global namespace. If your integration library's test suite relied on this behavior, you may need to add `lib: ["dom"]` to the `compilerOptions` section of your test suite's `tsconfig.json`.
+
+### Patch Changes
+
+- [#8078](https://github.com/apollographql/apollo-server/pull/8078) [`dabe7ba`](https://github.com/apollographql/apollo-server/commit/dabe7ba60b4661a4b2e72c57d082acf04b32186a) Thanks [@renovate](https://github.com/apps/renovate)! - Support Jest v30 as well as Jest v29.
+
+- Updated dependencies [[`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
+  - @apollo/server@5.0.0
+
+## 4.12.2
+
+### Patch Changes
+
+- [#8070](https://github.com/apollographql/apollo-server/pull/8070) [`0dee3c9`](https://github.com/apollographql/apollo-server/commit/0dee3c93254507190f2548dec52fd4101d2175d1) Thanks [@glasser](https://github.com/glasser)! - Provide dual-build CJS and ESM for `@apollo/server-integration-testsuite`.
+
+  We previously provided only a CJS build of this package, unlike `@apollo/server`
+  itself and the other helper packages that come with it. We may make all of
+  Apollo Server ESM-only in AS5; this is a step in that direction. Specifically,
+  only providing this package for CJS makes it challenging to run the tests in
+  `ts-jest` in some ESM-only setups, because the copy of `@apollo/server` fetched
+  directly in your ESM-based test may differ from the copy fetched indirectly via
+  `@apollo/server-integration-testsuite`, causing the "lockstep versioning" test
+  to fail.
+
+- Updated dependencies:
+  - @apollo/server@4.12.2
+
+## 4.12.1
+
+### Patch Changes
+
+- Updated dependencies [[`41f98d4`](https://github.com/apollographql/apollo-server/commit/41f98d4f2c143aad0ddfb36d5a4dd4b47fb406d7)]:
+  - @apollo/server@4.12.1
+
+## 4.12.0
+
+### Patch Changes
+
+- Updated dependencies [[`89e3f84`](https://github.com/apollographql/apollo-server/commit/89e3f848e64590e15b08a07df498fe3fdb4f370d), [`2550d9f`](https://github.com/apollographql/apollo-server/commit/2550d9fefe03069075e16141b043115170012e80)]:
+  - @apollo/server@4.12.0
+
 ## 4.11.3
 
 ### Patch Changes

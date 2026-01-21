@@ -40,7 +40,8 @@ import type {
   GraphQLRequestExecutionListener,
   BaseContext,
   GraphQLResponse,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
 } from './externalTypes/index.js';
 
 import {
@@ -52,10 +53,11 @@ import {
 import { makeGatewayGraphQLRequestContext } from './utils/makeGatewayGraphQLRequestContext.js';
 
 import { mergeHTTPGraphQLHead, newHTTPGraphQLHead } from './runHttpQuery.js';
-import type {
-  ApolloServer,
-  ApolloServerInternals,
-  SchemaDerivedData,
+import {
+  MEDIA_TYPES,
+  type ApolloServer,
+  type ApolloServerInternals,
+  type SchemaDerivedData,
 } from './ApolloServer.js';
 import { isDefined } from './utils/isDefined.js';
 import type {
@@ -64,10 +66,13 @@ import type {
 } from './externalTypes/requestPipeline.js';
 import {
   executeIncrementally,
-  type GraphQLExperimentalInitialIncrementalExecutionResult,
-  type GraphQLExperimentalSubsequentIncrementalExecutionResult,
+  type GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha9,
+  type GraphQLExperimentalInitialIncrementalExecutionResultAlpha2,
+  type GraphQLExperimentalInitialIncrementalExecutionResultAlpha9,
+  type GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha2,
 } from './incrementalDeliveryPolyfill.js';
 import { HeaderMap } from './utils/HeaderMap.js';
+import Negotiator from 'negotiator';
 
 export const APQ_CACHE_PREFIX = 'apq:';
 
@@ -77,13 +82,21 @@ function computeQueryHash(query: string) {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
+// Once GraphQL-JS v17 is released and we make a version of Apollo Server that
+// requires it, we can drop this hack, because it lets us break the `execute`
+// API into two steps and validate user input explicitly first.
 function isBadUserInputGraphQLError(error: GraphQLError): boolean {
   return (
     error.nodes?.length === 1 &&
     error.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
+    // GraphQL-JS v17 alpha wording
     (error.message.startsWith(
-      `Variable "$${error.nodes[0].variable.name.value}" got invalid value `,
+      `Variable "$${error.nodes[0].variable.name.value}" has invalid value`,
     ) ||
+      // GraphQL-JS v16 wording
+      error.message.startsWith(
+        `Variable "$${error.nodes[0].variable.name.value}" got invalid value `,
+      ) ||
       error.message.startsWith(
         `Variable "$${error.nodes[0].variable.name.value}" of required type `,
       ) ||
@@ -101,8 +114,12 @@ type SemiFormattedExecuteIncrementallyResults =
       singleResult: ExecutionResult;
     }
   | {
-      initialResult: GraphQLExperimentalInitialIncrementalExecutionResult;
-      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult>;
+      initialResult: GraphQLExperimentalInitialIncrementalExecutionResultAlpha2;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2>;
+    }
+  | {
+      initialResult: GraphQLExperimentalInitialIncrementalExecutionResultAlpha9;
+      subsequentResults: AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9>;
     };
 
 export async function processGraphQLRequest<TContext extends BaseContext>(
@@ -243,12 +260,19 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ),
       );
 
-      const validationErrors = validate(
+      let validationErrors = validate(
         schemaDerivedData.schema,
         requestContext.document,
         [...specifiedRules, ...internals.validationRules],
         internals.validationOptions,
       );
+      if (validationErrors.length === 0 && internals.laterValidationRules) {
+        validationErrors = validate(
+          schemaDerivedData.schema,
+          requestContext.document,
+          internals.laterValidationRules,
+        );
+      }
 
       if (validationErrors.length === 0) {
         await validationDidEnd();
@@ -359,7 +383,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ? { ttl: internals.persistedQueries?.ttl }
           : undefined,
       ),
-    ).catch(server.logger.warn);
+    ).catch(server.logger.warn.bind(server.logger));
   }
 
   const responseFromPlugin = await invokeHooksUntilDefinedAndNonNull(
@@ -427,9 +451,16 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
 
     try {
-      const fullResult = await execute(
-        requestContext as GraphQLRequestContextExecutionDidStart<TContext>,
-      );
+      const fullResult = await execute({
+        ...requestContext,
+        useLegacyIncremental:
+          new Negotiator({
+            headers: { accept: request.http?.headers.get('accept') },
+          }).mediaType([
+            MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
+            MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+          ]) === MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+      } as GraphQLRequestContextExecutionDidStart<TContext>);
       const result =
         'singleResult' in fullResult
           ? fullResult.singleResult
@@ -478,9 +509,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
-      // TODO(AS5) This becomes the default behavior and the
-      // `status400ForVariableCoercionErrors` configuration option is removed /
-      // ignored.
+      // TODO(AS6): remove `status400ForVariableCoercionErrors`
       if (
         internals.status400ForVariableCoercionErrors &&
         resultErrors?.length &&
@@ -528,9 +557,12 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
   }
   return requestContext.response as GraphQLResponse; // cast checked on previous line
 
-  async function execute(
-    requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): Promise<SemiFormattedExecuteIncrementallyResults> {
+  async function execute({
+    useLegacyIncremental,
+    ...requestContext
+  }: GraphQLRequestContextExecutionDidStart<TContext> & {
+    useLegacyIncremental?: boolean;
+  }): Promise<SemiFormattedExecuteIncrementallyResults> {
     const { request, document } = requestContext;
 
     if (internals.__testing_incrementalExecutionResults) {
@@ -552,13 +584,22 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         variableValues: request.variables,
         operationName: request.operationName,
         fieldResolver: internals.fieldResolver,
+        useLegacyIncremental,
+        options: internals.executionOptions,
+        legacyExperimentalExecuteIncrementally:
+          internals.legacyExperimentalExecuteIncrementally,
       });
       if ('initialResult' in resultOrResults) {
         return {
           initialResult: resultOrResults.initialResult,
-          subsequentResults: formatErrorsInSubsequentResults(
-            resultOrResults.subsequentResults,
-          ),
+          subsequentResults:
+            'pending' in resultOrResults.initialResult
+              ? formatErrorsInSubsequentResultsAlpha9(
+                  resultOrResults.subsequentResults as AsyncIterable<GraphQLExperimentalInitialIncrementalExecutionResultAlpha9>,
+                )
+              : formatErrorsInSubsequentResultsAlpha2(
+                  resultOrResults.subsequentResults,
+                ),
         };
       } else {
         return { singleResult: resultOrResults };
@@ -566,11 +607,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
     }
   }
 
-  async function* formatErrorsInSubsequentResults(
-    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResult>,
-  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult> {
+  async function* formatErrorsInSubsequentResultsAlpha2(
+    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha2>,
+  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2> {
     for await (const result of results) {
-      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult =
+      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 =
         result.incremental
           ? {
               ...result,
@@ -601,6 +642,86 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
               ),
             }
           : result;
+
+      // Invoke hook, which is allowed to mutate payload if it really wants to.
+      await Promise.all(
+        requestListeners.map((l) =>
+          l.willSendSubsequentPayload?.(
+            requestContext as GraphQLRequestContextWillSendSubsequentPayload<TContext>,
+            payload,
+          ),
+        ),
+      );
+
+      yield payload;
+    }
+  }
+
+  async function* formatErrorsInSubsequentResultsAlpha9(
+    results: AsyncIterable<GraphQLExperimentalSubsequentIncrementalExecutionResultAlpha9>,
+  ): AsyncIterable<GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9> {
+    for await (const result of results) {
+      const payload: GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9 =
+        result.incremental
+          ? {
+              ...result,
+              incremental: await seriesAsyncMap(
+                result.incremental,
+                async (incrementalResult) => {
+                  const { errors } = incrementalResult;
+                  if (errors) {
+                    await Promise.all(
+                      requestListeners.map((l) =>
+                        l.didEncounterSubsequentErrors?.(
+                          requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+                          errors,
+                        ),
+                      ),
+                    );
+
+                    return {
+                      ...incrementalResult,
+                      // Note that any `http` extensions in errors have no
+                      // effect, because we've already sent the status code
+                      // and response headers.
+                      errors: formatErrors(errors).formattedErrors,
+                    };
+                  }
+                  return incrementalResult;
+                },
+              ),
+            }
+          : result;
+
+      if (result.completed) {
+        payload.completed = await seriesAsyncMap(
+          result.completed,
+          async (completedResult) => {
+            const { errors } = completedResult;
+
+            if (errors) {
+              await Promise.all(
+                requestListeners.map((l) =>
+                  l.didEncounterSubsequentErrors?.(
+                    requestContext as GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
+                    errors,
+                  ),
+                ),
+              );
+
+              return {
+                ...completedResult,
+                // Note that any `http` extensions in errors have no
+                // effect, because we've already sent the status code
+                // and response headers.
+                errors: formatErrors(errors).formattedErrors,
+              };
+            }
+
+            return completedResult;
+          },
+        );
+      }
 
       // Invoke hook, which is allowed to mutate payload if it really wants to.
       await Promise.all(

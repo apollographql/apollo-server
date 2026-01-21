@@ -9,7 +9,7 @@
   // It's nice to be able to see PRs for everything in the Dependency Dashboard.
   prCreation: "immediate",
   // Disable circleci manager; see apollographql/federation's renovate file for details.
-  enabledManagers: ["npm"],
+  enabledManagers: ["npm", "mise", "custom.regex"],
   dependencyDashboard: true,
   // It seems like a nice idea to let Renovate use GitHub's native "automerge" since PRs
   // can get merged between Renovate runs. The downsides are:
@@ -20,6 +20,17 @@
   //   old branch point. GH auto-merge doesn't have that property so it's a bit more likely that
   //   a deps update could break the build if there are recent related changes.
   platformAutomerge: false,
+  // Update the version of Mise used in CircleCI.
+  customManagers: [{
+    customType: "regex",
+    managerFilePatterns: ["/^\\.circleci\/config\\.yml$/"],
+    matchStrings: ["MISE_VERSION=(?<currentValue>\\S+) "],
+    datasourceTemplate: "github-releases",
+    packageNameTemplate: "jdx/mise",
+    // mise doesn't use strict semver: the "major" number is the year, so
+    // bumping it isn't scarier than bumping the "minor" number.
+    versioningTemplate: "loose",
+  }],
   packageRules: [
     // Bunch up all non-major dependencies into a single PR.  In the common case
     // where the upgrades apply cleanly, this causes less noise and is resolved faster
@@ -37,14 +48,6 @@
       groupName: "typescript",
       matchPackageNames: ["typescript"],
       matchUpdateTypes: ["minor"],
-    },
-    // Also, we're currently stuck at v5.4.x because v5.5 ships a lib.dom.d.ts
-    // that's incompatible with `@types/node@14` which we are pinning until we
-    // drop Node v14 support. See
-    // https://github.com/DefinitelyTyped/DefinitelyTyped/issues/66617
-    {
-      matchPackageNames: ["typescript"],
-      allowedVersions: "5.4.x",
     },
     // The testsuite depends directly on the tests in `graphql-http`.
     // Because of this, updates to `graphql-http` affect the contents of
@@ -64,110 +67,17 @@
       matchFileNames: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
-    // We need to support Node v14, so we don't allow ourselves to use type definitions
-    // that would let us write v16-specific code.
+    // We need to support Node v20, so we don't allow ourselves to use type definitions
+    // that would let us write >v20-specific code.
     {
       matchPackageNames: ["@types/node"],
-      allowedVersions: "14.x"
-    },
-    // lru-cache@8 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["lru-cache"],
-      allowedVersions: "7.x"
-    },
-    // @apollo/utils@3 drop support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["/^@apollo/utils/"],
-      allowedVersions: "2.x"
-    },
-    // @graphql-codegen@4 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["/^@graphql-codegen/"],
-      allowedVersions: "3.x"
-    },
-    // @graphql-tools/mock@8 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["@graphql-tools/mock"],
-      allowedVersions: "8.x"
-    },
-    // @graphql-tools/schema@9 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["@graphql-tools/schema"],
-      allowedVersions: "9.x"
-    },
-    // @typescript-eslint@6 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["/^@typescript-eslint/"],
-      allowedVersions: "5.x"
-    },
-    // cspell@7 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["cspell"],
-      allowedVersions: "6.x",
-    },
-    // whatwg-mimetype@4 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["whatwg-mimetype"],
-      allowedVersions: "3.x",
-    },
-    // node-fetch v3 only ships as ESM. We currently build as both CommonJS and
-    // ESM, so let's stay on v2.
-    // (Once we drop support for node older than v18, we can switch our default
-    // fetch implementation to be Node's built-in implementation and drop this
-    // very old node-fetch implementation.)
-    {
-      matchPackageNames: ["node-fetch", "@types/node-fetch"],
-      allowedVersions: "2.x"
+      allowedVersions: "20.x"
     },
     {
       // Major upgrade rollup plugins along with rollup itself.
       matchSourceUrls: ["https://github.com/rollup/{/,}**"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
-    },
-    // rollup@4 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["rollup"],
-      allowedVersions: "3.x",
-    },
-    // eslint@9 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["eslint"],
-      allowedVersions: "8.x",
-    },
-    // uuid@10 drops support for node v14. We can take this when we drop node
-    // v14 support. (This isn't in the engines property, but they made this
-    // change in https://github.com/uuidjs/uuid/pull/750 and then later started
-    // using the new-in-v16 `??=` operator.)
-    {
-      matchPackageNames: ["uuid", "@types/uuid"],
-      allowedVersions: "9.x",
-    },
-    // negotiator@1 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["negotiator"],
-      allowedVersions: "0.x",
-    },
-    // npm@10 drops support for node v14. We can take this when we drop node v14 support.
-    {
-      matchPackageNames: ["npm"],
-      allowedVersions: "9.x",
-    },
-    // We specifically provide a first-party integration (`expressMiddleware`
-    // imported from `@apollo/server/express4`) for Express v4 because it is the
-    // most common web framework. (Additionally, as an internal implementation
-    // detail, it is what powers `startStandaloneServer`, though users of that
-    // function should not rely on anything other than that it uses standard
-    // Node `http` request and response objects.) It is easy to build
-    // integrations for other web servers, including Express v5, which is not
-    // yet as popular as Express v4. So we don't plan to provide a built-in
-    // Express v5 implementation any time soon (most likely as part of a new
-    // major version); we appreciate the simplicity of a build system that only
-    // installs one version of any given practice. See
-    // https://github.com/apollographql/apollo-server/issues/7928.
-    {
-      matchPackageNames: ["express", "@types/express", "@types/express-serve-static-core"],
-      allowedVersions: "4.x",
     },
   ]
 }

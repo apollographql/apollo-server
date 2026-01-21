@@ -1,5 +1,181 @@
 # @apollo/server
 
+## 5.2.0
+
+### Minor Changes
+
+- [#8161](https://github.com/apollographql/apollo-server/pull/8161) [`51acbeb`](https://github.com/apollographql/apollo-server/commit/51acbebde7cc2759efacaa9eccb10aa3fee6b368) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Fix an issue where some bundlers would fail to build because of the dynamic import for the optional peer dependency on `@yaacovcr/transform` introduced in `@apollo/server` 5.1.0. To provide support for the legacy incremental format, you must now provide the `legacyExperimentalExecuteIncrementally` option to the `ApolloServer` constructor.
+
+  ```ts
+  import { legacyExecuteIncrementally } from '@yaacovcr/transform';
+
+  const server = new ApolloServer({
+    // ...
+    legacyExperimentalExecuteIncrementally: legacyExecuteIncrementally,
+  });
+  ```
+
+  If the `legacyExperimentalExecuteIncrementally` option is not provided and the client sends an `Accept` header with a value of `multipart/mixed; deferSpec=20220824`, an error is returned by the server.
+
+## 5.1.0
+
+### Minor Changes
+
+- [#8148](https://github.com/apollographql/apollo-server/pull/8148) [`80a1a1a`](https://github.com/apollographql/apollo-server/commit/80a1a1af12b326d8c0f900bd85a25e14ee9cd9c0) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Apollo Server now supports the incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the current protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalSpec=v0.2`.
+
+  Upgrading to 5.1 will depend on what version of `graphql` you have installed and whether you already support the incremental delivery protocol.
+
+  ## I use `graphql@16` without incremental delivery
+
+  Continue using `graphql` v16 with no additional changes. Incremental delivery won't be available.
+
+  ## I use `graphql@16` but would like to add support for incremental delivery
+
+  Install `graphql@17.0.0-alpha.9` and follow the ["Incremental delivery" guide](https://www.apollographql.com/docs/apollo-server/workflow/requests#incremental-delivery-experimental) to add the `@defer` and `@stream` directives to your schema. Clients should send the `Accept` header with a value of `multipart/mixed; incrementalSpec=v0.2` to get multipart responses.
+
+  ## I use `graphql@17.0.0-alpha.2` and use incremental delivery
+
+  You must upgrade to `graphql@17.0.0-alpha.9` to continue using incremental delivery. If you'd like to continue providing support for the legacy incremental protocol, install the [`@yaacovcr/transform`](https://github.com/yaacovCR/transform) package. Apollo Server will attempt to load this module when the client specifies an `Accept` header with a value of `multipart/mixed; deferSpec=20220824`. If this package is not installed, an error is returned by the server.
+
+  Because Apollo Server now supports multiple versions of the incremental delivery types, the existing incremental delivery types have been renamed with an `Alpha2` suffix. If you import these types in your code, you will need to add the `Alpha2` suffix.
+
+  ```diff
+  import type {
+  - GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
+  + GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+
+  - GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  + GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+
+  - GraphQLExperimentalFormattedIncrementalResult,
+  + GraphQLExperimentalFormattedIncrementalResultAlpha2,
+
+  - GraphQLExperimentalFormattedIncrementalDeferResult,
+  + GraphQLExperimentalFormattedIncrementalDeferResultAlpha2,
+
+  - GraphQLExperimentalFormattedIncrementalStreamResult,
+  + GraphQLExperimentalFormattedIncrementalStreamResultAlpha2,
+  } from '@apollo/server';
+  ```
+
+  Incremental delivery types for the `graphql@17.0.0-alpha.9` version are now available using the `Alpha9` suffix:
+
+  ```ts
+  import type {
+    GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+    GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+    GraphQLExperimentalFormattedIncrementalResultAlpha9,
+    GraphQLExperimentalFormattedIncrementalDeferResultAlpha9,
+    GraphQLExperimentalFormattedIncrementalStreamResultAlpha9,
+    GraphQLExperimentalFormattedCompletedResultAlpha9,
+    GraphQLExperimentalPendingResultAlpha9,
+  } from '@apollo/server';
+  ```
+
+## 5.1.0-rc.0
+
+### Minor Changes
+
+- [#8148](https://github.com/apollographql/apollo-server/pull/8148) [`80a1a1a`](https://github.com/apollographql/apollo-server/commit/80a1a1af12b326d8c0f900bd85a25e14ee9cd9c0) Thanks [@jerelmiller](https://github.com/jerelmiller)! - Apollo Server now supports the incremental delivery protocol (`@defer` and `@stream`) that ships with `graphql@17.0.0-alpha.9`. To use the current protocol, clients must send the `Accept` header with a value of `multipart/mixed; incrementalSpec=v0.2`.
+
+  Upgrading to 5.1 will depend on what version of `graphql` you have installed and whether you already support the incremental delivery protocol.
+
+  ## I use `graphql@16` without incremental delivery
+
+  Continue using `graphql` v16 with no additional changes. Incremental delivery won't be available.
+
+  ## I use `graphql@16` but would like to add support for incremental delivery
+
+  Install `graphql@17.0.0-alpha.9` and follow the ["Incremental delivery" guide](https://www.apollographql.com/docs/apollo-server/workflow/requests#incremental-delivery-experimental) to add the `@defer` and `@stream` directives to your schema. Clients should send the `Accept` header with a value of `multipart/mixed; incrementalSpec=v0.2` to get multipart responses.
+
+  ## I use `graphql@17.0.0-alpha.2` and use incremental delivery
+
+  You must upgrade to `graphql@17.0.0-alpha.9` to continue using incremental delivery. If you'd like to continue providing support for the legacy incremental protocol, install the [`@yaacovcr/transform`](https://github.com/yaacovCR/transform) package. Apollo Server will attempt to load this module when the client specifies an `Accept` header with a value of `multipart/mixed; deferSpec=20220824`. If this package is not installed, an error is returned by the server.
+
+  Because Apollo Server now supports multiple versions of the incremental delivery types, the existing incremental delivery types have been renamed with an `Alpha2` suffix. If you import these types in your code, you will need to add the `Alpha2` suffix.
+
+  ```diff
+  import type {
+  - GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
+  + GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+
+  - GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
+  + GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+
+  - GraphQLExperimentalFormattedIncrementalResult,
+  + GraphQLExperimentalFormattedIncrementalResultAlpha2,
+
+  - GraphQLExperimentalFormattedIncrementalDeferResult,
+  + GraphQLExperimentalFormattedIncrementalDeferResultAlpha2,
+
+  - GraphQLExperimentalFormattedIncrementalStreamResult,
+  + GraphQLExperimentalFormattedIncrementalStreamResultAlpha2,
+  } from '@apollo/server';
+  ```
+
+  Incremental delivery types for the `graphql@17.0.0-alpha.9` version are now available using the `Alpha9` suffix:
+
+  ```ts
+  import type {
+    GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+    GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+    GraphQLExperimentalFormattedIncrementalResultAlpha9,
+    GraphQLExperimentalFormattedIncrementalDeferResultAlpha9,
+    GraphQLExperimentalFormattedIncrementalStreamResultAlpha9,
+    GraphQLExperimentalFormattedCompletedResultAlpha9,
+    GraphQLExperimentalPendingResultAlpha9,
+  } from '@apollo/server';
+  ```
+
+## 5.0.0
+
+### BREAKING CHANGES
+
+Apollo Server v5 has very few breaking API changes. It is a small upgrade focused largely on adjusting which versions of Node.js and Express are supported.
+
+Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for more details on how to update your app.
+
+- Dropped support for Node.js v14, v16, and v18, which are no longer under [long-term support](https://nodejs.org/en/about/releases/#releases) from the Node.js Foundation. Apollo Server 5 supports Node.js v20 and later; v24 is recommended. Ensure you are on a non-EOL version of Node.js before upgrading Apollo Server.
+- Dropped support for versions of the `graphql` library older than `v16.11.0`. (Apollo Server 4 supports `graphql` `v16.6.0` or later.) Upgrade `graphql` before upgrading Apollo Server.
+- Express integration requires a separate package. In Apollo Server 4, you could import the Express 4 middleware from `@apollo/server/express4`, or you could import it from the separate package `@as-integrations/express4`. In Apollo Server 5, you must import it from the separate package. You can migrate your server to the new package before upgrading to Apollo Server 5. (You can also use `@as-integrations/express5` for a middleware that works with Express 5.)
+- Usage Reporting, Schema Reporting, and Subscription Callback plugins now use the Node.js built-in `fetch` implementation for HTTP requests by default, instead of the `node-fetch` npm package. If your server uses an HTTP proxy to make HTTP requests, you need to configure it in a slightly different way. See the [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for details.
+- The server started with `startStandaloneServer` no longer uses Express. This is mostly invisible, but it does set slightly fewer headers. If you rely on the fact that this server is based on Express, you should explicitly use the Express middleware.
+- The experimental support for incremental delivery directives `@defer` and `@stream` (which requires using a pre-release version of `graphql` v17) now explicitly only works with version `17.0.0-alpha.2` of `graphql`. Note that this supports the same incremental delivery protocol implemented by Apollo Server 4, which is not the same protocol in the latest alpha version of `graphql`. As this support is experimental, we may switch over from "only `alpha.2` is supported" to "only a newer alpha or final release is supported, with a different protocol" during the lifetime of Apollo Server 5.
+- Apollo Server is now compiled by the TypeScript compiler targeting the ES2023 standard rather than the ES2020 standard.
+- Apollo Server 5 responds to requests with variable coercion errors (eg, if a number is passed in the `variables` map for a variable declared in the operation as a `String`) with a 400 status code, indicating a client error. This is also the behavior of Apollo Server 3. Apollo Server 4 mistakenly responds to these requests with a 200 status code by default; we recommended the use of the `status400ForVariableCoercionErrors: true` option to restore the intended behavior. That option now defaults to true.
+- The unsafe `precomputedNonce` option to landing page plugins (which was only non-deprecated for 8 days) has been removed.
+
+### Patch Changes
+
+There are a few other small changes in v5:
+
+- [#8076](https://github.com/apollographql/apollo-server/pull/8076) [`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6) Thanks [@valters](https://github.com/valters)! - Fix some error logs to properly call `logger.error` or `logger.warn` with `this` set. This fixes errors or crashes from logger implementations that expect `this` to be set properly in their methods.
+
+- [#7515](https://github.com/apollographql/apollo-server/pull/7515) [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da) Thanks [@trevor-scheer](https://github.com/trevor-scheer)! - ApolloServerPluginSubscriptionCallback now takes a `fetcher` argument, like the usage and schema reporting plugins. The default value is Node's built-in fetch.
+
+- Updated dependencies [[`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
+  - @apollo/server-gateway-interface@2.0.0
+
+## 4.12.2
+
+(No change; there is a change to the `@apollo/server-integration-testsuite` used to test integrations, and the two packages always have matching versions.)
+
+## 4.12.1
+
+### Patch Changes
+
+- [#8064](https://github.com/apollographql/apollo-server/pull/8064) [`41f98d4`](https://github.com/apollographql/apollo-server/commit/41f98d4f2c143aad0ddfb36d5a4dd4b47fb406d7) Thanks [@glasser](https://github.com/glasser)! - Update README.md to recommend Express v5 integration now that Express v5 is released.
+
+## 4.12.0
+
+### Minor Changes
+
+- [#8054](https://github.com/apollographql/apollo-server/pull/8054) [`89e3f84`](https://github.com/apollographql/apollo-server/commit/89e3f848e64590e15b08a07df498fe3fdb4f370d) Thanks [@clenfest](https://github.com/clenfest)! - Adds a new graphql-js validation rule to reject operations that recursively request selections above a specified maximum, which is disabled by default. Use configuration option `maxRecursiveSelections=true` to enable with a maximum of 10,000,000, or `maxRecursiveSelections=<number>` for a custom maximum. Enabling this validation can help avoid performance issues with configured validation rules or plugins.
+
+### Patch Changes
+
+- [#8031](https://github.com/apollographql/apollo-server/pull/8031) [`2550d9f`](https://github.com/apollographql/apollo-server/commit/2550d9fefe03069075e16141b043115170012e80) Thanks [@slagiewka](https://github.com/slagiewka)! - Add return after sending 400 response in doubly escaped JSON parser middleware
+
 ## 4.11.3
 
 ### Patch Changes
@@ -122,7 +298,6 @@
   Apollo Server previously performed no sanitization or validation of API keys on startup. In the case that an API key was provided which contained characters that are invalid as header values, Apollo Server could inadvertently log the API key in cleartext.
 
   This only affected users who:
-
   - Provide an API key with characters that are invalid as header values
   - Use either schema or usage reporting
   - Use the default fetcher provided by Apollo Server or configure their own `node-fetch` fetcher
@@ -551,7 +726,7 @@ This version has no changes; `@apollo/server` and `@apollo/server-integration-te
 
 ### BREAKING CHANGES
 
-Apollo Server contains quite a few breaking changes: most notably, a brand new package name! Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for more details on how to update your app.
+Apollo Server contains quite a few breaking changes: most notably, a brand new package name! Read our [migration guide](https://www.apollographql.com/docs/apollo-server/migration-from-v3/) for more details on how to update your app.
 
 #### Bumped dependencies
 
@@ -581,13 +756,13 @@ Other packages have been renamed:
 
 #### Removed web framework integrations
 
-Prior to Apollo Server 4, the only way to integrate a web framework with Apollo Server was for the Apollo Server project to add an official `apollo-server-x` subclass maintained as part of the core project. Apollo Server 4 makes it easy for users to integrate with their favorite web framework, and so we have removed most of the framework integrations from the core project so that framework integrations can be maintained by users who are passionate about that framework. Because of this, the core project no longer directly maintains integrations for Fastify, Hapi, Koa, Micro, AWS Lambda,Google Cloud Functions, Azure Functions, or Cloudflare. We expect that [community integrations](https://www.apollographql.com/docs/apollo-server/v4/integrations/integration-index/) will eventually be created for most of these frameworks and serverless environments.
+Prior to Apollo Server 4, the only way to integrate a web framework with Apollo Server was for the Apollo Server project to add an official `apollo-server-x` subclass maintained as part of the core project. Apollo Server 4 makes it easy for users to integrate with their favorite web framework, and so we have removed most of the framework integrations from the core project so that framework integrations can be maintained by users who are passionate about that framework. Because of this, the core project no longer directly maintains integrations for Fastify, Hapi, Koa, Micro, AWS Lambda,Google Cloud Functions, Azure Functions, or Cloudflare. We expect that [community integrations](https://www.apollographql.com/docs/apollo-server/integrations/integration-index/) will eventually be created for most of these frameworks and serverless environments.
 
 Apollo Server's support for the Express web framework no longer also supports its older predecessor [Connect](https://github.com/senchalabs/connect).
 
 #### Removed constructor options
 
-- The `dataSources` constructor option essentially added a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your context value. This meant the TypeScript type the `context` function returns was _different_ from the context type your resolvers and plugins receive. Additionally, this design obfuscated that `DataSource` objects are created once per request (i.e., like the rest of the context object). Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object. See the [migration guide](https://www.apollographql.com/docs/apollo-server/migration/) for details on how to move your `dataSources` function into your `context` function.
+- The `dataSources` constructor option essentially added a post-processing step to your app's context function, creating `DataSource` subclasses and adding them to a `dataSources` field on your context value. This meant the TypeScript type the `context` function returns was _different_ from the context type your resolvers and plugins receive. Additionally, this design obfuscated that `DataSource` objects are created once per request (i.e., like the rest of the context object). Apollo Server 4 removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object. See the [migration guide](https://www.apollographql.com/docs/apollo-server/migration-from-v3/) for details on how to move your `dataSources` function into your `context` function.
 - The `modules` constructor option was just a slightly different way of writing `typeDefs` and `resolvers` (although it surprisingly used entirely different logic under the hood). This option has been removed.
 - The `mocks` and `mockEntireSchema` constructor options wrapped an outdated version of the [`@graphql-tools/mocks`](https://www.npmjs.com/package/@graphql-tools/mock) library to provide mocking functionality. These constructor options have been removed; you can instead directly incorporate the `@graphql-tools/mock` package into your app, enabling you to get the most up-to-date mocking features.
 - The `debug` constructor option (which defaulted to `true` unless the `NODE_ENV` environment variable is either `production` or `test`) mostly controlled whether GraphQL errors responses included stack traces, but it also affected the default log level on the default logger. The `debug` constructor option has been removed and is replaced with `includeStacktraceInErrorResponses`, which does exactly what it says it does.
@@ -615,7 +790,7 @@ Apollo Server's support for the Express web framework no longer also supports it
 - The `formatError` hook now receives the original thrown error in addition to the formatted error.
 - Formatted errors no longer contain the `extensions.exception` field containing all enumerable properties of the originally thrown error. If you want to include more information in an error, specify them as `extensions` when creating a `GraphQLError`. The `stacktrace` field is provided directly on `extensions` rather than nested under `exception`.
 - All errors responses are consistently rendered as `application/json` JSON responses, and the `formatError` hook is used consistently.
-- Other [changes to error handling outside of resolvers](https://www.apollographql.com/docs/apollo-server/migration/#improvements-to-error-handling-outside-of-resolvers) are described in the migration guide.
+- Other [changes to error handling outside of resolvers](https://www.apollographql.com/docs/apollo-server/migration-from-v3/#improvements-to-error-handling-outside-of-resolvers) are described in the migration guide.
 - The `parseOptions` constructor option only affects the parsing of incoming operations, not the parsing of `typeDefs`.
 
 #### Plugin API changes
@@ -625,10 +800,10 @@ Apollo Server's support for the Express web framework no longer also supports it
 - The fields `GraphQLRequestContext.schemaHash` and `GraphQLRequestContext.debug` have been removed.
 - The type `GraphQLServiceContext` has been renamed to `GraphQLServerContext`, and the fields `schemaHash`, `persistedQueries`, and `serverlessFramework` have been removed; the latter has been semi-replaced by `startedInBackground`.
 - The `http` field on the `GraphQLRequest` object (available to plugins as `requestContext.request` and as an argument to `server.executeOperation`) is no longer based on the Fetch API's `Request` object. It no longer contains an URL path, and its `headers` field is a `Map` rather than a `Headers` object.
-- The structure of the `GraphQLResponse` object (available to plugins as `requestContext.response` and as the return value from `server.executeOperation`) has [changed in several ways](https://www.apollographql.com/docs/apollo-server/migration/#graphqlresponse).
+- The structure of the `GraphQLResponse` object (available to plugins as `requestContext.response` and as the return value from `server.executeOperation`) has [changed in several ways](https://www.apollographql.com/docs/apollo-server/migration-from-v3/#graphqlresponse).
 - The `plugins` constructor argument does not take factory functions.
 - `requestDidStart` hooks are called in parallel rather than in series.
-- A few changes have been made which may affect [custom `gateway` and `GraphQLDataSource` implementations](https://www.apollographql.com/docs/apollo-server/migration/#custom-gateway-and-graphqldatasource-implementations).
+- A few changes have been made which may affect [custom `gateway` and `GraphQLDataSource` implementations](https://www.apollographql.com/docs/apollo-server/migration-from-v3/#custom-gateway-and-graphqldatasource-implementations).
 
 #### Changes to defaults
 

@@ -35,7 +35,6 @@ import {
   type ApolloServerPlugin,
   HeaderMap,
 } from '@apollo/server';
-import fetch, { type Headers } from 'node-fetch';
 
 import resolvable, { type Resolvable } from './resolvable.js';
 import type { AddressInfo } from 'net';
@@ -361,9 +360,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
-            /got invalid value 2; String cannot represent a non string value: 2/,
-          );
+          expect([
+            // graphql v16
+            `Variable "$x" got invalid value 2; String cannot represent a non string value: 2`,
+            // graphql v17
+            'Variable "$x" has invalid value: String cannot represent a non string value: 2',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -383,9 +385,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of required type "String!" was not provided.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected a value of non-null type "String!" to be provided.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -405,9 +410,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of required type "[String]!" was not provided.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected a value of non-null type "[String]!" to be provided.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -428,9 +436,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of non-null type "String!" must not be null.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected value of non-null type "String!" not to be null.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -451,9 +462,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toMatch(
+          expect([
+            // graphql v16
             `Variable "$x" of non-null type "[String]!" must not be null.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value: Expected value of non-null type "[String]!" not to be null.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -474,10 +488,13 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
           expect(result.data).toBeUndefined();
           expect(result.errors).toBeDefined();
-          expect(result.errors[0].message).toBe(
+          expect([
+            // graphql v16
             `Variable "$x" got invalid value null at "x[0]"; ` +
               `Expected non-nullable type "String!" not to be null.`,
-          );
+            // graphql v17
+            'Variable "$x" has invalid value at [0]: Expected value of non-null type "String!" not to be null.',
+          ]).toContain(result.errors[0].message);
           expect(result.errors[0].extensions.code).toBe('BAD_USER_INPUT');
         });
 
@@ -510,23 +527,17 @@ export function defineIntegrationTestSuiteApolloServerTests(
             query: `query ($x:CustomScalar) {hello(x:$x)}`,
             variables: { x: 'foo' },
           });
-          expect(result).toMatchInlineSnapshot(`
+          expect(result.errors).toHaveLength(1);
+          expect([
+            // graphql v16
+            'Variable "$x" got invalid value "foo"; Something bad happened',
+            // graphql v17
+            'Variable "$x" has invalid value: Something bad happened',
+          ]).toContain(result.errors[0].message);
+          expect(result.errors[0].extensions).toMatchInlineSnapshot(`
             {
-              "errors": [
-                {
-                  "extensions": {
-                    "code": "BAD_USER_INPUT",
-                    "custom": "foo",
-                  },
-                  "locations": [
-                    {
-                      "column": 8,
-                      "line": 1,
-                    },
-                  ],
-                  "message": "Variable "$x" got invalid value "foo"; Something bad happened",
-                },
-              ],
+              "code": "BAD_USER_INPUT",
+              "custom": "foo",
             }
           `);
         });
@@ -560,23 +571,17 @@ export function defineIntegrationTestSuiteApolloServerTests(
             query: `query ($x:CustomScalar) {hello(x:$x)}`,
             variables: { x: 'foo' },
           });
-          expect(result).toMatchInlineSnapshot(`
+          expect(result.errors).toHaveLength(1);
+          expect([
+            // graphql v16
+            'Variable "$x" got invalid value "foo"; Something bad happened',
+            // graphql v17
+            'Variable "$x" has invalid value: Something bad happened',
+          ]).toContain(result.errors[0].message);
+          expect(result.errors[0].extensions).toMatchInlineSnapshot(`
             {
-              "errors": [
-                {
-                  "extensions": {
-                    "code": "CUSTOMIZED",
-                    "custom": "foo",
-                  },
-                  "locations": [
-                    {
-                      "column": 8,
-                      "line": 1,
-                    },
-                  ],
-                  "message": "Variable "$x" got invalid value "foo"; Something bad happened",
-                },
-              ],
+              "code": "CUSTOMIZED",
+              "custom": "foo",
             }
           `);
         });
@@ -670,9 +675,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
             );
           } else {
             // createServer awaits start() so should throw.
-            await expect(createServer({ gateway })).rejects.toThrowError(
-              loadError,
-            );
+            await expect(createServer({ gateway })).rejects.toThrow(loadError);
           }
         });
       });
@@ -966,13 +969,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
             > = {},
             constructorOptions: Partial<CreateServerForIntegrationTests> = {},
             plugins: ApolloServerPlugin<BaseContext>[] = [],
+            includeDeferDirective: boolean = false,
           ) => {
             uri = await createServerAndGetUrl({
               typeDefs: gql`
-                directive @defer(
-                  if: Boolean! = true
-                  label: String
-                ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+                ${includeDeferDirective
+                  ? `
+                  directive @defer(
+                    if: Boolean! = true
+                    label: String
+                  ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
+                `
+                  : ''}
 
                 enum CacheControlScope {
                   PUBLIC
@@ -1171,9 +1179,21 @@ export function defineIntegrationTestSuiteApolloServerTests(
           });
 
           (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
-            'includes all fields with defer',
+            'includes all fields with defer legacy',
             async () => {
-              await setupApolloServerAndFetchPair();
+              const { legacyExecuteIncrementally } = await import(
+                // @ts-ignore might not be installed
+                '@yaacovcr/transform'
+              );
+              await setupApolloServerAndFetchPair(
+                {},
+                {
+                  legacyExperimentalExecuteIncrementally:
+                    legacyExecuteIncrementally,
+                },
+                [],
+                true,
+              );
               const response = await fetch(uri, {
                 method: 'POST',
                 headers: {
@@ -1195,11 +1215,58 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":true,"data":{"justAField":"a string"}}
+                {"data":{"justAField":"a string"},"hasNext":true}
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"path":[],"data":{"delayedFoo":{"bar":"hi"}}}]}
+                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"path":[]}]}
+                -----
+                "
+              `);
+              const reports = await reportIngress.promiseOfReports;
+              expect(reports.length).toBe(1);
+              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+              const trace = Object.values(reports[0].tracesPerQuery)[0]
+                .trace?.[0] as Trace;
+              expect(trace).toBeDefined();
+              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
+                'bar',
+              );
+            },
+          );
+
+          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
+            'includes all fields with defer modern',
+            async () => {
+              await setupApolloServerAndFetchPair({}, {}, [], true);
+              const response = await fetch(uri, {
+                method: 'POST',
+                headers: {
+                  'content-type': 'application/json',
+                  accept: 'multipart/mixed; incrementalSpec=v0.2',
+                },
+                body: JSON.stringify({
+                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
+                }),
+              });
+              expect(response.status).toBe(200);
+              expect(
+                response.headers.get('content-type'),
+              ).toMatchInlineSnapshot(
+                `"multipart/mixed; boundary="-"; incrementalSpec=v0.2"`,
+              );
+              expect(await response.text()).toMatchInlineSnapshot(`
+                "
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"data":{"justAField":"a string"},"pending":[{"id":"0","path":[]}],"hasNext":true}
+                ---
+                content-type: application/json; charset=utf-8
+
+                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"id":"0"}],"completed":[{"id":"0"}]}
                 -----
                 "
               `);
@@ -1584,7 +1651,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
           },
         );
         const logger = mockLogger();
-        const unexpectedErrorProcessingRequest = jest.fn<() => Promise<void>>();
+        const unexpectedErrorProcessingRequest =
+          jest.fn<
+            NonNullable<ApolloServerPlugin['unexpectedErrorProcessingRequest']>
+          >();
         const uri = await createServerAndGetUrl({
           typeDefs: gql`
             type Query {
@@ -1603,7 +1673,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 return {
                   async willSendResponse() {
                     // formatError should be called after plugins
-                    expect(formatError).not.toBeCalled();
+                    expect(formatError).not.toHaveBeenCalled();
                     pluginCalled();
                   },
                 };
@@ -1677,7 +1747,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
           const apolloFetch = createApolloFetch({ uri });
 
-          expect(spy).not.toBeCalled();
+          expect(spy).not.toHaveBeenCalled();
 
           await apolloFetch({ query: '{hello}' });
           expect(spy).toHaveBeenCalledTimes(1);
@@ -1715,7 +1785,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             const apolloFetch = createApolloFetch({ uri });
 
-            expect(spy).not.toBeCalled();
+            expect(spy).not.toHaveBeenCalled();
 
             await apolloFetch({ query: '{hello}' });
             expect(spy).toHaveBeenCalledTimes(1);
@@ -1746,7 +1816,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
               resolvers,
             });
 
-            expect(spy).not.toBeCalled();
+            expect(spy).not.toHaveBeenCalled();
 
             await server.executeOperation(
               { query: '{hello}' },
@@ -1804,7 +1874,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
             const apolloFetch = createApolloFetch({ uri });
 
-            expect(spy).not.toBeCalled();
+            expect(spy).not.toHaveBeenCalled();
             await apolloFetch({ query: '{hello}' });
             expect(spy).toHaveBeenCalledTimes(1);
           });
@@ -2371,13 +2441,6 @@ export function defineIntegrationTestSuiteApolloServerTests(
             }
 
             let requestCount = 0;
-            const requestAgent = new http.Agent({ keepAlive: false });
-            const realCreateConnection = (requestAgent as any).createConnection;
-            (requestAgent as any).createConnection = function () {
-              requestCount++;
-              return realCreateConnection.apply(this, arguments);
-            };
-
             let reportErrorPromiseResolve: (error: Error) => void;
             const reportErrorPromise = new Promise<Error>(
               (resolve) => (reportErrorPromiseResolve = resolve),
@@ -2398,8 +2461,10 @@ export function defineIntegrationTestSuiteApolloServerTests(
                   endpointUrl: fakeUsageReportingUrl,
                   reportIntervalMs: 1,
                   maxAttempts: 3,
-                  fetcher: (url, options) =>
-                    fetch(url, { ...options, agent: requestAgent }),
+                  fetcher: (url, options) => {
+                    requestCount++;
+                    return fetch(url, options);
+                  },
                   logger: quietLogger,
                   reportErrorFunction(error: Error) {
                     reportErrorPromiseResolve(error);
@@ -2431,13 +2496,12 @@ export function defineIntegrationTestSuiteApolloServerTests(
             const sendingError = await reportErrorPromise;
             expect(sendingError).toBeTruthy();
             if (status === 'cannot-connect') {
-              expect(sendingError.message).toContain(
-                'Error sending report to Apollo servers',
+              expect(sendingError.message).toBe(
+                'Error sending report to Apollo servers: fetch failed',
               );
-              expect(sendingError.message).toContain('ECONNREFUSED');
             } else if (status === 'timeout') {
               expect(sendingError.message).toBe(
-                'Error sending report to Apollo servers: The user aborted a request.',
+                'Error sending report to Apollo servers: The operation was aborted due to timeout',
               );
             } else {
               expect(sendingError.message).toBe(
