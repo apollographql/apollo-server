@@ -27,6 +27,7 @@ import type {
   GraphQLExperimentalIncrementalExecutionResultsAlpha2,
   GraphQLExperimentalIncrementalExecutionResultsAlpha9,
 } from '../incrementalDeliveryPolyfill.js';
+import type { ValidationOptions } from '../ApolloServer.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -109,6 +110,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
   dangerouslyDisableValidation?: boolean;
+  validationOptions?: ValidationOptions;
   csrfPrevention?: CSRFPreventionOptions | boolean;
 
   // Used for parsing operations; unlike in AS3, this is not also used for

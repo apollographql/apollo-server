@@ -264,6 +264,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         schemaDerivedData.schema,
         requestContext.document,
         [...specifiedRules, ...internals.validationRules],
+        internals.validationOptions,
       );
       if (validationErrors.length === 0 && internals.laterValidationRules) {
         validationErrors = validate(
