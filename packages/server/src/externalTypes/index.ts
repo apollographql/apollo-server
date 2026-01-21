@@ -5,7 +5,11 @@
  * intention (it's public API).
  */
 export type { BaseContext, ContextFunction, ContextThunk } from './context.js';
-export type { GraphQLRequest, GraphQLResponse } from './graphql.js';
+export type {
+  GraphQLRequest,
+  GraphQLResponse,
+  LegacyExperimentalExecuteIncrementally,
+} from './graphql.js';
 export type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,

@@ -4,7 +4,11 @@
  * `executeHTTPGraphQLRequest` and `executeOperation`. The
  * `responseForOperation` plugin hook also returns a `GraphQLResponse`.
  */
-import type { FormattedExecutionResult } from 'graphql';
+import type {
+  ExecutionArgs,
+  ExecutionResult,
+  FormattedExecutionResult,
+} from 'graphql';
 import type { BaseContext } from './context.js';
 import type { HTTPGraphQLHead, HTTPGraphQLRequest } from './http.js';
 import type { WithRequired } from '@apollo/utils.withrequired';
@@ -16,6 +20,7 @@ import type {
   GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
   GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
 } from './incrementalDeliveryPolyfillAlpha9.js';
+import { type GraphQLExperimentalIncrementalExecutionResultsAlpha2 } from '../incrementalDeliveryPolyfill.js';
 
 export interface GraphQLRequest<
   TVariables extends VariableValues = VariableValues,
@@ -62,3 +67,15 @@ export type GraphQLResponse<TData = Record<string, unknown>> = WithRequired<
 export interface ExecuteOperationOptions<TContext extends BaseContext> {
   contextValue?: TContext;
 }
+
+type PromiseOrValue<T> = Promise<T> | T;
+
+export type LegacyExperimentalExecuteIncrementally<
+  TData = Record<string, unknown>,
+  TExtensions = Record<string, unknown>,
+> = (
+  args: ExecutionArgs,
+) => PromiseOrValue<
+  | ExecutionResult<TData, TExtensions>
+  | GraphQLExperimentalIncrementalExecutionResultsAlpha2<TData, TExtensions>
+>;

@@ -1,6 +1,6 @@
 {
   "name": "@apollo/server-plugin-response-cache",
-  "version": "5.0.1-rc.0",
+  "version": "5.0.0",
   "description": "Apollo Server full query response cache",
   "type": "module",
   "main": "dist/cjs/index.js",
@@ -36,7 +36,7 @@
     "@apollo/utils.keyvaluecache": "^4.0.0"
   },
   "peerDependencies": {
-    "@apollo/server": "^5.0.0 || ^5.1.0-rc",
+    "@apollo/server": "^5.0.0",
     "graphql": "^16.11.0"
   }
 }
