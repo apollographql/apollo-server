@@ -504,6 +504,35 @@ An object that specifies how your server parses GraphQL operations. [See `graphq
 <tr>
 <td>
 
+###### `executionOptions`
+
+`Object`
+
+</td>
+<td>
+
+An object that specifies options for GraphQL execution. This object is passed directly to the GraphQL execution engine and supports all [GraphQL-JS execution options](https://www.graphql-js.org/api-v16/execution/).
+
+The most common use case is configuring `maxCoercionErrors` to control how many variable coercion errors are allowed before execution is terminated:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  executionOptions: {
+    maxCoercionErrors: 10, // Default is 50
+  },
+});
+```
+
+GraphQL execution terminates if variable coercion encounters more errors than the specified limit. This prevents your application from performing expensive operations when many input variables are malformed.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `nodeEnv`
 
 `string`
