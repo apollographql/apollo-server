@@ -140,7 +140,7 @@ type ServerState =
       stopError: Error | null;
     };
 
-export type ValidateOptions = NonNullable<Parameters<typeof validate>[3]>;
+export type ValidationOptions = NonNullable<Parameters<typeof validate>[3]>;
 
 export interface ApolloServerInternals<TContext extends BaseContext> {
   state: ServerState;
@@ -157,7 +157,7 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   apolloConfig: ApolloConfig;
   plugins: ApolloServerPlugin<TContext>[];
   parseOptions: ParseOptions;
-  validationOptions: ValidateOptions;
+  validationOptions: ValidationOptions;
   executionOptions?: ExecutionArgs['options'];
   // `undefined` means we figure out what to do during _start (because
   // the default depends on whether or not we used the background version

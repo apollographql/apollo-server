@@ -4,9 +4,12 @@
 
 Expose `graphql` validation options.
 
-```
+```js
 const server = new ApolloServer({
   typeDefs,
   resolvers,
-  validateOptions: { maxErrors: 10 },
+  validationOptions: {
+    maxErrors: 10
+  },
 });
+```

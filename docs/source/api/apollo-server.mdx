@@ -237,6 +237,32 @@ An array containing custom functions to use as additional [validation rules](htt
 </td>
 </tr>
 
+
+<tr>
+<td>
+
+###### `validationOptions`
+
+`Object`
+
+</td>
+<td>
+
+An object that specifies options for GraphQL validation. This object is passed directly as the `options` argument to the GraphQL `validate` function. See the [GraphQL-JS documentation for `validate`](https://www.graphql-js.org/api-v16/validation/#validate).
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationOptions: {
+    maxErrors: 10
+  },
+});
+```
+
+</td>
+</tr>
+
 <tr>
 <td>
 
