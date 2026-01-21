@@ -16,7 +16,7 @@
   });
   ```
 
-- [`26320bc`](https://github.com/apollographql/apollo-server/commit/26320bccd77c6074d4a38119294f153f64e52d96) Thanks [@mo4islona](https://github.com/mo4islona)! - Expose `graphql` validation options.
+- [#8014](https://github.com/apollographql/apollo-server/pull/8014) [`26320bc`](https://github.com/apollographql/apollo-server/commit/26320bccd77c6074d4a38119294f153f64e52d96) Thanks [@mo4islona](https://github.com/mo4islona)! - Expose `graphql` validation options.
 
   ```js
   const server = new ApolloServer({
