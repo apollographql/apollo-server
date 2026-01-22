@@ -67,6 +67,7 @@
     "graphql": "16.11.0",
     "graphql-subscriptions": "3.0.0",
     "graphql-tag": "2.12.6",
+    "graphql17": "file:graphql-17.0.0-alpha.9.tgz",
     "jest": "30.0.5",
     "jest-config": "30.0.5",
     "jest-junit": "16.0.0",
