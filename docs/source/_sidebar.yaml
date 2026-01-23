@@ -91,6 +91,8 @@ items:
         href: './security/terminating-ssl'
       - label: Proxy configuration
         href: './security/proxy-configuration'
+      - label: 'Hardening for Production'
+        href: './security/hardening-for-production'
   - label: Deployment
     children:
       - label: Lambda
