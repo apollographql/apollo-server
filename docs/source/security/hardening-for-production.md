@@ -6,18 +6,18 @@ description: Important resources for securely deploying Apollo Server in product
 When deploying Apollo Server in a production environment, there are additional considerations to ensure the security and integrity of your server.
 All of this has already been covered in other places, so here are some links to relevant resources that you should review before going to production.
 
-# Recommended resources
+## Recommended resources
 
-## GraphOS Production Readiness Checklist
+### GraphOS Production Readiness Checklist
 
 The [Apollo GraphOS Production Readiness Checklist](https://www.apollographql.com/docs/graphos/platform/production-readiness/checklist) is a comprehensive resource that outlines best practices for deploying and managing GraphQL services with GraphOS in production.
 For Apollo Server specific advice, pay special attention to the [Subgraphs/servers](https://www.apollographql.com/docs/graphos/platform/production-readiness/checklist#subgraphsservers) section.
 
-## GraphOS "Graph Security" guide
+### GraphOS "Graph Security" guide
 
 If you are using Apollo GraphOS, there is also a lot of great advice available in the [GraphOS Graph Security](https://www.apollographql.com/docs/graphos/platform/security/overview) documentation.
 
-## GraphQL's Going to Production guide
+### GraphQL's Going to Production guide
 
 As Apollo Server internally uses the `graphql` npm package, we recommend going over the [Going to Production](https://www.graphql-js.org/docs/going-to-production/) guide from the GraphQL team, as it is an excellent resource.
 
