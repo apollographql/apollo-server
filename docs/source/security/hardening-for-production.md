@@ -3,7 +3,7 @@ title: Hardening for Production
 description: Important resources for securely deploying Apollo Server in production environments.
 ---
 
-When deploying a Apollo Server in a production environment, there are additional considerations to ensure the security and integrity of your server.
+When deploying Apollo Server in a production environment, there are additional considerations to ensure the security and integrity of your server.
 All of this has already been covered in other places, so here are some links to relevant resources that you should review before going to production.
 
 # Recommended resources
