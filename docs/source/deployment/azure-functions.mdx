@@ -1,0 +1,380 @@
+---
+title: Deploying with Azure Functions
+description: How to deploy Apollo Server with Azure Functions
+---
+
+[Azure Functions](https://azure.microsoft.com/products/functions/) is a serverless computing platform with a pay-for-use billing model that enables you to run code without worrying about provisioning or managing servers.
+
+In this guide, we'll walk through how to deploy Apollo Server's [Azure Functions integration](https://github.com/apollo-server-integrations/apollo-server-integration-azure-functions) to Azure Functions.
+
+## Prerequisites
+
+Make sure you've completed the following before proceeding with this guide:
+
+- [Create an Azure account](https://azure.microsoft.com/free/)
+- [Install the Azure Functions Core Tools](https://learn.microsoft.com/azure/azure-functions/functions-run-local)
+- [Install Node.js v22](https://nodejs.org/) or later
+
+> ⚠️ This integration requires **Azure Functions v4** or later and **Node.js v22** or later. If you're using an older version, please upgrade before proceeding.
+
+## Setting up your project
+
+For this example, we'll start from scratch to show how all the pieces fit together.
+
+### Creating a new Azure Functions app
+
+First, create a new Azure Functions app using the v4 programming model. You can follow the [official guide to create an Azure Function with TypeScript](https://learn.microsoft.com/azure/azure-functions/create-first-function-vs-code-typescript) (or [JavaScript](https://learn.microsoft.com/azure/azure-functions/create-first-function-vs-code-node)).
+
+### Installing dependencies
+
+Install the necessary packages for using Apollo Server and its integration for Azure Functions:
+
+```shell
+npm install @apollo/server graphql @as-integrations/azure-functions @azure/functions
+```
+
+If you're using TypeScript:
+
+```shell
+npm install -D typescript
+```
+
+### Creating your GraphQL function
+
+Create a new [HTTP Trigger](https://learn.microsoft.com/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=in-process%2Cfunctionsv2&pivots=programming-language-javascript) function for your GraphQL endpoint. Update your function file (e.g., `src/functions/graphql.ts`) to use the Apollo integration:
+
+<MultiCodeBlock>
+
+```ts title="src/functions/graphql.ts"
+import { ApolloServer } from '@apollo/server';
+import { app } from '@azure/functions';
+import { startServerAndCreateHandler } from '@as-integrations/azure-functions';
+
+// The GraphQL schema
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+  },
+};
+
+// Set up Apollo Server
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+});
+
+app.http('graphql', {
+  handler: startServerAndCreateHandler(server),
+});
+```
+
+</MultiCodeBlock>
+
+## Running locally
+
+Run the Azure Functions app locally using the Azure Functions Core Tools:
+
+```bash
+func start
+```
+
+Navigate to the function endpoint (e.g., `http://localhost:7071/api/graphql`) to access your GraphQL server using [Apollo Sandbox](/graphos/explorer/sandbox/).
+
+## Using context
+
+You can pass custom context to your resolvers to handle authentication, authorization, and other request-specific data:
+
+<MultiCodeBlock>
+
+```ts title="src/functions/graphql.ts"
+import { ApolloServer } from '@apollo/server';
+import { app, HttpRequest, InvocationContext } from '@azure/functions';
+import { startServerAndCreateHandler } from '@as-integrations/azure-functions';
+
+// Define the context type
+type MyContext = {
+  user: string | null;
+  isAuthenticated: boolean;
+};
+
+// Context creation function
+async function createContext(
+  req: HttpRequest,
+  _context: InvocationContext,
+  _body: any,
+): Promise<MyContext> {
+  const authHeader = req.headers.get('authorization');
+
+  return {
+    user: authHeader ? authHeader : null,
+    isAuthenticated: authHeader !== null,
+  };
+}
+
+const typeDefs = `#graphql
+  type Query {
+    hello: String
+    me: User
+  }
+
+  type User {
+    id: ID!
+    name: String!
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+    me: (_: any, _args: any, ctx: MyContext) => {
+      if (!ctx.isAuthenticated) {
+        throw new Error('Not authenticated');
+      }
+      return { id: '1', name: ctx.user };
+    },
+  },
+};
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+app.http('graphql', {
+  handler: startServerAndCreateHandler(server, {
+    context: async (args) => createContext(args.req, args.context, args.body),
+  }),
+});
+```
+
+</MultiCodeBlock>
+
+Your `context` function receives an object with the following properties:
+
+- `req`: The [HttpRequest](https://learn.microsoft.com/javascript/api/@azure/functions/httprequest) object containing HTTP headers, method, body, query parameters, etc.
+- `context`: The [InvocationContext](https://learn.microsoft.com/javascript/api/@azure/functions/invocationcontext) object containing function execution context (trace context, retry context, etc.)
+- `body`: The parsed request body
+
+## Deployment
+
+You have several options for deploying your GraphQL API to Azure:
+
+### Using VS Code
+
+1. Install the [Azure Functions extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions)
+2. Right-click your function app in the Azure Functions panel
+3. Select "Deploy to Function App"
+
+### Using Azure CLI
+
+First, build your application:
+
+```bash
+npm run build
+```
+
+Then deploy to Azure using the Azure Functions Core Tools:
+
+```bash
+func azure functionapp publish <YOUR_FUNCTION_APP_NAME>
+```
+
+### Using CI/CD
+
+Configure automated deployments using:
+
+- [GitHub Actions](https://learn.microsoft.com/azure/azure-functions/functions-how-to-github-actions) for GitHub repositories
+- [Azure DevOps](https://learn.microsoft.com/azure/azure-functions/functions-how-to-azure-devops) for Azure DevOps projects
+
+For more details, see the [Azure Functions deployment documentation](https://learn.microsoft.com/azure/azure-functions/functions-deployment-technologies).
+
+## Using function information
+
+You can access the Azure Functions request and invocation context information within your resolvers through the context:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { app, HttpRequest, InvocationContext } from '@azure/functions';
+import { startServerAndCreateHandler } from '@as-integrations/azure-functions';
+
+type MyContext = {
+  req: HttpRequest;
+  functionContext: InvocationContext;
+};
+
+const server = new ApolloServer<MyContext>({
+  typeDefs,
+  resolvers,
+});
+
+app.http('graphql', {
+  handler: startServerAndCreateHandler(server, {
+    context: async ({ req, context }) => {
+      return {
+        req,
+        functionContext: context,
+      };
+    },
+  }),
+});
+```
+
+</MultiCodeBlock>
+
+The `req` object contains the HTTP request information (headers, method, body, query parameters, etc.). The `context` object (not to be confused with the `context` function) contains the Azure Functions invocation context (trace context, retry context, etc.).
+
+## Advanced patterns
+
+### Authentication and authorization
+
+You can implement authentication and authorization patterns in your context function:
+
+<MultiCodeBlock>
+
+```ts
+import { ApolloServer } from '@apollo/server';
+import { GraphQLError } from 'graphql';
+import { app, HttpRequest, InvocationContext } from '@azure/functions';
+import { startServerAndCreateHandler } from '@as-integrations/azure-functions';
+
+type User = {
+  id: string;
+  name: string;
+  email: string;
+  roles: string[];
+};
+
+type Context = {
+  user: User | null;
+  isAuthenticated: boolean;
+};
+
+// Helper function to validate and decode token
+async function getUserFromToken(token: string): Promise<User | null> {
+  // In a real app, this would:
+  // 1. Verify JWT signature
+  // 2. Check expiration
+  // 3. Look up user in database
+
+  // Mock implementation
+  if (token.startsWith('Bearer ')) {
+    const userId = token.replace('Bearer ', '');
+    // Look up user...
+    return { id: userId, name: 'User', email: 'user@example.com', roles: ['user'] };
+  }
+
+  return null;
+}
+
+// Context creation function
+async function createContext(
+  req: HttpRequest,
+  _context: InvocationContext,
+  _body: any,
+): Promise<Context> {
+  const authHeader = req.headers.get('authorization');
+
+  let user: User | null = null;
+
+  if (authHeader) {
+    try {
+      user = await getUserFromToken(authHeader);
+    } catch (error) {
+      console.error('Authentication error:', error);
+    }
+  }
+
+  return {
+    user,
+    isAuthenticated: user !== null,
+  };
+}
+
+// Helper function to ensure user is authenticated
+function requireAuth(
+  ctx: Context,
+): asserts ctx is Context & { user: NonNullable<Context['user']> } {
+  if (!ctx.isAuthenticated || !ctx.user) {
+    throw new GraphQLError('You must be logged in to access this resource', {
+      extensions: {
+        code: 'UNAUTHENTICATED',
+        http: { status: 401 },
+      },
+    });
+  }
+}
+
+// Helper function to check if user has required role
+function requireRole(ctx: Context, role: string): void {
+  requireAuth(ctx);
+
+  if (!ctx.user.roles.includes(role)) {
+    throw new GraphQLError(
+      `You need the '${role}' role to access this resource`,
+      {
+        extensions: {
+          code: 'FORBIDDEN',
+          http: { status: 403 },
+        },
+      },
+    );
+  }
+}
+
+const typeDefs = `#graphql
+  type User {
+    id: ID!
+    name: String!
+    email: String!
+    roles: [String!]!
+  }
+
+  type Query {
+    hello: String
+    me: User
+    adminData: String
+  }
+`;
+
+const resolvers = {
+  Query: {
+    hello: () => 'world',
+    me: (_: any, _args: any, ctx: Context) => {
+      requireAuth(ctx);
+      return ctx.user;
+    },
+    adminData: (_: any, _args: any, ctx: Context) => {
+      requireRole(ctx, 'admin');
+      return 'Secret admin data';
+    },
+  },
+};
+
+const server = new ApolloServer<Context>({
+  typeDefs,
+  resolvers,
+});
+
+app.http('graphql', {
+  handler: startServerAndCreateHandler(server, {
+    context: async (args) => createContext(args.req, args.context, args.body),
+  }),
+});
+```
+
+</MultiCodeBlock>
+
+## Additional resources
+
+- [Azure Functions integration on GitHub](https://github.com/apollo-server-integrations/apollo-server-integration-azure-functions)
+- [Azure Functions integration on npm](https://www.npmjs.com/package/@as-integrations/azure-functions)
+- [Azure Functions documentation](https://learn.microsoft.com/azure/azure-functions/)
+- [Apollo Server documentation](/apollo-server/)
