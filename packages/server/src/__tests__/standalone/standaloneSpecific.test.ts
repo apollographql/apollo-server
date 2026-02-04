@@ -240,7 +240,8 @@ describe('Request body charset handling', () => {
       encoding: 'utf-7',
       charset: 'utf-8',
       status: 400,
-      expectedError: /SyntaxError: Unexpected token .* is not valid JSON/,
+      expectedError:
+        /SyntaxError: Unexpected token .* (in JSON at position|is not valid JSON)/,
     },
   ])(
     'fails with $status for $encoding in request body (passed in header: $charset)',
