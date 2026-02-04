@@ -1,6 +1,7 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
 import cors from 'cors';
 import bodyParser from 'body-parser';
+import { parse as parseContentType } from 'content-type';
 import http, { type IncomingMessage, type ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import { parse as urlParse } from 'url';
@@ -27,6 +28,12 @@ export interface StartStandaloneServerOptions<TContext extends BaseContext> {
   >;
 }
 
+// according to RFC8259, only UTF-8 is allowed in JSON text
+// (see https://datatracker.ietf.org/doc/html/rfc8259#section-8.1)
+// RFC 7159 also specifies that JSON could be UTF-16 or UTF-32,
+// so we allow for that, too
+const validCharset = /^utf-(8|((16|32)(le|be)?))$/i;
+
 export async function startStandaloneServer(
   server: ApolloServer<BaseContext>,
   options?: StartStandaloneServerOptions<BaseContext> & {
@@ -45,7 +52,23 @@ export async function startStandaloneServer<TContext extends BaseContext>(
 ): Promise<{ url: string }> {
   const context = options?.context ?? (async () => ({}) as TContext);
   const corsHandler = cors();
-  const jsonHandler = bodyParser.json({ limit: '50mb' });
+  const jsonHandler = bodyParser.json({
+    verify(req) {
+      const charset = parseContentType(req).parameters.charset || 'utf-8';
+      if (!charset.match(validCharset)) {
+        throw Object.assign(
+          new Error(`unsupported charset "${charset.toUpperCase()}"`),
+          {
+            status: 415,
+            name: 'UnsupportedMediaTypeError',
+            charset,
+            type: 'charset.unsupported',
+          },
+        );
+      }
+    },
+    limit: '50mb',
+  });
   const httpServer = http.createServer((req, res) => {
     const errorHandler = finalhandler(req, res, {
       // Use the same onerror as Express.

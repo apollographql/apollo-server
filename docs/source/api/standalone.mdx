@@ -9,9 +9,11 @@ This API reference documents the `startStandaloneServer` function.
 
 ## Overview
 
-This `startStandaloneServer` function helps you get started with Apollo Server quickly. This function is recommended for all projects that don't require serverless support or a particular Node.js framework (such as Fastify).
+This `startStandaloneServer` function helps you get started with Apollo Server quickly.
+This function is recommended for prototyping. For production services, we recommend integrating Apollo Server with a more fully-featured web framework such as Express, Koa, or Fastify.
 
-Because it sets helpful defaults, this function is less configurable than other Apollo Server integrations. Complex projects might eventually need to [swap to using `expressMiddleware`](#swapping-to-expressmiddleware) (this process is straightforward).
+You can find a list of supported web frameworks in [web framework integrations](../integrations/integration-index).
+For an example migration path, see [Swapping to `expressMiddleware`](#swapping-to-expressmiddleware).
 
 ## `startStandaloneServer`
 
@@ -191,12 +193,36 @@ const server = new ApolloServer<MyContext>({
 // Ensure we wait for our server to start
 await server.start();
 
+// according to RFC8259, only UTF-8 is allowed in JSON text
+// (see https://datatracker.ietf.org/doc/html/rfc8259#section-8.1)
+// RFC 7159 also specifies that JSON could be UTF-16 or UTF-32,
+// so we allow for that, too
+const validCharset = /^utf-(8|((16|32)(le|be)?))$/i;
+
 // Set up our Express middleware to handle CORS, body parsing,
 // and our expressMiddleware function.
 app.use('/',
   cors<cors.CorsRequest>(),
-  // 50mb is the limit that `startStandaloneServer` uses, but you may configure this to suit your needs
-  express.json({ limit: '50mb' }),
+  express.json({
+    verify(req) {
+      const charset = parseContentType(req).parameters.charset || 'utf-8';
+      if (!charset.match(validCharset)) {
+        throw Object.assign(
+          new Error(`unsupported charset "${charset.toUpperCase()}"`),
+          {
+            status: 415,
+            name: 'UnsupportedMediaTypeError',
+            charset,
+            type: 'charset.unsupported',
+          },
+        );
+      }
+    },
+    // 50mb is the limit that `startStandaloneServer` uses to cover all possible bases, but you may configure this to suit your needs.
+    // Generally we recommend keeping this as small as possible to still suit your use case.
+    // The `body-parser` default is '100kb'.
+    // limit: '50mb',
+  }),
   // expressMiddleware accepts the same arguments:
   // an Apollo Server instance and optional configuration options
   expressMiddleware(server, {

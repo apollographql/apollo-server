@@ -138,6 +138,7 @@
     "@graphql-tools/schema": "^10.0.0",
     "async-retry": "^1.2.1",
     "body-parser": "^2.2.2",
+    "content-type": "^1.0.5",
     "cors": "^2.8.5",
     "finalhandler": "^2.1.0",
     "loglevel": "^1.6.8",

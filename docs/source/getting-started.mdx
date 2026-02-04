@@ -266,7 +266,10 @@ console.log(`🚀  Server ready at: ${url}`);
 
 </MultiCodeBlock>
 
-> This tutorial uses Apollo Server's [standalone web server](./api/standalone). If you'd like to integrate Apollo Server with your favorite web framework such as Express, see our [web framework integrations](./integrations/integration-index).
+> This tutorial uses Apollo Server's [standalone web server](./api/standalone).
+> The standalone server is great for prototyping, but in the long run we recommend that you integrate Apollo Server with a more fully-featured web framework.
+> You can find a list of supported web frameworks in [web framework integrations](./integrations/integration-index).
+> This is not a choice you have to make now, as swapping from the standalone server to a web framework later is straightforward. For an example migration path, see [Swapping to `expressMiddleware`](./api/standalone#swapping-to-expressmiddleware).
 
 ## Step 7: Start the server
 
