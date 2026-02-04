@@ -1,5 +1,12 @@
 # @apollo/server-integration-testsuite
 
+## 5.4.0
+
+### Patch Changes
+
+- Updated dependencies [[`d25a5bd`](https://github.com/apollographql/apollo-server/commit/d25a5bdc377826ad424fcf7f8d1d062055911643)]:
+  - @apollo/server@5.4.0
+
 ## 5.3.0
 
 ### Patch Changes
