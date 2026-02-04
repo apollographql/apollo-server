@@ -1,6 +1,7 @@
 import type { WithRequired } from '@apollo/utils.withrequired';
 import cors from 'cors';
 import express from 'express';
+import { parse as parseContentType } from 'content-type';
 import http, { type IncomingMessage, type ServerResponse } from 'http';
 import type { ListenOptions } from 'net';
 import type { ApolloServer } from '../ApolloServer.js';
@@ -28,6 +29,14 @@ export interface StartStandaloneServerOptions<TContext extends BaseContext> {
     TContext
   >;
 }
+
+// according to RFC8259, only UTF-8 is allowed in JSON text
+// (see https://datatracker.ietf.org/doc/html/rfc8259#section-8.1)
+// RFC 7159 also specifies that JSON could be UTF-16 or UTF-32,
+// so we allow for that, too
+// note that the upstream dependencies of Apollo Client 4 do not work with UTF-32,
+// so they will likely fail, even though we allow it here
+const validCharset = /^utf-(8|((16|32)(le|be)?))$/i;
 
 export async function startStandaloneServer(
   server: ApolloServer<BaseContext>,
@@ -57,7 +66,23 @@ export async function startStandaloneServer<TContext extends BaseContext>(
   const context = options?.context ?? (async () => ({}) as TContext);
   app.use(
     cors(),
-    express.json({ limit: '50mb' }),
+    express.json({
+      verify(req) {
+        const charset = parseContentType(req).parameters.charset || 'utf-8';
+        if (!charset.match(validCharset)) {
+          throw Object.assign(
+            new Error(`unsupported charset "${charset.toUpperCase()}"`),
+            {
+              status: 415,
+              name: 'UnsupportedMediaTypeError',
+              charset,
+              type: 'charset.unsupported',
+            },
+          );
+        }
+      },
+      limit: '50mb',
+    }),
     expressMiddleware(server, { context }),
   );
 

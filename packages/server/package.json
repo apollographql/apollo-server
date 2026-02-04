@@ -148,6 +148,7 @@
     "@types/express-serve-static-core": "^4.17.30",
     "@types/node-fetch": "^2.6.1",
     "async-retry": "^1.2.1",
+    "content-type": "^1.0.5",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "loglevel": "^1.6.8",
