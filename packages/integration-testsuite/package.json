@@ -38,7 +38,7 @@
   },
   "dependencies": {
     "@apollo/cache-control-types": "^1.0.3",
-    "@apollo/client": "^3.6.9",
+    "@apollo/client": "^4.0.0",
     "@apollo/server": "5.4.0",
     "@apollo/usage-reporting-protobuf": "^4.1.1",
     "@apollo/utils.createhash": "^3.0.0",
