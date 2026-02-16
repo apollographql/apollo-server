@@ -477,6 +477,60 @@ describe('ApolloServer executeOperation', () => {
     await server.stop();
   });
 
+  it('should format errors when provided a formatErrors function', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      formatError: () => {
+        return {
+          code: 'MY_ERROR',
+          message: 'This is an error that was updated by formatError',
+        };
+      },
+    });
+    await server.start();
+
+    const { body } = await server.executeOperation({
+      query: 'query { error }',
+    });
+
+    const result = singleResult(body);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors?.[0]).toHaveProperty('code', 'MY_ERROR');
+    expect(result.errors?.[0]).toHaveProperty(
+      'message',
+      'This is an error that was updated by formatError',
+    );
+    await server.stop();
+  });
+
+  it('should format errors when provided an async formatErrors function', async () => {
+    const server = new ApolloServer({
+      typeDefs,
+      resolvers,
+      formatError: async () => {
+        return Promise.resolve({
+          code: 'MY_ERROR',
+          message: 'This is an error that was updated by formatError',
+        });
+      },
+    });
+    await server.start();
+
+    const { body } = await server.executeOperation({
+      query: 'query { error }',
+    });
+
+    const result = singleResult(body);
+    expect(result.errors).toHaveLength(1);
+    expect(result.errors?.[0]).toHaveProperty('code', 'MY_ERROR');
+    expect(result.errors?.[0]).toHaveProperty(
+      'message',
+      'This is an error that was updated by formatError',
+    );
+    await server.stop();
+  });
+
   it('works with string', async () => {
     const server = new ApolloServer({
       typeDefs,
