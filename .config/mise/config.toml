@@ -3,7 +3,7 @@
 # It's what we use to set up tools in CI.
 
 [tools]
-node = "24.13.0"
+node = "24.14.0"
 "ubi:codecov/codecov-cli" = "10.4.0"
 
 [env]
