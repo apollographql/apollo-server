@@ -17,7 +17,7 @@ commands:
       - run:
           name: Install Mise
           command: |
-            curl https://mise.run | MISE_VERSION=v2025.8.20 sh
+            curl https://mise.run | MISE_VERSION=v2026.2.24 sh
       - when:
           condition: << parameters.node-version >>
           steps:
