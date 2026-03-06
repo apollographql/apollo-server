@@ -17,15 +17,15 @@ Make sure you've completed the following before proceeding with this guide:
 
 > ⚠️ This integration requires **Azure Functions v4** or later and **Node.js v22** or later. If you're using an older version, please upgrade before proceeding.
 
-## Setting up your project
+## Set up your project
 
 For this example, we'll start from scratch to show how all the pieces fit together.
 
-### Creating a new Azure Functions app
+### Create a new Azure Functions app
 
 First, create a new Azure Functions app using the v4 programming model. You can follow the [official guide to create an Azure Function with TypeScript](https://learn.microsoft.com/azure/azure-functions/create-first-function-vs-code-typescript) (or [JavaScript](https://learn.microsoft.com/azure/azure-functions/create-first-function-vs-code-node)).
 
-### Installing dependencies
+### Install dependencies
 
 Install the necessary packages for using Apollo Server and its integration for Azure Functions:
 
@@ -39,7 +39,7 @@ If you're using TypeScript:
 npm install -D typescript
 ```
 
-### Creating your GraphQL function
+### Create your GraphQL function
 
 Create a new [HTTP Trigger](https://learn.microsoft.com/azure/azure-functions/functions-bindings-http-webhook-trigger?tabs=in-process%2Cfunctionsv2&pivots=programming-language-javascript) function for your GraphQL endpoint. Update your function file (e.g., `src/functions/graphql.ts`) to use the Apollo integration:
 
@@ -76,7 +76,7 @@ app.http('graphql', {
 
 </MultiCodeBlock>
 
-## Running locally
+## Run your app locally
 
 Run the Azure Functions app locally using the Azure Functions Core Tools:
 
@@ -84,9 +84,9 @@ Run the Azure Functions app locally using the Azure Functions Core Tools:
 func start
 ```
 
-Navigate to the function endpoint (e.g., `http://localhost:7071/api/graphql`) to access your GraphQL server using [Apollo Sandbox](/graphos/explorer/sandbox/).
+Go to the function endpoint (for example, `http://localhost:7071/api/graphql`) to access your GraphQL server using [Apollo Sandbox](/graphos/explorer/sandbox/).
 
-## Using context
+## Use context
 
 You can pass custom context to your resolvers to handle authentication, authorization, and other request-specific data:
 
@@ -155,7 +155,7 @@ app.http('graphql', {
 
 </MultiCodeBlock>
 
-Your `context` function receives an object with the following properties:
+Your `context` function receives an object with these properties:
 
 - `req`: The [HttpRequest](https://learn.microsoft.com/javascript/api/@azure/functions/httprequest) object containing HTTP headers, method, body, query parameters, etc.
 - `context`: The [InvocationContext](https://learn.microsoft.com/javascript/api/@azure/functions/invocationcontext) object containing function execution context (trace context, retry context, etc.)
@@ -167,19 +167,19 @@ You have several options for deploying your GraphQL API to Azure:
 
 ### Using VS Code
 
-1. Install the [Azure Functions extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions)
-2. Right-click your function app in the Azure Functions panel
-3. Select "Deploy to Function App"
+1. Install the [Azure Functions extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azurefunctions).
+2. Open the context window (use right-click) of your function app in the Azure Functions panel.
+3. Select the **Deploy to Function App** option.
 
 ### Using Azure CLI
 
-First, build your application:
+1. Build your application:
 
 ```bash
 npm run build
 ```
 
-Then deploy to Azure using the Azure Functions Core Tools:
+2. Deploy using the Azure Functions Core Tools:
 
 ```bash
 func azure functionapp publish <YOUR_FUNCTION_APP_NAME>
