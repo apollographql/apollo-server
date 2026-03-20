@@ -82,7 +82,9 @@ curl --request GET \
   https://rover.apollo.dev/quickstart/products/graphql?query=query%20GetBestSellers%28%24category%3A%20ProductCategory%29%7BbestSellers%28category%3A%20%24category%29%7Btitle%7D%7D&operationName=GetBestSellers&variables=%7B%22category%22%3A%22BOOKS%22%7D
 ```
 
-Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header. However, if you have Apollo Server's default [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature enabled, `GET` requests that don't contain a `Content-Type` header must contain one of the following:
+Unlike with `POST` requests, `GET` requests do not require a `Content-Type` header: this header describes the request's body's type, and `GET` requests do not have a body. For historical reasons, Apollo Server allows `GET` requests with a `Content-Type` header of `application/json` (with optional parameters such as `; charset=utf-8`); any other value is rejected with a 415 status code.
+
+Additionally, if you have Apollo Server's default [CSRF prevention](../security/cors#preventing-cross-site-request-forgery-csrf) feature enabled, `GET` requests that don't contain a `Content-Type` header must contain one of the following:
 
 - A non-empty `X-Apollo-Operation-Name` header
 - A non-empty `Apollo-Require-Preflight` header

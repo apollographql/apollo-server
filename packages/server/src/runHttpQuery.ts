@@ -21,6 +21,7 @@ import { type FormattedExecutionResult, Kind } from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';
+import MIMEType from 'whatwg-mimetype';
 
 function fieldIfString(
   o: Record<string, unknown>,
@@ -195,6 +196,20 @@ export async function runHttpQuery<TContext extends BaseContext>({
     }
 
     case 'GET': {
+      const contentType = httpRequest.headers.get('content-type');
+      if (contentType !== undefined) {
+        const contentTypeParsed = MIMEType.parse(contentType);
+        if (
+          contentTypeParsed === null ||
+          contentTypeParsed.essence !== 'application/json'
+        ) {
+          throw new BadRequestError(
+            'GET requests may not have a content-type header other than application/json.',
+            { extensions: { http: newHTTPGraphQLHead(415) } },
+          );
+        }
+      }
+
       const searchParams = new URLSearchParams(httpRequest.search);
 
       graphQLRequest = {
