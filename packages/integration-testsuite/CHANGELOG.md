@@ -4,7 +4,7 @@
 
 ### Minor Changes
 
-- [#8191](https://github.com/apollographql/apollo-server/pull/8191) [`ada1200`](https://github.com/apollographql/apollo-server/commit/ada12001c4e95b5c779d80314a5a32e33087b5cf) Thanks [@glasser](https://github.com/glasser)! - ⚠️ SECURITY `@apollo/server/standalone`:
+- [#8191](https://github.com/apollographql/apollo-server/pull/8191) [`ada1200`](https://github.com/apollographql/apollo-server/commit/ada12001c4e95b5c779d80314a5a32e33087b5cf) - ⚠️ SECURITY `@apollo/server/standalone`:
 
   Apollo Server now rejects GraphQL `GET` requests which contain a `Content-Type` header other than `application/json` (with optional parameters such as `; charset=utf-8`). Any other value is now rejected with a 415 status code.
 
