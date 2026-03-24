@@ -3177,15 +3177,21 @@ export function defineIntegrationTestSuiteApolloServerTests(
             .query(operation),
         );
 
-        // GET with an invalid content-type (no slash) actually succeeds, since
-        // this will be preflighted, although it would be reasonable if it
-        // didn't.
-        succeeds(
-          await request(url)
+        // GET with an invalid content-type (no slash) is blocked (not for CSRF
+        // reasons specifically, but because the content-type is not parsable
+        // as application/json).
+        {
+          const res = await request(url)
             .get('/')
             .set('content-type', 'invalid')
-            .query(operation),
-        );
+            .query(operation);
+          expect(res.status).toBe(415);
+          expect(res.text).toMatch(/GET requests may not have a content-type/);
+          expect(invalidRequestErrors).toHaveLength(1);
+          expect(invalidRequestErrors.pop()?.message).toMatch(
+            /GET requests may not have a content-type/,
+          );
+        }
 
         // Adding parameters to the content-type and spaces doesn't stop it from
         // being blocked.

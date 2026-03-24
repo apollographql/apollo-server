@@ -605,6 +605,107 @@ export function defineIntegrationTestSuiteHttpServerTests(
         `);
       });
 
+      it('throws an error if GET request has a non-application/json content-type', async () => {
+        const app = await createApp();
+        const res = await request(app)
+          .get('/?query={testString}')
+          .set('apollo-require-preflight', 't')
+          .set('content-type', 'text/plain');
+        expect(res.status).toEqual(415);
+        expect(JSON.parse((res.error as HTTPError).text))
+          .toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "GET requests may not have a content-type header other than application/json.",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('throws an error if GET request has a non-preflighted non-application/json content-type', async () => {
+        // application/graphql is a valid MIME type that is not one of the three
+        // CORS-safelisted types, so CSRF prevention would allow it through (it
+        // triggers a preflight). We block it anyway.
+        const app = await createApp();
+        const res = await request(app)
+          .get('/?query={testString}')
+          .set('apollo-require-preflight', 't')
+          .set('content-type', 'application/graphql');
+        expect(res.status).toEqual(415);
+        expect(JSON.parse((res.error as HTTPError).text))
+          .toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "GET requests may not have a content-type header other than application/json.",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('throws an error if GET request has a malformed content-type', async () => {
+        const app = await createApp();
+        const res = await request(app)
+          .get('/?query={testString}')
+          .set('apollo-require-preflight', 't')
+          .set('content-type', 'invalid');
+        expect(res.status).toEqual(415);
+        expect(JSON.parse((res.error as HTTPError).text))
+          .toMatchInlineSnapshot(`
+          {
+            "errors": [
+              {
+                "extensions": {
+                  "code": "BAD_REQUEST",
+                },
+                "message": "GET requests may not have a content-type header other than application/json.",
+              },
+            ],
+          }
+        `);
+      });
+
+      it('allows GET requests with content-type application/json', async () => {
+        const app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const query = {
+          query: 'query test{ testString }',
+        };
+        const res = await request(app)
+          .get('/')
+          .set('content-type', 'application/json')
+          .query(query);
+        expect(res.status).toEqual(200);
+        expect(res.body.data).toEqual(expected);
+      });
+
+      it('allows GET requests with content-type application/json with charset parameter', async () => {
+        const app = await createApp();
+        const expected = {
+          testString: 'it works',
+        };
+        const query = {
+          query: 'query test{ testString }',
+        };
+        const res = await request(app)
+          .get('/')
+          .set('content-type', 'application/json; charset=utf-8')
+          .query(query);
+        expect(res.status).toEqual(200);
+        expect(res.body.data).toEqual(expected);
+      });
+
       it('can handle a basic GET request', async () => {
         const app = await createApp();
         const expected = {

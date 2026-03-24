@@ -120,6 +120,8 @@ Integrations _are_ responsible for parsing a request's body and using the values
 
 In Apollo Server's Express integration, you set up the `express.json()` JSON middleware, which handles parsing JSON request bodies with a `content-type` of `application/json`. Integrations can require a similar middleware (or plugin) for their ecosystem, or they can handle body parsing themselves.
 
+Note that Apollo Server's [CSRF prevention](../security/cors/#preventing-cross-site-request-forgery-csrf) feature assumes that your integration's recommended method of body parsing will reject `POST` requests without a `content-type` of `application/json`. If your integration allows `POST` requests with no `content-type` header (or with a `content-type` of `text/plain`, `application/x-www-form-urlencoded`, or `multipart/form-data`), servers will be vulnerable to CSRF attacks.
+
 For example, a correctly parsed body should have a shape resembling this:
 
 ```ts
