@@ -14,3 +14,5 @@ This improvement makes Apollo Server's CSRF more resistant to browsers which imp
 **If your server uses cookies (or HTTP Basic Auth) for authentication, Apollo encourages you to upgrade to v5.5.0.**
 
 This is technically a backwards-incompatible change. Apollo is not aware of any GraphQL clients which provide non-empty `Content-Type` headers with `GET` requests with types other than `application/json`. If your use case requires such requests, please [file an issue](https://github.com/apollographql/apollo-server/issues) and we may add more configurability in a follow-up release.
+
+See [advisory GHSA-9q82-xgwf-vj6h](https://github.com/apollographql/apollo-server/security/advisories/GHSA-9q82-xgwf-vj6h) for more details.
