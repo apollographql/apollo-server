@@ -144,7 +144,7 @@
     "loglevel": "^1.6.8",
     "lru-cache": "^11.1.0",
     "negotiator": "^1.0.0",
-    "uuid": "^11.1.0",
+    "uuid": "^13.0.0",
     "whatwg-mimetype": "^4.0.0"
   },
   "peerDependencies": {
