@@ -79,7 +79,7 @@
     "nock": "14.0.10",
     "prettier": "3.6.2",
     "requisition": "1.7.0",
-    "rollup": "4.48.0",
+    "rollup": "4.59.0",
     "supertest": "7.1.4",
     "ts-jest": "29.4.1",
     "typescript": "5.8.3",
