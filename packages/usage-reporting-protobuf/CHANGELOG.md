@@ -1,5 +1,11 @@
 # @apollo/usage-reporting-protobuf
 
+## 4.1.2
+
+### Patch Changes
+
+- [#8204](https://github.com/apollographql/apollo-server/pull/8204) [`a879e96`](https://github.com/apollographql/apollo-server/commit/a879e969931390c1e78b67e8776f3abd49852ae7) Thanks [@phryneas](https://github.com/phryneas)! - Update dependency `@apollo/protobufjs` to `1.2.8`
+
 ## 4.1.1
 
 ### Patch Changes
