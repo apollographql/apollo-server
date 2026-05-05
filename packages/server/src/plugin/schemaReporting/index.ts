@@ -1,6 +1,5 @@
 import os from 'os';
 import { internalPlugin } from '../../internalPlugin.js';
-import { v4 as uuidv4 } from 'uuid';
 import { printSchema, validateSchema, buildSchema } from 'graphql';
 import { SchemaReporter } from './schemaReporter.js';
 import { schemaIsSubgraph } from '../schemaIsSubgraph.js';
@@ -66,7 +65,7 @@ export function ApolloServerPluginSchemaReporting(
     fetcher,
   }: ApolloServerPluginSchemaReportingOptions = Object.create(null),
 ): ApolloServerPlugin {
-  const bootId = uuidv4();
+  const bootId = crypto.randomUUID();
 
   return internalPlugin({
     __internal_plugin_id__: 'SchemaReporting',
