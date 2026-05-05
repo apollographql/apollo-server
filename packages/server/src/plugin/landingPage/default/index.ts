@@ -14,7 +14,6 @@ import {
 } from './getEmbeddedHTML.js';
 import { packageVersion } from '../../../generated/packageVersion.js';
 import { createHash } from '@apollo/utils.createhash';
-import { v4 as uuidv4 } from 'uuid';
 
 export type {
   ApolloServerPluginLandingPageLocalDefaultOptions,
@@ -122,7 +121,7 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
             apolloServerLandingPageVersion,
           );
           async function html() {
-            const nonce = createHash('sha256').update(uuidv4()).digest('hex');
+            const nonce = createHash('sha256').update(crypto.randomUUID()).digest('hex');
             const scriptCsp = `script-src 'self' 'nonce-${nonce}' ${scriptSafeList}`;
             const styleCsp = `style-src 'nonce-${nonce}' ${styleSafeList}`;
             const imageCsp = `img-src https://apollo-server-landing-page.cdn.apollographql.com`;
