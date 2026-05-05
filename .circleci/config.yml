@@ -11,7 +11,8 @@ commands:
         type: string
         default: ''
     steps:
-      - checkout
+      - checkout:
+          method: full
       # We can consider using the CircleCI cache to cache Mise and Node, but it tends
       # to be pretty fast to install.
       - run:
