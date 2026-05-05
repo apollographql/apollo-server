@@ -121,7 +121,9 @@ function ApolloServerPluginLandingPageDefault<TContext extends BaseContext>(
             apolloServerLandingPageVersion,
           );
           async function html() {
-            const nonce = createHash('sha256').update(crypto.randomUUID()).digest('hex');
+            const nonce = createHash('sha256')
+              .update(crypto.randomUUID())
+              .digest('hex');
             const scriptCsp = `script-src 'self' 'nonce-${nonce}' ${scriptSafeList}`;
             const styleCsp = `style-src 'nonce-${nonce}' ${styleSafeList}`;
             const imageCsp = `img-src https://apollo-server-landing-page.cdn.apollographql.com`;
