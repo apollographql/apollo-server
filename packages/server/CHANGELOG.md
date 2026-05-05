@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 5.5.1
+
+### Patch Changes
+
+- [#8201](https://github.com/apollographql/apollo-server/pull/8201) [`3f46c51`](https://github.com/apollographql/apollo-server/commit/3f46c51d0fa629e9e885ba095568a43c714a9b06) Thanks [@mhassan1](https://github.com/mhassan1)! - Replace dependency `uuid` with calls to `crypto.randomUUID`.
+
 ## 5.5.0
 
 ### Minor Changes
