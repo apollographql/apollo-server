@@ -37,6 +37,7 @@ commands:
       - run:
           name: "Maybe upload coverage to Codecov"
           command: |
+              ls -lahR /home/circleci/.local/share/mise/installs/
               if [ -n "$CODECOV_TOKEN" ]; then
                 codecov-cli upload-process
               fi
