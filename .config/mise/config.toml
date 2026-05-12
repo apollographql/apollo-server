@@ -9,3 +9,6 @@ node = "24.13.0"
 [env]
 # Put binaries from npm-installed packages on PATH (eg `changeset`).
 _.path = ["{{config_root}}/node_modules/.bin"]
+
+[settings]
+lockfile = true
