@@ -10,14 +10,14 @@ url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovc
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244442559"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-arm64-musl"]
-checksum = "blake3:68f96ede4e611d7bdc3cd1a9e0d12c3c08cc9efac5325eaf04cd44bcf1a6813f"
-url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_linux_arm64"
-url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244442559"
+checksum = "blake3:5f02a5b9221542c6ac3c4b6d1b318373d9a65af9a3579b38b8ddd8e6ca82c9be"
+url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_alpine_arm64"
+url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244442413"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-x64"]
-checksum = "blake3:53253f3d73f5550331fe62531b0622d63b4c44dd79e8c4815f51371c9ebb9e46"
-url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_alpine_x86_64"
-url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441834"
+checksum = "blake3:7601bc5982daed458150c09070af94f07bba4220639c7b4c60526e511064d601"
+url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_linux"
+url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441838"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-x64-musl"]
 checksum = "blake3:53253f3d73f5550331fe62531b0622d63b4c44dd79e8c4815f51371c9ebb9e46"
@@ -48,16 +48,16 @@ checksum = "sha256:0f6d40b94c6a2eb6b4c240ffc8b9fd3ada7ab044c177dd413c06e1ef9a63f
 url = "https://nodejs.org/dist/v24.13.0/node-v24.13.0-linux-arm64.tar.gz"
 
 [tools.node."platforms.linux-arm64-musl"]
-checksum = "sha256:0f6d40b94c6a2eb6b4c240ffc8b9fd3ada7ab044c177dd413c06e1ef9a63f081"
-url = "https://nodejs.org/dist/v24.13.0/node-v24.13.0-linux-arm64.tar.gz"
+checksum = "sha256:f8312012e07ff106a1c48ad08fc228f9434077e7f7462a2ffc6839c8e3f02935"
+url = "https://unofficial-builds.nodejs.org/download/release/v24.13.0/node-v24.13.0-linux-arm64-musl.tar.gz"
 
 [tools.node."platforms.linux-x64"]
 checksum = "sha256:6223aad1a81f9d1e7b682c59d12e2de233f7b4c37475cd40d1c89c42b737ffa8"
 url = "https://nodejs.org/dist/v24.13.0/node-v24.13.0-linux-x64.tar.gz"
 
 [tools.node."platforms.linux-x64-musl"]
-checksum = "sha256:6223aad1a81f9d1e7b682c59d12e2de233f7b4c37475cd40d1c89c42b737ffa8"
-url = "https://nodejs.org/dist/v24.13.0/node-v24.13.0-linux-x64.tar.gz"
+checksum = "sha256:e2750d9e00008d2eadcecc00e17c3060980ed26888de90a55f9873ebdcde74ac"
+url = "https://unofficial-builds.nodejs.org/download/release/v24.13.0/node-v24.13.0-linux-x64-musl.tar.gz"
 
 [tools.node."platforms.macos-arm64"]
 checksum = "sha256:d595961e563fcae057d4a0fb992f175a54d97fcc4a14dc2d474d92ddeea3b9f8"
