@@ -4,7 +4,7 @@
 
 [tools]
 node = "24.13.0"
-"github:codecov/codecov-cli" = "10.4.0"
+"github:codecov/codecov-cli" = { version = "10.4.0", bin = "codecov-cli" }
 
 [env]
 # Put binaries from npm-installed packages on PATH (eg `changeset`).

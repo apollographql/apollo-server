@@ -38,8 +38,7 @@ commands:
           name: "Maybe upload coverage to Codecov"
           command: |
               if [ -n "$CODECOV_TOKEN" ]; then
-                ls /home/circleci/.local/share/mise/installs/github-codecov-codecov-cli/10.4.0
-                codecovcli upload-process
+                codecov-cli upload-process
               fi
 
 jobs:
