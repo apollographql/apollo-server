@@ -25,6 +25,7 @@ jobs:
       - name: Install Node with Mise
         uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151
 
+      # deliberately not using a cache for action with elevated permissions, see https://tanstack.com/blog/npm-supply-chain-compromise-postmortem
       - name: Install Dependencies
         run: npm ci
 
