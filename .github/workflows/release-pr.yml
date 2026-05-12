@@ -17,25 +17,19 @@ jobs:
     if: github.repository == 'apollographql/apollo-server'
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
 
       - name: Install Node with Mise
-        uses: jdx/mise-action@v2
-
-      # Because Mise installs Node, this action mostly just caches node_modules.
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          cache: 'npm'
+        uses: jdx/mise-action@1648a7812b9aeae629881980618f079932869151
 
       - name: Install Dependencies
         run: npm ci
 
       - name: Create Release Pull Request / NPM Publish
-        uses: changesets/action@v1
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b
         with:
           publish: npm run changeset-publish
           version: npm run changeset-version
