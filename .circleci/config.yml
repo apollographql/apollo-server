@@ -26,6 +26,8 @@ commands:
       - run:
           name: Use Mise to configure the environment
           command: stty cols 80 && ~/.local/bin/mise install --verbose && mise ls && mise env --shell bash >> "$BASH_ENV" && cat "$BASH_ENV"
+          env:
+            MISE_LOCKED: "1"
       - node/install-packages:
           cache-version: node-v<< parameters.node-version >>
 
