@@ -12,3 +12,4 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 
 [settings]
 lockfile = true
+github.github_attestations = false
