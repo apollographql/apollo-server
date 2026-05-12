@@ -36,7 +36,7 @@ commands:
           name: "Maybe upload coverage to Codecov"
           command: |
               if [ -n "$CODECOV_TOKEN" ]; then
-                codecov-cli upload-process
+                codecovcli upload-process
               fi
 
 jobs:
