@@ -32,7 +32,7 @@ jobs:
           MISE_LOCKED: "1"
 
       # Deliberately not using an action like `actions/setup-node` which integrates with the Actions cache:
-      #  when publishing releases, we want to make sure no other actions (even those run without credentials)
+      # when publishing releases, we want to make sure no other actions (even those run without credentials)
       # had a chance to poison any cache.
       - name: Install Dependencies
         run: npm ci
