@@ -5,18 +5,22 @@ version = "10.4.0"
 backend = "github:codecov/codecov-cli"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-arm64"]
+checksum = "blake3:5f02a5b9221542c6ac3c4b6d1b318373d9a65af9a3579b38b8ddd8e6ca82c9be"
 url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_alpine_arm64"
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244442413"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-arm64-musl"]
+checksum = "blake3:5f02a5b9221542c6ac3c4b6d1b318373d9a65af9a3579b38b8ddd8e6ca82c9be"
 url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_alpine_arm64"
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244442413"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-x64"]
+checksum = "blake3:53253f3d73f5550331fe62531b0622d63b4c44dd79e8c4815f51371c9ebb9e46"
 url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_alpine_x86_64"
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441834"
 
 [tools."github:codecov/codecov-cli"."platforms.linux-x64-musl"]
+checksum = "blake3:53253f3d73f5550331fe62531b0622d63b4c44dd79e8c4815f51371c9ebb9e46"
 url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_alpine_x86_64"
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441834"
 
@@ -26,10 +30,12 @@ url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovc
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441853"
 
 [tools."github:codecov/codecov-cli"."platforms.macos-x64"]
+checksum = "blake3:fcfadc4f79dbdb211632db8857b1dbb09db2df1806a39a0dcdead77a7681111a"
 url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_macos"
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441853"
 
 [tools."github:codecov/codecov-cli"."platforms.windows-x64"]
+checksum = "blake3:bce1b2a424ce604086bd5c12557c1f6be74e32879eeb0b192165c338aa83b54f"
 url = "https://github.com/codecov/codecov-cli/releases/download/v10.4.0/codecovcli_windows.exe"
 url_api = "https://api.github.com/repos/codecov/codecov-cli/releases/assets/244441937"
 
