@@ -38,7 +38,7 @@ jobs:
         run: npm ci
 
       - name: Create Release Pull Request / NPM Publish
-        uses: changesets/action@v1
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1
         with:
           publish: npm run changeset-publish
           version: npm run changeset-version
