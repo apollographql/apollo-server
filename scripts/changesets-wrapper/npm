@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Shim that rewrites `npm publish ...` to `npm stage publish ...`
+# (https://docs.npmjs.com/staged-publishing) and forwards every other
+# invocation to the real npm unchanged.
+#
+set -euo pipefail
+
+# we assume that this binary was called because it's the first matching `npm` in PATH,
+# so we remove this directory from PATH and find the real npm binary that way
+SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+export PATH="${PATH//$SELF_DIR:/}"
+
+if [ "${1:-}" = "publish" ]; then
+	shift
+	exec npm stage publish "$@"
+fi
+
+exec npm "$@"

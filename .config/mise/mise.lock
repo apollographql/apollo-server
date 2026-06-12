@@ -70,3 +70,7 @@ url = "https://nodejs.org/dist/v24.13.0/node-v24.13.0-darwin-x64.tar.gz"
 [tools.node."platforms.windows-x64"]
 checksum = "sha256:ca2742695be8de44027d71b3f53a4bdb36009b95575fe1ae6f7f0b5ce091cb88"
 url = "https://nodejs.org/dist/v24.13.0/node-v24.13.0-win-x64.zip"
+
+[[tools.npm]]
+version = "11.15.0"
+backend = "npm:npm"
