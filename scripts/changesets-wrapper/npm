@@ -5,14 +5,15 @@
 #
 set -euo pipefail
 
-# we assume that this binary was called because it's the first matching `npm` in PATH,
-# so we remove this directory from PATH and find the real npm binary that way
+# Find the real npm by temporarily excluding this directory from PATH,
+# but do NOT export the modified PATH — child processes (e.g. changeset publish)
+# must still see this wrapper so their own `npm publish` calls get rewritten too.
 SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
-export PATH="${PATH//$SELF_DIR:/}"
+REAL_NPM="$(PATH="${PATH//$SELF_DIR:/}" command -v npm)"
 
 if [ "${1:-}" = "publish" ]; then
 	shift
-	exec npm stage publish "$@"
+	exec "$REAL_NPM" stage publish "$@"
 fi
 
-exec npm "$@"
+exec "$REAL_NPM" "$@"
