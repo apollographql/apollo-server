@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Shim that rewrites `npm publish ...` to `npm stage publish ...`
+# (https://docs.npmjs.com/staged-publishing) and forwards every other
+# invocation to the real npm unchanged.
+# Temporary workaround while waiting for https://github.com/changesets/changesets/issues/2025
+#
+set -euo pipefail
+
+# Find the real npm by temporarily excluding this directory from PATH,
+# but do NOT export the modified PATH — child processes (e.g. changeset publish)
+# must still see this wrapper so their own `npm publish` calls get rewritten too.
+SELF_DIR="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+REAL_NPM="$(PATH="${PATH//$SELF_DIR:/}" command -v npm)"
+
+if [ "${1:-}" = "publish" ]; then
+	shift
+	exec "$REAL_NPM" stage publish "$@"
+fi
+
+exec "$REAL_NPM" "$@"
