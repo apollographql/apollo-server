@@ -2,6 +2,7 @@
 # Shim that rewrites `npm publish ...` to `npm stage publish ...`
 # (https://docs.npmjs.com/staged-publishing) and forwards every other
 # invocation to the real npm unchanged.
+# Temporary workaround while waiting for https://github.com/changesets/changesets/issues/2025
 #
 set -euo pipefail
 
