@@ -307,7 +307,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
 
         // Wrap fetcher with async-retry for automatic retrying
         const fetcher: Fetcher = options.fetcher ?? fetch;
-        const response: FetcherResponse = await retry(
+        let response: FetcherResponse | null = await retry(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
@@ -384,6 +384,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
         if (options.debugPrintReports) {
           logger.info(`Apollo usage report: status ${response.status}`);
         }
+        response = null;
       };
 
       requestDidStartHandler = ({
