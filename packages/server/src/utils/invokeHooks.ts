@@ -1,11 +1,16 @@
 import { isDefined } from './isDefined.js';
+import type { PromiseOrValue } from '../externalTypes/plugins.js';
 
-type AsyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => Promise<void>;
+type AsyncDidEndHook<TArgs extends any[]> = (
+  ...args: TArgs
+) => PromiseOrValue<void>;
 type SyncDidEndHook<TArgs extends any[]> = (...args: TArgs) => void;
 
 export async function invokeDidStartHook<T, TEndHookArgs extends unknown[]>(
   targets: T[],
-  hook: (t: T) => Promise<AsyncDidEndHook<TEndHookArgs> | undefined | void>,
+  hook: (
+    t: T,
+  ) => PromiseOrValue<AsyncDidEndHook<TEndHookArgs> | undefined | void>,
 ): Promise<AsyncDidEndHook<TEndHookArgs>> {
   const didEndHooks = (
     await Promise.all(targets.map((target) => hook(target)))
@@ -41,7 +46,7 @@ export function invokeSyncDidStartHook<T, TEndHookArgs extends unknown[]>(
 
 export async function invokeHooksUntilDefinedAndNonNull<T, TOut>(
   targets: T[],
-  hook: (t: T) => Promise<TOut | null | undefined>,
+  hook: (t: T) => PromiseOrValue<TOut | null | undefined>,
 ): Promise<TOut | null> {
   for (const target of targets) {
     const value = await hook(target);
