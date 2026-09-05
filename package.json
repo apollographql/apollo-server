@@ -58,7 +58,7 @@
     "@types/negotiator": "0.6.4",
     "@types/node": "20.19.11",
     "@types/superagent": "8.1.9",
-    "@types/supertest": "6.0.3",
+    "@types/supertest": "7.2.1",
     "@types/whatwg-mimetype": "3.0.2",
     "awaiting": "3.0.0",
     "cors": "2.8.5",
