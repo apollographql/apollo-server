@@ -3,9 +3,9 @@
 # It's what we use to set up tools in CI.
 
 [tools]
-node = "24.13.0"
+node = "24.20.0"
 "github:codecov/codecov-cli" = { version = "10.4.0", bin = "codecov-cli" }
-npm = "11.15"
+npm = "11.19"
 
 [env]
 # Put binaries from npm-installed packages on PATH (eg `changeset`).
