@@ -59,7 +59,7 @@
     "@types/node": "20.19.11",
     "@types/superagent": "8.1.9",
     "@types/supertest": "6.0.3",
-    "@types/whatwg-mimetype": "3.0.2",
+    "@types/whatwg-mimetype": "5.0.0",
     "awaiting": "3.0.0",
     "cors": "2.8.5",
     "cspell": "9.2.0",
