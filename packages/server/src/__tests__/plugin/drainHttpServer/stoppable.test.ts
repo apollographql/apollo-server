@@ -26,6 +26,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
 
+import { EventEmitter } from 'events';
 import http from 'http';
 import https from 'https';
 const a: any = require('awaiting');
@@ -380,5 +381,62 @@ Object.keys(schemes).forEach((schemeName) => {
         await a.event(server, 'close');
       });
     }
+  });
+});
+
+describe('Stopper socket tracking', () => {
+  // Regression test: the 'finish' callback must not re-insert a socket that the
+  // 'close' handler already removed. The close listener is registered with
+  // `once`, so once it has fired nothing remains to remove a re-inserted entry
+  // and the Map grows for the lifetime of the process.
+  it('does not retain a socket whose close was processed before finish', () => {
+    const server = new http.Server();
+    const stopper = new Stopper(server);
+    // Reach into the private field the same way the leak would manifest.
+    const tracked = (
+      stopper as unknown as {
+        requestCountPerSocket: Map<unknown, number>;
+      }
+    ).requestCountPerSocket;
+
+    const socket = new EventEmitter();
+    const res = new EventEmitter();
+
+    // Node emits 'connection' for an accepted socket before any request on it.
+    server.emit('connection', socket);
+    expect(tracked.size).toBe(1);
+
+    server.emit('request', { socket }, res);
+    expect(tracked.size).toBe(1);
+
+    // 'close' is processed before the queued 'finish' callback runs.
+    socket.emit('close');
+    expect(tracked.size).toBe(0);
+
+    res.emit('finish');
+    expect(tracked.size).toBe(0);
+  });
+
+  it('still decrements the count when finish precedes close', () => {
+    const server = new http.Server();
+    const stopper = new Stopper(server);
+    const tracked = (
+      stopper as unknown as {
+        requestCountPerSocket: Map<unknown, number>;
+      }
+    ).requestCountPerSocket;
+
+    const socket = new EventEmitter();
+    const res = new EventEmitter();
+
+    server.emit('connection', socket);
+    server.emit('request', { socket }, res);
+    expect(tracked.get(socket)).toBe(1);
+
+    res.emit('finish');
+    expect(tracked.get(socket)).toBe(0);
+
+    socket.emit('close');
+    expect(tracked.size).toBe(0);
   });
 });
