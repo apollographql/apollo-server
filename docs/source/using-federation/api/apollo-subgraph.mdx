@@ -1,38 +1,48 @@
 ---
 title: 'API Reference: @apollo/subgraph'
+subtitle: Build a federation-ready subgraph schema for Apollo Server
+description: Use @apollo/subgraph to build a federation-ready GraphQL schema, resolve entities with __resolveReference, and print subgraph SDL.
 api_reference: true
 ---
 
-This API reference documents the exports from the `@apollo/subgraph` package. This package enables you to use Apollo Server as a subgraph in a federated supergraph. For more information, see [Implementing a subgraph with Apollo Server](../apollo-subgraph-setup).
+This API reference documents the exports from the [`@apollo/subgraph`](https://www.npmjs.com/package/@apollo/subgraph) package. Use this package to run Apollo Server as a subgraph in a federated supergraph. For a walkthrough, see [Implementing a subgraph with Apollo Server](../apollo-subgraph-setup).
 
-> Note, we recommend using `@apollo/subgraph` with Apollo Server, but it is compatible with any GraphQL server built on `graphql-js`.
+<Note>
+
+Apollo recommends `@apollo/subgraph` with Apollo Server. The package also works with any GraphQL server built on `graphql-js`. Version 2.15 and later require Node.js 24+ and `graphql` 16.11+.
+
+</Note>
 
 ## `buildSubgraphSchema`
 
-> This method was renamed from `buildFederatedSchema` after `@apollo/federation` v0.28.0 (the previous name still works, but it might be removed in a future release).
-
-A function that takes a schema module object (or an array of them) and returns a federation-ready subgraph schema:
+A function that takes federation SDL (as a `DocumentNode` or an array of schema modules) and returns an executable subgraph schema. The schema includes the federation directives your document imports with [`@link`](/federation/federated-schemas/federated-directives), plus the `_service` and `_entities` root fields the router uses to inspect the subgraph and resolve entities.
 
 <MultiCodeBlock>
 
 ```ts
 const server = new ApolloServer({
-  schema: buildSubgraphSchema({ typeDefs, resolvers }), //highlight-line
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }]), //highlight-line
 });
 ```
 
 </MultiCodeBlock>
 
-Used when [defining a subgraph](../apollo-subgraph-setup/#defining-a-subgraph) in a federated graph.
+Use `buildSubgraphSchema` when [defining a subgraph](../apollo-subgraph-setup/#defining-a-subgraph) in a federated graph.
 
-Each schema module is an object with the following format:
+Each schema module has the following shape:
 
 ```ts
 {
   typeDefs: DocumentNode,
-  resolvers: ResolverMap
+  resolvers?: GraphQLResolverMap
 }
 ```
+
+<Note>
+
+As of `@apollo/subgraph` v2.15, pass an array of schema modules (or a `DocumentNode`) to `buildSubgraphSchema`. A single `{ typeDefs, resolvers }` object is no longer valid. The deprecated `buildFederatedSchema` alias is also removed.
+
+</Note>
 
 ### Parameters
 
@@ -48,14 +58,21 @@ Each schema module is an object with the following format:
 <tr class="required">
 <td>
 
-###### `modules`
+###### `modulesOrSDL`
 
-`Object` or `Array`
+`BuildSubgraphSchemaInput`
 
 </td>
 <td>
 
-**Required.** A schema module object (or an array of them) with the structure shown above.
+**Required.** One of the following:
+
+- An array of schema modules (`{ typeDefs, resolvers? }`) and/or `DocumentNode`s
+- A single `DocumentNode`
+
+Pass `typeDefs` as a `DocumentNode` (for example, the result of the `gql` tag from [`graphql-tag`](https://www.npmjs.com/package/graphql-tag)). Don't pass a raw SDL string.
+
+If the assembled schema isn't a valid GraphQL schema, `buildSubgraphSchema` throws a `GraphQLSchemaValidationError`.
 
 </td>
 </tr>
@@ -72,6 +89,12 @@ import { ApolloServer } from '@apollo/server';
 import { buildSubgraphSchema } from '@apollo/subgraph';
 
 const typeDefs = gql`
+  extend schema
+    @link(
+      url: "https://specs.apollo.dev/federation/v2.9"
+      import: ["@key"]
+    )
+
   type Query {
     me: User
   }
@@ -89,28 +112,226 @@ const resolvers = {
     },
   },
   User: {
-    __resolveReference(user, { fetchUserById }) {
-      return fetchUserById(user.id);
+    __resolveReference(reference) {
+      return fetchUserById(reference.id);
     },
   },
 };
 
 const server = new ApolloServer({
-  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
 });
 ```
 
 </MultiCodeBlock>
 
+Without an `extend schema @link(...)` definition, `buildSubgraphSchema` treats the document as a Federation 1 subgraph.
+
+## `printSubgraphSchema`
+
+Prints a subgraph `GraphQLSchema` back to SDL, including federation directive applications, federation types, and the `_service` / `_entities` root fields.
+
+<MultiCodeBlock>
+
+```ts
+import { printSubgraphSchema } from '@apollo/subgraph';
+
+const sdl = printSubgraphSchema(schema);
+```
+
+</MultiCodeBlock>
+
+Use `printSubgraphSchema` to inspect the schema your subgraph actually executes. As of `@apollo/subgraph` v2.15, the printed SDL includes the complete schema (federation directives, types, and root fields). Use `printSubgraphSchema` instead of GraphQL.js `printSchema` when you need federation `@key` (and similar) annotations in the printed SDL.
+
+### Parameters
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+###### `schema`
+
+`GraphQLSchema`
+
+</td>
+<td>
+
+**Required.** The executable schema to print, usually the result of `buildSubgraphSchema`.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## `addResolversToSchema`
+
+<MinVersionBadge version="@apollo/subgraph v2.15" />
+
+Attaches a resolver map to an existing `GraphQLSchema` in place. In addition to field resolvers, this function recognizes:
+
+- `__resolveReference` (stored on the type as `extensions.apollo.subgraph.resolveReference`)
+- `__resolveType`
+- `__isTypeOf`
+
+<MultiCodeBlock>
+
+```ts
+import { addResolversToSchema } from '@apollo/subgraph';
+
+addResolversToSchema(schema, {
+  User: {
+    __resolveReference(reference) {
+      return fetchUserById(reference.id);
+    },
+  },
+});
+```
+
+</MultiCodeBlock>
+
+`buildSubgraphSchema` calls `addResolversToSchema` for you when you pass `resolvers` on a schema module. Call it yourself when you build or transform a schema outside that flow.
+
+### Parameters
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+###### `schema`
+
+`GraphQLSchema`
+
+</td>
+<td>
+
+**Required.** The schema to attach resolvers to. This function mutates the schema.
+
+</td>
+</tr>
+<tr class="required">
+<td>
+
+###### `resolvers`
+
+`GraphQLResolverMap`
+
+</td>
+<td>
+
+**Required.** A map of type names to field resolvers, reference resolvers, scalars, or enum value maps.
+
+</td>
+</tr>
+</tbody>
+</table>
+
+## `entitiesResolver`
+
+<MinVersionBadge version="@apollo/subgraph v2.15" />
+
+The resolver for `Query._entities`. The router sends a list of entity representations—objects with `__typename` plus the fields of one of the entity's `@key`s—and this function returns the corresponding entities in the same order.
+
+<MultiCodeBlock>
+
+```ts
+import { entitiesResolver } from '@apollo/subgraph';
+
+const resolvers = {
+  Query: {
+    _entities(_source, { representations }, context, info) {
+      return entitiesResolver({ representations, context, info });
+    },
+  },
+};
+```
+
+</MultiCodeBlock>
+
+`buildSubgraphSchema` installs this resolver on `Query._entities` when the schema has entities. Call `entitiesResolver` only when you assemble `_entities` yourself (for example, in a subgraph library that doesn't use `buildSubgraphSchema`).
+
+Each representation is resolved through that type's `__resolveReference` function. If a type has no `__resolveReference`, the representation is returned unchanged (with `__typename` applied).
+
+### Parameters
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name /<br/>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr class="required">
+<td>
+
+###### `representations`
+
+`Array`
+
+</td>
+<td>
+
+**Required.** Entity representations from the router's `_entities` argument.
+
+</td>
+</tr>
+<tr class="required">
+<td>
+
+###### `context`
+
+`Object`
+
+</td>
+<td>
+
+**Required.** The GraphQL context value for the operation. Passed through to each `__resolveReference` call.
+
+</td>
+</tr>
+<tr class="required">
+<td>
+
+###### `info`
+
+`GraphQLResolveInfo`
+
+</td>
+<td>
+
+**Required.** The GraphQL.js resolve info for the `_entities` field. Used to look up types in the schema and, when you run under Apollo Server with cache control enabled, to apply `@cacheControl` hints from the selected type.
+
+</td>
+</tr>
+</tbody>
+</table>
+
 ## `__resolveReference`
 
-The name of a special **reference resolver** function you can define for every [entity](/federation/entities/) in a subgraph schema's resolver map.
+The name of a special **reference resolver** you define for each [entity](/federation/entities/) in a subgraph schema's resolver map.
 
-The `__resolveReference` function enables your router's query planner to resolve a particular entity by whatever unique identifier your other subgraphs use to reference it. For details, see [Defining an entity](/federation/entities/#defining-an-entity).
+`__resolveReference` enables the router to resolve an entity by the unique identifier other subgraphs use to reference it. For details, see [Defining an entity](/federation/entities/#defining-an-entity).
 
-If the entity can be resolved,  `__resolveReference` returns the entity. Otherwise, it returns `null`.
+If the entity can be resolved, `__resolveReference` returns the entity. Otherwise, it returns `null`.
 
-The function takes the parameters listed below.
+You can also set a reference resolver on a type with `extensions.apollo.subgraph.resolveReference`. `addResolversToSchema` stores `__resolveReference` that way for you.
 
 ### Parameters
 
@@ -150,7 +371,7 @@ This object includes a `__typename` field, along with whichever fields the subgr
 </td>
 <td>
 
-An object that's passed to every resolver that executes for a particular operation, enabling resolvers to share helpful context.
+An object that's passed to every resolver that executes for a particular operation, so resolvers can share helpful context.
 
 Within resolvers and plugins, this object is named `contextValue`. For details, see [The `context` argument](../../data/context#the-contextvalue-object).
 
@@ -162,14 +383,14 @@ Within resolvers and plugins, this object is named `contextValue`. For details, 
 
 ###### `info`
 
-`Object`
+`GraphQLResolveInfo`
 
 </td>
 <td>
 
 Contains information about the operation's execution state, including the field name, the path to the field from the root, and more.
 
-This object's core fields are listed in the [GraphQL.js source code](https://github.com/graphql/graphql-js/blob/a24a9f35b876bdd0d5050eca34d3020bd0db9a29/src/type/definition.ts#L891-L902).
+This object's core fields are listed in the [GraphQL.js `GraphQLResolveInfo` type](https://github.com/graphql/graphql-js/blob/v16.11.0/src/type/definition.ts).
 
 </td>
 </tr>
@@ -190,12 +411,88 @@ const typeDefs = gql`
 
 const resolvers = {
   User: {
-    __resolveReference(user, { dataSources }) {
-      // user will always have at least the `id` and the `__typename` here
-      return dataSources.users.fetchUserById(user.id);
+    __resolveReference(reference) {
+      // reference always includes `id` and `__typename`
+      return fetchUserById(reference.id);
     },
   },
 };
 ```
 
 </MultiCodeBlock>
+
+## Error classes
+
+`@apollo/subgraph` throws the following errors when it can't build or interpret a subgraph schema:
+
+<table class="field-table">
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+
+<tbody>
+<tr>
+<td>
+
+###### `GraphQLSchemaValidationError`
+
+</td>
+<td>
+
+Thrown when the assembled subgraph schema fails GraphQL.js `validateSchema`. The `errors` property holds the underlying `GraphQLError` list.
+
+</td>
+</tr>
+<tr>
+<td>
+
+###### `FederationError`
+
+</td>
+<td>
+
+Base class for federation-specific failures.
+
+</td>
+</tr>
+<tr>
+<td>
+
+###### `MultipleFederationLinksError`
+
+</td>
+<td>
+
+Thrown when a document `@link`s the federation specification more than once.
+
+</td>
+</tr>
+<tr>
+<td>
+
+###### `UnsupportedFederationVersionError`
+
+</td>
+<td>
+
+Thrown when a `@link` URL names a federation version this package doesn't support. `@apollo/subgraph` v2.15 supports federation specification versions through v2.15.
+
+</td>
+</tr>
+<tr>
+<td>
+
+###### `UnsupportedLinkImportError`
+
+</td>
+<td>
+
+Thrown when a `@link(import: [...])` entry is malformed or names a directive or type that isn't in the linked federation version.
+
+</td>
+</tr>
+</tbody>
+</table>
