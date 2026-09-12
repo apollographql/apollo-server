@@ -44,7 +44,7 @@
     "@apollo/utils.createhash": "^3.0.0",
     "@apollo/utils.keyvaluecache": "^4.0.0",
     "express": "^5.0.0",
-    "graphql-http": "1.22.4",
+    "graphql-http": "1.23.0",
     "graphql-tag": "^2.12.6",
     "loglevel": "^1.8.0",
     "superagent": "^10.0.0",
