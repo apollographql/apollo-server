@@ -125,7 +125,7 @@ To apply transformer functions to your executable subgraph schema, you first _ge
 <MultiCodeBlock>
 
 ```ts
-let subgraphSchema = buildSubgraphSchema({ typeDefs, resolvers });
+let subgraphSchema = buildSubgraphSchema([{ typeDefs, resolvers }]);
 ```
 
 </MultiCodeBlock>
