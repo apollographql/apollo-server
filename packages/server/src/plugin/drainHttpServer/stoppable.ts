@@ -53,7 +53,13 @@ export class Stopper {
           (this.requestCountPerSocket.get(req.socket) ?? 0) + 1,
         );
         res.once('finish', () => {
-          const pending = (this.requestCountPerSocket.get(req.socket) ?? 0) - 1;
+          // If the socket already closed, its map entry was removed by the
+          // 'close' listener. Do not re-insert it — otherwise the closed socket
+          // is retained for the lifetime of the process (close-before-finish).
+          if (!this.requestCountPerSocket.has(req.socket)) {
+            return;
+          }
+          const pending = this.requestCountPerSocket.get(req.socket)! - 1;
           this.requestCountPerSocket.set(req.socket, pending);
           // If we're in the process of stopping and it's gone idle, close the
           // socket.
