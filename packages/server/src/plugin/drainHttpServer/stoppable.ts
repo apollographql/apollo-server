@@ -53,7 +53,16 @@ export class Stopper {
           (this.requestCountPerSocket.get(req.socket) ?? 0) + 1,
         );
         res.once('finish', () => {
-          const pending = (this.requestCountPerSocket.get(req.socket) ?? 0) - 1;
+          // The socket's 'close' handler may already have run, which both
+          // deleted this entry and consumed its `once` listener. Re-inserting
+          // the socket here would keep it (and everything it references) in the
+          // Map for the lifetime of the process, because no close listener
+          // remains to remove it. A closed socket has no pending requests worth
+          // tracking, so skip instead.
+          if (!this.requestCountPerSocket.has(req.socket)) {
+            return;
+          }
+          const pending = this.requestCountPerSocket.get(req.socket)! - 1;
           this.requestCountPerSocket.set(req.socket, pending);
           // If we're in the process of stopping and it's gone idle, close the
           // socket.
