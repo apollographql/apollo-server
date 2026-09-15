@@ -818,6 +818,43 @@ describe('ApolloServer executeOperation', () => {
         plugins: [basePlugin],
       });
     });
+
+    it('allows synchronous returns for plugin methods', async () => {
+      let startedCalled = false;
+      let stoppedCalled = false;
+      let willSendResponseCalled = false;
+      const syncPlugin: ApolloServerPlugin<BaseContext> = {
+        serverWillStart() {
+          startedCalled = true;
+          return {
+            serverWillStop() {
+              stoppedCalled = true;
+            },
+          };
+        },
+        requestDidStart() {
+          return {
+            willSendResponse() {
+              willSendResponseCalled = true;
+            },
+          };
+        },
+      };
+
+      const server = new ApolloServer({
+        typeDefs: 'type Query { x: ID }',
+        resolvers: { Query: { x: () => '1' } },
+        plugins: [syncPlugin],
+      });
+
+      await server.start();
+      await server.executeOperation({ query: '{ x }' });
+      await server.stop();
+
+      expect(startedCalled).toBe(true);
+      expect(stoppedCalled).toBe(true);
+      expect(willSendResponseCalled).toBe(true);
+    });
   });
 });
 

@@ -28,6 +28,7 @@ export type {
   GraphQLServerListener,
   GraphQLServerContext,
   LandingPage,
+  PromiseOrValue,
 } from './plugins.js';
 export type {
   GraphQLRequestContext,
