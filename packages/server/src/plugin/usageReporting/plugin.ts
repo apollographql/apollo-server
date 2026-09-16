@@ -7,9 +7,7 @@ import {
 } from '@apollo/utils.usagereporting';
 import retry from 'async-retry';
 import { type GraphQLSchema, printSchema } from 'graphql';
-import type LRUCache from 'lru-cache';
-import { AbortController } from 'node-abort-controller';
-import fetch from 'node-fetch';
+import { type LRUCache } from 'lru-cache';
 import os from 'os';
 import { gzip } from 'zlib';
 import type {
@@ -53,10 +51,6 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
     null,
   ),
 ): ApolloServerPlugin<TContext> {
-  // Note: We'd like to change the default to false in Apollo Server 4, so that
-  // the default usage reporting experience doesn't include *anything* that
-  // could potentially be PII (like error messages) --- just operations and
-  // numbers.
   const fieldLevelInstrumentationOption = options.fieldLevelInstrumentation;
   const fieldLevelInstrumentation =
     typeof fieldLevelInstrumentationOption === 'number'
@@ -317,33 +311,22 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           // Retry on network errors and 5xx HTTP
           // responses.
           async () => {
-            // Note that once we require Node v16 we can use its global
-            // AbortController instead of the one from `node-abort-controller`.
-            const controller = new AbortController();
-            const abortTimeout = setTimeout(() => {
-              controller.abort();
-            }, options.requestTimeoutMs ?? 30_000);
-            let curResponse;
-            try {
-              curResponse = await fetcher(
-                (options.endpointUrl ||
-                  'https://usage-reporting.api.apollographql.com') +
-                  '/api/ingress/traces',
-                {
-                  method: 'POST',
-                  headers: {
-                    'user-agent': 'ApolloServerPluginUsageReporting',
-                    'x-api-key': key,
-                    'content-encoding': 'gzip',
-                    accept: 'application/json',
-                  },
-                  body: compressed,
-                  signal: controller.signal,
+            const curResponse = await fetcher(
+              (options.endpointUrl ||
+                'https://usage-reporting.api.apollographql.com') +
+                '/api/ingress/traces',
+              {
+                method: 'POST',
+                headers: {
+                  'user-agent': 'ApolloServerPluginUsageReporting',
+                  'x-api-key': key,
+                  'content-encoding': 'gzip',
+                  accept: 'application/json',
                 },
-              );
-            } finally {
-              clearTimeout(abortTimeout);
-            }
+                body: compressed,
+                signal: AbortSignal.timeout(options.requestTimeoutMs ?? 30_000),
+              },
+            );
 
             if (curResponse.status >= 500 && curResponse.status < 600) {
               throw new Error(
@@ -647,7 +630,7 @@ export function ApolloServerPluginUsageReporting<TContext extends BaseContext>(
           // logger is preferred since this is very much coupled directly to a
           // client-triggered action which might be more granularly tagged by
           // logging implementations.
-          addTrace().catch(logger.error);
+          addTrace().catch(logger.error.bind(logger));
 
           async function addTrace(): Promise<void> {
             // Ignore traces that come in after stop().

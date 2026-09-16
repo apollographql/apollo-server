@@ -3,7 +3,7 @@ description: File a bug report
 body:
   - type: markdown
     attributes:
-      value: "Hello from the Apollo Server team! Hopefully we can help resolve your issue. To increase the chances of us being able to help, please take the time to fill out the form as completely as possible. A minimal, runnable reproduction is the best way to get us to help you quickly and in many cases we simply cannot help without one. Forking our [CodeSandbox](https://codesandbox.io/p/sandbox/apollo-server-typescript-3opde) is a great place to start."
+      value: "Hello from the Apollo Server team! Hopefully we can help resolve your issue. To increase the chances of us being able to help, please take the time to fill out the form as completely as possible. A minimal, runnable reproduction is the best way to get us to help you quickly and in many cases we simply cannot help without one."
   - type: textarea
     attributes:
       label: Issue Description

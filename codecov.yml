@@ -12,5 +12,4 @@ coverage:
 
 # The charts can still be viewed by clicking on the status
 # checks, but they create a fair amount of noise by default.
-comment: off
-
+comment: false

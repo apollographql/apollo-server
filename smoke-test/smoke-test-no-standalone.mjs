@@ -18,4 +18,4 @@ assert.strictEqual(body.singleResult.data.hello, 'world');
 
 await s.stop();
 
-console.log('Non-Express smoke test passed!');
+console.log('Non-Standalone smoke test passed!');

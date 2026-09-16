@@ -151,6 +151,26 @@ The default value is `true`, **unless** the `NODE_ENV` environment variable is s
 <tr>
 <td>
 
+###### `maxRecursiveSelections`
+
+`boolean` or `number`
+
+</td>
+
+<td>
+
+If `true`, enables a validation rule that computes how many selections would be in the operation if its named fragment definitions were recursively inlined (without actually inlining) and errors if the count exceeds 10,000,000. If `number`, it instead errors if the count exceeds this number.
+
+This rule is executed before any provided `validationRules`, and can be useful to avoid performance issues with those rules or any downstream plugins.
+
+The default value is `false`.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `hideSchemaDetailsFromClientErrors`
 
 `boolean`
@@ -213,6 +233,32 @@ Providing a function is useful if you want to use a different root value dependi
 <td>
 
 An array containing custom functions to use as additional [validation rules](https://github.com/graphql/graphql-js/tree/master/src/validation/rules) when validating operations against the schema. Note that these rules should depend only on the operation and the schema, not on anything else specific to an individual request, as the result of successful validation is cached across requests.
+
+</td>
+</tr>
+
+
+<tr>
+<td>
+
+###### `validationOptions`
+
+`Object`
+
+</td>
+<td>
+
+An object that specifies options for GraphQL validation. This object is passed directly as the `options` argument to the GraphQL `validate` function. See the [GraphQL-JS documentation for `validate`](https://www.graphql-js.org/api-v16/validation/#validate).
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  validationOptions: {
+    maxErrors: 10
+  },
+});
+```
 
 </td>
 </tr>
@@ -331,7 +377,7 @@ The `formatError` hook receives two arguments: the first is a [`GraphQLFormatted
 
 An object containing configuration options for connecting Apollo Server to [Apollo Studio](https://www.apollographql.com/docs/studio/). Each field of this object can also be set with an environment variable, which is the recommended method of setting these parameters. All fields are optional. The fields are:
 
-- `key`: The [graph API key](https://www.apollographql.com/docs/studio/api-keys/#graph-api-keys) that Apollo Server should use to authenticate with Apollo Studio. You can set this with the `APOLLO_KEY` environment variable.
+- `key`: The [graph API key](/graphos/platform/access-management/api-keys/graph-api-keys) that Apollo Server should use to authenticate with Apollo GraphOS. You can set this with the `APOLLO_KEY` environment variable.
 - `graphRef`: A reference of your graph in Apollo's registry, such as `graph-id@my-variant` or just `graph-id`. You can set this with the `APOLLO_GRAPH_REF` environment variable.
 - `graphId`: The ID of your graph in Apollo's registry. You can set this with the `APOLLO_GRAPH_ID` environment variable. You may not specify this if you specify the graph ref.
 - `graphVariant`: The [variant](https://www.apollographql.com/docs/studio/schema/registry/#managing-environments-with-variants) of your graph to associate this server's schema and metrics with. You can set this with the `APOLLO_GRAPH_VARIANT` environment variable. The default value is `current`. You may not specify this if you specify the graph ref.
@@ -484,6 +530,35 @@ An object that specifies how your server parses GraphQL operations. [See `graphq
 <tr>
 <td>
 
+###### `executionOptions`
+
+`Object`
+
+</td>
+<td>
+
+An object that specifies options for GraphQL execution. This object is passed directly to the GraphQL execution engine and supports all [GraphQL-JS execution options](https://www.graphql-js.org/api-v16/execution/).
+
+The most common use case is configuring `maxCoercionErrors` to control how many variable coercion errors are allowed before execution is terminated:
+
+```js
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  executionOptions: {
+    maxCoercionErrors: 10, // Default is 50
+  },
+});
+```
+
+GraphQL execution terminates if variable coercion encounters more errors than the specified limit. This prevents your application from performing expensive operations when many input variables are malformed.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `nodeEnv`
 
 `string`
@@ -506,9 +581,9 @@ If this is set to any string value, use that value instead of the environment va
 </td>
 <td>
 
-**Set this option to `true`.** It mitigates a regression introduced in Apollo Server v4 where the server returns a 200 status code (instead of 400) when a client query provides invalid variables. [Learn more.](../migration/#known-regressions)
+> Note: Apollo Server v5 defaults this option to `true`. This option is deprecated in v5 and will be ignored in a future major version.
 
-Apollo Server v5 will _always_ behave as if this option is `true` (and will ignore any provided value).
+**Apollo Server v4 users should set this option to `true` (or better yet, upgrade to v5).** It mitigates a regression introduced in Apollo Server v4 where the server returns a 200 status code (instead of 400) when a client query provides invalid variables.
 
 </td>
 </tr>
@@ -651,7 +726,7 @@ const response = await server.executeOperation({
 
 The `response` object returned from `executeOperation` is a `GraphQLResponse`, which has `body` and `http` fields.
 
-Apollo Server 4 supports incremental delivery directives such as `@defer` and `@stream` (when combined with an appropriate version of `graphql-js`), and so the structure of `response.body` can represent either a single result or multiple results. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized.)
+Apollo Server 4 and 5 support incremental delivery directives such as `@defer` and `@stream` when combined with pre-release version `17.0.0-alpha.2` of `graphql-js`, and so the structure of `response.body` can represent either a single result or multiple results. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized. Apollo Server currently only supports `17.0.0-alpha.2`, not newer alphas which use a different format.)
 
 The `http` field contains an optional numeric `status` code and a `headers` map specifying any HTTP status code and headers that should be set.
 

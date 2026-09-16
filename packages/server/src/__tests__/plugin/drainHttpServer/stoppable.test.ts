@@ -35,9 +35,7 @@ import { Stopper } from '../../../plugin/drainHttpServer/stoppable';
 import path from 'path';
 import type { AddressInfo } from 'net';
 import { describe, it, expect, afterEach, beforeEach } from '@jest/globals';
-import { AbortController } from 'node-abort-controller';
-import resolvable, { Resolvable } from '../../../utils/resolvable.js';
-
+import resolvable, { type Resolvable } from '../../../utils/resolvable.js';
 function port(s: http.Server) {
   return (s.address() as AddressInfo).port;
 }
@@ -204,7 +202,6 @@ Object.keys(schemes).forEach((schemeName) => {
           request(`${schemeName}://localhost:${p}`).agent(scheme.agent()),
         );
         expect(err.code).toMatch(/ECONNREFUSED/);
-
         expect(closed).toBe(1);
         expect(gracefully).toBe(true);
       });

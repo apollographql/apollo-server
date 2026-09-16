@@ -4,32 +4,47 @@ on:
   push:
     branches:
       - main
+      - version-4
 
 jobs:
   release:
     name: Release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
     if: github.repository == 'apollographql/apollo-server'
     steps:
       - name: Checkout Repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
+      - name: Install Node with Mise
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
         with:
-          # setup-node knows how to read the `volta.node` field.
-          node-version-file: package.json
+          # Disable caching mise tools in the Actions cache: when publishing releases, we want to make
+          # sure no other actions (even those run without credentials) had a chance to poison any cache.
+          cache: false
+        env:
+          MISE_LOCKED: "1"
+
+      # Deliberately not using an action like `actions/setup-node` which integrates with the Actions cache:
+      # when publishing releases, we want to make sure no other actions (even those run without credentials)
+      # had a chance to poison any cache.
       - name: Install Dependencies
-        run: npm i
+        run: npm ci
+
+      # shim around npm to convert `npm publish` to `npm stage publish` for staged publishing until changesets adds direct support for staged publishing.
+      - run: echo "${{ github.workspace }}/scripts/changesets-wrapper" >> "$GITHUB_PATH"
 
       - name: Create Release Pull Request / NPM Publish
-        uses: changesets/action@v1
+        uses: changesets/action@63a615b9cd06ba9a3e6d13796c7fbcb080a60a0b # v1
         with:
           publish: npm run changeset-publish
           version: npm run changeset-version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_TOKEN: ""

@@ -1,5 +1,110 @@
 # @apollo/server-integration-testsuite
 
+## 5.5.1
+
+### Patch Changes
+
+- Updated dependencies [[`3f46c51`](https://github.com/apollographql/apollo-server/commit/3f46c51d0fa629e9e885ba095568a43c714a9b06)]:
+  - @apollo/server@5.5.1
+
+## 5.5.0
+
+### Minor Changes
+
+- [#8191](https://github.com/apollographql/apollo-server/pull/8191) [`ada1200`](https://github.com/apollographql/apollo-server/commit/ada12001c4e95b5c779d80314a5a32e33087b5cf) - ⚠️ SECURITY `@apollo/server/standalone`:
+
+  Apollo Server now rejects GraphQL `GET` requests which contain a `Content-Type` header other than `application/json` (with optional parameters such as `; charset=utf-8`). Any other value is now rejected with a 415 status code.
+
+  (GraphQL `GET` requests without a `Content-Type` header are still allowed, though they do still need to contain a non-empty `X-Apollo-Operation-Name` or `Apollo-Require-Preflight` header to be processed if the default CSRF prevention feature is enabled.)
+
+  This improvement makes Apollo Server's CSRF more resistant to browsers which implement CORS in non-spec-compliant ways. Apollo is aware of one browser which as of March 2026 has a bug which allows an attacker to circumvent Apollo Server's CSRF prevention feature to carry out read-only XS-Search-style CSRF attacks. The browser vendor is in the process of patching this vulnerability; upgrading Apollo Server to v5.5.0 mitigates this vulnerability.
+
+  **If your server uses cookies (or HTTP Basic Auth) for authentication, Apollo encourages you to upgrade to v5.5.0.**
+
+  This is technically a backwards-incompatible change. Apollo is not aware of any GraphQL clients which provide non-empty `Content-Type` headers with `GET` requests with types other than `application/json`. If your use case requires such requests, please [file an issue](https://github.com/apollographql/apollo-server/issues) and we may add more configurability in a follow-up release.
+
+  See [advisory GHSA-9q82-xgwf-vj6h](https://github.com/apollographql/apollo-server/security/advisories/GHSA-9q82-xgwf-vj6h) for more details.
+
+### Patch Changes
+
+- Updated dependencies [[`ada1200`](https://github.com/apollographql/apollo-server/commit/ada12001c4e95b5c779d80314a5a32e33087b5cf)]:
+  - @apollo/server@5.5.0
+
+## 5.4.0
+
+### Patch Changes
+
+- Updated dependencies [[`d25a5bd`](https://github.com/apollographql/apollo-server/commit/d25a5bdc377826ad424fcf7f8d1d062055911643)]:
+  - @apollo/server@5.4.0
+
+## 5.3.0
+
+### Patch Changes
+
+- Updated dependencies [[`8e54e58`](https://github.com/apollographql/apollo-server/commit/8e54e5827791666e36082ad49d19c77f050355ac), [`26320bc`](https://github.com/apollographql/apollo-server/commit/26320bccd77c6074d4a38119294f153f64e52d96)]:
+  - @apollo/server@5.3.0
+
+## 5.2.0
+
+### Patch Changes
+
+- Updated dependencies [[`51acbeb`](https://github.com/apollographql/apollo-server/commit/51acbebde7cc2759efacaa9eccb10aa3fee6b368)]:
+  - @apollo/server@5.2.0
+
+## 5.1.0
+
+### Patch Changes
+
+- Updated dependencies [[`80a1a1a`](https://github.com/apollographql/apollo-server/commit/80a1a1af12b326d8c0f900bd85a25e14ee9cd9c0)]:
+  - @apollo/server@5.1.0
+
+## 5.1.0-rc.0
+
+### Patch Changes
+
+- Updated dependencies [[`80a1a1a`](https://github.com/apollographql/apollo-server/commit/80a1a1af12b326d8c0f900bd85a25e14ee9cd9c0)]:
+  - @apollo/server@5.1.0-rc.0
+
+## 5.0.0
+
+### Major Changes
+
+- Drop support for Node.JS v14, v16, and v20.
+
+- The integration test suite no longer uses `lib: ["dom"]` to tell TypeScript to assume DOM-related symbols are in the global namespace. If your integration library's test suite relied on this behavior, you may need to add `lib: ["dom"]` to the `compilerOptions` section of your test suite's `tsconfig.json`.
+
+### Patch Changes
+
+- [#8078](https://github.com/apollographql/apollo-server/pull/8078) [`dabe7ba`](https://github.com/apollographql/apollo-server/commit/dabe7ba60b4661a4b2e72c57d082acf04b32186a) Thanks [@renovate](https://github.com/apps/renovate)! - Support Jest v30 as well as Jest v29.
+
+- Updated dependencies [[`5b26558`](https://github.com/apollographql/apollo-server/commit/5b265580922c53aac8131472ba3dcef77a58b3d6), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da), [`100233a`](https://github.com/apollographql/apollo-server/commit/100233a6e015e1a63b7f8a4bcff7290da55750da)]:
+  - @apollo/server@5.0.0
+
+## 4.12.2
+
+### Patch Changes
+
+- [#8070](https://github.com/apollographql/apollo-server/pull/8070) [`0dee3c9`](https://github.com/apollographql/apollo-server/commit/0dee3c93254507190f2548dec52fd4101d2175d1) Thanks [@glasser](https://github.com/glasser)! - Provide dual-build CJS and ESM for `@apollo/server-integration-testsuite`.
+
+  We previously provided only a CJS build of this package, unlike `@apollo/server`
+  itself and the other helper packages that come with it. We may make all of
+  Apollo Server ESM-only in AS5; this is a step in that direction. Specifically,
+  only providing this package for CJS makes it challenging to run the tests in
+  `ts-jest` in some ESM-only setups, because the copy of `@apollo/server` fetched
+  directly in your ESM-based test may differ from the copy fetched indirectly via
+  `@apollo/server-integration-testsuite`, causing the "lockstep versioning" test
+  to fail.
+
+- Updated dependencies:
+  - @apollo/server@4.12.2
+
+## 4.12.1
+
+### Patch Changes
+
+- Updated dependencies [[`41f98d4`](https://github.com/apollographql/apollo-server/commit/41f98d4f2c143aad0ddfb36d5a4dd4b47fb406d7)]:
+  - @apollo/server@4.12.1
+
 ## 4.12.0
 
 ### Patch Changes

@@ -277,6 +277,81 @@ describe('@cacheControl directives', () => {
     );
   });
 
+  it('interaction between type implementing interface, both with specified `maxAge`', async () => {
+    const schema = buildSchemaWithCacheControlSupport(`
+      type Query {
+        named: Named
+        droid(id: ID!): Droid
+        alien(id: ID!): Alien
+      }
+
+      interface Named @cacheControl(maxAge: 60) {
+        name: String!
+      }
+
+      type Droid implements Named @cacheControl(maxAge: 30) {
+        id: ID!
+        name: String!
+      }
+
+      type Alien implements Named {
+        id: ID!
+        name: String!
+      }
+    `);
+
+    const hintsNamed = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          named {
+            ... on Droid {
+              id
+              name
+            }
+          }
+        }
+      `,
+    );
+
+    expect(hintsNamed).toStrictEqual(
+      new Map([['named', { maxAge: 60, scope: undefined }]]),
+    );
+
+    const hintsDroid = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          droid(id: 2001) {
+            id
+            name
+          }
+        }
+      `,
+    );
+
+    expect(hintsDroid).toStrictEqual(
+      new Map([['droid', { maxAge: 30, scope: undefined }]]),
+    );
+
+    const hintsAlien = await collectCacheControlHints(
+      schema,
+      `
+        query {
+          alien(id: 3001) {
+            id
+            name
+          }
+        }
+      `,
+      { defaultMaxAge: 10 },
+    );
+
+    expect(hintsAlien).toStrictEqual(
+      new Map([['alien', { maxAge: 10, scope: undefined }]]),
+    );
+  });
+
   it('inheritMaxAge', async () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql

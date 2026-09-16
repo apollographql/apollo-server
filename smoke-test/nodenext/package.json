@@ -1,7 +1,4 @@
 {
   "type": "module",
-  "module": "./dist/smoke-test.js",
-  "volta": {
-    "extends": "../../package.json"
-  }
+  "module": "./dist/smoke-test.js"
 }

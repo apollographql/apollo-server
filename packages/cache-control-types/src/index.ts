@@ -1,8 +1,3 @@
-// NOTE: Once Apollo Server 4 is released, move this package into the
-// apollo-server repo. We're placing it in the apollo-utils repo for now to
-// enable us to make non-alpha releases that can be used on the apollo-server
-// version-4 branch.
-
 import type { GraphQLCompositeType, GraphQLResolveInfo } from 'graphql';
 
 /**
@@ -68,7 +63,7 @@ export interface GraphQLResolveInfoWithCacheControl
   // `apollo-server-core` in your TypeScript build, then there's an ambient
   // `declare module` floating around that monkey-patches GraphQLResolveInfo to
   // have a cacheControl field. This led to lots of problems, which is why in
-  // AS4 we're moving towards the approach in this file where don't assume every
+  // AS4 we moved towards the approach in this file where don't assume every
   // GraphQLResolveInfo is a GraphQLResolveInfoWithCacheControl. The AS3 type is
   // very slightly incompatible with the type in the file, since we changed
   // CacheScope to be a union of strings rather than an enum. They have the same

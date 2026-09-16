@@ -5,7 +5,11 @@
  * intention (it's public API).
  */
 export type { BaseContext, ContextFunction, ContextThunk } from './context.js';
-export type { GraphQLRequest, GraphQLResponse } from './graphql.js';
+export type {
+  GraphQLRequest,
+  GraphQLResponse,
+  LegacyExperimentalExecuteIncrementally,
+} from './graphql.js';
 export type {
   HTTPGraphQLRequest,
   HTTPGraphQLResponse,
@@ -51,9 +55,19 @@ export type {
 } from './constructor.js';
 
 export type {
-  GraphQLExperimentalFormattedInitialIncrementalExecutionResult,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResult,
-  GraphQLExperimentalFormattedIncrementalResult,
-  GraphQLExperimentalFormattedIncrementalDeferResult,
-  GraphQLExperimentalFormattedIncrementalStreamResult,
-} from './incrementalDeliveryPolyfill.js';
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalDeferResultAlpha2,
+  GraphQLExperimentalFormattedIncrementalStreamResultAlpha2,
+} from './incrementalDeliveryPolyfillAlpha2.js';
+
+export type {
+  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
+  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+  GraphQLExperimentalFormattedIncrementalStreamResultAlpha9,
+  GraphQLExperimentalFormattedIncrementalDeferResultAlpha9,
+  GraphQLExperimentalFormattedCompletedResultAlpha9,
+  GraphQLExperimentalFormattedIncrementalResultAlpha9,
+  GraphQLExperimentalPendingResultAlpha9,
+} from './incrementalDeliveryPolyfillAlpha9.js';

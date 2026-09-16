@@ -137,6 +137,7 @@ paque
 parseurl
 pbjs
 pbts
+pipefail
 pook
 Pook
 pooks
@@ -221,4 +222,5 @@ whatwg
 Wheelock's
 withrequired
 xorby
+yaacovcr
 YOURNAME

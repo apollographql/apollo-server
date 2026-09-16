@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 2.0.0
+
+### Major Changes
+
+- Drop support for Node.JS v14, v16, and v20.
+
 ## 1.1.1
 
 ### Patch Changes

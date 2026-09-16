@@ -11,8 +11,6 @@ There are many cache backend implementations to choose from, including several i
 
 ## Configuring in-memory caching
 
-> ⚠️ If you are using Apollo Server 3, see the [previous version of this article](/apollo-server/v3/performance/cache-backends#ensuring-a-bounded-cache) to learn how to protect your cache from denial of service attacks by using a bounded cache. By default, Apollo Server 4's default cache is a _bounded_ in-memory cache backend.
-
 You can configure your server to use a different backend (such as Redis or Memcached) using the `cache` constructor option.
 
 If you want to configure the default in-memory cache, Apollo provides the [`InMemoryLRUCache`](https://github.com/apollographql/apollo-utils/tree/main/packages/keyValueCache#inmemorylrucache) class from the `@apollo/utils.keyvaluecache` package.
@@ -27,7 +25,7 @@ const server = new ApolloServer({
 });
 ```
 
-> Apollo Server 4 provides the equivalent of the above code snippet out-of-the-box and doesn't require you to install the `@apollo/utils.keyvaluecache` package.
+> Apollo Server provides the equivalent of the above code snippet out-of-the-box and doesn't require you to install the `@apollo/utils.keyvaluecache` package.
 
 In this example, we've increased the default size and provided a default TTL. For more information on these configuration options, see the [`lru-cache` documentation](https://www.npmjs.com/package/lru-cache).
 

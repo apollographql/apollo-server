@@ -174,7 +174,7 @@ Finally, we use the `buildSubgraphSchema` function from the `@apollo/subgraph` p
 
 ```ts title="index.ts"
 const server = new ApolloServer({
-  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
 });
 
 // Note the top level await!
@@ -229,7 +229,7 @@ const resolvers = {
 };
 
 const server = new ApolloServer({
-  schema: buildSubgraphSchema({ typeDefs, resolvers }),
+  schema: buildSubgraphSchema([{ typeDefs, resolvers }]),
 });
 
 const { url } = await startStandaloneServer(server);

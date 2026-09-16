@@ -1,0 +1,13 @@
+{
+  "extends": "../../tsconfig.base",
+  "compilerOptions": {
+    "rootDir": "./src",
+    "outDir": "./dist/esm",
+    "lib": ["es2023"],
+  },
+  "include": ["src/**/*"],
+  "references": [
+    { "path": "../cache-control-types"},
+    { "path": "../server" },
+  ],
+}

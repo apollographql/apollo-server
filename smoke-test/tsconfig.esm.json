@@ -6,6 +6,7 @@
     "outDir": "generated/tsc",
     "module": "esnext",
     "moduleResolution": "node",
+    "target": "ES2015",
     "esModuleInterop": true,
     "strict": true,
   },

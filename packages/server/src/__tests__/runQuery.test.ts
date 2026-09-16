@@ -1,6 +1,6 @@
 import {
-  DocumentNode,
-  FormattedExecutionResult,
+  type DocumentNode,
+  type FormattedExecutionResult,
   GraphQLInt,
   GraphQLNonNull,
   GraphQLObjectType,
@@ -11,20 +11,21 @@ import {
 import { InMemoryLRUCache } from '@apollo/utils.keyvaluecache';
 import {
   ApolloServer,
-  ApolloServerOptions,
-  ApolloServerPlugin,
-  BaseContext,
-  GraphQLRequest,
-  GraphQLRequestExecutionListener,
-  GraphQLRequestListener,
-  GraphQLRequestListenerDidResolveField,
-  GraphQLRequestListenerExecutionDidEnd,
-  GraphQLRequestListenerParsingDidEnd,
-  GraphQLRequestListenerValidationDidEnd,
+  type ApolloServerOptions,
+  type ApolloServerPlugin,
+  type BaseContext,
+  type GraphQLRequest,
+  type GraphQLRequestExecutionListener,
+  type GraphQLRequestListener,
+  type GraphQLRequestListenerDidResolveField,
+  type GraphQLRequestListenerExecutionDidEnd,
+  type GraphQLRequestListenerParsingDidEnd,
+  type GraphQLRequestListenerValidationDidEnd,
   HeaderMap,
 } from '..';
 import { mockLogger } from './mockLogger';
 import { jest, describe, it, expect } from '@jest/globals';
+import { singleResult } from './ApolloServer.test';
 
 async function runQuery(
   config: ApolloServerOptions<BaseContext>,
@@ -227,9 +228,13 @@ it('correctly passes in variables (and arguments)', async () => {
 
 it('throws an error if there are missing variables', async () => {
   const query = `query TestVar($base: Int!){ testArgumentValue(base: $base) }`;
-  const expected = 'Variable "$base" of required type "Int!" was not provided.';
   const res = await runQuery({ schema }, { query });
-  expect(res.errors![0].message).toEqual(expected);
+  expect([
+    // graphql 16
+    'Variable "$base" of required type "Int!" was not provided.',
+    // graphql 17
+    'Variable "$base" has invalid value: Expected a value of non-null type "Int!" to be provided.',
+  ]).toContain(res.errors![0].message);
 });
 
 it('supports yielding resolver functions', async () => {
@@ -307,10 +312,10 @@ describe('request pipeline life-cycle hooks', () => {
       );
 
     await runOnce();
-    expect(requestDidStart).toBeCalledTimes(1);
+    expect(requestDidStart).toHaveBeenCalledTimes(1);
     expect(requestDidStart.mock.calls[0][0]).toHaveProperty('schema', schema);
     await runOnce();
-    expect(requestDidStart).toBeCalledTimes(2);
+    expect(requestDidStart).toHaveBeenCalledTimes(2);
   });
 
   /**
@@ -365,7 +370,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testStringWithParseError: }' },
       );
 
-      expect(parsingDidStart).toBeCalled();
+      expect(parsingDidStart).toHaveBeenCalled();
     });
 
     it('called when a successful parse happens', async () => {
@@ -377,7 +382,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testString }' },
       );
 
-      expect(parsingDidStart).toBeCalled();
+      expect(parsingDidStart).toHaveBeenCalled();
     });
   });
 
@@ -462,7 +467,7 @@ describe('request pipeline life-cycle hooks', () => {
             },
             { query: '{ testString }' },
           ),
-        ).rejects.toThrowError(/Internal server error/);
+        ).rejects.toThrow(/Internal server error/);
 
         expect(executionDidEnd).toHaveBeenCalledTimes(1);
         expect(logger.error).toHaveBeenCalledWith(
@@ -812,7 +817,9 @@ describe('request pipeline life-cycle hooks', () => {
   });
 
   describe('didEncounterErrors', () => {
-    const didEncounterErrors = jest.fn(async () => {});
+    const didEncounterErrors = jest.fn<
+      NonNullable<GraphQLRequestListener<BaseContext>['didEncounterErrors']>
+    >(async () => {});
     const plugins: ApolloServerPlugin<BaseContext>[] = [
       {
         async requestDidStart() {
@@ -830,7 +837,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testStringWithParseError: }' },
       );
 
-      expect(didEncounterErrors).toBeCalledWith(
+      expect(didEncounterErrors).toHaveBeenCalledWith(
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
@@ -854,7 +861,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testStringWithParseError }' },
       );
 
-      expect(didEncounterErrors).toBeCalledWith(
+      expect(didEncounterErrors).toHaveBeenCalledWith(
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
@@ -885,7 +892,7 @@ describe('request pipeline life-cycle hooks', () => {
       );
       expect(response).toHaveProperty('data.testError', null);
 
-      expect(didEncounterErrors).toBeCalledWith(
+      expect(didEncounterErrors).toHaveBeenCalledWith(
         expect.objectContaining({
           errors: expect.arrayContaining([
             expect.objectContaining({
@@ -905,7 +912,7 @@ describe('request pipeline life-cycle hooks', () => {
         { query: '{ testString }' },
       );
 
-      expect(didEncounterErrors).not.toBeCalled();
+      expect(didEncounterErrors).not.toHaveBeenCalled();
     });
   });
 
@@ -1191,5 +1198,53 @@ describe('parsing and validation cache', () => {
     await server.executeOperation({ query: queryLarge });
     expect(parsingDidStart.mock.calls.length).toBe(6);
     expect(validationDidStart.mock.calls.length).toBe(6);
+  });
+
+  describe('validationMaxErrors option', () => {
+    it('should be 100 by default', async () => {
+      const server = new ApolloServer({
+        schema,
+      });
+      await server.start();
+
+      const vars = new Array(1000).fill('$a:a').join(',');
+      const query = `query aaa (${vars}) { a }`;
+
+      const res = await server.executeOperation({ query });
+      expect(res.http.status).toBe(400);
+
+      const body = singleResult(res.body);
+
+      // 100 by default plus one "Too many validation errors" error
+      // https://github.com/graphql/graphql-js/blob/main/src/validation/validate.ts#L46
+      expect(body.errors).toHaveLength(101);
+      await server.stop();
+    });
+
+    it('aborts the validation if max errors more than expected', async () => {
+      const server = new ApolloServer({
+        schema,
+        validationOptions: { maxErrors: 1 },
+      });
+      await server.start();
+
+      const vars = new Array(1000).fill('$a:a').join(',');
+      const query = `query aaa (${vars}) { a }`;
+
+      const res = await server.executeOperation({ query });
+      expect(res.http.status).toBe(400);
+
+      const body = singleResult(res.body);
+
+      expect(body.errors).toHaveLength(2);
+      expect(body.errors?.[0]).toMatchObject({
+        message: `There can be only one variable named "$a".`,
+      });
+      expect(body.errors?.[1]).toMatchObject({
+        message: `Too many validation errors, error limit reached. Validation aborted.`,
+      });
+
+      await server.stop();
+    });
   });
 });

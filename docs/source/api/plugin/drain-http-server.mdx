@@ -31,8 +31,8 @@ This plugin is exported from the `@apollo/server` package. Here's a basic exampl
 
 ```ts title="index.ts"
 import { ApolloServer } from '@apollo/server';
-import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
+import { expressMiddleware } from '@as-integrations/express5';
 import express from 'express';
 import http from 'http';
 import cors from 'cors';

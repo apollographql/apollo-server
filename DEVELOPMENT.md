@@ -8,7 +8,7 @@ To start development, simply run `npm install` (`npm i` for short). This will in
 
 To run Typescript in watch mode, run `npm run watch`.
 
-If you have [Volta](https://docs.volta.sh/guide/getting-started) installed, your Node and NPM versions will be configured automatically for you.
+If you have [Mise](https://mise.jdx.dev/) installed, your Node and NPM versions will be configured automatically for you.
 
 ## Testing
 

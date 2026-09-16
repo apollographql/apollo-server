@@ -6,5 +6,10 @@
   "files.trimTrailingWhitespace": true,
   "files.insertFinalNewline": true,
   "typescript.tsdk": "./node_modules/typescript/lib",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "mise.configureExtensionsUseSymLinks": true,
+  "python.defaultInterpreterPath": "${workspaceFolder}/.vscode/mise-tools/python",
+  "debug.javascript.defaultRuntimeExecutable": {
+    "pwa-node": "${workspaceFolder}/.vscode/mise-tools/node"
+  },
 }

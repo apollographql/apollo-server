@@ -1,9 +1,9 @@
 import { GraphQLError } from 'graphql';
 import {
   ApolloServerPluginCacheControl,
-  ApolloServerPluginCacheControlOptions,
+  type ApolloServerPluginCacheControlOptions,
 } from '../../../plugin/cacheControl';
-import { ApolloServer, HTTPGraphQLResponse, HeaderMap } from '../../..';
+import { ApolloServer, type HTTPGraphQLResponse, HeaderMap } from '../../..';
 import type { CacheHint } from '@apollo/cache-control-types';
 import { describe, it, expect } from '@jest/globals';
 

@@ -8,6 +8,7 @@ import type { Logger } from '@apollo/utils.logger';
 import type { IExecutableSchemaDefinition } from '@graphql-tools/schema';
 import type {
   DocumentNode,
+  ExecutionArgs,
   FormattedExecutionResult,
   GraphQLFieldResolver,
   GraphQLFormattedError,
@@ -18,8 +19,15 @@ import type {
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { GatewayInterface } from '@apollo/server-gateway-interface';
 import type { ApolloServerPlugin } from './plugins.js';
-import type { BaseContext } from './index.js';
-import type { GraphQLExperimentalIncrementalExecutionResults } from '../incrementalDeliveryPolyfill.js';
+import type {
+  BaseContext,
+  LegacyExperimentalExecuteIncrementally,
+} from './index.js';
+import type {
+  GraphQLExperimentalIncrementalExecutionResultsAlpha2,
+  GraphQLExperimentalIncrementalExecutionResultsAlpha9,
+} from '../incrementalDeliveryPolyfill.js';
+import type { ValidationOptions } from '../ApolloServer.js';
 
 export type DocumentStore = KeyValueCache<DocumentNode>;
 
@@ -102,23 +110,31 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   nodeEnv?: string;
   documentStore?: DocumentStore | null;
   dangerouslyDisableValidation?: boolean;
+  validationOptions?: ValidationOptions;
   csrfPrevention?: CSRFPreventionOptions | boolean;
 
   // Used for parsing operations; unlike in AS3, this is not also used for
   // parsing the schema.
   parseOptions?: ParseOptions;
 
-  // TODO(AS5): remove OR warn + ignore with this option set, ignore option and
-  // flip default behavior. Default false. This opt-in configuration fixes a
-  // regression introduced in v4. In v3, Apollo Server would correctly respond
-  // to a request with invalid `variables` with a 400 status code. AS4 responds
-  // with a 200 status code by default. We recommend setting this to `true`
-  // unless you've explicitly worked around this regression already (and maybe
-  // consider undoing the workaround).
+  executionOptions?: ExecutionArgs['options'];
+
+  // TODO(AS6): remove this option. Configuration to `true` is default behavior
+  // and configuration to `false` is deprecated. If you depend on `false`
+  // behavior, we recommend migrating away from that at your earliest
+  // convenience since it won't be supported in the next major version.
+  /**
+   * @deprecated `true` is now the default behavior in AS5. `false` will not be
+   * supported in AS6 since this option will be removed.
+   */
   status400ForVariableCoercionErrors?: boolean;
 
+  legacyExperimentalExecuteIncrementally?: LegacyExperimentalExecuteIncrementally;
+
   // For testing only.
-  __testing_incrementalExecutionResults?: GraphQLExperimentalIncrementalExecutionResults;
+  __testing_incrementalExecutionResults?:
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha2
+    | GraphQLExperimentalIncrementalExecutionResultsAlpha9;
 }
 
 export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>

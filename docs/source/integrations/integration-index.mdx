@@ -6,9 +6,11 @@ import IntegrationTable from "../shared/integration-table.mdx"
 
 > Are you looking to build a new integration? Or help maintain an existing integration? See [Building Web Framework Integrations for Apollo Server](./building-integrations) for step-by-step guidance!
 
-Apollo Server 4 includes two built-in integrations: [`startStandaloneServer`](../api/standalone) and [`expressMiddleware`](../api/express-middleware).
+Apollo Server's [`startStandaloneServer`](../api/standalone) function spins up a basic web server with sensible defaults.  The server is a fully functional GraphQL server supporting all of Apollo Server's GraphQL-level customizations, but it offers minimal opportunities for HTTP-level configuration.
 
-The `startStandaloneServer` function sets useful defaults to get you started quickly. Under the hood, the `startStandaloneServer` function uses Apollo Server 4's Express integration (i.e., `expressMiddleware`). The `expressMiddleware` function is Apollo Server 4's [Express](https://expressjs.com/) integration.
+If you need more control over how your GraphQL server speaks HTTP, you should instead use an _integration_. Integrations are packages which connect the Apollo Server API to your favorite web framework.
+
+Apollo maintains an [integration](../api/express-middleware) between Apollo Server and [Express](https://expressjs.com/), the most popular Node.js web framework. The integration with Express v4 is published as [`@as-integrations/express4`](https://www.npmjs.com/package/@as-integrations/express), and the integration with Express v5 is published as [`@as-integrations/express5`](https://www.npmjs.com/package/@as-integrations/express5). Both packages export the function [`expressMiddleware`](../api/express-middleware).
 
 > Have you built, or are you maintaining, an Apollo Server integration that isn't listed here? Please [submit a PR](https://github.com/apollographql/apollo-server/blob/main/docs/source/integrations/integration-index.mdx) to be added to this list!
 

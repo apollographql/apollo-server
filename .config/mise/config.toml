@@ -1,0 +1,17 @@
+# This is a config file for "mise-en-place": https://mise.jdx.dev/
+# It pins the version of Node and can be used to run other tools as well.
+# It's what we use to set up tools in CI.
+
+[tools]
+node = "24.13.0"
+"github:codecov/codecov-cli" = { version = "10.4.0", bin = "codecov-cli" }
+npm = "11.15"
+
+[env]
+# Put binaries from npm-installed packages on PATH (eg `changeset`).
+_.path = ["{{config_root}}/node_modules/.bin"]
+
+[settings]
+lockfile = true
+github.github_attestations = false
+github.slsa = false

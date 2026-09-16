@@ -8,7 +8,7 @@ describe('whenResultIsFinished', () => {
     const callback = jest.fn();
     whenResultIsFinished(result, callback);
     await new Promise((r) => setImmediate(r));
-    expect(callback).toBeCalledWith(null, expected);
+    expect(callback).toHaveBeenCalledWith(null, expected);
   });
   it('passes result of Array of Promises to the callback', async () => {
     const expected = 1;
@@ -16,7 +16,7 @@ describe('whenResultIsFinished', () => {
     const callback = jest.fn();
     whenResultIsFinished(result, callback);
     await new Promise((r) => setImmediate(r));
-    expect(callback).toBeCalledWith(null, [expected]);
+    expect(callback).toHaveBeenCalledWith(null, [expected]);
   });
   it('passes result which is not asynchronous directly to the callback', async () => {
     const expected = 1;
@@ -24,7 +24,7 @@ describe('whenResultIsFinished', () => {
     const callback = jest.fn();
     whenResultIsFinished(result, callback);
     await new Promise((r) => setImmediate(r));
-    expect(callback).toBeCalledWith(null, expected);
+    expect(callback).toHaveBeenCalledWith(null, expected);
   });
   it('passes result of Promise of Array of Promises to the callback', async () => {
     const expected = 1;
@@ -32,6 +32,6 @@ describe('whenResultIsFinished', () => {
     const callback = jest.fn();
     whenResultIsFinished(result, callback);
     await new Promise((r) => setImmediate(r));
-    expect(callback).toBeCalledWith(null, [expected]);
+    expect(callback).toHaveBeenCalledWith(null, [expected]);
   });
 });

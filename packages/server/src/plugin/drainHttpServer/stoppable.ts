@@ -29,7 +29,6 @@
 import type http from 'http';
 import https from 'https';
 import type { Socket } from 'net';
-import type { AbortSignal } from 'node-abort-controller';
 
 export class Stopper {
   private requestCountPerSocket = new Map<Socket, number>();
