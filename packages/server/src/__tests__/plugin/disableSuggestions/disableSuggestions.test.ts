@@ -10,12 +10,14 @@ describe('ApolloServerPluginDisableSuggestions', () => {
     variables,
     resolverError,
     includeStacktraceInErrorResponses,
+    onError,
   }: {
     withPlugin: boolean;
     query: string;
     variables?: Record<string, unknown>;
     resolverError?: Error;
     includeStacktraceInErrorResponses?: boolean;
+    onError?: (error: GraphQLError) => void;
   }) {
     const server = new ApolloServer({
       typeDefs: `#graphql
@@ -51,6 +53,19 @@ describe('ApolloServerPluginDisableSuggestions', () => {
       },
       hideSchemaDetailsFromClientErrors: withPlugin,
       includeStacktraceInErrorResponses,
+      plugins: onError
+        ? [
+            {
+              async requestDidStart() {
+                return {
+                  async didEncounterErrors({ errors }) {
+                    onError(errors[0]);
+                  },
+                };
+              },
+            },
+          ]
+        : [],
     });
 
     await server.start();
@@ -121,9 +136,12 @@ describe('ApolloServerPluginDisableSuggestions', () => {
       variables: { filter: { nam: 'Bob' } },
     });
 
-    expect(await errorMessage(response)).toBe(
+    expect([
+      // graphql 16
       'Variable "$filter" got invalid value { nam: "Bob" }; Field "nam" is not defined by type "UserFilter". Did you mean "name"?',
-    );
+      // graphql 17
+      'Variable "$filter" has invalid value: Expected value of type "UserFilter" not to include unknown field "nam". Did you mean "name"? Found: { nam: "Bob" }.',
+    ]).toContain(await errorMessage(response));
   });
 
   it('should hide suggestions from variable coercion when plugin is enabled', async () => {
@@ -139,9 +157,12 @@ describe('ApolloServerPluginDisableSuggestions', () => {
 
     const message = await errorMessage(response);
     expect(message).not.toMatch(/Did you mean/);
-    expect(message).toBe(
+    expect([
+      // graphql 16
       'Variable "$filter" got invalid value { nam: "Bob" }; Field "nam" is not defined by type "UserFilter".',
-    );
+      // graphql 17
+      'Variable "$filter" has invalid value: Expected value of type "UserFilter" not to include unknown field "nam". Found: { nam: "Bob" }.',
+    ]).toContain(message);
   });
 
   it('should hide suggestions from invalid enum variable values when plugin is enabled', async () => {
@@ -157,9 +178,12 @@ describe('ApolloServerPluginDisableSuggestions', () => {
 
     const message = await errorMessage(response);
     expect(message).not.toMatch(/Did you mean/);
-    expect(message).toBe(
+    expect([
+      // graphql 16
       'Variable "$enumType" got invalid value "FakeEnumValue"; Value "FakeEnumValue" does not exist in "ExampleEnum" enum.',
-    );
+      // graphql 17
+      'Variable "$enumType" has invalid value: Value "FakeEnumValue" does not exist in "ExampleEnum" enum.',
+    ]).toContain(message);
   });
 
   it.each([
@@ -199,20 +223,24 @@ describe('ApolloServerPluginDisableSuggestions', () => {
   ])(
     'should hide variable suggestions from stacktraces for $query',
     async ({ query, variables }) => {
+      let originalStackFrames: string[] | undefined;
       const response = await makeServer({
         withPlugin: true,
         query,
         variables,
         includeStacktraceInErrorResponses: true,
+        onError(error) {
+          assert(error.stack);
+          error.stack += '\n    at Did you mean "name"? (caller.ts:1:1)';
+          originalStackFrames = error.stack.split('\n').slice(1);
+        },
       });
 
       assert(response.body.kind === 'complete');
       const error = JSON.parse(response.body.string).errors[0];
       expect(error.message).not.toContain('Did you mean');
       expect(error.extensions.stacktrace[0]).not.toContain('Did you mean');
-      expect(error.extensions.stacktrace.slice(1)).toEqual(
-        expect.arrayContaining([expect.stringMatching(/^\s+at /)]),
-      );
+      expect(error.extensions.stacktrace.slice(1)).toEqual(originalStackFrames);
     },
   );
 });

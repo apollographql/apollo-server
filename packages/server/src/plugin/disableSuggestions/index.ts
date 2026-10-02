@@ -2,7 +2,8 @@ import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import { internalPlugin } from '../../internalPlugin.js';
 import { Kind } from 'graphql';
 
-const DID_YOU_MEAN_SUFFIX = / ?Did you mean(.+?)\?$/;
+// GraphQL 17 may append the invalid input value after the suggestion.
+const DID_YOU_MEAN_SUFFIX = / ?Did you mean(.+?)\?(?= Found: |$)/;
 
 function stripDidYouMeanSuggestion(error: { message: string; stack?: string }) {
   const message = error.message.replace(DID_YOU_MEAN_SUFFIX, '');
