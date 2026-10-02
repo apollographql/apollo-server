@@ -1,16 +1,21 @@
 import { ApolloServer, HeaderMap } from '../../..';
 import { describe, it, expect } from '@jest/globals';
 import assert from 'assert';
+import { GraphQLError } from 'graphql';
 
 describe('ApolloServerPluginDisableSuggestions', () => {
   async function makeServer({
     withPlugin,
     query,
     variables,
+    resolverError,
+    includeStacktraceInErrorResponses,
   }: {
     withPlugin: boolean;
     query: string;
     variables?: Record<string, unknown>;
+    resolverError?: Error;
+    includeStacktraceInErrorResponses?: boolean;
   }) {
     const server = new ApolloServer({
       typeDefs: `#graphql
@@ -31,6 +36,9 @@ describe('ApolloServerPluginDisableSuggestions', () => {
       resolvers: {
         Query: {
           hello() {
+            if (resolverError) {
+              throw resolverError;
+            }
             return 'asdf';
           },
           users() {
@@ -42,6 +50,7 @@ describe('ApolloServerPluginDisableSuggestions', () => {
         },
       },
       hideSchemaDetailsFromClientErrors: withPlugin,
+      includeStacktraceInErrorResponses,
     });
 
     await server.start();
@@ -152,4 +161,58 @@ describe('ApolloServerPluginDisableSuggestions', () => {
       'Variable "$enumType" got invalid value "FakeEnumValue"; Value "FakeEnumValue" does not exist in "ExampleEnum" enum.',
     );
   });
+
+  it.each([
+    new Error('Action failed. Did you mean to retry?'),
+    new GraphQLError('Action failed. Did you mean to retry?', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    }),
+  ])(
+    'should preserve resolver messages and stacks for %s',
+    async (resolverError) => {
+      const response = await makeServer({
+        withPlugin: true,
+        query: '{ hello }',
+        resolverError,
+        includeStacktraceInErrorResponses: true,
+      });
+
+      assert(response.body.kind === 'complete');
+      const error = JSON.parse(response.body.string).errors[0];
+      expect(error.message).toBe(resolverError.message);
+      expect(error.extensions.stacktrace).toEqual(
+        resolverError.stack?.split('\n'),
+      );
+    },
+  );
+
+  it.each([
+    {
+      query: 'query ($filter: UserFilter!) { users(filter: $filter) }',
+      variables: { filter: { nam: 'Bob' } },
+    },
+    {
+      query:
+        'query ($enumType: ExampleEnum) { enumField(enumType: $enumType) }',
+      variables: { enumType: 'FakeEnumValue' },
+    },
+  ])(
+    'should hide variable suggestions from stacktraces for $query',
+    async ({ query, variables }) => {
+      const response = await makeServer({
+        withPlugin: true,
+        query,
+        variables,
+        includeStacktraceInErrorResponses: true,
+      });
+
+      assert(response.body.kind === 'complete');
+      const error = JSON.parse(response.body.string).errors[0];
+      expect(error.message).not.toContain('Did you mean');
+      expect(error.extensions.stacktrace[0]).not.toContain('Did you mean');
+      expect(error.extensions.stacktrace.slice(1)).toEqual(
+        expect.arrayContaining([expect.stringMatching(/^\s+at /)]),
+      );
+    },
+  );
 });
