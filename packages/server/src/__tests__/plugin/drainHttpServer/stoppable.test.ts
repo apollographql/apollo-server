@@ -382,3 +382,48 @@ Object.keys(schemes).forEach((schemeName) => {
     }
   });
 });
+
+describe('Stopper requestCountPerSocket cleanup', () => {
+  it('does not re-insert a socket when finish runs after close', () => {
+    // Simulate Node's connection/request/close/finish event order without a
+    // real TCP connection so we can force close-before-finish deterministically.
+    const { EventEmitter } = require('events');
+    const server = new EventEmitter();
+    const stopper = new Stopper(server as any);
+    const socket = new EventEmitter();
+    const req = { socket };
+    const res = new EventEmitter();
+
+    server.emit('connection', socket);
+    expect((stopper as any).requestCountPerSocket.has(socket)).toBe(true);
+
+    server.emit('request', req, res);
+    expect((stopper as any).requestCountPerSocket.get(socket)).toBe(1);
+
+    // close before finish (the leaky ordering)
+    socket.emit('close');
+    expect((stopper as any).requestCountPerSocket.has(socket)).toBe(false);
+
+    res.emit('finish');
+    expect((stopper as any).requestCountPerSocket.has(socket)).toBe(false);
+  });
+
+  it('still decrements the pending count when finish runs before close', () => {
+    const { EventEmitter } = require('events');
+    const server = new EventEmitter();
+    const stopper = new Stopper(server as any);
+    const socket = new EventEmitter();
+    const req = { socket };
+    const res = new EventEmitter();
+
+    server.emit('connection', socket);
+    server.emit('request', req, res);
+    expect((stopper as any).requestCountPerSocket.get(socket)).toBe(1);
+
+    res.emit('finish');
+    expect((stopper as any).requestCountPerSocket.get(socket)).toBe(0);
+
+    socket.emit('close');
+    expect((stopper as any).requestCountPerSocket.has(socket)).toBe(false);
+  });
+});
