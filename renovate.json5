@@ -80,5 +80,22 @@
       matchUpdateTypes: ["major"],
       groupName: "rollup",
     },
+    // We need to support Node v20. Since @graphql-tools/utils@12.0.2 (and the
+    // versions of @graphql-tools/schema and @graphql-tools/merge that depend on
+    // it), these packages depend on @whatwg-node/promise-helpers@2, which
+    // declares `engines.node: >=22.15`. That makes a fresh install of
+    // @apollo/server fail on Node v20 for anyone enforcing engines (eg
+    // `npm --engine-strict` or Yarn 1). So packages/server/package.json pins
+    // these three packages to the last versions that don't do that, and we
+    // tell Renovate to leave them alone. Remove this rule (and the pins) when
+    // we drop Node v20 support in Apollo Server v6.
+    {
+      matchPackageNames: [
+        "@graphql-tools/schema",
+        "@graphql-tools/merge",
+        "@graphql-tools/utils",
+      ],
+      enabled: false,
+    },
   ]
 }
