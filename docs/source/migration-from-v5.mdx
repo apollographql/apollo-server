@@ -1,0 +1,33 @@
+---
+title: Migrating from Apollo Server 5
+subtitle: Learn how to upgrade your Apollo Server 5 to Apollo Server 6 with minimal changes.
+---
+
+Apollo Server 6 updates the versions of Node.js and GraphQL.js that Apollo Server supports. Most users only have to:
+
+- Confirm that you are running Node.js v22 or later
+- Upgrade GraphQL.js to v17
+
+If you are still on Apollo Server 4, first read [Migrating from Apollo Server 4](./migration).
+
+## Require Node.js v22
+
+Apollo Server 6 supports Node.js v22.0.0 and later. (Apollo Server 5 supports Node.js v20.0.0 and later.) This includes all non-EOL major versions at the time of release.
+
+If you're using Node.js v20, upgrade your runtime before upgrading to Apollo Server 6. If you can't upgrade to a non-EOL version of Node.js, you can continue to use Apollo Server 5.
+
+## Require GraphQL.js v17
+
+Apollo Server 6 supports GraphQL.js v17 as a peer dependency. (Apollo Server 5 supports GraphQL.js v16.11.0 and later.) Apollo Server 6 does not support GraphQL.js v16.
+
+Before upgrading, follow the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) if your server uses any of the GraphQL.js features that changed. Then run `npm install graphql@17`.
+
+Libraries that your server uses with GraphQL.js, such as `@apollo/subgraph` and `@apollo/gateway`, must also support GraphQL.js v17. Check each library's `peerDependencies` before upgrading.
+
+## Incremental delivery uses released GraphQL.js
+
+Apollo Server 5 supports [incremental delivery](./workflow/requests#incremental-delivery-experimental) only with the pre-release `graphql@17.0.0-alpha.9`. Apollo Server 6 supports it with any GraphQL.js v17 release and clients that send `accept: multipart/mixed; incrementalSpec=v0.2`.
+
+Apollo Server 6 also supports the legacy incremental delivery protocol (`accept: multipart/mixed; deferSpec=20220824`) by default, using `legacyExecuteIncrementally` from `graphql`. You no longer need to install `@yaacovcr/transform` and pass it as `legacyExperimentalExecuteIncrementally`. If you do pass that option, Apollo Server uses it instead.
+
+The format of the incremental payloads comes from GraphQL.js, so it can differ slightly from the format produced by `graphql@17.0.0-alpha.9`. For example, the final payload of a `@stream`ed list can include `hasNext: false` instead of being followed by an empty payload.
