@@ -1,5 +1,11 @@
 # @apollo/server
 
+## 5.5.2
+
+### Patch Changes
+
+- [#8232](https://github.com/apollographql/apollo-server/pull/8232) [`1766981`](https://github.com/apollographql/apollo-server/commit/176698186a5d0feb9ff5d85ffb26e4df07ab17cd) Thanks [@glasser](https://github.com/glasser)! - Constrain the `@graphql-tools/schema`, `@graphql-tools/merge`, and `@graphql-tools/utils` dependency ranges so that a fresh install of `@apollo/server` on Node.js v20 (via npm) no longer pulls in `@whatwg-node/promise-helpers@2`, which declares `engines.node >=22.15` and therefore fails installs that enforce engine constraints (such as `npm --engine-strict`). While Node.js v20 is EOL, Apollo Server 5 is still documented as supporting this version.
+
 ## 5.5.1
 
 ### Patch Changes
