@@ -1,5 +1,11 @@
 # @apollo/cache-control-types
 
+## 1.1.0
+
+### Minor Changes
+
+- [#8236](https://github.com/apollographql/apollo-server/pull/8236) [`933a76c`](https://github.com/apollographql/apollo-server/commit/933a76c9a8af23e2cbee56d4b9396fd3cdc55450) Thanks [@glasser](https://github.com/glasser)! - Allow `graphql` v17 as a peer dependency. This will make these support packages compatible with both today's Apollo Server v5 and the forthcoming v6, which will support `graphql` v17.
+
 ## 1.0.3
 
 ### Patch Changes
