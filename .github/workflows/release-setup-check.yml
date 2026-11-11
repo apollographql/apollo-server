@@ -1,0 +1,34 @@
+name: Release setup check
+
+# The Release workflow (release-pr.yml) only runs on pushes to main, so when its
+# tool setup breaks nobody notices until a release silently fails to happen.
+# This job runs the same setup steps on every pull request. Keep it in sync
+# with release-pr.yml.
+on:
+  pull_request:
+
+jobs:
+  setup:
+    name: Release setup check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install Node with Mise
+        uses: jdx/mise-action@c37c93293d6b742fc901e1406b8f764f6fb19dac # v2
+        with:
+          cache: false
+        env:
+          MISE_LOCKED: "1"
+
+      - name: Install Dependencies
+        run: npm ci
+
+      # Publishing goes through `npm stage publish`, which needs the npm pinned
+      # in .config/mise/config.toml rather than the one bundled with Node.
+      - name: Check that the pinned npm is the one on PATH
+        run: |
+          which npm
+          npm --version
+          npm stage --help > /dev/null
