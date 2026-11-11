@@ -2508,14 +2508,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
           });
         });
 
-        // These tests actually execute incremental delivery operations with
-        // graphql-js, so we only run them from the CI job that installs a
-        // prerelease of graphql@17. Once graphql@17 is released we can switch
-        // to running them by default (and run tests against graphql@16 for
-        // back-compat).
-        (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED
-          ? describe
-          : describe.skip)('tests that require graphql@17', () => {
+        describe('tests that execute incremental delivery operations', () => {
           let barrierStringBarrier: Resolvable<void>;
           beforeEach(() => {
             barrierStringBarrier = resolvable();
@@ -2567,15 +2560,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
               ['multipart/mixed; deferSpec=20220824, application/json'],
               ['application/json, multipart/mixed; deferSpec=20220824'],
             ])('basic @defer working with accept: %s', async (accept) => {
-              const { legacyExecuteIncrementally } = await import(
-                // @ts-ignore might not be installed
-                '@yaacovcr/transform'
-              );
               const app = await createApp({
                 typeDefs,
                 resolvers,
-                legacyExperimentalExecuteIncrementally:
-                  legacyExecuteIncrementally,
               });
               const res = await request(app)
                 .post('/')
@@ -2607,10 +2594,6 @@ content-type: application/json; charset=utf-8\r
               ['multipart/mixed; deferSpec=20220824, application/json'],
               ['application/json, multipart/mixed; deferSpec=20220824'],
             ])('basic @stream working with accept: %s', async (accept) => {
-              const { legacyExecuteIncrementally } = await import(
-                // @ts-ignore might not be installed
-                '@yaacovcr/transform'
-              );
               const app = await createApp({
                 typeDefs: `#graphql
                     directive @stream(if: Boolean! = true, label: String, initialCount: Int! = 0) on FIELD
@@ -2632,8 +2615,6 @@ content-type: application/json; charset=utf-8\r
                     },
                   },
                 },
-                legacyExperimentalExecuteIncrementally:
-                  legacyExecuteIncrementally,
               });
               const res = await request(app)
                 .post('/')
@@ -2663,25 +2644,15 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"incremental":[{"items":["it works again again"],"path":["testStrings",2]}]}\r
----\r
-content-type: application/json; charset=utf-8\r
-\r
-{"hasNext":false}\r
+{"hasNext":false,"incremental":[{"items":["it works again again"],"path":["testStrings",2]}]}\r
 -----\r
 `);
             });
 
             it('first payload sent while deferred field is blocking', async () => {
-              const { legacyExecuteIncrementally } = await import(
-                // @ts-ignore might not be installed
-                '@yaacovcr/transform'
-              );
               const app = await createApp({
                 typeDefs,
                 resolvers,
-                legacyExperimentalExecuteIncrementally:
-                  legacyExecuteIncrementally,
               });
               const gotFirstChunkBarrier = resolvable();
               const resPromise = request(app)
@@ -2792,7 +2763,7 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":false,"incremental":[{"data":{"testString":"it works"},"id":"0"}],"completed":[{"id":"0"}]}\r
+{"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}\r
 -----\r
 `);
             });
@@ -2852,11 +2823,7 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"incremental":[{"id":"0","items":["it works again again"]}]}\r
----\r
-content-type: application/json; charset=utf-8\r
-\r
-{"hasNext":false,"completed":[{"id":"0"}]}\r
+{"hasNext":false,"incremental":[{"id":"0","items":["it works again again"]}],"completed":[{"id":"0"}]}\r
 -----\r
 `);
             });
@@ -2909,7 +2876,7 @@ content-type: application/json; charset=utf-8\r
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"data":{"barrierString":"we waited"},"id":"0"}],"completed":[{"id":"0"}]}
+                {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
                 -----
                 "
               `);

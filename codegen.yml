@@ -6,5 +6,4 @@ generates:
   ./packages/server/src/plugin/schemaReporting/generated/operations.d.ts:
     documents: packages/server/src/plugin/schemaReporting/schemaReporter.ts
     plugins:
-    - typescript
     - typescript-operations
