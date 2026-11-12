@@ -65,6 +65,8 @@ Use `@cacheControl` for fields that should usually be cached with the same setti
 >
 > Similarly, Apollo Server sets a response's `scope` to `PRIVATE` if _any_ included field is `PRIVATE`.
 
+> **Important:** `PUBLIC` is the default `scope`. If a field that returns user-specific data has a non-zero `maxAge` and you don't set `scope: PRIVATE`, a shared cache (such as a CDN) can serve that data to other users. Always set `scope: PRIVATE` on fields that return private user information.
+
 #### Field-level definitions
 
 This example defines cache control settings for two fields of the `Post` type: `votes` and `readByCurrentUser`:
