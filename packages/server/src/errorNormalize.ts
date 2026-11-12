@@ -18,41 +18,43 @@ import { HeaderMap } from './utils/HeaderMap.js';
 // are removed from the formatted error.
 //
 // This function should not throw.
-export function normalizeAndFormatErrors(
+export async function normalizeAndFormatErrors(
   errors: ReadonlyArray<unknown>,
   options: {
     formatError?: (
       formattedError: GraphQLFormattedError,
       error: unknown,
-    ) => GraphQLFormattedError;
+    ) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
     includeStacktraceInErrorResponses?: boolean;
   } = {},
-): {
+): Promise<{
   formattedErrors: Array<GraphQLFormattedError>;
   httpFromErrors: HTTPGraphQLHead;
-} {
+}> {
   const formatError = options.formatError ?? ((error) => error);
   const httpFromErrors = newHTTPGraphQLHead();
 
   return {
     httpFromErrors,
-    formattedErrors: errors.map((error) => {
-      try {
-        return formatError(enrichError(error), error);
-      } catch (formattingError) {
-        if (options.includeStacktraceInErrorResponses) {
-          // includeStacktraceInErrorResponses is used in development
-          // so it will be helpful to show errors thrown by formatError hooks in that mode
-          return enrichError(formattingError);
-        } else {
-          // obscure error
-          return {
-            message: 'Internal server error',
-            extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
-          };
+    formattedErrors: await Promise.all(
+      errors.map(async (error) => {
+        try {
+          return await formatError(enrichError(error), error);
+        } catch (formattingError) {
+          if (options.includeStacktraceInErrorResponses) {
+            // includeStacktraceInErrorResponses is used in development
+            // so it will be helpful to show errors thrown by formatError hooks in that mode
+            return enrichError(formattingError);
+          } else {
+            // obscure error
+            return {
+              message: 'Internal server error',
+              extensions: { code: ApolloServerErrorCode.INTERNAL_SERVER_ERROR },
+            };
+          }
         }
-      }
-    }),
+      }),
+    ),
   };
 
   function enrichError(maybeError: unknown): GraphQLFormattedError {
