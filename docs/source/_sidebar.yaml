@@ -1,7 +1,7 @@
 switcher:
   heading: 'Apollo Server'
   versions:
-    - label: v4–v5
+    - label: v4–v6
       latest: true
       href: ./
     - label: v3
@@ -13,8 +13,10 @@ items:
     href: '.'
   - label: Get started
     href: './getting-started'
-  - label: New in v4 and v5
+  - label: New in v4, v5, and v6
     children:
+      - label: Migrating from Apollo Server 5
+        href: './migration-from-v5'
       - label: Migrating from Apollo Server 4
         href: './migration'
       - label: Migrating from Apollo Server 3

@@ -1,17 +1,15 @@
 import {
-  execute,
+  experimentalExecuteIncrementally,
+  legacyExecuteIncrementally,
   type ExecutionArgs,
   type ExecutionResult,
   type GraphQLError,
 } from 'graphql';
-import { BadRequestError } from './internalErrorClasses.js';
-import { MEDIA_TYPES } from './ApolloServer.js';
 import { type LegacyExperimentalExecuteIncrementally } from './externalTypes/graphql.js';
 
-// This file "polyfills" graphql@17's experimentalExecuteIncrementally (by
-// returning a function that does not understand incremental directives if
-// you're using graphql@16). The types defined in this file are largely copied
-// from graphql-js.
+// This file wraps graphql@17's experimentalExecuteIncrementally and
+// legacyExecuteIncrementally. The types defined in this file are largely
+// copied from graphql-js.
 
 interface ObjMap<T> {
   [key: string]: T;
@@ -177,38 +175,6 @@ export interface GraphQLExperimentalIncrementalExecutionResultsAlpha9<
   >;
 }
 
-type PromiseOrValue<T> = Promise<T> | T;
-
-// This starts as undefined and is set to a function or null by running
-// tryToLoadGraphQL17(). If graphql-js 17 is installed, it is set to the
-// experimentalExecuteIncrementally function from that package; otherwise it is
-// set to null.
-let graphqlExperimentalExecuteIncrementally:
-  | ((
-      args: ExecutionArgs,
-    ) => PromiseOrValue<
-      ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha9
-    >)
-  | null
-  | undefined = undefined;
-
-async function tryToLoadGraphQL17() {
-  if (graphqlExperimentalExecuteIncrementally !== undefined) {
-    return;
-  }
-
-  const graphql = await import('graphql');
-  if (
-    graphql.version === '17.0.0-alpha.9' &&
-    'experimentalExecuteIncrementally' in graphql
-  ) {
-    graphqlExperimentalExecuteIncrementally = (graphql as any)
-      .experimentalExecuteIncrementally;
-  } else {
-    graphqlExperimentalExecuteIncrementally = null;
-  }
-}
-
 export async function executeIncrementally({
   useLegacyIncremental,
   legacyExperimentalExecuteIncrementally,
@@ -223,31 +189,15 @@ export async function executeIncrementally({
   | GraphQLExperimentalIncrementalExecutionResultsAlpha2
   | GraphQLExperimentalIncrementalExecutionResultsAlpha9
 > {
-  await tryToLoadGraphQL17();
-
   if (useLegacyIncremental) {
-    if (legacyExperimentalExecuteIncrementally) {
-      return legacyExperimentalExecuteIncrementally(args);
-    }
-
-    // Only throw if the server supports incremental delivery with the new
-    // format, but not the legacy format. We don't want to accidentally send
-    // alpha.9 format when the client requested the legacy format.
-    if (graphqlExperimentalExecuteIncrementally) {
-      throw new BadRequestError(
-        'Apollo Server received an operation that uses incremental delivery ' +
-          '(@defer or @stream) with the legacy incremental format, but the server ' +
-          'does not support the legacy incremental delivery format. Add the HTTP ' +
-          `header: 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}' ` +
-          'to use the current incremental delivery format',
-        // Use 406 Not Accepted
-        { extensions: { http: { status: 406 } } },
-      );
-    }
+    // An explicitly configured function takes precedence over graphql-js's
+    // built-in legacy format.
+    return (
+      legacyExperimentalExecuteIncrementally ?? legacyExecuteIncrementally
+    )(args);
   }
 
-  if (graphqlExperimentalExecuteIncrementally) {
-    return graphqlExperimentalExecuteIncrementally(args);
-  }
-  return execute(args);
+  return experimentalExecuteIncrementally(args) as Promise<
+    ExecutionResult | GraphQLExperimentalIncrementalExecutionResultsAlpha9
+  >;
 }

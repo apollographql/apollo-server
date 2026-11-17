@@ -4,8 +4,12 @@ import type {
   SchemaReport,
   SchemaReportMutationVariables,
   SchemaReportMutation,
-  ReportSchemaResponse,
 } from './generated/operations';
+
+type ReportSchemaResponse = Extract<
+  NonNullable<SchemaReportMutation['reportSchema']>,
+  { __typename: 'ReportSchemaResponse' }
+>;
 import type { Fetcher } from '@apollo/utils.fetcher';
 import { packageVersion } from '../../generated/packageVersion.js';
 

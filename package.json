@@ -32,7 +32,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20",
+    "node": ">=22",
     "npm": ">=8.19.2"
   },
   "devDependencies": {
@@ -42,8 +42,8 @@
     "@apollo/utils.createhash": "3.0.1",
     "@changesets/changelog-github": "0.5.1",
     "@changesets/cli": "2.29.6",
-    "@graphql-codegen/cli": "5.0.7",
-    "@graphql-codegen/typescript-operations": "4.6.1",
+    "@graphql-codegen/cli": "7.4.6",
+    "@graphql-codegen/typescript-operations": "6.2.0",
     "@graphql-tools/mock": "9.0.25",
     "@graphql-tools/schema": "10.0.25",
     "@rollup/plugin-commonjs": "28.0.6",
@@ -56,7 +56,7 @@
     "@types/finalhandler": "1.2.4",
     "@types/lodash.sumby": "4.6.9",
     "@types/negotiator": "0.6.4",
-    "@types/node": "20.19.11",
+    "@types/node": "22.20.5",
     "@types/superagent": "8.1.9",
     "@types/supertest": "6.0.3",
     "@types/whatwg-mimetype": "3.0.2",
@@ -65,7 +65,7 @@
     "cspell": "9.2.0",
     "eslint": "9.34.0",
     "eslint-plugin-import": "2.32.0",
-    "graphql": "16.11.0",
+    "graphql": "17.0.2",
     "graphql-subscriptions": "3.0.0",
     "graphql-tag": "2.12.6",
     "iconv-lite": "0.7.2",
@@ -84,6 +84,9 @@
     "ts-jest": "29.4.1",
     "typescript": "5.8.3",
     "typescript-eslint": "8.40.0"
+  },
+  "overrides": {
+    "graphql": "$graphql"
   },
   "jest": {
     "projects": [
