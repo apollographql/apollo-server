@@ -89,7 +89,7 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   formatError?: (
     formattedError: GraphQLFormattedError,
     error: unknown,
-  ) => GraphQLFormattedError;
+  ) => GraphQLFormattedError | Promise<GraphQLFormattedError>;
   rootValue?: ((parsedQuery: DocumentNode) => unknown) | unknown;
   validationRules?: Array<ValidationRule>;
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
