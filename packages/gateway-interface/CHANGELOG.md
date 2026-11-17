@@ -1,5 +1,11 @@
 # @apollo/server-gateway-interface
 
+## 2.2.0
+
+### Minor Changes
+
+- [#8238](https://github.com/apollographql/apollo-server/pull/8238) [`341a4f1`](https://github.com/apollographql/apollo-server/commit/341a4f1ffbe8bb82f14e903f7e326f7314d49472) Thanks [@glasser](https://github.com/glasser)! - Allow `@apollo/server-gateway-interface` to work with older major versions of `@apollo/utils.fetcher`, `@apollo/utils.logger` and `@apollo/utils.keyvaluecache`. This is a technical change that will allow this version of `@apollo/server-gateway-interface` to be used with `@apollo/gateway` 2.x under every Node version it supports, even EOL Node versions like Node 18. Even though Node 18 is EOL, putting out a new version of `@apollo/gateway` which requires newer Node would require a major version bump for `@apollo/gateway` which we currently do not want to do.
+
 ## 2.1.0
 
 ### Minor Changes
