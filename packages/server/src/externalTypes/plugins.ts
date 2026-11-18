@@ -25,6 +25,8 @@ import type {
 } from './requestPipeline.js';
 import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9 } from './incrementalDeliveryPolyfillAlpha9.js';
 
+export type PromiseOrValue<T> = Promise<T> | T;
+
 export interface GraphQLServerContext {
   readonly logger: Logger;
   readonly cache: KeyValueCache<string>;
@@ -45,14 +47,14 @@ export interface ApolloServerPlugin<
   // Called once on server startup, after the schema has been loaded.
   serverWillStart?(
     service: GraphQLServerContext,
-  ): Promise<GraphQLServerListener | void>;
+  ): PromiseOrValue<GraphQLServerListener | void>;
 
   // Called once per request, before parsing or validation of the request has
   // occurred. This hook can return an object of more fine-grained hooks (see
   // `GraphQLRequestListener`) which pertain to the lifecycle of the request.
   requestDidStart?(
     requestContext: GraphQLRequestContext<TContext>,
-  ): Promise<GraphQLRequestListener<TContext> | void>;
+  ): PromiseOrValue<GraphQLRequestListener<TContext> | void>;
 
   /**
    * "Unexpected" errors do not include more common errors like validation,
@@ -67,20 +69,20 @@ export interface ApolloServerPlugin<
   }: {
     requestContext: GraphQLRequestContext<TContext>;
     error: Error;
-  }): Promise<void>;
+  }): PromiseOrValue<void>;
   // Called specifically when the user-provided `context` function throws an
   // error.
-  contextCreationDidFail?({ error }: { error: Error }): Promise<void>;
+  contextCreationDidFail?({ error }: { error: Error }): PromiseOrValue<void>;
   /**
    * This hook is called any time a "Bad Request" error is thrown during request
    * execution. This includes CSRF prevention and malformed requests (e.g.
    * incorrect headers, invalid JSON body, or invalid search params for GET),
    * but does not include malformed GraphQL.
    */
-  invalidRequestWasReceived?({ error }: { error: Error }): Promise<void>;
+  invalidRequestWasReceived?({ error }: { error: Error }): PromiseOrValue<void>;
   // Called on startup fail. This can occur if the schema fails to load or if a
   // `serverWillStart` or `renderLandingPage` hook throws.
-  startupDidFail?({ error }: { error: Error }): Promise<void>;
+  startupDidFail?({ error }: { error: Error }): PromiseOrValue<void>;
 }
 
 export interface GraphQLServerListener {
@@ -94,14 +96,14 @@ export interface GraphQLServerListener {
   // is in progress. A typical use is to stop listening for new connections and
   // wait until all current connections are idle. The built-in
   // ApolloServerPluginDrainHttpServer implements this method.
-  drainServer?(): Promise<void>;
+  drainServer?(): PromiseOrValue<void>;
 
   // When your server is stopped (by calling `stop()` or via the
   // `SIGINT`/`SIGTERM` handlers) then (after the `drainServer` phase finishes)
   // Apollo Server transitions into a state where no new operations will run and
   // then awaits all `drainServer` hooks in parallel. A typical use is to flush
   // outstanding observability data.
-  serverWillStop?(): Promise<void>;
+  serverWillStop?(): PromiseOrValue<void>;
 
   // At most one plugin's serverWillStart may return a GraphQLServerListener
   // with this method. If one does, it is called once on server startup and the
@@ -109,23 +111,23 @@ export interface GraphQLServerListener {
   // is an intentionally simple API; if you want to do something fancy to serve
   // a landing page, you probably should just define a handler in your web
   // framework.
-  renderLandingPage?(): Promise<LandingPage>;
+  renderLandingPage?(): PromiseOrValue<LandingPage>;
 }
 
 // The page served to clients with `accept: text/html` headers.
 export interface LandingPage {
-  html: string | (() => Promise<string>);
+  html: string | (() => PromiseOrValue<string>);
 }
 
 export type GraphQLRequestListenerParsingDidEnd = (
   err?: Error,
-) => Promise<void>;
+) => PromiseOrValue<void>;
 export type GraphQLRequestListenerValidationDidEnd = (
   err?: ReadonlyArray<Error>,
-) => Promise<void>;
+) => PromiseOrValue<void>;
 export type GraphQLRequestListenerExecutionDidEnd = (
   err?: Error,
-) => Promise<void>;
+) => PromiseOrValue<void>;
 export type GraphQLRequestListenerDidResolveField = (
   error: Error | null,
   result?: any,
@@ -134,23 +136,23 @@ export type GraphQLRequestListenerDidResolveField = (
 export interface GraphQLRequestListener<TContext extends BaseContext> {
   didResolveSource?(
     requestContext: GraphQLRequestContextDidResolveSource<TContext>,
-  ): Promise<void>;
+  ): PromiseOrValue<void>;
 
   parsingDidStart?(
     requestContext: GraphQLRequestContextParsingDidStart<TContext>,
-  ): Promise<GraphQLRequestListenerParsingDidEnd | void>;
+  ): PromiseOrValue<GraphQLRequestListenerParsingDidEnd | void>;
 
   validationDidStart?(
     requestContext: GraphQLRequestContextValidationDidStart<TContext>,
-  ): Promise<GraphQLRequestListenerValidationDidEnd | void>;
+  ): PromiseOrValue<GraphQLRequestListenerValidationDidEnd | void>;
 
   didResolveOperation?(
     requestContext: GraphQLRequestContextDidResolveOperation<TContext>,
-  ): Promise<void>;
+  ): PromiseOrValue<void>;
 
   didEncounterErrors?(
     requestContext: GraphQLRequestContextDidEncounterErrors<TContext>,
-  ): Promise<void>;
+  ): PromiseOrValue<void>;
 
   // If this hook is defined, it is invoked immediately before GraphQL execution
   // would take place. If its return value resolves to a non-null
@@ -159,24 +161,24 @@ export interface GraphQLRequestListener<TContext extends BaseContext> {
   // response is used.
   responseForOperation?(
     requestContext: GraphQLRequestContextResponseForOperation<TContext>,
-  ): Promise<GraphQLResponse | null>;
+  ): PromiseOrValue<GraphQLResponse | null>;
 
   // Note that in the case of incremental delivery, the end hook gets called
   // when the initial response is ready to go: further execution can still occur.
   executionDidStart?(
     requestContext: GraphQLRequestContextExecutionDidStart<TContext>,
-  ): Promise<GraphQLRequestExecutionListener<TContext> | void>;
+  ): PromiseOrValue<GraphQLRequestExecutionListener<TContext> | void>;
 
   // Note that in the case of incremental delivery, this is called when the
   // initial response is ready to go.
   willSendResponse?(
     requestContext: GraphQLRequestContextWillSendResponse<TContext>,
-  ): Promise<void>;
+  ): PromiseOrValue<void>;
 
   didEncounterSubsequentErrors?(
     requestContext: GraphQLRequestContextDidEncounterSubsequentErrors<TContext>,
     errors: ReadonlyArray<GraphQLError>,
-  ): Promise<void>;
+  ): PromiseOrValue<void>;
 
   // You can use hasNext to tell if this is the end or not.
   willSendSubsequentPayload?(
@@ -184,7 +186,7 @@ export interface GraphQLRequestListener<TContext extends BaseContext> {
     payload:
       | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
       | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
-  ): Promise<void>;
+  ): PromiseOrValue<void>;
 }
 
 /**
