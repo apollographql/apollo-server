@@ -37,7 +37,7 @@
   },
   "devDependencies": {
     "@apollo/client": "3.14.0",
-    "@apollo/gateway": "2.11.2",
+    "@apollo/gateway": "2.11.6",
     "@apollo/subgraph": "2.11.2",
     "@apollo/utils.createhash": "3.0.1",
     "@changesets/changelog-github": "0.5.1",
