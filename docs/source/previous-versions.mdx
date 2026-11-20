@@ -3,9 +3,11 @@ title: Previous Versions of Apollo Server
 subtitle: Learn about the current and deprecated versions of Apollo Server, including their end-of-life dates and upgrade paths.
 ---
 
-## Apollo Server 5 is generally available
+## Apollo Server 6 is generally available
 
-Apollo Server 5 is the latest version of Apollo Server and is [generally available](/graphos/reference/feature-launch-stages#general-availability). Apollo Server 5 is ready for use in a production environment, and Apollo provides official support for this library. There is currently no planned end-of-life date.
+Apollo Server 6 is the latest version of Apollo Server and is [generally available](/graphos/reference/feature-launch-stages#general-availability). Apollo Server 6 is ready for use in a production environment, and Apollo provides official support for this library. There is currently no planned end-of-life date.
+
+Apollo Server is only supported when run on a [version of Node.js in Active or Maintenance LTS](https://github.com/nodejs/release#release-schedule). When a major version of Node.js reaches End-of-Life, Apollo Server may drop support for that version in a minor release rather than a major release.
 
 ## Deprecated versions
 
@@ -13,7 +15,9 @@ Deprecated versions continue to receive security patches and updates to address 
 
 > [Learn more about deprecation and end-of-life.](/graphos/reference/feature-launch-stages#apollo-feature-retirement-stages)
 
-There are currently no deprecated versions of Apollo Server.
+### Apollo Server 5
+
+Apollo Server 5 has been deprecated since INSERT-AS6-RELEASE-DATE and will be end-of-life on INSERT-AS5-EOL-DATE. We encourage all Apollo Server 5 users to [**upgrade** to Apollo Server 6](./migration). The upgrade requires moving to GraphQL.js v17 and a supported version of Node.js; the [migration guide](./migration) covers the few changes involved.
 
 
 ## End-of-life versions
@@ -26,7 +30,7 @@ End-of-life versions will remain available in the npm registry and can still be 
 
 ### Apollo Server 4
 
-Apollo Server 4 has been end-of-life since January 26, 2026. We encourage all Apollo Server 4 users to [**upgrade** to Apollo Server 5 now](./migration). As long as you're already using a non-EOL version of Node.js, the upgrade from v4 should take only a few minutes and require little to no changes.
+Apollo Server 4 has been end-of-life since January 26, 2026. We encourage all Apollo Server 4 users to [**upgrade** to Apollo Server 5 now](./migration-from-v4). As long as you're already using a non-EOL version of Node.js, the upgrade from v4 should take only a few minutes and require little to no changes.
 
 
 ### Apollo Server 3

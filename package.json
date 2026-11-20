@@ -32,7 +32,7 @@
     "packages/*"
   ],
   "engines": {
-    "node": ">=20",
+    "node": ">=22.18",
     "npm": ">=8.19.2"
   },
   "devDependencies": {
@@ -56,7 +56,7 @@
     "@types/finalhandler": "1.2.4",
     "@types/lodash.sumby": "4.6.9",
     "@types/negotiator": "0.6.4",
-    "@types/node": "20.19.11",
+    "@types/node": "22.20.5",
     "@types/superagent": "8.1.9",
     "@types/supertest": "6.0.3",
     "@types/whatwg-mimetype": "3.0.2",

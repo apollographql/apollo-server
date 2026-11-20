@@ -1,178 +1,26 @@
 ---
-title: Migrating from Apollo Server 4
-subtitle: Learn how to upgrade your Apollo Server 4 to Apollo Server 5 with minimal changes.
+title: Migrating from Apollo Server 5
+subtitle: Learn how to upgrade your Apollo Server 5 to Apollo Server 6 with minimal changes.
 ---
 
-While Apollo Server 4 came with numerous breaking changes, the Apollo Server team is pleased to say that Apollo Server 5 has almost none!
+Apollo Server 6 is a small upgrade focused on the versions of Node.js and GraphQL.js that Apollo Server supports. This page tells you what to do to migrate your server from Apollo Server 5 to Apollo Server 6.
 
-Apollo Server 5 is a small upgrade focused largely on adjusting which versions of Node.js and Express are supported. This page tells you what to do to migrate your server from Apollo Server 4 to Apollo Server 5.
+If you are still on Apollo Server 4 or Apollo Server 3, first follow the [migrating from Apollo Server 4](./migration-from-v4) or [migrating from Apollo Server 3](./migration-from-v3) guide to get to Apollo Server 5, then come back to this page.
 
-Most users will only have to:
-- Confirm that you are running a non-EOL version of Node.js
-- Maybe do a backward-compatible upgrade of GraphQL.js
-- If using Express, adjust how you import `expressMiddleware`
-- If using an [HTTP proxy](./security/proxy-configuration/) to make HTTP requests, adjust how you configure it
+We recommend that all users of [previous versions](./previous-versions) of Apollo Server upgrade to Apollo Server 6 as soon as possible. Apollo Server 5 will be end-of-life on INSERT-AS5-EOL-DATE. Apollo Server 4 has been end-of-life since January 26, 2026. Apollo Server 3 has been end-of-life since October 22, 2024. Apollo Server 2 has been end-of-life since October 22, 2023.
 
-If you are still on Apollo Server v3, the [migrating from Apollo Server 3](./migration-from-v3) guide shows you how to migrate directly from v3 to v5.
+## Require Node.js v22
 
-We recommend that all users of [previous versions](./previous-versions) of Apollo Server upgrade to Apollo Server 5 as soon as possible. Apollo Server 4 has been end-of-life since January 26, 2026. Apollo Server 3 has been end-of-life since October 22, 2024. Apollo Server 2 has been end-of-life since October 22, 2023.
+Apollo Server 6 supports Node.js v22.18.0 and later. (Apollo Server 5 supports Node.js v20.0.0 and later.)
 
-## Require Node.js v20
-
-Apollo Server 5 supports Node.js v20.0.0 and later. (Apollo Server 4 supports Node.js v14.16.0 and later.) This includes all non-EOL major versions at the time of release.
-
-If you're using Node.js v14, v16, or v18, upgrade your runtime before upgrading to Apollo Server 5 to at least v20; we recommend upgrading all the way to the latest version.
+If you're using Node.js v20 (or a v22 release older than v22.18.0), upgrade your runtime before upgrading to Apollo Server 6 to at least v22.18.0; we recommend upgrading all the way to the latest version. Node.js v20 has been end-of-life since April 30, 2026, so we recommend doing this even if you are not upgrading Apollo Server.
 
 If your server requires you to use an [HTTP proxy](./security/proxy-configuration/) to make external connections, we strongly recommend running Node.js v24 or newer, which has built-in support for communicating through HTTP proxies.
 
-If you can't upgrade to a non-EOL version of Node.js, you can continue to use Apollo Server 4.
+If you can't upgrade to a non-EOL version of Node.js, you can continue to use Apollo Server 5.
 
-## Require GraphQL.js v16.11.0
+### Node.js support policy
 
-Apollo Server 5 supports GraphQL.js v16.11.0 and later, as a peer dependency. (Apollo Server 4 supports GraphQL.js v16.6.0 and later.)
+Starting with Apollo Server 6, Apollo Server's policy is that a *minor* release of Apollo Server may drop support for a Node.js major version once that Node.js version has reached end-of-life. Previously, Apollo Server only dropped support for Node.js versions in new Apollo Server major versions, which meant that Apollo Server 5 continued to support Node.js v20 for a year after it reached end-of-life.
 
-Before upgrading to Apollo Server 5, make sure the version of `graphql` in your server is at least v16.11.0. There are no backward-incompatible changes between v16.6.0 and v16.11.0 (but there are several nice improvements, including a fix to a [serious bug that can crash your Node server](https://github.com/graphql/graphql-js/issues/3528).)
-
-
-## Separate package for the Express integration
-
-Apollo Server defines a generic API for integrating with web frameworks via [separately-distributed integration packages](./integrations/integration-index).
-
-Apollo Server 4 includes a built-in integration with version 4 of the Express web framework directly inside the `@apollo/server` package: the `expressMiddleware` function exported from `@apollo/server/express4`.
-
-In Apollo Server 5, integrating with Express works the same way as integrating with any other web framework: you need to install a separate integration package. Apollo maintains an integration with Express v4 ([`@as-integrations/express4`](https://www.npmjs.com/package/@as-integrations/express4)), as well as an integration with Express v5 ([`@as-integrations/express5`](https://www.npmjs.com/package/@as-integrations/express5)). These separate integrations also work with Apollo Server 4, so you may already be using them.
-
-This Apollo Server 4 code:
-
-```ts
-import { expressMiddleware } from '@apollo/server/express4';
-```
-
-looks like this in Apollo Server 5:
-```ts
-import { expressMiddleware } from '@as-integrations/express4';
-```
-
-You must first run `npm install @as-integrations/express4`.
-
-You can make this change while you're still running Apollo Server 4 before upgrading to Apollo Server 5, or you can make it when you upgrade.
-
-(You may then wish to upgrade Express to v5. If you do, use `@as-integrations/express5` instead; it has the same API as `@as-integrations/express4`.)
-
-
-
-## Plugins use built-in Node.js fetch to make HTTP requests
-
-Certain features require Apollo Server to make outgoing requests to Apollo GraphOS or another server in your infrastructure. Specifically, the [Usage Reporting](./api/plugin/usage-reporting/) and [Schema Reporting](./api/plugin/schema-reporting/) plugins make requests to Apollo GraphOS, and the [Subscription Callback](./api/plugin/subscription-callback/) plugin makes requests to your GraphOS Router.
-
-In Apollo Server 4, these plugins use the [`node-fetch` npm package](https://www.npmjs.com/package/node-fetch) by default.
-
-In Apollo Server 5, these plugins use the [Node.js built-in `fetch` implementation](https://nodejs.org/api/globals.html#fetch) by default. (Despite the similar names, these are completely different implementations.)
-
-These implementations both make essentially the same HTTP requests, so this behavior change is largely invisible. However, the two libraries implement [HTTP proxy](./security/proxy-configuration/) support in different ways. If you had followed [our directions](./security/proxy-configuration/) to configure your server to use your HTTP proxy using the `global-agent` npm package, you will need to update your server's configuration.
-
-> Note you can override how the plugins make requests by passing a `fetcher` option to the `ApolloServerPluginUsageReporting`, `ApolloServerPluginSchemaReporting`, and `ApolloServerPluginSubscriptionCallback` functions, though only the usage reporting and schema reporting functions can be configured in Apollo Server 4. The only change in Apollo Server 5 is which fetcher is used by the default, so if you explicitly specify a `fetcher` to a reporting plugin, nothing will change in Apollo Server 5.
-
-This is simplest if you are running Node.js v24 or newer, where the built-in `fetch` implementation has support for environment-variable-based proxy configuration.
-
-Specifically, if you have this code in Apollo Server 4:
-
-```ts
-import { bootstrap } from 'global-agent'; // highlight-line
-bootstrap(); // highlight-line
-```
-
-and have set environment variables such as `GLOBAL_AGENT_HTTP_PROXY` and `GLOBAL_AGENT_NO_PROXY`, then:
-
-* Remove the `bootstrap` import and call.
-* Remove `global-agent` from your project (eg `npm uninstall global-agent`).
-* Check what version of Node.js you are running:
-  * If you are running Node.js v24 or later, set the `NODE_USE_ENV_PROXY` environment variable to 1.
-  * If you are running Node.js v20 or v22, [follow our instructions](./security/proxy-configuration#configuring-as5-with-nodejs-v20-or-v22) to set the Undici global dispatcher to the `EnvHttpProxyAgent`.
-* If you were previously setting the `GLOBAL_AGENT_HTTP_PROXY` environment variable, set the `HTTP_PROXY` environment variable to the same value instead.
-* If you were previously setting the `GLOBAL_AGENT_HTTPS_PROXY` environment variable, set the `HTTPS_PROXY` environment variable to the same value instead.
-* If you were previously setting the `GLOBAL_AGENT_NO_PROXY` environment variable, set the `NO_PROXY` environment variable to the same value instead.
-
-Alternatively, you can continue to use `node-fetch` with Apollo Server 5. To do this, run `npm install node-fetch@2`, and pass it as the `fetcher` option to the plugins that you use:
-
-```typescript
-import nodeFetchFetcher from 'node-fetch';
-import { ApolloServer } from '@apollo/server';
-import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting';
-import { ApolloServerPluginSchemaReporting } from '@apollo/server/plugin/schemaReporting';
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-  plugins: [
-    ApolloServerPluginUsageReporting({
-      fetcher: nodeFetchFetcher,
-      // ... other options
-    }),
-    ApolloServerPluginSchemaReporting({
-      fetcher: nodeFetchFetcher,
-      // ... other options
-    }),
-  ],
-});
-```
-With this approach, the existing `global-agent` proxy configuration will continue to work. (v2 is the version of `node-fetch` used by Apollo Server 4.)
-
-> Note: if you have enabled usage reporting by setting `APOLLO_KEY` and `APOLLO_GRAPH_REF` without any other configuration, you may not have a call to `ApolloServerPluginUsageReporting` in your `plugins` array; you can add a call that just includes `fetcher`. Similarly, if you set `APOLLO_SCHEMA_REPORTING` and don't explicitly call `ApolloServerPluginSchemaReporting`, you can add a call to `ApolloServerPluginSchemaReporting` that just includes `fetcher`.
-
-
-## Better default HTTP status for variable coercion errors
-
-Apollo Server 3 responds to requests with variable coercion errors (eg, if a number is passed in the `variables` map for a variable declared in the operation as a `String`) with a 400 status code, indicating a client error.
-
-Apollo Server 4 mistakenly responds to these requests with a 200 status code (success) by default. This was an unintended regression.  Starting with Apollo Server v4.6.0, users can pass `status400ForVariableCoercionErrors: true` to restore the intended behavior where variable coercion errors are treated as client errors, and we recommended this value in the documentation. However, for backwards compatibility, Apollo Server 4 still defaulted to responding with a 200 status code to these requests.
-
-Apollo Server 5 restores the intended behavior: `status400ForVariableCoercionErrors` now defaults to true.
-
-If you have built clients or monitoring that depend on the accidental default behavior here, you can explicitly pass `status400ForVariableCoercionErrors: false` to the `ApolloServer` constructor to continue to respond to variable coercion errors with status 200.
-
-We intend to remove this option in future major versions of Apollo Server. If your use case requires the ability to set `status400ForVariableCoercionErrors: false`, please [open an issue](https://github.com/apollographql/apollo-server/issues) to let us know about it.
-
-
-## Standalone server does not use Express
-
-In Apollo Server 4, the simple minimally-configurable server created with [`startStandaloneServer`](./api/standalone/) is implemented using the Express web framework and Apollo Server's built-in `expressMiddleware`; Express is itself built on top of Node's built-in HTTP server.
-
-In Apollo Server 5, the `startStandaloneServer` is built directly on top of Node's built-in HTTP server without using Express.
-
-While the TypeScript types in Apollo Server 4 were intended to only allow you to treat the server like an `http.Server` and not like an Express server, users of `startStandaloneServer` could have used type-unsafe operations to interact directly with Express-specific features. Additionally, Express does support some extra HTTP-level functionality; for example, by default it sets an `x-powered-by: Express` response header and a dynamic `etag` response header based on the hash of the response body.
-
-If you rely on the fact that the `startStandaloneServer` is powered by Express in Apollo Server 4, you should [swap to `expressMiddleware`](./api/standalone#swapping-to-expressmiddleware) to explicitly depend on Express. You can do this before you upgrade from Apollo Server 4 to Apollo Server 5.
-
-
-## Alpha support for incremental delivery
-
-Apollo Server 4 supports the [incremental delivery directives `@defer` and `@stream`](./workflow/requests#incremental-delivery-experimental). Enabling these directives requires using v17 of GraphQL.js, which was not yet officially released at the time of AS v4.0.0. The support in Apollo Server 4 was designed specifically around the pre-release `v17.0.0-alpha.2` of GraphQL.js, and requires clients to send an `accept: multipart/mixed; deferSpec=20220824` header.
-
-At the time of release of Apollo Server v5.0.0, GraphQL.js v17 is still not officially released. Newer alpha releases of GraphQL.js v17 produce a slightly different format of response.
-
-Because GraphQL.js v17's behavior is still in flux, Apollo Server 5 does not yet support the newer incremental delivery format.
-
-Just like in Apollo Server 4, Apollo Server 5 does not support incremental delivery when used with GraphQL.js v16, and does support incremental delivery when used with GraphQL.js `v17.0.0-alpha.2` and clients set `accept: multipart/mixed; deferSpec=20220824`.
-
-The only difference in Apollo Server 5 is that Apollo Server now *explicitly* checks to see if its version of GraphQL.js is `17.0.0-alpha.2`, and only enables it if the version matches exactly. If you are using a newer alpha (or an official v17 release if that has happened by the time you read this), Apollo Server 5 will not support incremental delivery.
-
-We hope to support the newer incremental delivery format in a future version of Apollo Server when GraphQL.js v17 is officially released. Note that because this is an experimental feature that currently requires the use of a pre-release of a dependency, we may drop support for the current format in a minor version release of Apollo Server 5 (but we will at least use the `accept` header to return reasonable errors to clients).
-
-
-## Unsafe `precomputedNonce` option to landing page plugins removed
-
-Apollo Server v4.7.3 attempted to fix a challenge with using the [landing page plugins](./api/plugin/landing-pages/) on Cloudflare Workers by adding a `precomputedNonce` option to avoid using crypto functions during server startup and use a fixed value instead of a random value. We quickly learned that this approach was unsafe, as the entire purpose of a nonce is for it to only be used once. The following week, Apollo Server v4.7.4 fixed the Cloudflare Workers compatibility issue in a different way that did not require a precomputed nonce.
-
-For backwards compatibility reasons, we did not remove the `precomputedNonce` option when we released v4.7.4, though we did make it log a deprecation warning.
-
-In Apollo Server 5, the unsafe `precomputedNonce` option to the landing page plugins does not exist. We do not expect that many users use this option whose non-deprecated lifetime was 8 days. If you do pass this option to a landing page plugin, you should be able to just delete it.
-
-## TypeScript build target changes
-
-Apollo Server 4 is compiled by the TypeScript compiler targeting the ES2020 standard. Apollo Server 5 is compiled targeting the ES2023 standard. This is not expected to cause any issues, because [Node.js v20 supports ES2023](https://github.com/microsoft/TypeScript/wiki/Node-Target-Mapping).
-
-
-## Integration test suite support library TypeScript build target change
-
-The [`@apollo/server-integration-testsuite`](https://www.npmjs.com/package/@apollo/server-integration-testsuite) used by integration library authors to test their integration no longer uses `lib: ["dom"]` to tell TypeScript to assume DOM-related symbols are in the global namespace. If your integration library's test suite relied on this behavior, you may need to add `lib: ["dom"]` to the `compilerOptions` section of your test suite's `tsconfig.json`. This should not affect normal use of Apollo Server, just testing for integration library authors.
+Any such change will be called out in the changelog for the release that makes it. Apollo Server will not drop support for a Node.js version that is still supported by the Node.js project except in a new Apollo Server major version. This policy applies only to Node.js versions, not to other dependencies.
