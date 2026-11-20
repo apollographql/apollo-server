@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - version-4
+      - version-5
 
 jobs:
   release:
