@@ -71,7 +71,7 @@ jobs:
       GRAPHQL_JS_VERSION: 17.0.0-alpha.9
     steps:
       - setup-node:
-          node-version: "20"
+          node-version: "22"
       # Install a prerelease of graphql-js 17 with incremental delivery support.
       # --legacy-peer-deps because nothing expects v17 yet.
       - run: npm i --legacy-peer-deps "graphql@${GRAPHQL_JS_VERSION}" @yaacovcr/transform
@@ -151,9 +151,9 @@ workflows:
           matrix:
             parameters:
               node-version:
-                - "20"
                 - "22"
                 - "24"
+                - "26"
       - "Check for FIXM\x45"
       - Prettier
       - ESLint

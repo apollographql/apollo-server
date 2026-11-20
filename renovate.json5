@@ -68,34 +68,17 @@
       matchFileNames: ["packages/integration-testsuite/package.json"],
       rangeStrategy: "pin",
     },
-    // We need to support Node v20, so we don't allow ourselves to use type definitions
-    // that would let us write >v20-specific code.
+    // We need to support Node v22, so we don't allow ourselves to use type definitions
+    // that would let us write >v22-specific code.
     {
       matchPackageNames: ["@types/node"],
-      allowedVersions: "20.x"
+      allowedVersions: "22.x"
     },
     {
       // Major upgrade rollup plugins along with rollup itself.
       matchSourceUrls: ["https://github.com/rollup/{/,}**"],
       matchUpdateTypes: ["major"],
       groupName: "rollup",
-    },
-    // We need to support Node v20. Since @graphql-tools/utils@12.0.2 (and the
-    // versions of @graphql-tools/schema and @graphql-tools/merge that depend on
-    // it), these packages depend on @whatwg-node/promise-helpers@2, which
-    // declares `engines.node: >=22.15`. That makes a fresh install of
-    // @apollo/server fail on Node v20 for anyone enforcing engines (eg
-    // `npm --engine-strict` or Yarn 1). So packages/server/package.json pins
-    // these three packages to the last versions that don't do that, and we
-    // tell Renovate to leave them alone. Remove this rule (and the pins) when
-    // we drop Node v20 support in Apollo Server v6.
-    {
-      matchPackageNames: [
-        "@graphql-tools/schema",
-        "@graphql-tools/merge",
-        "@graphql-tools/utils",
-      ],
-      enabled: false,
     },
   ]
 }
