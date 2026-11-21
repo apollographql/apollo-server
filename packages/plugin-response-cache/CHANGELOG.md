@@ -1,5 +1,24 @@
 # @apollo/server-plugin-response-cache
 
+## 6.0.0-alpha.0
+
+### Major Changes
+
+- [#8246](https://github.com/apollographql/apollo-server/pull/8246) [`89486b2`](https://github.com/apollographql/apollo-server/commit/89486b20b528db5c4dee9af2b84aa72bd7a70248) Thanks [@glasser](https://github.com/glasser)! - Require GraphQL.js v17. The `graphql` peer dependency is now `^17.1.0`; Apollo Server 6 does not support GraphQL.js v16 (nor does it support pre-release versions of GraphQL.js v17, as Apollo Server 5 did experimentally). Before upgrading, read the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) for changes to GraphQL.js itself.
+
+  Incremental delivery (`@defer` and `@stream`) now works natively without needing to install an alpha version of GraphQL.js. Clients must request incremental delivery with the `accept: multipart/mixed; incrementalSpec=v0.2` HTTP header.
+
+  Other packages that peer-depend on `graphql` must also accept v17; in particular, use `@apollo/gateway` v2.14.5 or later and `@apollo/subgraph` v2.16.0 or later.
+
+- [#8244](https://github.com/apollographql/apollo-server/pull/8244) [`0976350`](https://github.com/apollographql/apollo-server/commit/0976350229ef6bf362b9b80bdc69831e345ae4ec) Thanks [@glasser](https://github.com/glasser)! - Drop support for Node.js v20, which reached end-of-life on April 30, 2026. Apollo Server 6 requires Node.js v22.18.0 or later (`engines.node: ">=22.18"`).
+
+  Apollo Server 6 also adopts a new policy for Node.js support: once a Node.js major version reaches end-of-life, Apollo Server may drop support for it with a minor release rather than a major release. Such a change will be called out in the changelog. This policy only applies to Node.js versions, not other dependencies.
+
+### Patch Changes
+
+- Updated dependencies [[`89486b2`](https://github.com/apollographql/apollo-server/commit/89486b20b528db5c4dee9af2b84aa72bd7a70248), [`0976350`](https://github.com/apollographql/apollo-server/commit/0976350229ef6bf362b9b80bdc69831e345ae4ec)]:
+  - @apollo/server@6.0.0-alpha.0
+
 ## 5.0.0
 
 ### Major Changes
