@@ -117,7 +117,7 @@ describe('dynamic cache control', () => {
   it('should set the scope for a field from a dynamic cache hint', async () => {
     const typeDefs = `
       type Query {
-        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+        droid(id: ID!): Droid @cacheControl(maxAge: 60, scope: PUBLIC)
       }
 
       type Droid {
@@ -163,7 +163,7 @@ describe('dynamic cache control', () => {
   it('should override the maxAge set for a field from a dynamic cache hint', async () => {
     const typeDefs = `
       type Query {
-        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+        droid(id: ID!): Droid @cacheControl(maxAge: 60, scope: PUBLIC)
       }
 
       type Droid {
@@ -201,6 +201,8 @@ describe('dynamic cache control', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 120 }]]));
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 120, scope: 'PUBLIC' }]]),
+    );
   });
 });

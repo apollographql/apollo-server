@@ -1,12 +1,17 @@
 import type { ApolloServerPlugin } from '../../externalTypes/index.js';
 import {
   type DirectiveNode,
+  DirectiveLocation,
   getNamedType,
   type GraphQLCompositeType,
+  type GraphQLDirective,
   type GraphQLField,
   isCompositeType,
+  isEnumType,
   isInterfaceType,
+  isNonNullType,
   isObjectType,
+  isScalarType,
   responsePathAsArray,
 } from 'graphql';
 import { newCachePolicy } from '../../cachePolicy.js';
@@ -48,8 +53,93 @@ export interface ApolloServerPluginCacheControlOptions {
    * delivery response, and the body contains no errors.
    */
   calculateHttpHeaders?: boolean | 'if-cacheable';
+  /**
+   * If true (the default), the plugin checks at startup that any
+   * `@cacheControl` directive defined in your schema has the documented
+   * definition (in particular, that its `scope` argument is non-null, so that
+   * every `@cacheControl` usage says whether it is `PUBLIC` or `PRIVATE`), and
+   * throws an error describing the expected definition if it does not. Set
+   * this to false to keep using a different definition, such as the one with a
+   * nullable `scope` that Apollo Server 4 and 5 documented.
+   */
+  validateDirectiveDefinition?: boolean;
   // For testing only.
   __testing__cacheHints?: Map<string, CacheHint>;
+}
+
+// The definition of `@cacheControl` that we document and expect schemas to use.
+export const CACHE_CONTROL_DIRECTIVE_DEFINITION = `enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope!
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION`;
+
+const ALLOWED_LOCATIONS = new Set<string>([
+  DirectiveLocation.FIELD_DEFINITION,
+  DirectiveLocation.OBJECT,
+  DirectiveLocation.INTERFACE,
+  DirectiveLocation.UNION,
+]);
+
+// Checks that a schema's `@cacheControl` directive matches the documented
+// definition closely enough for the plugin to interpret its usages correctly:
+// `maxAge: Int`, `inheritMaxAge: Boolean`, a non-null `scope` whose enum has
+// exactly the values PUBLIC and PRIVATE (the enum's name doesn't matter), no
+// other arguments, and only the documented locations. Returns a description of
+// the first problem found, or null.
+export function cacheControlDirectiveDefinitionProblem(
+  directive: GraphQLDirective,
+): string | null {
+  for (const location of directive.locations) {
+    if (!ALLOWED_LOCATIONS.has(location)) {
+      return `it is defined on the ${location} location`;
+    }
+  }
+  const seen = new Set<string>();
+  for (const arg of directive.args) {
+    seen.add(arg.name);
+    const type = arg.type;
+    switch (arg.name) {
+      case 'maxAge':
+        if (!(isScalarType(type) && type.name === 'Int')) {
+          return `its \`maxAge\` argument has type \`${type}\` rather than \`Int\``;
+        }
+        break;
+      case 'inheritMaxAge':
+        if (!(isScalarType(type) && type.name === 'Boolean')) {
+          return `its \`inheritMaxAge\` argument has type \`${type}\` rather than \`Boolean\``;
+        }
+        break;
+      case 'scope': {
+        if (!isNonNullType(type)) {
+          return `its \`scope\` argument has nullable type \`${type}\`; Apollo Server 6 requires every \`@cacheControl\` to specify a scope, so define it as \`${type}!\``;
+        }
+        const enumType = type.ofType;
+        if (!isEnumType(enumType)) {
+          return `its \`scope\` argument has type \`${type}\` rather than a non-null enum`;
+        }
+        const values = enumType
+          .getValues()
+          .map((v) => v.name)
+          .sort();
+        if (values.join(',') !== 'PRIVATE,PUBLIC') {
+          return `its \`scope\` argument's enum \`${enumType.name}\` has values ${values.join(', ')} rather than exactly PUBLIC and PRIVATE`;
+        }
+        break;
+      }
+      default:
+        return `it has an unexpected \`${arg.name}\` argument`;
+    }
+  }
+  if (!seen.has('scope')) {
+    return 'it has no `scope` argument';
+  }
+  return null;
 }
 
 export function ApolloServerPluginCacheControl(
@@ -67,6 +157,18 @@ export function ApolloServerPluginCacheControl(
     __is_disabled_plugin__: false,
 
     async serverWillStart({ schema }) {
+      if (options.validateDirectiveDefinition !== false) {
+        const directive = schema.getDirective('cacheControl');
+        const problem = directive
+          ? cacheControlDirectiveDefinitionProblem(directive)
+          : null;
+        if (problem) {
+          throw new Error(
+            `The schema's \`@cacheControl\` directive definition does not match the one Apollo Server expects: ${problem}. The expected definition is:\n\n${CACHE_CONTROL_DIRECTIVE_DEFINITION}\n\nTo use a different definition, pass \`validateDirectiveDefinition: false\` to ApolloServerPluginCacheControl.`,
+          );
+        }
+      }
+
       // Set the size of the caches to be equal to the number of composite types
       // and fields in the schema respectively. This generally means that the
       // cache will always have room for all the cache hints in the active

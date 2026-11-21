@@ -999,12 +999,12 @@ export function defineIntegrationTestSuiteHttpServerTests(
             author: String
           }
 
-          type Cook @cacheControl(maxAge: 200) {
+          type Cook @cacheControl(maxAge: 200, scope: PUBLIC) {
             title: String
             author: String
           }
 
-          type Pook @cacheControl(maxAge: 200) {
+          type Pook @cacheControl(maxAge: 200, scope: PUBLIC) {
             title: String
             books: [Book] @cacheControl(maxAge: 20, scope: PRIVATE)
           }
@@ -1014,7 +1014,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
             cooks: [Cook]
             pooks: [Pook]
             uncached: ID
-            ten: ID @cacheControl(maxAge: 10)
+            ten: ID @cacheControl(maxAge: 10, scope: PUBLIC)
             twenty: ID @cacheControl(maxAge: 20, scope: PRIVATE)
           }
 
@@ -1025,7 +1025,7 @@ export function defineIntegrationTestSuiteHttpServerTests(
 
           directive @cacheControl(
             maxAge: Int
-            scope: CacheControlScope
+            scope: CacheControlScope!
           ) on FIELD_DEFINITION | OBJECT | INTERFACE
         `;
 

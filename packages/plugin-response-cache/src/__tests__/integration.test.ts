@@ -42,10 +42,10 @@ describe('Response caching', () => {
   it('basic caching', async () => {
     const typeDefs = `#graphql
       type Query {
-        cached: String @cacheControl(maxAge: 10)
-        asyncCached: String @cacheControl(maxAge: 10)
-        asyncUncached: String @cacheControl(maxAge: 10)
-        asyncNoWrite: String @cacheControl(maxAge: 10)
+        cached: String @cacheControl(maxAge: 10, scope: PUBLIC)
+        asyncCached: String @cacheControl(maxAge: 10, scope: PUBLIC)
+        asyncUncached: String @cacheControl(maxAge: 10, scope: PUBLIC)
+        asyncNoWrite: String @cacheControl(maxAge: 10, scope: PUBLIC)
         uncached: String
         private: String @cacheControl(maxAge: 9, scope: PRIVATE)
       }
@@ -55,7 +55,7 @@ describe('Response caching', () => {
       }
       directive @cacheControl(
         maxAge: Int
-        scope: CacheControlScope
+        scope: CacheControlScope!
       ) on FIELD_DEFINITION | OBJECT | INTERFACE
     `;
 

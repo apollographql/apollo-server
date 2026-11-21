@@ -57,3 +57,24 @@ Apollo Server 4 had a regression where operations with invalid variables (for ex
 ## New: request cancellation signal
 
 `HTTPGraphQLRequest` has a new optional `signal` field. Integrations that provide an `AbortSignal` and abort it when the client disconnects let Apollo Server stop execution early: GraphQL.js exposes the signal to resolvers via `info.getAbortSignal()`, and an operation whose signal fires before execution completes ends with a `REQUEST_ABORTED` error instead of running to completion. The standalone server (`startStandaloneServer`) does this automatically. This is optional for integrations; nothing changes for integrations that don't set it.
+
+## `@cacheControl` definition is checked, and `scope` is required
+
+If your schema defines the `@cacheControl` directive (which you need in order to use it in your SDL), the cache control plugin now checks on startup that the definition matches the documented one, and the documented definition now declares `scope` as non-null:
+
+```graphql
+enum CacheControlScope {
+  PUBLIC
+  PRIVATE
+}
+
+directive @cacheControl(
+  maxAge: Int
+  scope: CacheControlScope!
+  inheritMaxAge: Boolean
+) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
+```
+
+Previously, `scope` was nullable and defaulted to `PUBLIC`, so a field annotated with just `@cacheControl(maxAge: 60)` was cacheable by shared caches and CDNs, which is easy to do by accident. With a non-null `scope`, GraphQL.js's own SDL validation rejects every `@cacheControl` usage that doesn't say `scope: PUBLIC` or `scope: PRIVATE`, including `@cacheControl(inheritMaxAge: true)`.
+
+To migrate, change `scope: CacheControlScope` to `scope: CacheControlScope!` in your definition, and add `scope: PUBLIC` (or `PRIVATE`) to every `@cacheControl` usage. The startup error prints the expected definition. If you want to keep the old definition for now, pass `validateDirectiveDefinition: false` to `ApolloServerPluginCacheControl`. Cache hints set from code (`info.cacheControl.setCacheHint({ maxAge })`, `defaultMaxAge`) still default to `PUBLIC`.
