@@ -1,9 +1,5 @@
 import type {
   BaseContext,
-  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2,
-  GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2,
-  GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
   GraphQLRequest,
   HTTPGraphQLHead,
   HTTPGraphQLRequest,
@@ -17,7 +13,12 @@ import {
   MEDIA_TYPES,
   type SchemaDerivedData,
 } from './ApolloServer.js';
-import { type FormattedExecutionResult, Kind } from 'graphql';
+import {
+  type FormattedExecutionResult,
+  type FormattedInitialIncrementalExecutionResult,
+  type FormattedSubsequentIncrementalExecutionResult,
+  Kind,
+} from 'graphql';
 import { BadRequestError } from './internalErrorClasses.js';
 import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';
@@ -285,36 +286,33 @@ export async function runHttpQuery<TContext extends BaseContext>({
 
   // Note that incremental delivery is not yet part of the official GraphQL
   // spec. We are implementing a proposed version of the spec, and require
-  // clients to explicitly state `deferSpec=20220824`. Once incremental delivery
-  // has been added to the GraphQL spec, we will support `accept` headers
-  // without `deferSpec` as well (perhaps with slightly different behavior if
-  // anything has changed).
+  // clients to explicitly state `incrementalSpec=v0.2`. Once incremental
+  // delivery has been added to the GraphQL spec, we will support `accept`
+  // headers without `incrementalSpec` as well (perhaps with slightly different
+  // behavior if anything has changed).
   const acceptHeader = httpRequest.headers.get('accept');
   const negotiator = new Negotiator({ headers: { accept: acceptHeader } });
   const preferredMediaType = negotiator.mediaType([
     // mediaType() will return the first one that matches, so if the client
-    // doesn't include the deferSpec parameter it will match this one here,
-    // which isn't good enough.
-    MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
-    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
-    MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
+    // doesn't include the incrementalSpec parameter it will match this one
+    // here, which isn't good enough.
+    MEDIA_TYPES.MULTIPART_MIXED_NO_INCREMENTAL_SPEC,
+    MEDIA_TYPES.MULTIPART_MIXED_INCREMENTAL,
   ]);
 
   if (
     !acceptHeader ||
-    (preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2 &&
-      preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9)
+    preferredMediaType !== MEDIA_TYPES.MULTIPART_MIXED_INCREMENTAL
   ) {
     // The client ran an operation that would yield multiple parts, but didn't
-    // specify `accept: multipart/mixed`. We return an error.
+    // specify `accept: multipart/mixed; incrementalSpec=v0.2`. (This includes
+    // clients that ask for the legacy `deferSpec=20220824` format that Apollo
+    // Server 4 and 5 supported.) We return an error.
     throw new BadRequestError(
       'Apollo server received an operation that uses incremental delivery ' +
         '(@defer or @stream), but the client does not accept multipart/mixed ' +
         'HTTP responses. To enable incremental delivery support, add the HTTP ' +
-        `header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9}' ` +
-        'if your client supports the current incremental format or ' +
-        `'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2}' if your ` +
-        'client supports the legacy incremental format',
+        `header 'Accept: ${MEDIA_TYPES.MULTIPART_MIXED_INCREMENTAL}'`,
       // Use 406 Not Accepted
       { extensions: { http: { status: 406 } } },
     );
@@ -337,13 +335,8 @@ export async function runHttpQuery<TContext extends BaseContext>({
 }
 
 async function* writeMultipartBody(
-  initialResult:
-    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha2
-    | GraphQLExperimentalFormattedInitialIncrementalExecutionResultAlpha9,
-  subsequentResults: AsyncIterable<
-    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
-    | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9
-  >,
+  initialResult: FormattedInitialIncrementalExecutionResult,
+  subsequentResults: AsyncIterable<FormattedSubsequentIncrementalExecutionResult>,
 ): AsyncGenerator<string> {
   // Note: we assume in this function that every result other than the last has
   // hasNext=true and the last has hasNext=false. That is, we choose which kind

@@ -191,9 +191,9 @@ export function ApolloServerPluginSubscriptionCallback(
             'Server is shutting down. Cleaning up outstanding subscriptions and heartbeat intervals',
           );
           await subscriptionManager.cleanup();
-          // This setImmediate makes the precise timing of the log line below
-          // consistent between when we run our test suite with GraphQL.js v16
-          // and v17.0.0-alpha.9.
+          // This setImmediate keeps the precise timing of the log line below
+          // consistent across GraphQL.js versions (it mattered when our test
+          // suite ran against both v16 and v17).
           await setImmediate();
           logger?.debug(
             'Successfully cleaned up outstanding subscriptions and heartbeat intervals.',
