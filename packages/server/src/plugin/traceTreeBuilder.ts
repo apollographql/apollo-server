@@ -32,8 +32,7 @@ export class TraceTreeBuilder {
     [responsePathAsString(), this.rootNode],
   ]);
   private readonly transformError:
-    | ((err: GraphQLError) => GraphQLError | null)
-    | null;
+    ((err: GraphQLError) => GraphQLError | null) | null;
 
   public constructor(options: {
     maskedBy: string;

@@ -953,14 +953,16 @@ export function defineIntegrationTestSuiteApolloServerTests(
           ) => {
             uri = await createServerAndGetUrl({
               typeDefs: gql`
-                ${includeDeferDirective
-                  ? `
+                ${
+                  includeDeferDirective
+                    ? `
                   directive @defer(
                     if: Boolean! = true
                     label: String
                   ) on FRAGMENT_SPREAD | INLINE_FRAGMENT
                 `
-                  : ''}
+                    : ''
+                }
 
                 enum CacheControlScope {
                   PUBLIC

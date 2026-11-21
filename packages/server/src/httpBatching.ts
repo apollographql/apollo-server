@@ -76,12 +76,10 @@ export async function runPotentiallyBatchedHttpQuery<
   schemaDerivedData: SchemaDerivedData,
   internals: ApolloServerInternals<TContext>,
 ): Promise<HTTPGraphQLResponse> {
-  if (
-    !(
-      httpGraphQLRequest.method === 'POST' &&
-      Array.isArray(httpGraphQLRequest.body)
-    )
-  ) {
+  if (!(
+    httpGraphQLRequest.method === 'POST' &&
+    Array.isArray(httpGraphQLRequest.body)
+  )) {
     return await runHttpQuery({
       server,
       httpRequest: httpGraphQLRequest,

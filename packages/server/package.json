@@ -127,7 +127,7 @@
     "@apollo/utils.logger": "^3.0.0",
     "@apollo/utils.usagereporting": "^3.2.0",
     "@apollo/utils.withrequired": "^3.0.0",
-    "@graphql-tools/schema": "^10.0.0",
+    "@graphql-tools/schema": "^11.0.0",
     "async-retry": "^1.2.1",
     "body-parser": "^2.2.2",
     "content-type": "^1.0.5",
@@ -136,7 +136,7 @@
     "loglevel": "^1.6.8",
     "lru-cache": "^11.1.0",
     "negotiator": "^1.0.0",
-    "whatwg-mimetype": "^4.0.0"
+    "whatwg-mimetype": "^5.0.0"
   },
   "peerDependencies": {
     "graphql": "^17.1.0"

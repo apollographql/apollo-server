@@ -58,12 +58,10 @@ function wrapField<TContext extends BaseContext>(
     const willResolveField = contextValue?.[
       symbolExecutionDispatcherWillResolveField
     ] as
-      | GraphQLRequestExecutionListener<TContext>['willResolveField']
-      | undefined;
+      GraphQLRequestExecutionListener<TContext>['willResolveField'] | undefined;
 
     const userFieldResolver = contextValue?.[symbolUserFieldResolver] as
-      | GraphQLFieldResolver<any, any>
-      | undefined;
+      GraphQLFieldResolver<any, any> | undefined;
 
     // The technique for implementing a  "did resolve field" is accomplished by
     // returning a function from the `willResolveField` handler.  While there

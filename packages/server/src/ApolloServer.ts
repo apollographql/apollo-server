@@ -890,9 +890,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
     // Special case: cache control is on unless you explicitly disable it.
     {
       if (!alreadyHavePluginWithInternalId('CacheControl')) {
-        const { ApolloServerPluginCacheControl } = await import(
-          './plugin/cacheControl/index.js'
-        );
+        const { ApolloServerPluginCacheControl } =
+          await import('./plugin/cacheControl/index.js');
         plugins.push(ApolloServerPluginCacheControl());
       }
     }
@@ -907,9 +906,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
           // Keep this plugin first so it wraps everything. (Unfortunately despite
           // the fact that the person who wrote this line also was the original
           // author of the comment above in #1105, they don't quite understand why this was important.)
-          const { ApolloServerPluginUsageReporting } = await import(
-            './plugin/usageReporting/index.js'
-          );
+          const { ApolloServerPluginUsageReporting } =
+            await import('./plugin/usageReporting/index.js');
           plugins.unshift(
             ApolloServerPluginUsageReporting({
               __onlyIfSchemaIsNotSubgraph: true,
@@ -933,9 +931,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       const enabledViaEnvVar = process.env.APOLLO_SCHEMA_REPORTING === 'true';
       if (!alreadyHavePlugin && enabledViaEnvVar) {
         if (apolloConfig.key) {
-          const { ApolloServerPluginSchemaReporting } = await import(
-            './plugin/schemaReporting/index.js'
-          );
+          const { ApolloServerPluginSchemaReporting } =
+            await import('./plugin/schemaReporting/index.js');
           plugins.push(ApolloServerPluginSchemaReporting());
         } else {
           throw new Error(
@@ -958,9 +955,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // federated" mode.  (This is slightly different than the
         // pre-ApolloServerPluginInlineTrace where we would also avoid doing
         // this if an API key was configured and log a warning.)
-        const { ApolloServerPluginInlineTrace } = await import(
-          './plugin/inlineTrace/index.js'
-        );
+        const { ApolloServerPluginInlineTrace } =
+          await import('./plugin/inlineTrace/index.js');
         plugins.push(
           ApolloServerPluginInlineTrace({ __onlyIfSchemaIsSubgraph: true }),
         );

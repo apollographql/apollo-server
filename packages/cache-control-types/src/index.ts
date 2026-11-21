@@ -57,8 +57,10 @@ export interface ResolveInfoCacheControl {
  * `info` argument to resolvers can be considered to be of this type. (You can
  * use this type with the customResolveInfo option to the graphql-code-generator
  * typescript-resolvers plugin, for example.) */
-export interface GraphQLResolveInfoWithCacheControl
-  extends Omit<GraphQLResolveInfo, 'cacheControl'> {
+export interface GraphQLResolveInfoWithCacheControl extends Omit<
+  GraphQLResolveInfo,
+  'cacheControl'
+> {
   // Why the Omit above? If you happen to have AS2 `apollo-cache-control` or AS3
   // `apollo-server-core` in your TypeScript build, then there's an ambient
   // `declare module` floating around that monkey-patches GraphQLResolveInfo to

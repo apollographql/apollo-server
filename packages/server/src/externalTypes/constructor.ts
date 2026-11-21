@@ -113,24 +113,27 @@ interface ApolloServerOptionsBase<TContext extends BaseContext> {
   executionOptions?: ExecutionArgs['options'];
 }
 
-export interface ApolloServerOptionsWithGateway<TContext extends BaseContext>
-  extends ApolloServerOptionsBase<TContext> {
+export interface ApolloServerOptionsWithGateway<
+  TContext extends BaseContext,
+> extends ApolloServerOptionsBase<TContext> {
   gateway: GatewayInterface;
   schema?: undefined;
   typeDefs?: undefined;
   resolvers?: undefined;
 }
 
-export interface ApolloServerOptionsWithSchema<TContext extends BaseContext>
-  extends ApolloServerOptionsBase<TContext> {
+export interface ApolloServerOptionsWithSchema<
+  TContext extends BaseContext,
+> extends ApolloServerOptionsBase<TContext> {
   schema: GraphQLSchema;
   gateway?: undefined;
   typeDefs?: undefined;
   resolvers?: undefined;
 }
 
-export interface ApolloServerOptionsWithTypeDefs<TContext extends BaseContext>
-  extends ApolloServerOptionsBase<TContext> {
+export interface ApolloServerOptionsWithTypeDefs<
+  TContext extends BaseContext,
+> extends ApolloServerOptionsBase<TContext> {
   // These two options are always only passed directly through to
   // makeExecutableSchema. (If you don't want to use makeExecutableSchema, pass
   // `schema` instead.)

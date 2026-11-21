@@ -7,8 +7,9 @@ import type { BaseContext, ApolloServerPlugin } from './externalTypes/index.js';
 // ApolloServer.ensurePluginInstantiation uses to figure out if the plugins have
 // already been installed (or explicitly disabled via the matching Disable
 // plugins).
-export interface InternalApolloServerPlugin<TContext extends BaseContext>
-  extends ApolloServerPlugin<TContext> {
+export interface InternalApolloServerPlugin<
+  TContext extends BaseContext,
+> extends ApolloServerPlugin<TContext> {
   // Used to identify a few specific plugins that are instantiated
   // by default if not explicitly used or disabled.
   __internal_plugin_id__: InternalPluginId;

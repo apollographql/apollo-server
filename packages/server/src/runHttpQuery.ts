@@ -22,7 +22,7 @@ import {
 import { BadRequestError } from './internalErrorClasses.js';
 import Negotiator from 'negotiator';
 import { HeaderMap } from './utils/HeaderMap.js';
-import MIMEType from 'whatwg-mimetype';
+import { MIMEType } from 'whatwg-mimetype';
 
 function fieldIfString(
   o: Record<string, unknown>,
