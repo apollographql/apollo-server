@@ -5,11 +5,15 @@
  */
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
 import type { Logger } from '@apollo/utils.logger';
-import type { GraphQLError, GraphQLResolveInfo, GraphQLSchema } from 'graphql';
+import type {
+  FormattedSubsequentIncrementalExecutionResult,
+  GraphQLError,
+  GraphQLResolveInfo,
+  GraphQLSchema,
+} from 'graphql';
 import type { ApolloConfig } from './constructor.js';
 import type { BaseContext } from './context.js';
 import type { GraphQLResponse } from './graphql.js';
-import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2 } from './incrementalDeliveryPolyfillAlpha2.js';
 import type {
   GraphQLRequestContext,
   GraphQLRequestContextDidEncounterErrors,
@@ -23,7 +27,6 @@ import type {
   GraphQLRequestContextWillSendResponse,
   GraphQLRequestContextWillSendSubsequentPayload,
 } from './requestPipeline.js';
-import type { GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9 } from './incrementalDeliveryPolyfillAlpha9.js';
 
 export interface GraphQLServerContext {
   readonly logger: Logger;
@@ -181,9 +184,7 @@ export interface GraphQLRequestListener<TContext extends BaseContext> {
   // You can use hasNext to tell if this is the end or not.
   willSendSubsequentPayload?(
     requestContext: GraphQLRequestContextWillSendSubsequentPayload<TContext>,
-    payload:
-      | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha2
-      | GraphQLExperimentalFormattedSubsequentIncrementalExecutionResultAlpha9,
+    payload: FormattedSubsequentIncrementalExecutionResult,
   ): Promise<void>;
 }
 

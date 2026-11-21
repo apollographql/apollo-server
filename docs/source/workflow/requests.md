@@ -93,9 +93,9 @@ For more details, see [the CSRF prevention documentation](../security/cors#preve
 
 ## Incremental delivery (experimental)
 
-Incremental delivery is a [Stage 1: Proposal](https://github.com/graphql/graphql-spec/pull/1110) to the GraphQL specification which adds `@defer` and `@stream` executable directives. These directives allow clients to specify that parts of an operation can be sent after an initial response, so that slower fields do not delay all other fields. As of June 2025, the `graphql` library (also known as `graphql-js`) upon which Apollo Server is built implements incremental delivery only in the unreleased major version 17. If a pre-release of `graphql@17.0.0-alpha.9` is installed in your server, Apollo Server can execute these incremental delivery directives and provide streaming [`multipart/mixed`](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md) responses.
+Incremental delivery is a [Stage 1: Proposal](https://github.com/graphql/graphql-spec/pull/1110) to the GraphQL specification which adds `@defer` and `@stream` executable directives. These directives allow clients to specify that parts of an operation can be sent after an initial response, so that slower fields do not delay all other fields. The `graphql` library (also known as `graphql-js`) upon which Apollo Server is built implements incremental delivery as an experimental feature starting with version 17, and Apollo Server 6 (which requires `graphql` v17) can execute these incremental delivery directives and provide streaming [`multipart/mixed`](https://github.com/graphql/graphql-over-http/blob/main/rfcs/IncrementalDelivery.md) responses.
 
-Support for incremental delivery in graphql version 17 is [opt-in](https://github.com/robrichard/defer-stream-wg/discussions/12), meaning the directives are not defined by default. In order to use `@defer` or `@stream`, you must provide the appropriate definition(s) in your SDL. The definitions below can be pasted into your schema as-is:
+Support for incremental delivery in `graphql` version 17 is [opt-in](https://github.com/robrichard/defer-stream-wg/discussions/12), meaning the directives are not defined by default. In order to use `@defer` or `@stream`, you must provide the appropriate definition(s) in your SDL. The definitions below can be pasted into your schema as-is:
 
 ```graphql
 directive @defer(if: Boolean, label: String) on FRAGMENT_SPREAD | INLINE_FRAGMENT
@@ -121,39 +121,8 @@ const schema = new GraphQLSchema({
 });
 ```
 
-Clients sending operations with incremental delivery directives need to explicitly indicate that they are expecting to receive `multipart/mixed` responses in an `accept` header. Moreover, because incremental delivery has not yet been finalized in the GraphQL spec and may change before the final version, they need to specify that they expect the particular response format that Apollo Server produces today via a `incrementalSpec` parameter. Specifically, clients prepared to accept incremental delivery responses should send an `accept` header like `multipart/mixed; incrementalSpec=v0.2`. Note that this header implies that *only* multipart responses should be accepted; typically, clients will send an accept header like `multipart/mixed; incrementalSpec=v0.2, application/json` indicating that either multipart or single-part responses are acceptable.
+Clients sending operations with incremental delivery directives need to explicitly indicate that they are expecting to receive `multipart/mixed` responses in an `accept` header. Moreover, because incremental delivery has not yet been finalized in the GraphQL spec and may change before the final version, they need to specify that they expect the particular response format that Apollo Server produces today via an `incrementalSpec` parameter. Specifically, clients prepared to accept incremental delivery responses should send an `accept` header like `multipart/mixed; incrementalSpec=v0.2`. Note that this header implies that *only* multipart responses should be accepted; typically, clients will send an accept header like `multipart/mixed; incrementalSpec=v0.2, application/json` indicating that either multipart or single-part responses are acceptable.
 
-> Apollo Server *only* supports the specific pre-release `graphql@17.0.0-alpha.9`. Apollo Server 5 checks the version of `graphql` you have installed and will not attempt to support incremental delivery unless it is precisely `17.0.0-alpha.9`.
+The response format is described by the [Apollo incremental delivery specification v0.2](https://specs.apollo.dev/incremental/v0.2/), and matches the format produced by `graphql`'s `experimentalExecuteIncrementally`. If an operation uses `@defer` or `@stream` but the client does not send a matching `accept` header, Apollo Server responds with a `406 Not Acceptable` error. This includes clients that send `accept: multipart/mixed; deferSpec=20220824`, the older format used by Apollo Server 4 and 5; Apollo Server 6 does not support that format.
 
 You cannot combine [batching](#batching) with incremental delivery in the same request.
-
-<Note>
-
-Apollo Server 5.1 changed the required pre-release `graphql` version from `17.0.0-alpha.2` to `17.0.0-alpha.9`. If you are using 5.0 or below, use `graphql` version `17.0.0-alpha.2` instead.
-
-</Note>
-
-<MinVersion version="5.2.0">
-
-### Add support for the legacy incremental delivery protocol
-
-</MinVersion>
-
-Clients may request the legacy incremental delivery protocol by specifying an `accept` header with a value of `multipart/mixed; deferSpec=20220824`. Apollo Server does not support the legacy incremental delivery protocol by default and an error will be returned to the client.
-
-You may choose to support the legacy incremental delivery protocol by installing the [`@yaacovcr/transform` package](https://github.com/yaacovCR/transform) which provides the needed utilities to format the incremental result using the legacy protocol.
-
-```sh
-npm install @yaacovcr/transform
-```
-
-You will then need to configure Apollo Server with the `legacyExperimentalExecuteIncrementally` option in order to provide support for the legacy incremental format.
-
-```ts
-import { legacyExecuteIncrementally } from '@yaacovcr/transform';
-
-const server = new ApolloServer({
-  // ...
-  legacyExperimentalExecuteIncrementally: legacyExecuteIncrementally
-})
-```

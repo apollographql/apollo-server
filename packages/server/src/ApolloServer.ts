@@ -38,7 +38,6 @@ import { ApolloServerErrorCode } from './errors/index.js';
 import type { ApolloServerOptionsWithStaticSchema } from './externalTypes/constructor.js';
 import type {
   ExecuteOperationOptions,
-  LegacyExperimentalExecuteIncrementally,
   VariableValues,
 } from './externalTypes/graphql.js';
 import type {
@@ -60,10 +59,6 @@ import type {
   PersistedQueryOptions,
 } from './externalTypes/index.js';
 import { runPotentiallyBatchedHttpQuery } from './httpBatching.js';
-import type {
-  GraphQLExperimentalIncrementalExecutionResultsAlpha2,
-  GraphQLExperimentalIncrementalExecutionResultsAlpha9,
-} from './incrementalDeliveryPolyfill.js';
 import { pluginIsInternal, type InternalPluginId } from './internalPlugin.js';
 import {
   preventCsrf,
@@ -172,13 +167,9 @@ export interface ApolloServerInternals<TContext extends BaseContext> {
   fieldResolver?: GraphQLFieldResolver<any, TContext>;
   // TODO(AS6): remove this option.
   status400ForVariableCoercionErrors?: boolean;
-  __testing_incrementalExecutionResults?:
-    | GraphQLExperimentalIncrementalExecutionResultsAlpha2
-    | GraphQLExperimentalIncrementalExecutionResultsAlpha9;
   stringifyResult: (
     value: FormattedExecutionResult,
   ) => string | Promise<string>;
-  legacyExperimentalExecuteIncrementally?: LegacyExperimentalExecuteIncrementally;
 }
 
 function defaultLogger(): Logger {
@@ -357,11 +348,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
               recommendedCsrfPreventionRequestHeaders),
       status400ForVariableCoercionErrors:
         config.status400ForVariableCoercionErrors ?? true,
-      __testing_incrementalExecutionResults:
-        config.__testing_incrementalExecutionResults,
       stringifyResult: config.stringifyResult ?? prettyJSONStringify,
-      legacyExperimentalExecuteIncrementally:
-        config.legacyExperimentalExecuteIncrementally,
     };
 
     this.warnAgainstDeprecatedConfigOptions(config);
@@ -1222,9 +1209,8 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
         // by the order in the list we provide, so we put text/html last.
         MEDIA_TYPES.APPLICATION_JSON,
         MEDIA_TYPES.APPLICATION_GRAPHQL_RESPONSE_JSON,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2,
-        MEDIA_TYPES.MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9,
-        MEDIA_TYPES.MULTIPART_MIXED_NO_DEFER_SPEC,
+        MEDIA_TYPES.MULTIPART_MIXED_INCREMENTAL,
+        MEDIA_TYPES.MULTIPART_MIXED_NO_INCREMENTAL_SPEC,
         MEDIA_TYPES.TEXT_HTML,
       ]) === MEDIA_TYPES.TEXT_HTML
     );
@@ -1418,11 +1404,10 @@ export const MEDIA_TYPES = {
     'application/graphql-response+json; charset=utf-8',
   // We do *not* currently support this content-type; we will once incremental
   // delivery is part of the official GraphQL spec.
-  MULTIPART_MIXED_NO_DEFER_SPEC: 'multipart/mixed',
-  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_2: 'multipart/mixed; deferSpec=20220824',
+  MULTIPART_MIXED_NO_INCREMENTAL_SPEC: 'multipart/mixed',
   // This references the spec stored at
   // https://specs.apollo.dev/incremental/v0.2/
-  MULTIPART_MIXED_EXPERIMENTAL_ALPHA_9: 'multipart/mixed; incrementalSpec=v0.2',
+  MULTIPART_MIXED_INCREMENTAL: 'multipart/mixed; incrementalSpec=v0.2',
   TEXT_HTML: 'text/html',
 };
 
