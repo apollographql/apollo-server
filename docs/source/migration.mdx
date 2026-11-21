@@ -3,7 +3,17 @@ title: Migrating from Apollo Server 5
 subtitle: Learn how to upgrade your Apollo Server 5 to Apollo Server 6 with minimal changes.
 ---
 
-Apollo Server 6 is a small upgrade focused on the versions of Node.js and GraphQL.js that Apollo Server supports. This page tells you what to do to migrate your server from Apollo Server 5 to Apollo Server 6.
+Apollo Server 6 is a small upgrade focused on the versions of Node.js and GraphQL.js that Apollo Server supports, plus a few cleanups that those new versions make possible. This page tells you what to do to migrate your server from Apollo Server 5 to Apollo Server 6.
+
+In summary, Apollo Server 6:
+
+- [requires Node.js v22.18.0 or later](#require-nodejs-v22), and adopts a [new policy](#nodejs-support-policy) for dropping end-of-life Node.js versions;
+- [requires GraphQL.js v17](#require-graphqljs-v17);
+- [supports incremental delivery](#incremental-delivery-changes) (`@defer` and `@stream`) on released GraphQL.js, and drops the older `deferSpec=20220824` response format;
+- [removes the `status400ForVariableCoercionErrors` option](#remove-status400forvariablecoercionerrors);
+- [hides more schema details](#hideschemadetailsfromclienterrors-covers-variable-coercion-errors) when `hideSchemaDetailsFromClientErrors` is set;
+- [lets integrations cancel execution](#new-request-cancellation-signal) when a client disconnects;
+- [checks your `@cacheControl` directive definition](#cachecontrol-definition-is-checked-and-scope-is-required) and requires every usage to specify a `scope`.
 
 If you are still on Apollo Server 4 or Apollo Server 3, first follow the [migrating from Apollo Server 4](./migration-from-v4) or [migrating from Apollo Server 3](./migration-from-v3) guide to get to Apollo Server 5, then come back to this page.
 
@@ -53,6 +63,12 @@ If you write plugins or integrations that process incremental responses, note th
 ## Remove `status400ForVariableCoercionErrors`
 
 Apollo Server 4 had a regression where operations with invalid variables (for example, a string provided for an `Int!` variable) received a 200 status code instead of 400. Apollo Server 5 fixed this by defaulting the `status400ForVariableCoercionErrors` constructor option to `true`, and deprecated setting it to `false`. Apollo Server 6 removes the option: variable coercion errors always receive a 400 status code. If you pass this option to the `ApolloServer` constructor, remove it.
+
+## `hideSchemaDetailsFromClientErrors` covers variable coercion errors
+
+Apollo Server 5's `hideSchemaDetailsFromClientErrors` option removed "Did you mean ...?" suggestions from validation errors by rewriting their messages. Apollo Server 6 instead uses GraphQL.js v17's `hideSuggestions` option, which also leaves suggestions out of variable coercion errors (such as a misspelled input object field or enum value provided via variables), which the previous implementation missed. If you relied on the (undocumented) `@apollo/server/plugin/disableSuggestions` entry point, it no longer exists; use the constructor option instead.
+
+Relatedly, Apollo Server 6 uses GraphQL.js v17's `validateExecutionArgs` to detect variable coercion errors structurally rather than by inspecting error messages. One visible difference: the "Too many errors processing variables" error that GraphQL.js produces when `executionOptions.maxCoercionErrors` is exceeded now has the code `BAD_USER_INPUT` (like the coercion errors it accompanies) instead of `INTERNAL_SERVER_ERROR`.
 
 ## New: request cancellation signal
 
