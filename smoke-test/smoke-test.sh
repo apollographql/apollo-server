@@ -40,33 +40,22 @@ node generated/tsc/variants/nodenext/smoke-test.cjs
 node generated/tsc/variants/node16/smoke-test.cjs
 node generated/tsc/smoke-test.mjs
 
-# Ensure that we at least type-check against a variety of versions of Apollo
+# Ensure that we at least type-check against a couple of versions of Apollo
 # Gateway. Specifically:
-# - 2.0.0 is the oldest supported version of v2.
-# - 2.0.5 was the last version of 2.x before we converted it to use
-#   `@apollo/server-gateway-interface` instead of directly depending on Apollo
-#   Server packages
+# - 2.14.5 is the oldest version of `@apollo/gateway` whose peer dependency and
+#   type definitions accept graphql@17, so it is the oldest version that can be
+#   used with Apollo Server 6. (Earlier 2.x versions only type-check against
+#   graphql@16.)
 # - 2.x lets us test against the latest released 2.x version. (Theoretically it
 #   would be better to pin a specific version and let Renovate update it so that
 #   the Renovate PRs fail instead of `main` but this is simpler for now.)
 #
-# `--no-engine-strict` is required for some of the older ones on Node 18+,
-# because we used to really like putting `<` engine constraints on all our
-# packages.
-#
 # Prior to Apollo Server 5, we also tested against various versions of Gateway
 # 0.x. However, Gateway 0.x has been EOL since September 2023, so we no longer
 # test against it.
-#
-# This runs into some weird issues when we install the graphql@17 canary that
-# seems to just be about ending up with two copies of `graphql` installed at
-# different levels. For simplicity, we skip this part of the test in the canary
-# jobs. Once graphql@17.0.0 is out we should be able to de-conditional this.
-if [[ -z "${GRAPHQL_JS_VERSION:-}" ]]; then
-  pushd gateway-compatibility
-    for version in 2.0.0 2.0.5 2.x; do
-      npm i --no-save --no-engine-strict "@apollo/gateway@$version"
-      npx tsc --build tsconfig.json
-    done
-  popd
-fi
+pushd gateway-compatibility
+  for version in 2.14.5 2.x; do
+    npm i --no-save "@apollo/gateway@$version"
+    npx tsc --build tsconfig.json
+  done
+popd

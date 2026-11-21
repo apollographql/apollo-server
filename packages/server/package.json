@@ -125,15 +125,15 @@
     "node": ">=22.18"
   },
   "dependencies": {
-    "@apollo/cache-control-types": "^1.0.3",
-    "@apollo/server-gateway-interface": "^2.0.0",
+    "@apollo/cache-control-types": "^1.1.0",
+    "@apollo/server-gateway-interface": "^2.1.0",
     "@apollo/usage-reporting-protobuf": "^4.1.1",
     "@apollo/utils.createhash": "^3.0.0",
     "@apollo/utils.fetcher": "^3.0.0",
     "@apollo/utils.isnodelike": "^3.0.0",
     "@apollo/utils.keyvaluecache": "^4.0.0",
     "@apollo/utils.logger": "^3.0.0",
-    "@apollo/utils.usagereporting": "^2.1.0",
+    "@apollo/utils.usagereporting": "^3.2.0",
     "@apollo/utils.withrequired": "^3.0.0",
     "@graphql-tools/schema": "^10.0.0",
     "async-retry": "^1.2.1",
@@ -147,6 +147,6 @@
     "whatwg-mimetype": "^4.0.0"
   },
   "peerDependencies": {
-    "graphql": "^16.11.0"
+    "graphql": "^17.1.0"
   }
 }

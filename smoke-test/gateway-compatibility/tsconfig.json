@@ -10,5 +10,10 @@
     "target": "ES2015",
     "esModuleInterop": true,
     "strict": true,
+    // Only load Node's ambient types. Without this, every @types package in
+    // the repo's root node_modules is type-checked too (eg @types/babel__core,
+    // pulled in by the codegen tooling), which is irrelevant to this check and
+    // not guaranteed to be consistent with the dependencies' own types.
+    "types": ["node"],
   },
 }

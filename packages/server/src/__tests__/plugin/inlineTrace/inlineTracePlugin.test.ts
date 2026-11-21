@@ -9,26 +9,28 @@ import { ApolloServerPluginInlineTrace } from '@apollo/server/plugin/inlineTrace
 describe('ApolloServerPluginInlineTrace', () => {
   it('Adds errors within lists to the correct path rather than the root', async () => {
     const server = new ApolloServer({
-      schema: buildSubgraphSchema({
-        typeDefs: gql`
-          type Query {
-            a: A!
-          }
-          type A {
-            brokenList: [String!]!
-          }
-        `,
-        resolvers: {
-          Query: {
-            a: () => ({}),
-          },
-          A: {
-            brokenList() {
-              return ['hello world!', null];
+      schema: buildSubgraphSchema([
+        {
+          typeDefs: gql`
+            type Query {
+              a: A!
+            }
+            type A {
+              brokenList: [String!]!
+            }
+          `,
+          resolvers: {
+            Query: {
+              a: () => ({}),
+            },
+            A: {
+              brokenList() {
+                return ['hello world!', null];
+              },
             },
           },
         },
-      }),
+      ]),
       plugins: [
         // silence logs about the plugin being enabled
         ApolloServerPluginInlineTrace(),

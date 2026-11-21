@@ -17,15 +17,7 @@ rm -rf node_modules package-lock.json generated
 npm i
 
 # Now install the tarballs we made (but don't write their paths to package.json).
-# And also install a graphql prerelease if we need to.
-if [[ -n "${GRAPHQL_JS_VERSION:-}" ]]; then
-  npm i --no-save --legacy-peer-deps \
-    "$TARBALL_DIR"/*.tgz \
-    "graphql@${GRAPHQL_JS_VERSION}" \
-    "@yaacovcr/transform"
-else
-  npm i --no-save "$TARBALL_DIR"/*.tgz
-fi
+npm i --no-save "$TARBALL_DIR"/*.tgz
 
 rm package-lock.json
 rm -rf "$TARBALL_DIR"
