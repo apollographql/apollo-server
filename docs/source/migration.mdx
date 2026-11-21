@@ -24,3 +24,20 @@ If you can't upgrade to a non-EOL version of Node.js, you can continue to use Ap
 Starting with Apollo Server 6, Apollo Server's policy is that a *minor* release of Apollo Server may drop support for a Node.js major version once that Node.js version has reached end-of-life. Previously, Apollo Server only dropped support for Node.js versions in new Apollo Server major versions, which meant that Apollo Server 5 continued to support Node.js v20 for a year after it reached end-of-life.
 
 Any such change will be called out in the changelog for the release that makes it. Apollo Server will not drop support for a Node.js version that is still supported by the Node.js project except in a new Apollo Server major version. This policy applies only to Node.js versions, not to other dependencies.
+
+## Require GraphQL.js v17
+
+Apollo Server 6 supports GraphQL.js v17.1.0 and later, as a peer dependency. (Apollo Server 5 supports GraphQL.js v16.11.0 and later.) Apollo Server 6 does not support GraphQL.js v16, so you must upgrade `graphql` and `@apollo/server` together, in a single `npm install`.
+
+Before upgrading, read the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) and check your own schema and resolver code for the changes it describes. The ones most likely to affect a server:
+
+- The positional `GraphQLError` constructor is gone; pass an options object instead.
+- `printError`, `formatError`, `getOperationRootType`, and `assertValidName` are removed.
+- Resolver `args` and coerced input objects are null-prototype objects, so `args.hasOwnProperty(...)` no longer works (use `Object.hasOwn(args, ...)` or `'x' in args`).
+- The parser may leave optional AST arrays `undefined` rather than `[]`, which affects custom validation rules and schema-directive code.
+- `validateSchema()` now rejects invalid default values, so a schema that started under v16 can fail at startup under v17.
+- The `reason` argument of `@deprecated` is non-null.
+
+Every other package in your server that peer-depends on `graphql` must also accept v17, and most can be upgraded while you are still on Apollo Server 5. In particular, use `@apollo/subgraph` v2.16.0 or later and `@apollo/gateway` v2.14.5 or later.
+
+GraphQL.js has a development-only check that detects when more than one copy of the `graphql` package is installed in your `node_modules`. Having two copies is a common mistake (typically caused by a dependency pinning a different `graphql` version), and without the check it shows up as confusing errors such as `Expected ... to be a GraphQL schema` or `Schema must contain uniquely named types`. With the check enabled, you get a clear `Cannot use GraphQLSchema "..." from another module or realm` error instead. In GraphQL.js v16, this check was on unless `NODE_ENV` was `production`. In v17, it is off by default and `NODE_ENV` is no longer consulted. To turn it on in development, call `enableDevMode()` (exported from `graphql`) before you build your schema, or run Node.js with `--conditions=development`, which makes Node.js load the development build of the `graphql` package.

@@ -28,6 +28,14 @@ import { nockAfterEach, nockBeforeEach } from '../../nockAssertions';
 
 const mockReportingEndpoint = 'https://my-reporting-endpoint.com';
 
+// `@apollo/gateway` exports anonymous "fleet awareness" metrics to Apollo over
+// OTLP, including a forced flush when the gateway stops. With nock
+// intercepting HTTP here that export cannot succeed, and awaiting it made
+// `gateway.stop()` take a second and sometimes hang past the test timeout. The
+// gateway reads this opt-out (shared with Rover and Router) in its
+// constructor.
+process.env.APOLLO_TELEMETRY_DISABLED = '1';
+
 describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', () => {
   beforeEach(nockBeforeEach);
   afterEach(nockAfterEach);
@@ -57,97 +65,16 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
     );
     await startServer(gatewayServer);
 
+    // Capture the report and assert on it in test context below: an `expect`
+    // that throws inside nock's body matcher is swallowed as "no match" rather
+    // than failing the test.
+    let resolveReportBody: (body: string) => void;
+    const reportBody = new Promise<string>((resolve) => {
+      resolveReportBody = resolve;
+    });
     nock(mockReportingEndpoint)
       .post('/api/ingress/traces', (body) => {
-        const gzipReportBuffer = Buffer.from(body, 'hex');
-        const report = Report.decode(gunzipSync(gzipReportBuffer));
-        const statsKey = Object.keys(report.tracesPerQuery)[0];
-        const { queryLatencyStats, perTypeStat } = (
-          report.tracesPerQuery[statsKey]
-            ?.statsWithContext as IContextualizedStats[]
-        )[0];
-        expect(cleanLatencyCount(queryLatencyStats!)).toMatchInlineSnapshot(`
-          {
-            "cacheHits": 0,
-            "cacheLatencyCount": [],
-            "forbiddenOperationCount": 0,
-            "latencyCount": [
-              "*redacted for snapshot*",
-            ],
-            "persistedQueryHits": 0,
-            "persistedQueryMisses": 0,
-            "privateCacheTtlCount": [],
-            "publicCacheTtlCount": [],
-            "registeredOperationCount": 0,
-            "requestCount": 1,
-            "requestsWithErrorsCount": 1,
-            "requestsWithoutFieldInstrumentation": 1,
-            "rootErrorStats": {
-              "children": {
-                "service:error-ftv1-subgraph": {
-                  "children": {
-                    "errorFtv1": {
-                      "children": {},
-                      "errorsCount": 1,
-                      "requestsWithErrorsCount": 1,
-                    },
-                  },
-                  "errorsCount": 0,
-                  "requestsWithErrorsCount": 0,
-                },
-                "service:error-no-ftv1-subgraph": {
-                  "children": {
-                    "_entities": {
-                      "children": {
-                        "color": {
-                          "children": {
-                            "blueErrorNoFtv1": {
-                              "children": {},
-                              "errorsCount": 1,
-                              "requestsWithErrorsCount": 1,
-                            },
-                          },
-                          "errorsCount": 0,
-                          "requestsWithErrorsCount": 0,
-                        },
-                      },
-                      "errorsCount": 0,
-                      "requestsWithErrorsCount": 0,
-                    },
-                    "errorNoFtv1": {
-                      "children": {},
-                      "errorsCount": 1,
-                      "requestsWithErrorsCount": 1,
-                    },
-                    "productsWithErrorsNoFtv1": {
-                      "children": {
-                        "color": {
-                          "children": {
-                            "blueErrorNoFtv1": {
-                              "children": {},
-                              "errorsCount": 1,
-                              "requestsWithErrorsCount": 1,
-                            },
-                          },
-                          "errorsCount": 0,
-                          "requestsWithErrorsCount": 0,
-                        },
-                      },
-                      "errorsCount": 0,
-                      "requestsWithErrorsCount": 0,
-                    },
-                  },
-                  "errorsCount": 0,
-                  "requestsWithErrorsCount": 0,
-                },
-              },
-              "errorsCount": 0,
-              "requestsWithErrorsCount": 0,
-            },
-          }
-        `);
-        expect(perTypeStat).toMatchInlineSnapshot(`{}`);
-
+        resolveReportBody(body);
         return true;
       })
       .reply(200);
@@ -188,7 +115,97 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
       context: async () => ({}),
     });
 
+    // Stopping the server flushes the usage report.
     await gatewayServer.stop();
+    const gzipReportBuffer = Buffer.from(await reportBody, 'hex');
+    const report = Report.decode(gunzipSync(gzipReportBuffer));
+    const statsKey = Object.keys(report.tracesPerQuery)[0];
+    const { queryLatencyStats, perTypeStat } = (
+      report.tracesPerQuery[statsKey]
+        ?.statsWithContext as IContextualizedStats[]
+    )[0];
+    expect(cleanLatencyCount(queryLatencyStats!)).toMatchInlineSnapshot(`
+      {
+        "cacheHits": 0,
+        "cacheLatencyCount": [],
+        "forbiddenOperationCount": 0,
+        "latencyCount": [
+          "*redacted for snapshot*",
+        ],
+        "persistedQueryHits": 0,
+        "persistedQueryMisses": 0,
+        "privateCacheTtlCount": [],
+        "publicCacheTtlCount": [],
+        "registeredOperationCount": 0,
+        "requestCount": 1,
+        "requestsWithErrorsCount": 1,
+        "requestsWithoutFieldInstrumentation": 1,
+        "rootErrorStats": {
+          "children": {
+            "service:error-ftv1-subgraph": {
+              "children": {
+                "errorFtv1": {
+                  "children": {},
+                  "errorsCount": 1,
+                  "requestsWithErrorsCount": 1,
+                },
+              },
+              "errorsCount": 0,
+              "requestsWithErrorsCount": 0,
+            },
+            "service:error-no-ftv1-subgraph": {
+              "children": {
+                "_entities": {
+                  "children": {
+                    "color": {
+                      "children": {
+                        "blueErrorNoFtv1": {
+                          "children": {},
+                          "errorsCount": 1,
+                          "requestsWithErrorsCount": 1,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+                "errorNoFtv1": {
+                  "children": {},
+                  "errorsCount": 1,
+                  "requestsWithErrorsCount": 1,
+                },
+                "productsWithErrorsNoFtv1": {
+                  "children": {
+                    "color": {
+                      "children": {
+                        "blueErrorNoFtv1": {
+                          "children": {},
+                          "errorsCount": 1,
+                          "requestsWithErrorsCount": 1,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+              },
+              "errorsCount": 0,
+              "requestsWithErrorsCount": 0,
+            },
+          },
+          "errorsCount": 0,
+          "requestsWithErrorsCount": 0,
+        },
+      }
+    `);
+    expect(perTypeStat).toMatchInlineSnapshot(`{}`);
+
     await errorFtv1Subgraph.stop();
     await errorNoFtv1Subgraph.stop();
     await successSubgraph.stop();
@@ -219,159 +236,16 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
     );
     await startServer(gatewayServer);
 
+    // Capture the report and assert on it in test context below: an `expect`
+    // that throws inside nock's body matcher is swallowed as "no match" rather
+    // than failing the test.
+    let resolveReportBody: (body: string) => void;
+    const reportBody = new Promise<string>((resolve) => {
+      resolveReportBody = resolve;
+    });
     nock(mockReportingEndpoint)
       .post('/api/ingress/traces', (body) => {
-        const gzipReportBuffer = Buffer.from(body, 'hex');
-        const report = Report.decode(gunzipSync(gzipReportBuffer));
-        const statsKey = Object.keys(report.tracesPerQuery)[0];
-        const { queryLatencyStats, perTypeStat } = (
-          report.tracesPerQuery[statsKey]
-            ?.statsWithContext as IContextualizedStats[]
-        )[0];
-
-        expect(cleanLatencyCount(queryLatencyStats!)).toMatchInlineSnapshot(`
-          {
-            "cacheHits": 0,
-            "cacheLatencyCount": [],
-            "forbiddenOperationCount": 0,
-            "latencyCount": [
-              "*redacted for snapshot*",
-            ],
-            "persistedQueryHits": 0,
-            "persistedQueryMisses": 0,
-            "privateCacheTtlCount": [],
-            "publicCacheTtlCount": [],
-            "registeredOperationCount": 0,
-            "requestCount": 1,
-            "requestsWithErrorsCount": 1,
-            "requestsWithoutFieldInstrumentation": 0,
-            "rootErrorStats": {
-              "children": {
-                "service:error-ftv1-subgraph": {
-                  "children": {
-                    "errorFtv1": {
-                      "children": {},
-                      "errorsCount": 1,
-                      "requestsWithErrorsCount": 1,
-                    },
-                  },
-                  "errorsCount": 0,
-                  "requestsWithErrorsCount": 0,
-                },
-                "service:error-no-ftv1-subgraph": {
-                  "children": {
-                    "_entities": {
-                      "children": {
-                        "color": {
-                          "children": {
-                            "blueErrorNoFtv1": {
-                              "children": {},
-                              "errorsCount": 1,
-                              "requestsWithErrorsCount": 1,
-                            },
-                          },
-                          "errorsCount": 0,
-                          "requestsWithErrorsCount": 0,
-                        },
-                      },
-                      "errorsCount": 0,
-                      "requestsWithErrorsCount": 0,
-                    },
-                    "errorNoFtv1": {
-                      "children": {},
-                      "errorsCount": 1,
-                      "requestsWithErrorsCount": 1,
-                    },
-                    "productsWithErrorsNoFtv1": {
-                      "children": {
-                        "color": {
-                          "children": {
-                            "blueErrorNoFtv1": {
-                              "children": {},
-                              "errorsCount": 1,
-                              "requestsWithErrorsCount": 1,
-                            },
-                          },
-                          "errorsCount": 0,
-                          "requestsWithErrorsCount": 0,
-                        },
-                      },
-                      "errorsCount": 0,
-                      "requestsWithErrorsCount": 0,
-                    },
-                  },
-                  "errorsCount": 0,
-                  "requestsWithErrorsCount": 0,
-                },
-              },
-              "errorsCount": 0,
-              "requestsWithErrorsCount": 0,
-            },
-          }
-        `);
-        expect(cleanLatencyCount(perTypeStat!)).toMatchInlineSnapshot(`
-          {
-            "Product": {
-              "perFieldStat": {
-                "id": {
-                  "errorsCount": 0,
-                  "estimatedExecutionCount": 1,
-                  "latencyCount": [
-                    "*redacted for snapshot*",
-                  ],
-                  "observedExecutionCount": 1,
-                  "requestsWithErrorsCount": 0,
-                  "returnType": "String!",
-                },
-                "type": {
-                  "errorsCount": 0,
-                  "estimatedExecutionCount": 1,
-                  "latencyCount": [
-                    "*redacted for snapshot*",
-                  ],
-                  "observedExecutionCount": 1,
-                  "requestsWithErrorsCount": 0,
-                  "returnType": "String!",
-                },
-              },
-            },
-            "Query": {
-              "perFieldStat": {
-                "errorFtv1": {
-                  "errorsCount": 1,
-                  "estimatedExecutionCount": 1,
-                  "latencyCount": [
-                    "*redacted for snapshot*",
-                  ],
-                  "observedExecutionCount": 1,
-                  "requestsWithErrorsCount": 1,
-                  "returnType": "String",
-                },
-                "productsWithFtv1Errors": {
-                  "errorsCount": 0,
-                  "estimatedExecutionCount": 1,
-                  "latencyCount": [
-                    "*redacted for snapshot*",
-                  ],
-                  "observedExecutionCount": 1,
-                  "requestsWithErrorsCount": 0,
-                  "returnType": "[Product!]!",
-                },
-                "success": {
-                  "errorsCount": 0,
-                  "estimatedExecutionCount": 1,
-                  "latencyCount": [
-                    "*redacted for snapshot*",
-                  ],
-                  "observedExecutionCount": 1,
-                  "requestsWithErrorsCount": 0,
-                  "returnType": "String",
-                },
-              },
-            },
-          }
-        `);
-
+        resolveReportBody(body);
         return true;
       })
       .reply(200);
@@ -412,7 +286,159 @@ describe('Error stats + `fieldLevelInstrumentation` (or non-ftv1 subgraphs)', ()
       context: async () => ({}),
     });
 
+    // Stopping the server flushes the usage report.
     await gatewayServer.stop();
+    const gzipReportBuffer = Buffer.from(await reportBody, 'hex');
+    const report = Report.decode(gunzipSync(gzipReportBuffer));
+    const statsKey = Object.keys(report.tracesPerQuery)[0];
+    const { queryLatencyStats, perTypeStat } = (
+      report.tracesPerQuery[statsKey]
+        ?.statsWithContext as IContextualizedStats[]
+    )[0];
+
+    expect(cleanLatencyCount(queryLatencyStats!)).toMatchInlineSnapshot(`
+      {
+        "cacheHits": 0,
+        "cacheLatencyCount": [],
+        "forbiddenOperationCount": 0,
+        "latencyCount": [
+          "*redacted for snapshot*",
+        ],
+        "persistedQueryHits": 0,
+        "persistedQueryMisses": 0,
+        "privateCacheTtlCount": [],
+        "publicCacheTtlCount": [],
+        "registeredOperationCount": 0,
+        "requestCount": 1,
+        "requestsWithErrorsCount": 1,
+        "requestsWithoutFieldInstrumentation": 0,
+        "rootErrorStats": {
+          "children": {
+            "service:error-ftv1-subgraph": {
+              "children": {
+                "errorFtv1": {
+                  "children": {},
+                  "errorsCount": 1,
+                  "requestsWithErrorsCount": 1,
+                },
+              },
+              "errorsCount": 0,
+              "requestsWithErrorsCount": 0,
+            },
+            "service:error-no-ftv1-subgraph": {
+              "children": {
+                "_entities": {
+                  "children": {
+                    "color": {
+                      "children": {
+                        "blueErrorNoFtv1": {
+                          "children": {},
+                          "errorsCount": 1,
+                          "requestsWithErrorsCount": 1,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+                "errorNoFtv1": {
+                  "children": {},
+                  "errorsCount": 1,
+                  "requestsWithErrorsCount": 1,
+                },
+                "productsWithErrorsNoFtv1": {
+                  "children": {
+                    "color": {
+                      "children": {
+                        "blueErrorNoFtv1": {
+                          "children": {},
+                          "errorsCount": 1,
+                          "requestsWithErrorsCount": 1,
+                        },
+                      },
+                      "errorsCount": 0,
+                      "requestsWithErrorsCount": 0,
+                    },
+                  },
+                  "errorsCount": 0,
+                  "requestsWithErrorsCount": 0,
+                },
+              },
+              "errorsCount": 0,
+              "requestsWithErrorsCount": 0,
+            },
+          },
+          "errorsCount": 0,
+          "requestsWithErrorsCount": 0,
+        },
+      }
+    `);
+    expect(cleanLatencyCount(perTypeStat!)).toMatchInlineSnapshot(`
+      {
+        "Product": {
+          "perFieldStat": {
+            "id": {
+              "errorsCount": 0,
+              "estimatedExecutionCount": 1,
+              "latencyCount": [
+                "*redacted for snapshot*",
+              ],
+              "observedExecutionCount": 1,
+              "requestsWithErrorsCount": 0,
+              "returnType": "String!",
+            },
+            "type": {
+              "errorsCount": 0,
+              "estimatedExecutionCount": 1,
+              "latencyCount": [
+                "*redacted for snapshot*",
+              ],
+              "observedExecutionCount": 1,
+              "requestsWithErrorsCount": 0,
+              "returnType": "String!",
+            },
+          },
+        },
+        "Query": {
+          "perFieldStat": {
+            "errorFtv1": {
+              "errorsCount": 1,
+              "estimatedExecutionCount": 1,
+              "latencyCount": [
+                "*redacted for snapshot*",
+              ],
+              "observedExecutionCount": 1,
+              "requestsWithErrorsCount": 1,
+              "returnType": "String",
+            },
+            "productsWithFtv1Errors": {
+              "errorsCount": 0,
+              "estimatedExecutionCount": 1,
+              "latencyCount": [
+                "*redacted for snapshot*",
+              ],
+              "observedExecutionCount": 1,
+              "requestsWithErrorsCount": 0,
+              "returnType": "[Product!]!",
+            },
+            "success": {
+              "errorsCount": 0,
+              "estimatedExecutionCount": 1,
+              "latencyCount": [
+                "*redacted for snapshot*",
+              ],
+              "observedExecutionCount": 1,
+              "requestsWithErrorsCount": 0,
+              "returnType": "String",
+            },
+          },
+        },
+      }
+    `);
+
     await errorFtv1Subgraph.stop();
     await errorNoFtv1Subgraph.stop();
     await successSubgraph.stop();

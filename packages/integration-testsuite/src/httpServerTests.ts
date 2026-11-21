@@ -2508,14 +2508,9 @@ export function defineIntegrationTestSuiteHttpServerTests(
           });
         });
 
-        // These tests actually execute incremental delivery operations with
-        // graphql-js, so we only run them from the CI job that installs a
-        // prerelease of graphql@17. Once graphql@17 is released we can switch
-        // to running them by default (and run tests against graphql@16 for
-        // back-compat).
-        (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED
-          ? describe
-          : describe.skip)('tests that require graphql@17', () => {
+        // Unlike the tests above, these tests execute incremental delivery
+        // operations for real, with graphql-js's experimentalExecuteIncrementally.
+        describe('real execution', () => {
           let barrierStringBarrier: Resolvable<void>;
           beforeEach(() => {
             barrierStringBarrier = resolvable();
@@ -2532,7 +2527,13 @@ export function defineIntegrationTestSuiteHttpServerTests(
             },
           };
 
-          describe('tests that require legacy incremental format', () => {
+          // The legacy `deferSpec=20220824` format needs a
+          // `legacyExperimentalExecuteIncrementally` implementation (previously
+          // `@yaacovcr/transform`). Apollo Server 6 drops that format and the
+          // option. These tests are skipped rather than ported, and will be
+          // removed in a future PR before v6 is released (which will replace
+          // them with a test that checks the 406 response).
+          describe.skip('tests that require legacy incremental format', () => {
             it.each([
               [undefined],
               ['application/json'],
@@ -2792,7 +2793,7 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":false,"incremental":[{"data":{"testString":"it works"},"id":"0"}],"completed":[{"id":"0"}]}\r
+{"hasNext":false,"incremental":[{"id":"0","data":{"testString":"it works"}}],"completed":[{"id":"0"}]}\r
 -----\r
 `);
             });
@@ -2852,11 +2853,7 @@ content-type: application/json; charset=utf-8\r
 ---\r
 content-type: application/json; charset=utf-8\r
 \r
-{"hasNext":true,"incremental":[{"id":"0","items":["it works again again"]}]}\r
----\r
-content-type: application/json; charset=utf-8\r
-\r
-{"hasNext":false,"completed":[{"id":"0"}]}\r
+{"hasNext":false,"incremental":[{"id":"0","items":["it works again again"]}],"completed":[{"id":"0"}]}\r
 -----\r
 `);
             });
@@ -2909,7 +2906,7 @@ content-type: application/json; charset=utf-8\r
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"data":{"barrierString":"we waited"},"id":"0"}],"completed":[{"id":"0"}]}
+                {"hasNext":false,"incremental":[{"id":"0","data":{"barrierString":"we waited"}}],"completed":[{"id":"0"}]}
                 -----
                 "
               `);

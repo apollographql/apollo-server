@@ -198,10 +198,7 @@ async function tryToLoadGraphQL17() {
   }
 
   const graphql = await import('graphql');
-  if (
-    graphql.version === '17.0.0-alpha.9' &&
-    'experimentalExecuteIncrementally' in graphql
-  ) {
+  if ('experimentalExecuteIncrementally' in graphql) {
     graphqlExperimentalExecuteIncrementally = (graphql as any)
       .experimentalExecuteIncrementally;
   } else {

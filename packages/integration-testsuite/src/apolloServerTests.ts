@@ -18,9 +18,7 @@ import {
   GraphQLScalarType,
 } from 'graphql';
 
-// Note that by doing deep imports here we don't need to install React.
-import { execute } from '@apollo/client/link/core';
-import { createHttpLink } from '@apollo/client/link/http';
+import { ApolloClient, InMemoryCache, createHttpLink } from '@apollo/client';
 import { createPersistedQueryLink } from '@apollo/client/link/persisted-queries';
 
 import {
@@ -167,6 +165,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
     // Serverless integrations tell us that they start in the background,
     // which affects some tests.
     serverIsStartedInBackground?: boolean;
+    // Integrations that don't implement streaming responses can skip the
+    // incremental delivery tests.
+    noIncrementalDelivery?: boolean;
   } = {},
 ) {
   describe('apolloServerTests.ts', () => {
@@ -1178,39 +1179,38 @@ export function defineIntegrationTestSuiteApolloServerTests(
             expect(Object.keys(reports[0].tracesPerQuery)[0]).toMatch(/^# -\n/);
           });
 
-          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
-            'includes all fields with defer legacy',
-            async () => {
-              const { legacyExecuteIncrementally } = await import(
-                // @ts-ignore might not be installed
-                '@yaacovcr/transform'
-              );
-              await setupApolloServerAndFetchPair(
-                {},
-                {
-                  legacyExperimentalExecuteIncrementally:
-                    legacyExecuteIncrementally,
-                },
-                [],
-                true,
-              );
-              const response = await fetch(uri, {
-                method: 'POST',
-                headers: {
-                  'content-type': 'application/json',
-                  accept: 'multipart/mixed; deferSpec=20220824',
-                },
-                body: JSON.stringify({
-                  query: '{ justAField ...@defer { delayedFoo { bar} } }',
-                }),
-              });
-              expect(response.status).toBe(200);
-              expect(
-                response.headers.get('content-type'),
-              ).toMatchInlineSnapshot(
-                `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
-              );
-              expect(await response.text()).toMatchInlineSnapshot(`
+          // Skipped rather than ported: Apollo Server 6 drops the legacy
+          // deferSpec=20220824 format (see httpServerTests.ts). This test will
+          // be removed in a future PR before v6 is released.
+          it.skip('includes all fields with defer legacy', async () => {
+            const { legacyExecuteIncrementally } = await import(
+              // @ts-ignore might not be installed
+              '@yaacovcr/transform'
+            );
+            await setupApolloServerAndFetchPair(
+              {},
+              {
+                legacyExperimentalExecuteIncrementally:
+                  legacyExecuteIncrementally,
+              },
+              [],
+              true,
+            );
+            const response = await fetch(uri, {
+              method: 'POST',
+              headers: {
+                'content-type': 'application/json',
+                accept: 'multipart/mixed; deferSpec=20220824',
+              },
+              body: JSON.stringify({
+                query: '{ justAField ...@defer { delayedFoo { bar} } }',
+              }),
+            });
+            expect(response.status).toBe(200);
+            expect(response.headers.get('content-type')).toMatchInlineSnapshot(
+              `"multipart/mixed; boundary="-"; deferSpec=20220824"`,
+            );
+            expect(await response.text()).toMatchInlineSnapshot(`
                 "
                 ---
                 content-type: application/json; charset=utf-8
@@ -1223,21 +1223,18 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 -----
                 "
               `);
-              const reports = await reportIngress.promiseOfReports;
-              expect(reports.length).toBe(1);
-              expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
-              const trace = Object.values(reports[0].tracesPerQuery)[0]
-                .trace?.[0] as Trace;
-              expect(trace).toBeDefined();
-              expect(trace?.root?.child?.[0].responseName).toBe('justAField');
-              expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
-              expect(trace?.root?.child?.[1].child?.[0].responseName).toBe(
-                'bar',
-              );
-            },
-          );
+            const reports = await reportIngress.promiseOfReports;
+            expect(reports.length).toBe(1);
+            expect(Object.keys(reports[0].tracesPerQuery)).toHaveLength(1);
+            const trace = Object.values(reports[0].tracesPerQuery)[0]
+              .trace?.[0] as Trace;
+            expect(trace).toBeDefined();
+            expect(trace?.root?.child?.[0].responseName).toBe('justAField');
+            expect(trace?.root?.child?.[1].responseName).toBe('delayedFoo');
+            expect(trace?.root?.child?.[1].child?.[0].responseName).toBe('bar');
+          });
 
-          (process.env.INCREMENTAL_DELIVERY_TESTS_ENABLED ? it : it.skip)(
+          (options.noIncrementalDelivery ? it.skip : it)(
             'includes all fields with defer modern',
             async () => {
               await setupApolloServerAndFetchPair({}, {}, [], true);
@@ -1266,7 +1263,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
                 ---
                 content-type: application/json; charset=utf-8
 
-                {"hasNext":false,"incremental":[{"data":{"delayedFoo":{"bar":"hi"}},"id":"0"}],"completed":[{"id":"0"}]}
+                {"hasNext":false,"incremental":[{"id":"0","data":{"delayedFoo":{"bar":"hi"}}}],"completed":[{"id":"0"}]}
                 -----
                 "
               `);
@@ -2336,21 +2333,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
         const link = createPersistedQueryLink({
           sha256: (query) => createHash('sha256').update(query).digest('hex'),
         }).concat(createHttpLink({ uri, fetch } as any));
+        const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-        const promise = resolvable();
-        execute(link, {
+        const result = await client.query({
           query,
           variables,
-        }).subscribe(
-          (result) => {
-            expect(result.data).toEqual({ testString: 'test string' });
-            promise.resolve();
-          },
-          // onerror
-          () => expect(false).toBe(true),
-        );
-        await promise;
-        expect.assertions(1);
+          fetchPolicy: 'no-cache',
+        });
+        expect(result.data).toEqual({ testString: 'test string' });
       });
 
       it('returns correct result for persisted query link using get request', async () => {
@@ -2359,19 +2349,14 @@ export function defineIntegrationTestSuiteApolloServerTests(
           sha256: (query) => createHash('sha256').update(query).digest('hex'),
           useGETForHashedQueries: true,
         }).concat(createHttpLink({ uri, fetch } as any));
+        const client = new ApolloClient({ cache: new InMemoryCache(), link });
 
-        const promise = resolvable();
-        execute(link, { query, variables } as any).subscribe(
-          (result) => {
-            expect(result.data).toEqual({ testString: 'test string' });
-            promise.resolve();
-          },
-          //onerror
-          () => expect(false).toBe(true),
-        );
-
-        await promise;
-        expect.assertions(1);
+        const result = await client.query({
+          query,
+          variables,
+          fetchPolicy: 'no-cache',
+        });
+        expect(result.data).toEqual({ testString: 'test string' });
       });
     });
 
