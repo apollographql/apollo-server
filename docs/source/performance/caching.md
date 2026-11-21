@@ -10,7 +10,7 @@ type Post {
   id: ID!
   title: String
   author: Author
-  votes: Int @cacheControl(maxAge: 30)
+  votes: Int @cacheControl(maxAge: 30, scope: PUBLIC)
   comments: [Comment]
   readByCurrentUser: Boolean! @cacheControl(maxAge: 10, scope: PRIVATE)
 }
@@ -44,19 +44,19 @@ enum CacheControlScope {
 
 directive @cacheControl(
   maxAge: Int
-  scope: CacheControlScope
+  scope: CacheControlScope!
   inheritMaxAge: Boolean
 ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 ```
 
-If you don't add these definitions, Apollo Server throws an `Unknown directive "@cacheControl"` error on startup.
+If you don't add these definitions, Apollo Server throws an `Unknown directive "@cacheControl"` error on startup. If your schema defines `@cacheControl` differently (for example, with a nullable `scope`, as Apollo Server 4 and 5 documented), the cache control plugin throws an error describing the expected definition on startup; see the [`validateDirectiveDefinition`](../api/plugin/cache-control/#validatedirectivedefinition) option if you need to keep a different definition.
 
 The `@cacheControl` directive accepts the following arguments:
 
 | Name | Description |
 |------|-------------|
 | `maxAge` | The maximum amount of time the field's cached value is valid, in seconds. The default value is `0`, but you can [set a different default](#setting-a-different-default-maxage). |
-| `scope` | If `PRIVATE`, the field's value is specific to a single user. The default value is `PUBLIC`. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
+| `scope` | **Required.** `PUBLIC` if the field's value can be shared between users, or `PRIVATE` if it is specific to a single user. See also [Identifying users for `PRIVATE` responses](#identifying-users-for-private-responses). |
 | `inheritMaxAge` | If `true`, this field inherits the `maxAge` of its parent field instead of using the [default `maxAge`](#setting-a-different-default-maxage). Do not provide `maxAge` if you provide this argument. |
 
 Use `@cacheControl` for fields that should usually be cached with the same settings. If caching settings might change at runtime, you can use the [dynamic method](#in-your-resolvers-dynamic).
@@ -74,7 +74,7 @@ type Post {
   id: ID!
   title: String
   author: Author
-  votes: Int @cacheControl(maxAge: 30)
+  votes: Int @cacheControl(maxAge: 30, scope: PUBLIC)
   comments: [Comment]
   readByCurrentUser: Boolean! @cacheControl(maxAge: 10, scope: PRIVATE)
 }
@@ -90,7 +90,7 @@ In this example:
 This example defines cache control settings for _all_ schema fields that return a `Post` object:
 
 ```graphql {1} title="schema.graphql"
-type Post @cacheControl(maxAge: 240) {
+type Post @cacheControl(maxAge: 240, scope: PUBLIC) {
   id: Int!
   title: String
   author: Author
@@ -113,7 +113,7 @@ type Comment {
 
 ```graphql title="schema.graphql"
 type Comment {
-  post: Post! @cacheControl(maxAge: 120)
+  post: Post! @cacheControl(maxAge: 120, scope: PUBLIC)
   body: String!
 }
 ```
@@ -240,17 +240,17 @@ Consider the following schema:
 ```graphql
 type Query {
   book: Book
-  cachedBook: Book @cacheControl(maxAge: 60)
-  reader: Reader @cacheControl(maxAge: 40)
+  cachedBook: Book @cacheControl(maxAge: 60, scope: PUBLIC)
+  reader: Reader @cacheControl(maxAge: 40, scope: PUBLIC)
 }
 
 type Book {
   title: String
-  cachedTitle: String @cacheControl(maxAge: 30)
+  cachedTitle: String @cacheControl(maxAge: 30, scope: PUBLIC)
 }
 
 type Reader {
-  book: Book @cacheControl(inheritMaxAge: true)
+  book: Book @cacheControl(inheritMaxAge: true, scope: PUBLIC)
 }
 ```
 
@@ -307,7 +307,7 @@ When using [Apollo Federation](/federation), the `@cacheControl` directive and `
 Subgraph schemas contain an `_entities` root field on the `Query` type, so all query plans that require entity resolution will have a [`maxAge` of `0` set by default](#default-maxage). To override this default behavior, you can add a `@cacheControl` directive to an entity's definition:
 
 ```graphql
-type Book @key(fields: "isbn") @cacheControl(maxAge: 30) {
+type Book @key(fields: "isbn") @cacheControl(maxAge: 30, scope: PUBLIC) {
   isbn: String!
   title: String
 }

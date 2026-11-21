@@ -994,7 +994,7 @@ export function defineIntegrationTestSuiteApolloServerTests(
 
                 directive @cacheControl(
                   maxAge: Int
-                  scope: CacheControlScope
+                  scope: CacheControlScope!
                 ) on FIELD_DEFINITION | OBJECT | INTERFACE
 
                 type Query {

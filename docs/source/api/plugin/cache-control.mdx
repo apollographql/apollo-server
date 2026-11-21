@@ -89,6 +89,22 @@ This option was popular in Apollo Server 2 as a workaround for the problem solve
 <tr>
 <td>
 
+###### `validateDirectiveDefinition`
+
+`boolean`
+</td>
+<td>
+
+By default, the plugin checks on startup that any `@cacheControl` directive your schema defines matches the [documented definition](../../performance/caching/#in-your-schema-static): `maxAge: Int`, a non-null `scope` argument whose enum has exactly the values `PUBLIC` and `PRIVATE`, `inheritMaxAge: Boolean`, no other arguments, and only the `FIELD_DEFINITION`, `OBJECT`, `INTERFACE`, and `UNION` locations. If the definition differs, the server fails to start with an error that prints the expected definition. The most common difference is a nullable `scope`, which Apollo Server 4 and 5 documented; Apollo Server 6 requires every `@cacheControl` usage to choose a scope so that no field is cached publicly by accident.
+
+Set this to `false` to skip the check and keep a different definition. Note that the plugin only understands the arguments listed above, whatever the definition says.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `calculateHttpHeaders`
 
 `boolean | 'if-cacheable'`

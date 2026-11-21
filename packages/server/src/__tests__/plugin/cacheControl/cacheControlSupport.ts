@@ -15,7 +15,7 @@ export function augmentTypeDefsWithCacheControlSupport(typeDefs: string) {
 
   directive @cacheControl(
     maxAge: Int
-    scope: CacheControlScope
+    scope: CacheControlScope!
     inheritMaxAge: Boolean
   ) on FIELD_DEFINITION | OBJECT | INTERFACE | UNION
 ` + typeDefs

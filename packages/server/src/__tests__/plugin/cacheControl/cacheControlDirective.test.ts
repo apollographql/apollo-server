@@ -85,7 +85,7 @@ describe('@cacheControl directives', () => {
   it('should set the specified maxAge from a cache hint on the field', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {
-        droid(id: ID!): Droid @cacheControl(maxAge: 60)
+        droid(id: ID!): Droid @cacheControl(maxAge: 60, scope: PUBLIC)
       }
 
       type Droid {
@@ -106,7 +106,9 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 60, scope: 'PUBLIC' }]]),
+    );
   });
 
   it('should set the specified maxAge for a field from a cache hint on the target type', async () => {
@@ -115,7 +117,7 @@ describe('@cacheControl directives', () => {
         droid(id: ID!): Droid
       }
 
-      type Droid @cacheControl(maxAge: 60) {
+      type Droid @cacheControl(maxAge: 60, scope: PUBLIC) {
         id: ID!
         name: String!
       }
@@ -133,7 +135,9 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 60, scope: 'PUBLIC' }]]),
+    );
   });
 
   it('should set the specified maxAge for a field from a cache hint on the target type extension', async () => {
@@ -147,7 +151,7 @@ describe('@cacheControl directives', () => {
         name: String!
       }
 
-      extend type Droid @cacheControl(maxAge: 60)
+      extend type Droid @cacheControl(maxAge: 60, scope: PUBLIC)
     `);
 
     const hints = await collectCacheControlHints(
@@ -162,7 +166,9 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 60 }]]));
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 60, scope: 'PUBLIC' }]]),
+    );
   });
 
   it('should overwrite the default maxAge when maxAge=0 is specified on the type', async () => {
@@ -171,7 +177,7 @@ describe('@cacheControl directives', () => {
         droid(id: ID!): Droid
       }
 
-      type Droid @cacheControl(maxAge: 0) {
+      type Droid @cacheControl(maxAge: 0, scope: PUBLIC) {
         id: ID!
         name: String!
       }
@@ -189,16 +195,18 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 0 }]]));
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 0, scope: 'PUBLIC' }]]),
+    );
   });
 
   it('should override the maxAge from the target type with that specified on a field', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {
-        droid(id: ID!): Droid @cacheControl(maxAge: 120)
+        droid(id: ID!): Droid @cacheControl(maxAge: 120, scope: PUBLIC)
       }
 
-      type Droid @cacheControl(maxAge: 60) {
+      type Droid @cacheControl(maxAge: 60, scope: PUBLIC) {
         id: ID!
         name: String!
       }
@@ -216,13 +224,15 @@ describe('@cacheControl directives', () => {
       { defaultMaxAge: 10 },
     );
 
-    expect(hints).toStrictEqual(new Map([['droid', { maxAge: 120 }]]));
+    expect(hints).toStrictEqual(
+      new Map([['droid', { maxAge: 120, scope: 'PUBLIC' }]]),
+    );
   });
 
   it('should override the maxAge from the target type with that specified on a field, keeping the scope', async () => {
     const schema = buildSchemaWithCacheControlSupport(`
       type Query {
-        droid(id: ID!): Droid @cacheControl(maxAge: 120)
+        droid(id: ID!): Droid @cacheControl(maxAge: 120, scope: PRIVATE)
       }
 
       type Droid @cacheControl(maxAge: 60, scope: PRIVATE) {
@@ -285,11 +295,11 @@ describe('@cacheControl directives', () => {
         alien(id: ID!): Alien
       }
 
-      interface Named @cacheControl(maxAge: 60) {
+      interface Named @cacheControl(maxAge: 60, scope: PUBLIC) {
         name: String!
       }
 
-      type Droid implements Named @cacheControl(maxAge: 30) {
+      type Droid implements Named @cacheControl(maxAge: 30, scope: PUBLIC) {
         id: ID!
         name: String!
       }
@@ -315,7 +325,7 @@ describe('@cacheControl directives', () => {
     );
 
     expect(hintsNamed).toStrictEqual(
-      new Map([['named', { maxAge: 60, scope: undefined }]]),
+      new Map([['named', { maxAge: 60, scope: 'PUBLIC' }]]),
     );
 
     const hintsDroid = await collectCacheControlHints(
@@ -331,7 +341,7 @@ describe('@cacheControl directives', () => {
     );
 
     expect(hintsDroid).toStrictEqual(
-      new Map([['droid', { maxAge: 30, scope: undefined }]]),
+      new Map([['droid', { maxAge: 30, scope: 'PUBLIC' }]]),
     );
 
     const hintsAlien = await collectCacheControlHints(
@@ -356,18 +366,18 @@ describe('@cacheControl directives', () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
       type Query {
-        topLevel: DroidQuery @cacheControl(maxAge: 1000)
+        topLevel: DroidQuery @cacheControl(maxAge: 1000, scope: PUBLIC)
       }
 
       type DroidQuery {
-        droid: Droid @cacheControl(inheritMaxAge: true)
-        droids: [Droid] @cacheControl(inheritMaxAge: true)
+        droid: Droid @cacheControl(inheritMaxAge: true, scope: PUBLIC)
+        droids: [Droid] @cacheControl(inheritMaxAge: true, scope: PUBLIC)
       }
 
       type Droid {
         uncachedField: Droid
         scalarField: String
-        cachedField: String @cacheControl(maxAge: 30)
+        cachedField: String @cacheControl(maxAge: 30, scope: PUBLIC)
       }
     `,
     });
@@ -382,8 +392,9 @@ describe('@cacheControl directives', () => {
 
       expect(hints).toStrictEqual(
         new Map([
-          ['topLevel', { maxAge: 1000 }],
-          ['topLevel.droid.cachedField', { maxAge: 30 }],
+          ['topLevel', { maxAge: 1000, scope: 'PUBLIC' }],
+          ['topLevel.droid', { maxAge: undefined, scope: 'PUBLIC' }],
+          ['topLevel.droid.cachedField', { maxAge: 30, scope: 'PUBLIC' }],
         ]),
       );
       expect(policyIfCacheable).toStrictEqual({
@@ -402,10 +413,14 @@ describe('@cacheControl directives', () => {
 
       expect(hints).toStrictEqual(
         new Map([
-          ['topLevel', { maxAge: 1000 }],
-          ['topLevel.droid.cachedField', { maxAge: 30 }],
+          ['topLevel', { maxAge: 1000, scope: 'PUBLIC' }],
+          ['topLevel.droid', { maxAge: undefined, scope: 'PUBLIC' }],
+          ['topLevel.droid.cachedField', { maxAge: 30, scope: 'PUBLIC' }],
           ['topLevel.droid.uncachedField', { maxAge: 0 }],
-          ['topLevel.droid.uncachedField.cachedField', { maxAge: 30 }],
+          [
+            'topLevel.droid.uncachedField.cachedField',
+            { maxAge: 30, scope: 'PUBLIC' },
+          ],
         ]),
       );
       expect(policyIfCacheable).toBeNull();
@@ -421,13 +436,20 @@ describe('@cacheControl directives', () => {
 
       expect(hints).toStrictEqual(
         new Map([
-          ['topLevel', { maxAge: 1000 }],
-          ['topLevel.droids.0.cachedField', { maxAge: 30 }],
+          ['topLevel', { maxAge: 1000, scope: 'PUBLIC' }],
+          ['topLevel.droids', { maxAge: undefined, scope: 'PUBLIC' }],
+          ['topLevel.droids.0.cachedField', { maxAge: 30, scope: 'PUBLIC' }],
           ['topLevel.droids.0.uncachedField', { maxAge: 0 }],
-          ['topLevel.droids.0.uncachedField.cachedField', { maxAge: 30 }],
-          ['topLevel.droids.1.cachedField', { maxAge: 30 }],
+          [
+            'topLevel.droids.0.uncachedField.cachedField',
+            { maxAge: 30, scope: 'PUBLIC' },
+          ],
+          ['topLevel.droids.1.cachedField', { maxAge: 30, scope: 'PUBLIC' }],
           ['topLevel.droids.1.uncachedField', { maxAge: 0 }],
-          ['topLevel.droids.1.uncachedField.cachedField', { maxAge: 30 }],
+          [
+            'topLevel.droids.1.uncachedField.cachedField',
+            { maxAge: 30, scope: 'PUBLIC' },
+          ],
         ]),
       );
       expect(policyIfCacheable).toBeNull();
@@ -439,15 +461,15 @@ describe('@cacheControl directives', () => {
       typeDefs: `#graphql
         type Query {
           book: Book
-          cachedBook: Book @cacheControl(maxAge: 60)
-          reader: Reader @cacheControl(maxAge: 40)
+          cachedBook: Book @cacheControl(maxAge: 60, scope: PUBLIC)
+          reader: Reader @cacheControl(maxAge: 40, scope: PUBLIC)
         }
         type Book {
           title: String
-          cachedTitle: String @cacheControl(maxAge: 30)
+          cachedTitle: String @cacheControl(maxAge: 30, scope: PUBLIC)
         }
         type Reader {
-          book: Book @cacheControl(inheritMaxAge: true)
+          book: Book @cacheControl(inheritMaxAge: true, scope: PUBLIC)
         }
       `,
     });
@@ -474,13 +496,13 @@ describe('@cacheControl directives', () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
         type Query {
-          topLevel: TopLevel @cacheControl(maxAge: 500)
+          topLevel: TopLevel @cacheControl(maxAge: 500, scope: PUBLIC)
         }
         type TopLevel {
           foo: Foo @cacheControl(inheritMaxAge: true, scope: PRIVATE)
         }
         type Foo {
-          bar: String @cacheControl(maxAge: 5)
+          bar: String @cacheControl(maxAge: 5, scope: PUBLIC)
         }
     `,
     });
@@ -494,9 +516,9 @@ describe('@cacheControl directives', () => {
 
     expect(hints).toStrictEqual(
       new Map([
-        ['topLevel', { maxAge: 500 }],
-        ['topLevel.foo', { scope: 'PRIVATE' }],
-        ['topLevel.foo.bar', { maxAge: 5 }],
+        ['topLevel', { maxAge: 500, scope: 'PUBLIC' }],
+        ['topLevel.foo', { maxAge: undefined, scope: 'PRIVATE' }],
+        ['topLevel.foo.bar', { maxAge: 5, scope: 'PUBLIC' }],
       ]),
     );
     expect(policyIfCacheable).toStrictEqual({
@@ -509,12 +531,12 @@ describe('@cacheControl directives', () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
         type Query {
-          topLevel: TopLevel @cacheControl(maxAge: 500)
+          topLevel: TopLevel @cacheControl(maxAge: 500, scope: PUBLIC)
         }
         type TopLevel {
           foo: Foo
         }
-        type Foo @cacheControl(inheritMaxAge: true) {
+        type Foo @cacheControl(inheritMaxAge: true, scope: PUBLIC) {
           bar: String
         }
     `,
@@ -527,7 +549,12 @@ describe('@cacheControl directives', () => {
         {},
       );
 
-    expect(hints).toStrictEqual(new Map([['topLevel', { maxAge: 500 }]]));
+    expect(hints).toStrictEqual(
+      new Map([
+        ['topLevel', { maxAge: 500, scope: 'PUBLIC' }],
+        ['topLevel.foo', { maxAge: undefined, scope: 'PUBLIC' }],
+      ]),
+    );
     expect(policyIfCacheable).toStrictEqual({
       maxAge: 500,
       scope: 'PUBLIC',
@@ -538,15 +565,15 @@ describe('@cacheControl directives', () => {
     const schema = makeExecutableSchemaWithCacheControlSupport({
       typeDefs: `#graphql
         type Query {
-          foo: Foo @cacheControl(maxAge: 5)
+          foo: Foo @cacheControl(maxAge: 5, scope: PUBLIC)
         }
         type Foo {
-          bar: Bar @cacheControl(inheritMaxAge: true)
+          bar: Bar @cacheControl(inheritMaxAge: true, scope: PUBLIC)
           defaultBar: Bar
         }
         type Bar {
           scalar: String
-          cachedScalar: String @cacheControl(maxAge: 2)
+          cachedScalar: String @cacheControl(maxAge: 2, scope: PUBLIC)
         }
     `,
     });
