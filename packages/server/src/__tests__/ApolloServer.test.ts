@@ -616,7 +616,9 @@ describe('ApolloServer executeOperation', () => {
     const result = singleResult(body);
     expect(result.errors).toHaveLength(2);
     expect(result.errors?.[0].extensions?.code).toBe('BAD_USER_INPUT');
-    expect(result.errors?.[1].extensions?.code).toBe('INTERNAL_SERVER_ERROR');
+    // The "too many errors" error is one of the request errors graphql-js
+    // returns from variable coercion, so it gets the same code as the rest.
+    expect(result.errors?.[1].extensions?.code).toBe('BAD_USER_INPUT');
     expect(result.errors?.[1].message).toMatch(
       'Too many errors processing variables, error limit reached. Execution aborted.',
     );

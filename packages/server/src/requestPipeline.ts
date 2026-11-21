@@ -5,8 +5,8 @@ import {
   GraphQLError,
   validate,
   parse,
-  Kind,
-  experimentalExecuteIncrementally,
+  experimentalExecuteRootSelectionSet,
+  validateExecutionArgs,
   type ExecutionResult,
   type FormattedSubsequentIncrementalExecutionResult,
   type InitialIncrementalExecutionResult,
@@ -75,36 +75,16 @@ function computeQueryHash(query: string) {
 
 type Mutable<T> = { -readonly [P in keyof T]: T[P] };
 
-// Once GraphQL-JS v17 is released and we make a version of Apollo Server that
-// requires it, we can drop this hack, because it lets us break the `execute`
-// API into two steps and validate user input explicitly first.
-function isBadUserInputGraphQLError(error: GraphQLError): boolean {
-  return (
-    error.nodes?.length === 1 &&
-    error.nodes[0].kind === Kind.VARIABLE_DEFINITION &&
-    // GraphQL-JS v17 alpha wording
-    (error.message.startsWith(
-      `Variable "$${error.nodes[0].variable.name.value}" has invalid value`,
-    ) ||
-      // GraphQL-JS v16 wording
-      error.message.startsWith(
-        `Variable "$${error.nodes[0].variable.name.value}" got invalid value `,
-      ) ||
-      error.message.startsWith(
-        `Variable "$${error.nodes[0].variable.name.value}" of required type `,
-      ) ||
-      error.message.startsWith(
-        `Variable "$${error.nodes[0].variable.name.value}" of non-null type `,
-      ))
-  );
-}
-
 // This is "semi-formatted" because the initial result has not yet been
 // formatted but the subsequent results "have been" --- in the sense that they
 // are an async iterable that will format them as they come in.
 type SemiFormattedExecuteIncrementallyResults =
   | {
       singleResult: ExecutionResult;
+      // True when graphql-js rejected the request before executing it (the
+      // operation could not be selected, or the variables failed to coerce),
+      // so `singleResult` holds only request errors.
+      requestErrors?: boolean;
     }
   | {
       initialResult: InitialIncrementalExecutionResult;
@@ -460,28 +440,19 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         throw new OperationResolutionError(result.errors[0]);
       }
 
-      // The first thing that execution does is coerce the request's variables
-      // to the types declared in the operation, which can lead to errors if
-      // they are of the wrong type. It also makes sure that all non-null
-      // variables are required and get non-null values. If any of these things
-      // lead to errors, we change them into UserInputError so that their code
-      // doesn't end up being INTERNAL_SERVER_ERROR, since these are client
-      // errors. (But if the error already has a code, perhaps because the
-      // original error was thrown from a custom scalar parseValue, we leave it
-      // alone. We check that here instead of as part of
-      // isBadUserInputGraphQLError since perhaps that function will one day be
-      // changed to something we can get directly from graphql-js, but the
-      // `code` check is AS-specific.)
-      //
-      // This is hacky! Hopefully graphql-js will give us a way to separate
-      // variable resolution from execution later; see
-      // https://github.com/graphql/graphql-js/issues/3169
-      const resultErrors = result.errors?.map((e) => {
-        if (isBadUserInputGraphQLError(e) && e.extensions?.code == null) {
-          return new UserInputError(e);
-        }
-        return e;
-      });
+      // If graphql-js rejected the request before executing it (we know the
+      // operation was resolved, so these are variable coercion errors: a
+      // variable of the wrong type, or a missing or null value for a non-null
+      // variable), change the errors into UserInputError so that their code is
+      // BAD_USER_INPUT rather than INTERNAL_SERVER_ERROR, since these are
+      // client errors. If an error already has a code, perhaps because it was
+      // thrown from a custom scalar's parseValue, we leave it alone.
+      const resultErrors =
+        'requestErrors' in fullResult && fullResult.requestErrors
+          ? result.errors?.map((e) =>
+              e.extensions?.code == null ? new UserInputError(e) : e,
+            )
+          : result.errors;
 
       if (resultErrors) {
         await didEncounterErrors(resultErrors);
@@ -552,7 +523,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
       );
       return { singleResult: result };
     } else {
-      const resultOrResults = await experimentalExecuteIncrementally({
+      // graphql-js splits execution into two steps: validateExecutionArgs
+      // selects the operation and coerces the variables, returning request
+      // errors if either fails, and only then do we execute the operation.
+      const validatedArgs = validateExecutionArgs({
         schema: schemaDerivedData.schema,
         document,
         rootValue:
@@ -565,6 +539,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         fieldResolver: internals.fieldResolver,
         options: internals.executionOptions,
       });
+      if (!('schema' in validatedArgs)) {
+        return { singleResult: { errors: validatedArgs }, requestErrors: true };
+      }
+      const resultOrResults =
+        await experimentalExecuteRootSelectionSet(validatedArgs);
       if ('initialResult' in resultOrResults) {
         return {
           initialResult: resultOrResults.initialResult,
