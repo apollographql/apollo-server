@@ -15,6 +15,7 @@ import {
   printSchema,
   type FieldNode,
   type GraphQLFormattedError,
+  type GraphQLResolveInfo,
   GraphQLScalarType,
 } from 'graphql';
 
@@ -168,6 +169,9 @@ export function defineIntegrationTestSuiteApolloServerTests(
     // Integrations that don't implement streaming responses can skip the
     // incremental delivery tests.
     noIncrementalDelivery?: boolean;
+    // Integrations that abort `HTTPGraphQLRequest.signal` when the client
+    // disconnects can opt in to the request cancellation test.
+    supportsRequestAbortSignal?: boolean;
   } = {},
 ) {
   describe('apolloServerTests.ts', () => {
@@ -2875,6 +2879,49 @@ export function defineIntegrationTestSuiteApolloServerTests(
           expect(v3.data).toEqual({ testString3: '3' });
         });
       });
+    });
+
+    describe('request cancellation', () => {
+      (options.supportsRequestAbortSignal ? it : it.skip)(
+        'aborts execution when the client disconnects',
+        async () => {
+          const resolverStarted = resolvable();
+          const resolverSawAbort = resolvable();
+          const uri = await createServerAndGetUrl({
+            typeDefs: 'type Query { hang: String }',
+            resolvers: {
+              Query: {
+                hang(
+                  _source: unknown,
+                  _args: unknown,
+                  _context: unknown,
+                  info: GraphQLResolveInfo,
+                ) {
+                  resolverStarted.resolve();
+                  return new Promise<string>((resolve) => {
+                    info.getAbortSignal()?.addEventListener('abort', () => {
+                      resolverSawAbort.resolve();
+                      resolve('aborted');
+                    });
+                  });
+                },
+              },
+            },
+          });
+
+          const controller = new AbortController();
+          const fetchPromise = fetch(uri, {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({ query: '{ hang }' }),
+            signal: controller.signal,
+          });
+          await resolverStarted;
+          controller.abort();
+          await expect(fetchPromise).rejects.toThrow(/abort/i);
+          await resolverSawAbort;
+        },
+      );
     });
 
     describe('renderLandingPage', () => {

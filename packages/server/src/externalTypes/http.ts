@@ -22,6 +22,14 @@ export interface HTTPGraphQLRequest {
   // read by your body-parser or whatever. we poke at it to make it into
   // the right real type.
   body: unknown;
+  /**
+   * Optional. If provided, Apollo Server forwards this signal to GraphQL.js
+   * execution: resolvers can observe it via `info.getAbortSignal()`, and if
+   * it is aborted before execution completes, execution stops and the request
+   * fails with a `REQUEST_ABORTED` error. Integrations typically abort it
+   * when the client closes the connection before receiving a response.
+   */
+  signal?: AbortSignal;
 }
 
 export interface HTTPGraphQLHead {

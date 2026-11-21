@@ -154,8 +154,11 @@ interface HTTPGraphQLRequest {
   headers: HeaderMap; // the `HeaderMap` class is exported by @apollo/server
   search: string;
   body: unknown;
+  signal?: AbortSignal;
 }
 ```
+
+The optional `signal` lets your integration tell Apollo Server that the client has gone away. If you provide an `AbortSignal` and abort it when the client closes the connection before receiving a response, Apollo Server forwards it to GraphQL.js execution: resolvers can observe it via `info.getAbortSignal()`, and execution stops when it fires (the request then fails with a `REQUEST_ABORTED` error, which no client receives but which plugins can observe). Apollo Server's standalone server aborts it from the response's `close` event when the response has not finished.
 
 Apollo Server handles the logic of `GET` vs. `POST`, relevant headers, and
 whether to look in `body` or `search` for the GraphQL-specific parts of the

@@ -5,6 +5,7 @@ import {
   GraphQLError,
   validate,
   parse,
+  AbortedGraphQLExecutionError,
   experimentalExecuteRootSelectionSet,
   validateExecutionArgs,
   type ExecutionResult,
@@ -22,6 +23,7 @@ import {
   PersistedQueryNotFoundError,
   UserInputError,
   BadRequestError,
+  RequestAbortedError,
   ValidationError,
   SyntaxError,
   OperationResolutionError,
@@ -510,6 +512,19 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         executionListeners.map((l) => l.executionDidEnd?.(executionError)),
       );
 
+      if (executionError instanceof AbortedGraphQLExecutionError) {
+        // The request's abort signal fired mid-execution (usually because the
+        // client went away). graphql-js attaches whatever partial result it
+        // had, but nobody is waiting for it, so we discard it and respond
+        // with a single error that plugins can recognize.
+        server.logger.debug(
+          'GraphQL execution was aborted because the request was cancelled.',
+        );
+        return await sendErrorResponse([
+          new RequestAbortedError(executionError.cause),
+        ]);
+      }
+
       return await sendErrorResponse([ensureGraphQLError(executionError)]);
     }
 
@@ -548,6 +563,10 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         operationName: request.operationName,
         fieldResolver: internals.fieldResolver,
         hideSuggestions: internals.hideSchemaDetailsFromClientErrors,
+        // Integrations may provide a signal (typically aborted when the client
+        // disconnects); graphql-js exposes it to resolvers and stops execution
+        // when it fires.
+        abortSignal: request.http?.signal,
         options: internals.executionOptions,
       });
       if (!('schema' in validatedArgs)) {
