@@ -9,5 +9,8 @@
     "@apollo/server": "5.5.2",
     "@apollo/usage-reporting-protobuf": "4.1.2"
   },
-  "changesets": []
+  "changesets": [
+    "graphql-17",
+    "node-22-floor"
+  ]
 }
