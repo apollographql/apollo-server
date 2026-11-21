@@ -29,6 +29,9 @@ export function defineIntegrationTestSuite(
   options: {
     serverIsStartedInBackground?: boolean;
     noIncrementalDelivery?: boolean;
+    // Set this if your integration passes an AbortSignal on
+    // HTTPGraphQLRequest that is aborted when the client disconnects.
+    supportsRequestAbortSignal?: boolean;
   } = {},
 ) {
   describe('integration tests', () => {

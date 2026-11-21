@@ -103,12 +103,22 @@ export async function startStandaloneServer<TContext extends BaseContext>(
           }
         }
 
+        // If the client goes away before we finish writing the response,
+        // tell Apollo Server so that execution can stop early.
+        const abortController = new AbortController();
+        res.once('close', () => {
+          if (!res.writableFinished) {
+            abortController.abort();
+          }
+        });
+
         const httpGraphQLRequest: HTTPGraphQLRequest = {
           // Note that method and url are guaranteed to exist for IncomingMessages coming from Servers.
           method: req.method!.toUpperCase(),
           headers,
           search: urlParse(req.url!).search ?? '',
           body: 'body' in req ? req.body : undefined,
+          signal: abortController.signal,
         };
 
         server

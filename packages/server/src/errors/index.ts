@@ -9,6 +9,7 @@ export enum ApolloServerErrorCode {
   BAD_USER_INPUT = 'BAD_USER_INPUT',
   OPERATION_RESOLUTION_FAILURE = 'OPERATION_RESOLUTION_FAILURE',
   BAD_REQUEST = 'BAD_REQUEST',
+  REQUEST_ABORTED = 'REQUEST_ABORTED',
 }
 
 export enum ApolloServerValidationErrorCode {

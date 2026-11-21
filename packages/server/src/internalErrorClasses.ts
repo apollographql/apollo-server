@@ -111,6 +111,16 @@ export class OperationResolutionError extends GraphQLErrorWithCode {
   }
 }
 
+export class RequestAbortedError extends GraphQLErrorWithCode {
+  constructor(cause: unknown) {
+    super(
+      'Execution was aborted because the request was cancelled.',
+      ApolloServerErrorCode.REQUEST_ABORTED,
+      { originalError: cause instanceof Error ? cause : undefined },
+    );
+  }
+}
+
 export class BadRequestError extends GraphQLErrorWithCode {
   constructor(message: string, options?: GraphQLErrorOptions) {
     super(message, ApolloServerErrorCode.BAD_REQUEST, {

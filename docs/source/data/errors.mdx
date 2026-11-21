@@ -152,6 +152,19 @@ This occurs when a request containing multiple named operations doesn't specify 
 <tr>
 <td>
 
+###### `REQUEST_ABORTED`
+
+</td>
+<td>
+
+The integration aborted the request's `AbortSignal` (typically because the client disconnected) before execution finished, so execution was stopped early. No client receives this error; it exists so that plugins and logs can distinguish cancelled requests from failures.
+
+</td>
+</tr>
+
+<tr>
+<td>
+
 ###### `BAD_REQUEST`
 
 </td>
