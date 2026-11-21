@@ -133,7 +133,7 @@ export function ApolloServerPluginInlineTrace(
 
           const encodedUint8Array = Trace.encode(treeBuilder.trace).finish();
           const encodedBuffer = Buffer.from(
-            encodedUint8Array,
+            encodedUint8Array.buffer,
             encodedUint8Array.byteOffset,
             encodedUint8Array.byteLength,
           );

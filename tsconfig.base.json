@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "composite": true,
-    "target": "es2023",
+    "target": "es2024",
     "module": "esnext",
     "moduleResolution": "node",
     "esModuleInterop": true,
@@ -17,7 +17,7 @@
     "noUnusedParameters": true,
     "noUnusedLocals": true,
     "forceConsistentCasingInFileNames": true,
-    "lib": ["es2023"],
+    "lib": ["es2024"],
     "types": ["node"],
     "baseUrl": ".",
   }
