@@ -1,25 +1,25 @@
 ---
 title: Migrating from Apollo Server 3
-subtitle: Upgrade your Apollo Server 3 to Apollo Server 5
+subtitle: Upgrade your Apollo Server 3 to Apollo Server 6
 ---
 
 import TopLevelAwait from "./shared/top-level-await.mdx"
 import IntegrationTable from "./shared/integration-table.mdx"
 
-Apollo Server 4 is a major refactor, focused on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. Apollo Server 5 is a smaller upgrade focused largely on adjusting which versions of Node.js and Express are supported. This page tells you what to do to migrate your server from Apollo Server 3 directly to Apollo Server 5. (The differences between Apollo Server 4 and 5 are small enough that there is no advantage to trying to upgrade in two separate steps.)
+Apollo Server 4 is a major refactor, focused on improving Apollo Server's extensibility and making it simpler to use, maintain, and document. Apollo Server 6 and Apollo Server 6 are smaller upgrades focused largely on adjusting which versions of Node.js, Express, and GraphQL.js are supported. This page tells you what to do to migrate your server from Apollo Server 3 directly to Apollo Server 6. (The differences between Apollo Server 4 and 5 are small enough that there is no advantage to trying to upgrade in two separate steps.)
 
-Apollo Server 4 and 5 provide the following features:
+Apollo Server 4, 5, and 6 provide the following features:
 * A well-defined API with a stable HTTP abstraction, enabling contributors to easily [build and maintain integrations](./integrations/building-integrations) in their preferred frameworks.
 * A new `@apollo/server` package, combining numerous [smaller packages](#packages-merged-into-apolloserver) and including the [`startStandaloneServer`](#migrate-from-apollo-server) function.
 * Apollo-maintained packages to integrate with the Express web framework via the [`expressMiddleware`](#migrate-from-apollo-server-express) function.
 * Packages that can be used as either ECMAScript or CJS modules.
-* Experimental support for [incremental delivery](./workflow/requests#incremental-delivery-experimental) when combined with a pre-release of `graphql-js`.
+* Support for [incremental delivery](./workflow/requests#incremental-delivery-experimental) (`@defer` and `@stream`): experimental and tied to pre-releases of `graphql-js` in Apollo Server 4 and 5, and built in with GraphQL.js v17 in Apollo Server 6.
 
 > For a list of all breaking changes, see the [changelog](https://github.com/apollographql/apollo-server/blob/main/packages/server/CHANGELOG.md).
 
-> 🚚 This guide helps you migrate from Apollo Server 3 to Apollo Server 5. If you are using Apollo Server 2, you must first [migrate to Apollo Server 3](https://www.apollographql.com/docs/apollo-server/v3/migration) before following this guide.
+> 🚚 This guide helps you migrate from Apollo Server 3 to Apollo Server 6. If you are using Apollo Server 2, you must first [migrate to Apollo Server 3](https://www.apollographql.com/docs/apollo-server/v3/migration) before following this guide.
 
-We recommend that all users of [previous versions](./previous-versions) of Apollo Server upgrade to Apollo Server 5 as soon as possible. Apollo Server 4 has been end-of-life since January 26, 2026. Apollo Server 3 has been end-of-life since October 22, 2024. Apollo Server 2 has been end-of-life since October 22, 2023.
+We recommend that all users of [previous versions](./previous-versions) of Apollo Server upgrade to Apollo Server 6 as soon as possible. Apollo Server 6 will be end-of-life on INSERT-AS5-EOL-DATE. Apollo Server 4 has been end-of-life since January 26, 2026. Apollo Server 3 has been end-of-life since October 22, 2024. Apollo Server 2 has been end-of-life since October 22, 2023.
 
 ## The new `@apollo/server` package
 
@@ -39,7 +39,7 @@ There are no integration-specific subclasses in Apollo Server 4+. Instead, there
 
 In Apollo Server 3, the Apollo Server core team was responsible for maintaining every integration package. With Apollo Server 4+, the AS core team no longer directly maintains most integration packages. Instead, we work with the broader open source community [to maintain Apollo Server integrations](./integrations/integration-index/), enabling those who regularly use different web frameworks to make the best choices for their framework's integration.
 
-For those migrating from Apollo Server 3 to Apollo Server 5, use the below flowchart to see your migration path:
+For those migrating from Apollo Server 3 to Apollo Server 6, use the below flowchart to see your migration path:
 
 ```mermaid
 graph TB;
@@ -56,7 +56,7 @@ graph TB;
 
 The [`@apollo/server` package](https://www.npmjs.com/package/@apollo/server) exports these functions alongside the  `ApolloServer` class.
 
-> In Apollo Server 4, `@apollo/server` also contains a copy of the same `expressMiddleware` function from `@as-integrations/express4` package, exported from `@apollo/server/express4`. This copy does not exist in Apollo Server 5. As our recommendation is to upgrade directly to Apollo Server 5 from Apollo Server 3, you should use the separate integration package.
+> In Apollo Server 4, `@apollo/server` also contains a copy of the same `expressMiddleware` function from `@as-integrations/express4` package, exported from `@apollo/server/express4`. This copy does not exist in Apollo Server 5 or later. As our recommendation is to upgrade directly to Apollo Server 6 from Apollo Server 3, you should use the separate integration package.
 
 If you are using another Apollo Server 3 framework integration package (such as `apollo-server-koa` or `apollo-server-lambda`), check out our [list of integrations](./integrations/integration-index) to see if a community-maintained integration package exists for your framework of choice.
 
@@ -68,7 +68,7 @@ Below are a few high-level changes for using framework integrations:
 - You are responsible for [setting up HTTP body parsing and CORS](#http-body-parsing-and-cors) using your framework integration's standard functionality.
 - If you want your server to listen on a specific URL path, pass that path directly to your framework's router instead of using the [`path` option](#path-parsing). If you did not specify a URL path, the default in Apollo Server 3 was `/graphql`, so to preserve existing behavior, you should specify that path explicitly.
 
-The following sections show how servers using `apollo-server` or `apollo-server-express` can update to Apollo Server 5.
+The following sections show how servers using `apollo-server` or `apollo-server-express` can update to Apollo Server 6.
 
 <TopLevelAwait />
 
@@ -76,7 +76,7 @@ The following sections show how servers using `apollo-server` or `apollo-server-
 
 In Apollo Server 3, the `apollo-server` package is a "batteries-included" package that wraps `apollo-server-express`, providing an HTTP server with minimal HTTP-level customization.
 
-If you used the "batteries included" `apollo-server` package in Apollo Server 3, use the `startStandaloneServer` function in Apollo Server 5.
+If you used the "batteries included" `apollo-server` package in Apollo Server 3, use the `startStandaloneServer` function in Apollo Server 6.
 
 This Apollo Server 3 code:
 
@@ -102,7 +102,7 @@ console.log(`🚀  Server ready at ${url}`);
 
 </MultiCodeBlock>
 
-looks like this in Apollo Server 5:
+looks like this in Apollo Server 6:
 
 <MultiCodeBlock>
 
@@ -152,7 +152,7 @@ The `startStandaloneServer` function accepts two arguments; the first is the ins
 
   An optional `context` initialization function. The `context` function receives `req` and `res` options ([see below for more details.](#context-initialization-function)).
 
-  In Apollo Server 3, you pass the `context` function to the constructor. In Apollo Server 5, you pass the `context` function to `startStandaloneServer`.
+  In Apollo Server 3, you pass the `context` function to the constructor. In Apollo Server 6, you pass the `context` function to `startStandaloneServer`.
 
 </td>
 
@@ -172,7 +172,7 @@ The `startStandaloneServer` function accepts two arguments; the first is the ins
 
   An optional `listen` configuration option. The `listen` option accepts an object with the same properties as the [`net.Server.listen` options object](https://nodejs.org/api/net.html#serverlistenoptions-callback).
 
-  For example, in Apollo Server 3, if you used `server.listen(4321)`, you'll pass `listen: { port: 4321 }` to the `startStandaloneServer` function in Apollo Server 5. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method; you don't need to specify this `listen` option.
+  For example, in Apollo Server 3, if you used `server.listen(4321)`, you'll pass `listen: { port: 4321 }` to the `startStandaloneServer` function in Apollo Server 6. If you didn't pass any arguments to Apollo Server 3's `server.listen()` method; you don't need to specify this `listen` option.
 </td>
 
 </tr>
@@ -180,13 +180,13 @@ The `startStandaloneServer` function accepts two arguments; the first is the ins
 </tbody>
 </table>
 
-The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you previously used the `cors` constructor option to customize your CORS settings in Apollo Server 3, use the [`expressMiddleware` function](#migrate-from-apollo-server-express) in Apollo Server 5.
+The `startStandaloneServer` function doesn't enable you to configure your server's CORS behavior. If you previously used the `cors` constructor option to customize your CORS settings in Apollo Server 3, use the [`expressMiddleware` function](#migrate-from-apollo-server-express) in Apollo Server 6.
 
 Similarly, if you used the `stopGracePeriodMillis` constructor option in Apollo Server 3, use the [`expressMiddleware` function](#migrate-from-apollo-server-express) and specify `stopGracePeriodMillis` to the `ApolloServerPluginDrainHttpServer` plugin.
 
 ### Migrate from `apollo-server-express`
 
-If you used the `apollo-server-express` package in Apollo Server 3, use the `expressMiddleware` function in Apollo Server 5 (i.e., instead of using `server.applyMiddleware` or `server.getMiddleware`).
+If you used the `apollo-server-express` package in Apollo Server 3, use the `expressMiddleware` function in Apollo Server 6 (i.e., instead of using `server.applyMiddleware` or `server.getMiddleware`).
 
 > The following assumes you are using Express v4. If you would like to use Express v5 (which was not supported by Apollo Server 3), you can follow the instructions below, but use the package `@as-integrations/express5` instead of `@as-integrations/express4`.
 
@@ -230,7 +230,7 @@ console.log(`🚀 Server ready at http://localhost:4000${server.graphqlPath}`);
 
 </MultiCodeBlock>
 
-looks like this in Apollo Server 5:
+looks like this in Apollo Server 6:
 
 <MultiCodeBlock>
 
@@ -335,7 +335,7 @@ For example, replace this Apollo Server 3 code:
 import { ApolloServerPluginUsageReporting } from 'apollo-server-core';
 ```
 
-with this Apollo Server 5 code:
+with this Apollo Server 6 code:
 
 ```ts
 import { ApolloServerPluginUsageReporting } from '@apollo/server/plugin/usageReporting';
@@ -350,20 +350,20 @@ Once you've updated your imports, you can remove your project's dependency on `a
 
 ### Node.js
 
-Apollo Server 5 supports Node.js v20.0.0 and later. (Apollo Server 3 supports Node.js v12.) This includes all [LTS and Current major versions at the time of release](https://nodejs.org/en/about/releases/).
+Apollo Server 6 supports Node.js v22.18.0 and later. (Apollo Server 3 supports Node.js v12.) This includes all [LTS and Current major versions at the time of release](https://nodejs.org/en/about/releases/). Note that starting with Apollo Server 6, a minor release may drop support for a Node.js major version once it reaches end-of-life; see the [Node.js support policy](./migration#nodejs-support-policy).
 
-If you're using an older EOL version of Node.js, upgrade your runtime before upgrading to Apollo Server 5.
+If you're using an older EOL version of Node.js, upgrade your runtime before upgrading to Apollo Server 6.
 
 If your server requires you to use an [HTTP proxy](./security/proxy-configuration/) to make external connections, we strongly recommend running Node.js v24 or newer, which has built-in support for communicating through HTTP proxies.
 
 
 ### `graphql`
 
-Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package/graphql) (the core JS GraphQL implementation). Apollo Server 5 supports `graphql` v16.11.0 and later. (Apollo Server 3 supports `graphql` v15.3.0 through v16.)
+Apollo Server has a peer dependency on [`graphql`](https://www.npmjs.com/package/graphql) (the core JS GraphQL implementation). Apollo Server 6 supports `graphql` v17.1.0 and later. (Apollo Server 3 supports `graphql` v15.3.0 through v16.) Read the [GraphQL.js v16 to v17 upgrade guide](https://www.graphql-js.org/upgrade-guides/v16-v17/) and the [v17 notes in the Apollo Server 6 migration guide](./migration#require-graphqljs-v17) for the changes that most often affect servers.
 
-If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 5.
+If you're using an older version of `graphql`, upgrade it to a supported version before upgrading to Apollo Server 6.
 
-Note that upgrading `graphql` may require you to upgrade other libraries that are installed in your project. For example, if you use Apollo Server with Apollo Gateway, you should upgrade Apollo Gateway to some v2.x version for full `graphql` 16 support before upgrading to Apollo Server 5. (This is also recommended because Apollo Gateway v0.x is end-of-life.)
+Note that upgrading `graphql` may require you to upgrade other libraries that are installed in your project. For example, if you use Apollo Server with Apollo Gateway, you should upgrade Apollo Gateway to v2.14.5 or later for `graphql` v17 support before upgrading to Apollo Server 6. (This is also recommended because Apollo Gateway v0.x is end-of-life.)
 
 ### TypeScript
 
@@ -385,7 +385,7 @@ In Apollo Server 3, the top-level [`dataSources` constructor option](/apollo-ser
 
 Apollo Server 4+ removes the `dataSources` constructor option. You can now treat `DataSources` like any other part of your `context` object.
 
-In Apollo Server 3, immediately after constructing each `DataSource` subclass, Apollo Server invokes the `dataSource.initialize({ cache, context })` function on each new `DataSource`. If you need to replicate this behavior in Apollo Server 5, you can pass the `cache` and `context` arguments to each `DataSource` constructor. In Apollo Server 5, you can find `cache` as a new readonly field on `ApolloServer`.
+In Apollo Server 3, immediately after constructing each `DataSource` subclass, Apollo Server invokes the `dataSource.initialize({ cache, context })` function on each new `DataSource`. If you need to replicate this behavior in Apollo Server 6, you can pass the `cache` and `context` arguments to each `DataSource` constructor. In Apollo Server 6, you can find `cache` as a new readonly field on `ApolloServer`.
 
 For example, below, we use the `RESTDataSource` class to create a `DataSource` with Apollo Server 3:
 
@@ -448,11 +448,11 @@ await server.listen();
 
 </MultiCodeBlock>
 
-Below is how you write the same code in Apollo Server 5.
+Below is how you write the same code in Apollo Server 6.
 
 <MultiCodeBlock>
 
-```ts title="Apollo Server 5"
+```ts title="Apollo Server 6"
 import { RESTDataSource, AugmentedRequest } from '@apollo/datasource-rest';
 // KeyValueCache is the type of Apollo server's default cache
 import type { KeyValueCache } from '@apollo/utils.keyvaluecache';
@@ -578,7 +578,7 @@ await startStandaloneServer(server, {
 
 </MultiCodeBlock>
 
-If you want to migrate quickly to Apollo Server 5 *without* altering your data sources, the snippet below replicates Apollo Server 3's `dataSources` behavior with a custom plugin.
+If you want to migrate quickly to Apollo Server 6 *without* altering your data sources, the snippet below replicates Apollo Server 3's `dataSources` behavior with a custom plugin.
 
 <ExpansionPanel title="Click to expand">
 
@@ -652,7 +652,7 @@ new ApolloServer({
 });
 ```
 
-```ts  title="Apollo Server 5"
+```ts  title="Apollo Server 6"
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
@@ -677,7 +677,7 @@ new ApolloServer({
 });
 ```
 
-```ts title="Apollo Server 5"
+```ts title="Apollo Server 6"
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
@@ -707,7 +707,7 @@ new ApolloServer({
 });
 ```
 
-```ts {11} title="Apollo Server 5"
+```ts {11} title="Apollo Server 6"
 import { addMocksToSchema } from '@graphql-tools/mock';
 import { makeExecutableSchema } from '@graphql-tools/schema';
 
@@ -736,7 +736,7 @@ In Apollo Server 3, the `debug` constructor option (which defaults to `true` unl
 
 Apollo Server 4+ removes the `debug` constructor option. In its place is a new `includeStacktraceInErrorResponses` option which controls its namesake feature. Like `debug`, this option defaults to `true` unless the `NODE_ENV` environment variable is either `production` or `test`.
 
-If you use `debug` in Apollo Server 3, you can use `includeStacktraceInErrorResponses` with the same value in Apollo Server 5:
+If you use `debug` in Apollo Server 3, you can use `includeStacktraceInErrorResponses` with the same value in Apollo Server 6:
 
 ```ts
 const apolloServerInstance = new ApolloServer<MyContext>({
@@ -793,7 +793,7 @@ new ApolloServer({
 }),
 ```
 
-your Apollo Server 5 code can use `willSendResponse`, like so:
+your Apollo Server 6 code can use `willSendResponse`, like so:
 
 ```ts
 new ApolloServer<MyContext>({
@@ -905,7 +905,7 @@ In Apollo Server 3, framework integrations automatically set up HTTP body parsin
 
 In Apollo Server 4+, it's your responsibility to set up HTTP body parsing and CORS headers for your web framework. Specifically, when using [`expressMiddleware`](#migrate-from-apollo-server-express), you can use the native [`express.json()`](https://expressjs.com/en/api.html#express.json) function (available in Express `v4.16.0` onwards) for body parsing and the `cors` npm package for CORS headers. You can install and use the `cors` package in your Express app, just like with any other JSON-based API server. If you passed a `cors` option to `applyMiddleware` or `getMiddleware`, pass the same value to the `cors` function. If you passed a `bodyParserConfig` option to `applyMiddleware` or `getMiddleware`, pass the same value to the [`express.json()`](https://expressjs.com/en/api.html#express.json) function.
 
-Note that [`startStandaloneServer`](#migrate-from-apollo-server) sets up body parsing and CORS functionality for you, but you can't configure this behavior. In Apollo Server 3, you could configure the batteries-included `apollo-server`'s CORS behavior via the `cors` constructor option. In Apollo Server 5, if you need to configure CORS behavior, use `expressMiddleware` rather than `startStandaloneServer`.
+Note that [`startStandaloneServer`](#migrate-from-apollo-server) sets up body parsing and CORS functionality for you, but you can't configure this behavior. In Apollo Server 3, you could configure the batteries-included `apollo-server`'s CORS behavior via the `cors` constructor option. In Apollo Server 6, if you need to configure CORS behavior, use `expressMiddleware` rather than `startStandaloneServer`.
 
 ### `gql` GraphQL tag
 
@@ -960,7 +960,7 @@ import { ForbiddenError } from 'apollo-server';
 throw new ForbiddenError("my message", { myExtension: "foo" })
 ```
 
-In Apollo Server 5, you should define your own error using `GraphQLError`, like so:
+In Apollo Server 6, you should define your own error using `GraphQLError`, like so:
 
 ```ts
 import { GraphQLError } from 'graphql';
@@ -980,7 +980,7 @@ In Apollo Server 3, you can check the type of an error, like so:
 if (error instanceof SyntaxError)
 ```
 
-In Apollo Server 5, you can use the `ApolloServerErrorCode` enum to check if an error is one of the types recognized by Apollo Server, like so:
+In Apollo Server 6, you can use the `ApolloServerErrorCode` enum to check if an error is one of the types recognized by Apollo Server, like so:
 
 ```ts
 import { ApolloServerErrorCode } from '@apollo/server/errors';
@@ -1252,7 +1252,7 @@ expect(result.data?.hello).toBe('Hello world!'); // -> true
 
 </MultiCodeBlock>
 
-looks like this in Apollo Server 5:
+looks like this in Apollo Server 6:
 
 <MultiCodeBlock>
 
@@ -1509,7 +1509,7 @@ new ApolloServer({
 });
 ```
 
-and you would like to continue to apply the same options to both operation and schema parsing in Apollo Server 5, run `npm install @graphql-tools/schema`, and change your code to this:
+and you would like to continue to apply the same options to both operation and schema parsing in Apollo Server 6, run `npm install @graphql-tools/schema`, and change your code to this:
 
 ```ts
 import { makeExecutableSchema } from '@graphql-tools/schema';
@@ -1600,9 +1600,9 @@ Apollo Server 4+ refactors the [`GraphQLResponse` object](https://github.com/apo
 
 In Apollo Server 3, the  `data`, `errors`, and `extensions` fields existed at the top level, right beside `http`.
 
-Because Apollo Server 4+ supports incremental delivery directives such as `@defer` and `@stream` (when combined with an appropriate version of `graphql-js`), the structure of the response can now represent either a single result or multiple results, so these fields no longer exist at the top level of `GraphQLResponse`.
+Because Apollo Server 4+ supports incremental delivery directives such as `@defer` and `@stream`, the structure of the response can now represent either a single result or multiple results, so these fields no longer exist at the top level of `GraphQLResponse`.
 
-Instead, there is a `body` field at the top level of `GraphQLResponse`. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js` and may change between the current pre-release of `graphql-js` v17 and its final release; if you write code that processes these values before `graphql-js` v17 has been released you may have to adapt it when the API is finalized.)
+Instead, there is a `body` field at the top level of `GraphQLResponse`. `response.body.kind` is either `'single'` or `'incremental'`. If it is `'single'`, then incremental delivery has not been used, and `response.body.singleResult` is an object with `data`, `errors`, and `extensions` fields. If it is `'incremental'`, then `response.body.initialResult` is the initial result of the operation, and `response.body.subsequentResults` is an async iterator that will yield subsequent results. (The precise structure of `initialResult` and `subsequentResults` is defined by `graphql-js`: they are its `FormattedInitialIncrementalExecutionResult` and `FormattedSubsequentIncrementalExecutionResult` types.)
 
 Additionally, the  `data` and `extensions` fields are both type `Record<string, unknown>`, rather than `Record<string, any>`.
 
@@ -1630,7 +1630,7 @@ const server = new ApolloServer({
 
 </MultiCodeBlock>
 
-then your Apollo Server 5 code can look like this:
+then your Apollo Server 6 code can look like this:
 
 <MultiCodeBlock>
 
@@ -1737,7 +1737,7 @@ In Apollo Server 3, the default development landing page is a splash page contai
 
 In Apollo Server 4+, the default development landing page is the *embedded* Apollo Sandbox.  Note that nothing changes about the default production landing page.
 
-To use the splash page from Apollo Server 3, you can add the following to your Apollo Server 5 constructor:
+To use the splash page from Apollo Server 3, you can add the following to your Apollo Server 6 constructor:
 
 <MultiCodeBlock>
 
@@ -1881,7 +1881,7 @@ For example, if you had this resolver in Apollo Server 3:
   }
 ```
 
-you can write this in Apollo Server 5:
+you can write this in Apollo Server 6:
 
 ```ts
 import { cacheControlFromInfo } from '@apollo/cache-control-types';

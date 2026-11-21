@@ -29,9 +29,9 @@ If you are using AS4, the environment variables need to be prefixed with `GLOBAL
 
 To enable the use of these environment variables, refer to the sections below for instructions specific to your Apollo Server and Node.js versions.
 
-## Configuring AS5 with Node.js v24+ (recommended)
+## Configuring AS5+ with Node.js v24+ (recommended)
 
-By default, Apollo Server v5 uses [the Node.js built-in `fetch` implementation](https://nodejs.org/api/globals.html#fetch).
+By default, Apollo Server v5 and later use [the Node.js built-in `fetch` implementation](https://nodejs.org/api/globals.html#fetch).
 
 If you are using Node.js v24 or newer, this implementation has built-in support for configuring your HTTP proxy via environment variables. You can enable this using the [`NODE_USE_ENV_PROXY` environment variable](https://nodejs.org/api/cli.html#node_use_env_proxy1).
 
@@ -41,9 +41,9 @@ NODE_USE_ENV_PROXY=1
 
 You can now use the proxy configuration variables defined above.
 
-## Configuring AS5 with Node.js v20 or v22
+## Configuring AS5+ with Node.js v22 (or v20)
 
-If you are running Apollo Server v5 with Node.js v20 or v22, you need to use a bit of code to enable proxy configuration with the built-in `fetch` implementation.
+If you are running Apollo Server v5 or later with Node.js v22 (or Apollo Server v5 with Node.js v20), you need to use a bit of code to enable proxy configuration with the built-in `fetch` implementation.
 
 First, install the `undici` library in your app. The built-in `fetch` implementation is based on [Undici](https://www.npmjs.com/package/undici), but you still need to install the package from the npm registry in order to change this global configuration.
 
