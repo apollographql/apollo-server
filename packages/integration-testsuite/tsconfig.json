@@ -3,7 +3,7 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist/esm",
-    "lib": ["es2023"],
+    "lib": ["es2024"],
     // @apollo/client 4's link typings reference DOM fetch types (eg
     // RequestCredentials) that are not in the Node lib.
     "skipLibCheck": true,

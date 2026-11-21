@@ -127,6 +127,11 @@ export class TraceTreeBuilder {
       // https://github.com/graphql/graphql-js/pull/3529 means that this
       // sometimes crashed execution anyway. Our error never caught any actual
       // problematic cases, so keeping it around doesn't really help.)
+      //
+      // graphql-js 17 behaves the same way by default. It can stop that
+      // leftover work early when execution is given an AbortSignal (which
+      // Apollo Server forwards from `HTTPGraphQLRequest.signal`), but nothing
+      // guarantees it, so we keep ignoring late fields here.
       return () => {};
     }
 
