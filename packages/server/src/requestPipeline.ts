@@ -491,9 +491,11 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         ? formatErrors(resultErrors)
         : { formattedErrors: undefined, httpFromErrors: newHTTPGraphQLHead() };
 
-      // TODO(AS6): remove `status400ForVariableCoercionErrors`
+      // If execution produced errors without producing any data, the request
+      // itself was invalid (typically variable coercion errors, which the
+      // GraphQL over HTTP spec treats as request errors), so respond with 400
+      // unless the errors chose a status themselves.
       if (
-        internals.status400ForVariableCoercionErrors &&
         resultErrors?.length &&
         result.data === undefined &&
         !httpFromErrors.status

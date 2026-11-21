@@ -553,50 +553,19 @@ describe('ApolloServer executeOperation', () => {
     await server.stop();
   });
 
-  // `status400ForVariableCoercionErrors` has no effect in v5
-  // TODO(AS6): remove this
-  it.each([
-    {
-      status400ForVariableCoercionErrors: false,
-      expectedStatus: undefined,
-      expectedWarning:
-        'The `status400ForVariableCoercionErrors: false` configuration option is deprecated and will be removed in Apollo Server v6. Apollo recommends removing any dependency on this behavior.',
-    },
-    {
-      status400ForVariableCoercionErrors: true,
-      expectedStatus: 400,
-      expectedWarning:
-        'The `status400ForVariableCoercionErrors: true` configuration option is now the default behavior and has no effect in Apollo Server v5. You can safely remove this option from your configuration.',
-    },
-  ])(
-    'variable coercion errors',
-    async ({
-      status400ForVariableCoercionErrors,
-      expectedStatus,
-      expectedWarning,
-    }) => {
-      const logger = mockLogger();
-      const server = new ApolloServer({
-        typeDefs,
-        resolvers,
-        logger,
-        status400ForVariableCoercionErrors,
-      });
+  it('variable coercion errors get a 400 status', async () => {
+    const server = new ApolloServer({ typeDefs, resolvers });
+    await server.start();
 
-      expect(logger.warn).toHaveBeenCalledWith(expectedWarning);
-
-      await server.start();
-
-      const { body, http } = await server.executeOperation({
-        query: 'query NeedsArg($arg: String) { needsStringArg(aString: $arg) }',
-        variables: { arg: 1 },
-      });
-      const result = singleResult(body);
-      expect(result.errors?.[0].extensions?.code).toBe('BAD_USER_INPUT');
-      expect(http.status).toBe(expectedStatus);
-      await server.stop();
-    },
-  );
+    const { body, http } = await server.executeOperation({
+      query: 'query NeedsArg($arg: String) { needsStringArg(aString: $arg) }',
+      variables: { arg: 1 },
+    });
+    const result = singleResult(body);
+    expect(result.errors?.[0].extensions?.code).toBe('BAD_USER_INPUT');
+    expect(http.status).toBe(400);
+    await server.stop();
+  });
 
   // CompoundInput is { compound: { nested1: String!, nested2: String! }! }
   // absence, null, and non-string values will all cause coercion errors
