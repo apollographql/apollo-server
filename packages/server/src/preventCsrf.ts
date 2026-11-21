@@ -1,4 +1,4 @@
-import MIMEType from 'whatwg-mimetype';
+import { MIMEType } from 'whatwg-mimetype';
 import { BadRequestError } from './internalErrorClasses.js';
 import type { HeaderMap } from './utils/HeaderMap.js';
 

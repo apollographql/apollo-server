@@ -110,8 +110,7 @@ const notCollectingPathsResponseNamePath: ResponseNamePath = {
 };
 
 type CollectingPathsResponseNamePath =
-  | RootCollectingPathsResponseNamePath
-  | ChildCollectingPathsResponseNamePath;
+  RootCollectingPathsResponseNamePath | ChildCollectingPathsResponseNamePath;
 class RootCollectingPathsResponseNamePath implements ResponseNamePath {
   toArray() {
     return [];
