@@ -229,17 +229,27 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
           ),
       );
 
+      // `hideSchemaDetailsFromClientErrors` asks graphql-js to leave "Did you
+      // mean ...?" suggestions out of validation errors (and, below, out of
+      // variable coercion errors).
+      const validationOptions = {
+        ...internals.validationOptions,
+        hideSuggestions:
+          internals.hideSchemaDetailsFromClientErrors ||
+          internals.validationOptions.hideSuggestions,
+      };
       let validationErrors = validate(
         schemaDerivedData.schema,
         requestContext.document,
         [...specifiedRules, ...internals.validationRules],
-        internals.validationOptions,
+        validationOptions,
       );
       if (validationErrors.length === 0 && internals.laterValidationRules) {
         validationErrors = validate(
           schemaDerivedData.schema,
           requestContext.document,
           internals.laterValidationRules,
+          validationOptions,
         );
       }
 
@@ -537,6 +547,7 @@ export async function processGraphQLRequest<TContext extends BaseContext>(
         variableValues: request.variables,
         operationName: request.operationName,
         fieldResolver: internals.fieldResolver,
+        hideSuggestions: internals.hideSchemaDetailsFromClientErrors,
         options: internals.executionOptions,
       });
       if (!('schema' in validatedArgs)) {

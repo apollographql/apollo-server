@@ -179,7 +179,7 @@ The default value is `false`.
 
 <td>
 
-If `true`, Apollo Server strips out "did you mean" suggestions when an operation fails validation.
+If `true`, Apollo Server leaves out "Did you mean ...?" suggestions from errors it sends to clients: both validation errors (such as a query for an unknown field) and variable coercion errors (such as a misspelled input object field or enum value in a variable).
 
 For example, with this option set to `true`, an error would read `Cannot query field "help" on type "Query".`. With this option set to `false`, the same error would read `Cannot query field "help" on type "Query". Did you mean "hello"?`.
 

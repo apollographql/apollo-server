@@ -840,12 +840,7 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
   }
 
   private async addDefaultPlugins() {
-    const {
-      plugins,
-      apolloConfig,
-      nodeEnv,
-      hideSchemaDetailsFromClientErrors,
-    } = this.internals;
+    const { plugins, apolloConfig, nodeEnv } = this.internals;
     const isDev = nodeEnv !== 'production';
 
     const alreadyHavePluginWithInternalId = (id: InternalPluginId) =>
@@ -1003,17 +998,6 @@ export class ApolloServer<in out TContext extends BaseContext = BaseContext> {
       }
       plugin.__internal_installed_implicitly__ = true;
       plugins.push(plugin);
-    }
-
-    {
-      const alreadyHavePlugin =
-        alreadyHavePluginWithInternalId('DisableSuggestions');
-      if (hideSchemaDetailsFromClientErrors && !alreadyHavePlugin) {
-        const { ApolloServerPluginDisableSuggestions } = await import(
-          './plugin/disableSuggestions/index.js'
-        );
-        plugins.push(ApolloServerPluginDisableSuggestions());
-      }
     }
   }
 
